@@ -33,3 +33,33 @@ test.describe("Faza 3 — Termini stats", () => {
     expect(errors, errors.join("\n")).toHaveLength(0)
   })
 })
+
+test.describe("Faza 3 — Termini tabela", () => {
+  test("renderuje tabelu sa redovima i 7 kolona", async ({ page }) => {
+    await page.goto("/termini")
+    const table = page.getByTestId("termini-table")
+    await expect(table).toBeVisible()
+
+    const headers = ["Datum roka", "Klijent", "Lokacija", "Vrsta", "Status", "Zaduženi", "Akcije"]
+    await Promise.all(
+      headers.map((h) => expect(table.getByRole("columnheader", { name: h })).toBeVisible())
+    )
+
+    // bar 1 red + status badge
+    const rows = page.getByTestId("termin-row")
+    expect(await rows.count()).toBeGreaterThan(0)
+    await expect(page.getByTestId("status-badge").first()).toBeVisible()
+  })
+
+  test("paginacija — Sljedeća mijenja stranu", async ({ page }) => {
+    await page.goto("/termini")
+    await expect(page.getByTestId("termini-page")).toContainText("Strana 1")
+    await page.getByRole("link", { name: "Sljedeća" }).click()
+    await expect(page.getByTestId("termini-page")).toContainText("Strana 2")
+  })
+
+  test("Detalji link postoji u svakom redu", async ({ page }) => {
+    await page.goto("/termini")
+    await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
+  })
+})

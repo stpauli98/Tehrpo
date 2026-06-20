@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:types": "supabase gen types typescript --local 2>/dev/null > db/types.ts",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -44,6 +45,7 @@
     "postcss": "^8.5.15",
     "shadcn": "^4.11.0",
     "tailwindcss": "^4.3.1",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.9"
   }

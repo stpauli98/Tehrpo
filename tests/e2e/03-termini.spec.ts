@@ -172,3 +172,30 @@ test.describe("Faza 3 — Novi termin", () => {
     expect(after).toBe(before + 1)
   })
 })
+
+test.describe("Faza 3 — Vizuelni smoke", () => {
+  test("termini ekran screenshot @ 1440x900", async ({ page }) => {
+    await page.goto("/termini")
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByTestId("termini-stats")).toBeVisible()
+    await expect(page.getByTestId("termini-table")).toBeVisible()
+    // Snapshot za manualni pregled (ne toHaveScreenshot da izbjegnemo baseline drift na seed promjenama)
+    await page.screenshot({ path: "test-results/termini-faza3.png", fullPage: true })
+  })
+
+  test("status badge boje odgovaraju izvedenom statusu (§9.1)", async ({ page }) => {
+    // 'kasni' filter → svi badge-evi crveni
+    await page.goto("/termini?status=kasni")
+    await page.waitForLoadState("networkidle")
+    const kasni = page.getByTestId("status-badge").first()
+    await expect(kasni).toHaveAttribute("data-status", "kasni")
+    await expect(kasni).toHaveClass(/bg-red-50/)
+
+    // 'izvrseno' filter → zeleni
+    await page.goto("/termini?status=izvrseno")
+    await page.waitForLoadState("networkidle")
+    const izvr = page.getByTestId("status-badge").first()
+    await expect(izvr).toHaveAttribute("data-status", "izvrseno")
+    await expect(izvr).toHaveClass(/bg-green-50/)
+  })
+})

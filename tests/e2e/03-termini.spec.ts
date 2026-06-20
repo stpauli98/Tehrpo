@@ -63,3 +63,39 @@ test.describe("Faza 3 — Termini tabela", () => {
     await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
   })
 })
+
+test.describe("Faza 3 — Termini filteri", () => {
+  test("status pill 'Kasni' filtrira na kasni termine", async ({ page }) => {
+    await page.goto("/termini")
+    await page.getByTestId("status-pill-kasni").click()
+    await page.waitForURL(/status=kasni/)
+    // svi vidljivi status badge-evi su 'kasni'
+    const badges = page.getByTestId("status-badge")
+    const n = await badges.count()
+    expect(n).toBeGreaterThan(0)
+    await Promise.all(
+      Array.from({ length: Math.min(n, 10) }, (_, i) =>
+        expect(badges.nth(i)).toHaveAttribute("data-status", "kasni")
+      )
+    )
+  })
+
+  test("pretraga firme filtrira tabelu", async ({ page }) => {
+    await page.goto("/termini")
+    const input = page.getByTestId("filter-search")
+    await input.fill("WAIKIKI")
+    await input.press("Enter")
+    await page.waitForURL(/q=WAIKIKI/)
+    const rows = page.getByTestId("termin-row")
+    expect(await rows.count()).toBeGreaterThan(0)
+    // bar prvi red sadrži WAIKIKI (case-insensitive)
+    await expect(rows.first()).toContainText(/WAIKIKI/i)
+  })
+
+  test("status pill 'Svi' vraća sve", async ({ page }) => {
+    await page.goto("/termini?status=kasni")
+    await page.getByTestId("status-pill-svi").click()
+    await page.waitForURL((u) => !u.search.includes("status="))
+    await expect(page.getByTestId("termini-table")).toBeVisible()
+  })
+})

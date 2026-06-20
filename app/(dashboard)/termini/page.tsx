@@ -3,8 +3,10 @@ import Link from "next/link"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { StatCard } from "@/components/domain/StatCard"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
+import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { monthRange, currentYear } from "@/lib/date"
 
 const PER_PAGE = 50
 
@@ -18,21 +20,59 @@ export default async function TerminiPage({
   const from = (pageNum - 1) * PER_PAGE
   const to = from + PER_PAGE - 1
 
+  const statusFilter = typeof sp.status === "string" ? sp.status : "svi"
+  const qFilter = typeof sp.q === "string" ? sp.q.trim() : ""
+  const klijentFilter = typeof sp.klijent_id === "string" ? sp.klijent_id : ""
+  const vrstaFilter = typeof sp.vrsta_id === "string" ? sp.vrsta_id : ""
+  const mjesecFilter = typeof sp.mjesec === "string" ? sp.mjesec : ""
+
   const supabase = await createServerSupabaseClient()
 
-  const [{ data: statsRows }, listRes] = await Promise.all([
+  // Build list query sa filterima
+  let listQuery = supabase
+    .from("termini_view")
+    .select("*", { count: "exact" })
+    .order("rok_dospijeca", { ascending: true })
+
+  if (statusFilter && statusFilter !== "svi") {
+    listQuery = listQuery.eq("status_izvedeni", statusFilter)
+  }
+  if (qFilter) {
+    // Pretraga po klijentu ILI lokaciji — escape PostgREST or() meta-znakove
+    const safe = qFilter.replace(/[(),]/g, " ")
+    listQuery = listQuery.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
+  }
+  if (klijentFilter) {
+    listQuery = listQuery.eq("klijent_id", klijentFilter)
+  }
+  if (vrstaFilter) {
+    listQuery = listQuery.eq("vrsta_provjere_id", vrstaFilter)
+  }
+  if (mjesecFilter) {
+    const mn = Number(mjesecFilter)
+    if (mn >= 1 && mn <= 12) {
+      // miesec se odnosi na rok_dospijeca u tekućoj godini (dinamički)
+      const { from: mFrom, to: mTo } = monthRange(currentYear(), mn)
+      listQuery = listQuery.gte("rok_dospijeca", mFrom).lte("rok_dospijeca", mTo)
+    }
+  }
+  listQuery = listQuery.range(from, to)
+
+  // Paralelno: stats RPC + filtirana lista + klijenti + vrste (dropdown opcije)
+  const [{ data: statsRows }, listRes, klijentiRes, vrsteRes] = await Promise.all([
     supabase.rpc("get_termini_stats"),
-    supabase
-      .from("termini_view")
-      .select("*", { count: "exact" })
-      .order("rok_dospijeca", { ascending: true })
-      .range(from, to),
+    listQuery,
+    supabase.from("klijenti").select("id, naziv").order("naziv"),
+    supabase.from("vrste_provjera").select("id, naziv").eq("aktivna", true).order("naziv"),
   ])
 
   const stats = statsRows?.[0] ?? { ukupno: 0, ovog_mjeseca: 0, kasni: 0, izvrseno_ovog_mjeseca: 0 }
   const rows = (listRes.data ?? []) as TerminRow[]
   const total = listRes.count ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
+
+  const klijenti = (klijentiRes.data ?? []).map((k) => ({ id: k.id, naziv: k.naziv }))
+  const vrste = (vrsteRes.data ?? []).map((v) => ({ id: v.id, naziv: v.naziv }))
 
   // currentSearch string (preserves all current params for detail link base)
   const currentSearch = new URLSearchParams(
@@ -59,6 +99,8 @@ export default async function TerminiPage({
         <StatCard testId="stat-kasni" label="Kasni rokovi" value={stats.kasni} sub="zahtijevaju akciju" icon={AlertTriangle} tone="danger" />
         <StatCard testId="stat-izvrseno" label="Izvršeni ovog mjeseca" value={stats.izvrseno_ovog_mjeseca} sub="završeno" icon={CheckCircle2} tone="success" />
       </div>
+
+      <TerminiFilters klijenti={klijenti} vrste={vrste} />
 
       <TerminiTable rows={rows} currentSearch={currentSearch} />
 

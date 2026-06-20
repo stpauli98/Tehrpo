@@ -5,6 +5,7 @@ import { StatCard } from "@/components/domain/StatCard"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
+import { NoviTerminButton } from "@/components/domain/NoviTerminButton"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { monthRange, currentYear } from "@/lib/date"
@@ -127,6 +128,7 @@ export default async function TerminiPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Termini</h1>
+        <NoviTerminButton klijenti={klijenti} vrste={vrste} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" data-testid="termini-stats">

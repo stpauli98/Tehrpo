@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --workers=1",
     "test:e2e:ui": "playwright test --ui",
     "db:types": "supabase gen types typescript --local 2>/dev/null > db/types.ts",
     "db:reset": "supabase db reset",

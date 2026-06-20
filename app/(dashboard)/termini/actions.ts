@@ -56,6 +56,40 @@ export async function updateTermin(
   return { ok: true }
 }
 
+const createSchema = z.object({
+  klijent_id: z.string().uuid("Klijent je obavezan"),
+  vrsta_provjere_id: z.string().uuid("Vrsta je obavezna"),
+  rok_dospijeca: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Rok je obavezan"),
+  datum_zakazan: optionalDate,
+  zaduzeni: z.string().max(200).optional().or(z.literal("").transform(() => undefined)),
+})
+
+export async function createTermin(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const parsed = createSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  }
+  const { klijent_id, vrsta_provjere_id, rok_dospijeca, datum_zakazan, zaduzeni } = parsed.data
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("termini").insert({
+    klijent_id,
+    vrsta_provjere_id,
+    rok_dospijeca,
+    datum_zakazan: datum_zakazan ?? null,
+    zaduzeni: zaduzeni ?? null,
+    status: datum_zakazan ? "zakazano" : "planirano",
+  })
+
+  if (error) return { ok: false, message: error.message }
+
+  revalidatePath("/termini")
+  return { ok: true }
+}
+
 const markSchema = z.object({
   id: z.string().uuid(),
   datum_izvrsenja: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum je obavezan"),

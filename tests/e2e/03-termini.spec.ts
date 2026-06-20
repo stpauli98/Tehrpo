@@ -146,3 +146,29 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
     await expect(page.getByTestId("termin-sheet")).toBeHidden()
   })
 })
+
+test.describe("Faza 3 — Novi termin", () => {
+  test("kreira novi termin koji se pojavi u listi", async ({ page }) => {
+    await page.goto("/termini")
+    const before = Number(await page.getByTestId("stat-ukupno-value").textContent())
+
+    await page.getByTestId("novi-termin-btn").click()
+    await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+
+    // Izaberi klijenta
+    await page.getByTestId("novi-klijent").click()
+    await page.getByRole("option").first().click()
+    // Izaberi vrstu
+    await page.getByTestId("novi-vrsta").click()
+    await page.getByRole("option").first().click()
+    // Rok
+    await page.getByTestId("novi-rok").fill("2026-12-31")
+
+    await page.getByTestId("novi-submit").click()
+
+    // Sheet se zatvori, ukupno +1
+    await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+    const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
+    expect(after).toBe(before + 1)
+  })
+})

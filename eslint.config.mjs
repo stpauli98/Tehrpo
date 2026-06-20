@@ -13,6 +13,30 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Tehpro project-wide rules
+  {
+    rules: {
+      "no-await-in-loop": "error",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/(?<![a-zA-Z])(sm|md):/]",
+          message: "Tehpro je desktop-only. Koristi lg:/xl:/2xl: ili bez breakpoint-a.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/(?<![a-zA-Z])(sm|md):/]",
+          message: "Tehpro je desktop-only. Koristi lg:/xl:/2xl: ili bez breakpoint-a.",
+        },
+      ],
+    },
+  },
+  // scripts/ override — bulk operacije su OK tamo
+  {
+    files: ["scripts/**/*"],
+    rules: {
+      "no-await-in-loop": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

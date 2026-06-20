@@ -101,6 +101,7 @@ export function TerminiFilters({
 
       {/* Search */}
       <Input
+        key={q}
         type="search"
         placeholder="Pretraga firme..."
         defaultValue={q}

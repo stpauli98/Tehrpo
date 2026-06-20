@@ -81,7 +81,11 @@ async function main() {
   console.log("\n💾 Inserting termini...")
   const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
   const skippedFK: string[] = []
-  const terminiRows = parsed.termini.flatMap(t => {
+  type TerminRow =
+    | { klijent_id: string; vrsta_provjere_id: string; datum_zadnjeg: string; datum_izvrsenja: string; rok_dospijeca: string; status: "izvrseno" }
+    | { klijent_id: string; vrsta_provjere_id: string; datum_zakazan: string; rok_dospijeca: string; status: "planirano" }
+
+  const terminiRows = parsed.termini.flatMap<TerminRow>(t => {
     const klijentId = klijentiMap.get(t.klijent_naziv)
     const vrstaId = vrsteMap.get(t.vrsta_naziv)
     if (!klijentId || !vrstaId) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDatum, monthRange, MONTHS_BS } from "./date"
+import { formatDatum, monthRange, MONTHS_BS, todayIso } from "./date"
 
 describe("formatDatum", () => {
   it("ISO datum → DD.MM.YYYY.", () => {
@@ -36,5 +36,19 @@ describe("MONTHS_BS", () => {
     expect(MONTHS_BS).toHaveLength(12)
     expect(MONTHS_BS[0]).toBe("Januar")
     expect(MONTHS_BS[11]).toBe("Decembar")
+  })
+})
+
+describe("todayIso", () => {
+  it("vraća YYYY-MM-DD string koji odgovara trenutnom UTC datumu", () => {
+    const result = todayIso()
+    // format check
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    // value check: build expected from UTC components
+    const now = new Date()
+    const y = now.getUTCFullYear()
+    const m = String(now.getUTCMonth() + 1).padStart(2, "0")
+    const d = String(now.getUTCDate()).padStart(2, "0")
+    expect(result).toBe(`${y}-${m}-${d}`)
   })
 })

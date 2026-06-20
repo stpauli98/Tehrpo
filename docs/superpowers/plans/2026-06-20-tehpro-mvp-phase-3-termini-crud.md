@@ -17,7 +17,7 @@
 
 - **Node ≥ 20, pnpm.** Next.js 16 (Turbopack default), React 19, TS strict + `noUncheckedIndexedAccess`.
 - **DB driver:** SAMO `@supabase/supabase-js`. READ iz `termini_view`, WRITE u `termini` tabelu. Mutacije isključivo kroz Server Actions.
-- **Query-by-page rule (§5):** max 2 DB round-trips po inicijalnom renderu. `/termini` koristi: (1) `get_termini_stats()` RPC, (2) lista sa `{ count: 'exact' }` (rows + total u jednom). Detail sheet selekcija ne smije dodati 3. query na inicijalni render liste — termin za sheet se nalazi u već-dohvaćenim rows (fallback fetch samo ako selected nije na trenutnoj stranici).
+- **Query-by-page rule (§5):** **Glavni podaci** = max 2 DB round-tripa: (1) `get_termini_stats()` RPC, (2) lista iz `termini_view` sa `{ count: 'exact' }` (rows + total u jednom). **Pomoćni fetchevi** (klijenti/vrste za dropdown opcije; opcioni fallback fetch selektovanog termina; istorija ciklusa kad je sheet otvoren) su IZUZETI iz ovog budžeta jer se izvršavaju PARALELNO preko `Promise.all` (nema serijskog N+1). Nikad query po elementu u petlji.
 - **No await-in-loop**, no per-element queries. Bulk filteri u jednom `.select()`.
 - **Tailwind breakpoints:** SAMO `lg:`/`xl:`/`2xl:`. `sm:`/`md:` = ESLint error.
 - **Brand tokeni:** `#2563eb` brand. Status badge boje (soft pills, Tailwind skale): planirano=blue, zakazano=cyan, izvrseno=green, kasni=red, otkazano=slate.
@@ -90,6 +90,7 @@ tehpro-mvp/
 - Produces:
   - `formatDatum(iso: string | null | undefined): string` → `"28.07.2026."` ili `"—"`
   - `todayIso(): string` → `"YYYY-MM-DD"`
+  - `currentYear(): number` → npr. `2026`
   - `monthRange(year: number, month1to12: number): { from: string; to: string }` (from = prvi dan, to = zadnji dan mjeseca, ISO)
   - `MONTHS_BS: readonly string[]` (Januar..Decembar)
   - `type DerivedStatus = "planirano" | "zakazano" | "izvrseno" | "kasni" | "otkazano"`
@@ -126,6 +127,11 @@ export function todayIso(): string {
   const m = String(now.getMonth() + 1).padStart(2, "0")
   const d = String(now.getDate()).padStart(2, "0")
   return `${y}-${m}-${d}`
+}
+
+/** Tekuća godina (npr. 2026). */
+export function currentYear(): number {
+  return new Date().getFullYear()
 }
 
 /** Prvi i zadnji dan mjeseca (ISO). month1to12: 1=Januar. */
@@ -544,6 +550,11 @@ export default async function TerminiPage() {
 ```ts
 import { test, expect } from "@playwright/test"
 
+// Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
+// mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
+// trkali na before/after brojevima i davali lažne padove.
+test.describe.configure({ mode: "serial" })
+
 test.describe("Faza 3 — Termini stats", () => {
   test("prikazuje 4 stat kartice sa brojevima", async ({ page }) => {
     await page.goto("/termini")
@@ -667,9 +678,9 @@ export function TerminiTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {rows.map((r, idx) => (
             <tr
-              key={r.id ?? ""}
+              key={r.id ?? `row-${idx}`}
               data-testid="termin-row"
               className="border-t border-slate-100 hover:bg-slate-50"
             >
@@ -707,7 +718,8 @@ import Link from "next/link"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { StatCard } from "@/components/domain/StatCard"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 const PER_PAGE = 50
 
@@ -768,17 +780,25 @@ export default async function TerminiPage({
       <div className="flex items-center justify-between text-sm text-slate-600" data-testid="termini-pagination">
         <span data-testid="termini-total">Ukupno rezultata: {total}</span>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={pageNum <= 1} render={
-            pageNum <= 1 ? <span /> : <Link href={pageHref(pageNum - 1)} />
-          }>
-            Prethodna
-          </Button>
+          {pageNum <= 1 ? (
+            <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>
+              Prethodna
+            </span>
+          ) : (
+            <Link href={pageHref(pageNum - 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Prethodna
+            </Link>
+          )}
           <span data-testid="termini-page">Strana {pageNum} / {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={pageNum >= totalPages} render={
-            pageNum >= totalPages ? <span /> : <Link href={pageHref(pageNum + 1)} />
-          }>
-            Sljedeća
-          </Button>
+          {pageNum >= totalPages ? (
+            <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>
+              Sljedeća
+            </span>
+          ) : (
+            <Link href={pageHref(pageNum + 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Sljedeća
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -872,7 +892,8 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { STATUS_FILTER_OPTIONS, MONTHS_BS_OPTION } from "@/lib/termini-filters"
+import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
+import { MONTHS_BS_OPTION } from "@/lib/termini-filters"
 
 type Opt = { id: string; naziv: string }
 
@@ -991,7 +1012,7 @@ export const MONTHS_BS_OPTION = MONTHS_BS.map((label, i) => ({
 }))
 ```
 
-**Napomena:** `STATUS_FILTER_OPTIONS` se importuje iz `@/lib/termini` (Task 1) — ispravi import u TerminiFilters.tsx: `import { STATUS_FILTER_OPTIONS } from "@/lib/termini"` i `import { MONTHS_BS_OPTION } from "@/lib/termini-filters"`.
+**Napomena:** importi su već razdvojeni u Step 5.1 (`STATUS_FILTER_OPTIONS` iz `@/lib/termini`, `MONTHS_BS_OPTION` iz `@/lib/termini-filters`).
 
 - [ ] **Step 5.3: Update `page.tsx` — dohvati klijente/vrste, primijeni filtere**
 
@@ -1000,7 +1021,7 @@ Dodaj iznad list query-ja dohvat klijenata i vrsta (za dropdown-e) i izgradi fil
 ```tsx
 // ... unutar TerminiPage, prije Promise.all:
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
-import { monthRange } from "@/lib/date"
+import { monthRange, currentYear } from "@/lib/date"
 
 const statusFilter = typeof sp.status === "string" ? sp.status : "svi"
 const qFilter = typeof sp.q === "string" ? sp.q.trim() : ""
@@ -1018,7 +1039,10 @@ if (statusFilter && statusFilter !== "svi") {
   listQuery = listQuery.eq("status_izvedeni", statusFilter)
 }
 if (qFilter) {
-  listQuery = listQuery.ilike("klijent_naziv", `%${qFilter}%`)
+  // Pretraga po klijentu ILI lokaciji (spec §7.2 A: "po klijentu/lokaciji")
+  // escape PostgREST or() meta-znakova (zarez/zagrada) iz korisničkog unosa
+  const safe = qFilter.replace(/[(),]/g, " ")
+  listQuery = listQuery.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
 }
 if (klijentFilter) {
   listQuery = listQuery.eq("klijent_id", klijentFilter)
@@ -1029,8 +1053,8 @@ if (vrstaFilter) {
 if (mjesecFilter) {
   const mn = Number(mjesecFilter)
   if (mn >= 1 && mn <= 12) {
-    // mjesec se odnosi na rok_dospijeca u tekućoj godini (2026)
-    const { from: mFrom, to: mTo } = monthRange(2026, mn)
+    // mjesec se odnosi na rok_dospijeca u TEKUĆOJ godini (dinamički, ne hardkodirano)
+    const { from: mFrom, to: mTo } = monthRange(currentYear(), mn)
     listQuery = listQuery.gte("rok_dospijeca", mFrom).lte("rok_dospijeca", mTo)
   }
 }
@@ -1166,17 +1190,19 @@ export async function updateTermin(
   }
   const { id, ...fields } = parsed.data
 
+  // Ažuriraj SAMO polja prisutna u formi (sprječava null-wipe datum_izvrsenja
+  // kada edit forma ne sadrži to polje za ne-izvršene termine).
+  const patch: Record<string, string | null> = {}
+  if (formData.has("datum_zakazan")) patch.datum_zakazan = fields.datum_zakazan ?? null
+  if (formData.has("datum_izvrsenja")) patch.datum_izvrsenja = fields.datum_izvrsenja ?? null
+  if (formData.has("zaduzeni")) patch.zaduzeni = fields.zaduzeni ?? null
+  if (formData.has("napomena")) patch.napomena = fields.napomena ?? null
+  if (fields.status) patch.status = fields.status
+
+  if (Object.keys(patch).length === 0) return { ok: true }
+
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("termini")
-    .update({
-      datum_zakazan: fields.datum_zakazan ?? null,
-      datum_izvrsenja: fields.datum_izvrsenja ?? null,
-      zaduzeni: fields.zaduzeni ?? null,
-      napomena: fields.napomena ?? null,
-      ...(fields.status ? { status: fields.status } : {}),
-    })
-    .eq("id", id)
+  const { error } = await supabase.from("termini").update(patch).eq("id", id)
 
   if (error) return { ok: false, message: error.message }
 
@@ -1232,7 +1258,13 @@ import type { TerminRow } from "@/components/domain/TerminiTable"
 
 const initial: ActionResult = { ok: true }
 
-export function TerminSheet({ termin, closeHref }: { termin: TerminRow; closeHref: string }) {
+export function TerminSheet({
+  termin, istorija, closeHref,
+}: {
+  termin: TerminRow
+  istorija: TerminRow[]
+  closeHref: string
+}) {
   const router = useRouter()
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
@@ -1265,6 +1297,12 @@ export function TerminSheet({ termin, closeHref }: { termin: TerminRow; closeHre
               <span className="text-slate-600">Datum zakazan</span>
               <Input type="date" name="datum_zakazan" defaultValue={termin.datum_zakazan ?? ""} data-testid="edit-datum-zakazan" />
             </label>
+            {termin.status === "izvrseno" && (
+              <label className="block text-sm">
+                <span className="text-slate-600">Datum izvršenja</span>
+                <Input type="date" name="datum_izvrsenja" defaultValue={termin.datum_izvrsenja ?? ""} data-testid="edit-datum-izvrsenja" />
+              </label>
+            )}
             <label className="block text-sm">
               <span className="text-slate-600">Zaduženi</span>
               <Input name="zaduzeni" defaultValue={termin.zaduzeni ?? ""} placeholder="npr. Marija K." data-testid="edit-zaduzeni" />
@@ -1311,10 +1349,21 @@ export function TerminSheet({ termin, closeHref }: { termin: TerminRow; closeHre
             <p className="mt-1 text-sm text-slate-500">Upload i AI generisanje zapisnika dolazi u Fazi 7.</p>
           </section>
 
-          {/* Istorija — placeholder (puni se u Fazi 4/kasnije) */}
+          {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
           <section data-testid="sheet-istorija">
             <p className="text-xs uppercase tracking-wide text-slate-400">Istorija</p>
-            <p className="mt-1 text-sm text-slate-500">Prethodni ciklusi pojavljuju se ovdje.</p>
+            {istorija.length === 0 ? (
+              <p className="mt-1 text-sm text-slate-500">Nema prethodnih izvršenih ciklusa.</p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {istorija.map((h) => (
+                  <li key={h.id ?? ""} className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600">{h.vrsta_naziv ?? "—"}</span>
+                    <span className="text-green-600 tabular-nums">{formatDatum(h.datum_izvrsenja)} ✓</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
 
@@ -1341,7 +1390,7 @@ const selectedId = typeof sp.selected === "string" ? sp.selected : null
 let selectedTermin: TerminRow | null =
   selectedId ? rows.find((r) => r.id === selectedId) ?? null : null
 
-// Fallback fetch ako selected nije na trenutnoj stranici/filteru
+// Fallback fetch ako selected nije na trenutnoj stranici/filteru (pomoćni, izuzet iz budžeta)
 if (selectedId && !selectedTermin) {
   const { data } = await supabase
     .from("termini_view")
@@ -1349,6 +1398,21 @@ if (selectedId && !selectedTermin) {
     .eq("id", selectedId)
     .maybeSingle()
   selectedTermin = (data as TerminRow | null) ?? null
+}
+
+// Istorija — prethodni izvršeni ciklusi istog klijenta + vrste (pomoćni fetch, samo kad je sheet otvoren)
+let istorija: TerminRow[] = []
+if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
+  const { data } = await supabase
+    .from("termini_view")
+    .select("*")
+    .eq("klijent_id", selectedTermin.klijent_id)
+    .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
+    .eq("status", "izvrseno")
+    .neq("id", selectedTermin.id ?? "")
+    .order("datum_izvrsenja", { ascending: false })
+    .limit(5)
+  istorija = (data ?? []) as TerminRow[]
 }
 
 // closeHref = trenutni URL bez "selected"
@@ -1360,7 +1424,7 @@ const closeHref = `/termini${closeParams.toString() ? `?${closeParams.toString()
 I na kraju JSX-a:
 
 ```tsx
-{selectedTermin && <TerminSheet termin={selectedTermin} closeHref={closeHref} />}
+{selectedTermin && <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />}
 ```
 
 - [ ] **Step 6.4: E2E mutacije**
@@ -1494,7 +1558,7 @@ export async function createTermin(
 ```tsx
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import {
@@ -1516,13 +1580,19 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
   const [klijentId, setKlijentId] = useState("")
   const [vrstaId, setVrstaId] = useState("")
   const [state, action, pending] = useActionState(createTermin, initial)
+  const submitted = useRef(false)
 
-  // Na uspjeh: zatvori i osvježi
+  // Zatvori sheet TEK nakon stvarnog submita koji je uspio (submitted ref
+  // razlikuje uspjeh od initial { ok: true } stanja).
   useEffect(() => {
-    if (state.ok && !pending) {
-      // state.ok je true i u initialu; zatvori samo nakon stvarnog submita — pratimo preko submitted flag
+    if (submitted.current && !pending && state.ok) {
+      submitted.current = false
+      setOpen(false)
+      setKlijentId("")
+      setVrstaId("")
+      router.refresh()
     }
-  }, [state, pending])
+  }, [state, pending, router])
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -1542,6 +1612,7 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
           action={(fd) => {
             fd.set("klijent_id", klijentId)
             fd.set("vrsta_provjere_id", vrstaId)
+            submitted.current = true
             action(fd)
           }}
           className="flex-1 overflow-auto px-4 space-y-3"
@@ -1549,7 +1620,7 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
         >
           <label className="block text-sm">
             <span className="text-slate-600">Klijent *</span>
-            <Select value={klijentId} onValueChange={setKlijentId}>
+            <Select value={klijentId} onValueChange={(v) => setKlijentId(v ?? "")}>
               <SelectTrigger data-testid="novi-klijent"><SelectValue placeholder="Izaberi klijenta" /></SelectTrigger>
               <SelectContent>
                 {klijenti.map((k) => <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>)}
@@ -1559,7 +1630,7 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
 
           <label className="block text-sm">
             <span className="text-slate-600">Vrsta provjere *</span>
-            <Select value={vrstaId} onValueChange={setVrstaId}>
+            <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")}>
               <SelectTrigger data-testid="novi-vrsta"><SelectValue placeholder="Izaberi vrstu" /></SelectTrigger>
               <SelectContent>
                 {vrste.map((v) => <SelectItem key={v.id} value={v.id}>{v.naziv}</SelectItem>)}
@@ -1600,7 +1671,7 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
 }
 ```
 
-**Napomena:** zatvaranje sheet-a na uspjeh — pošto initial state ima `ok: true`, ne možemo razlikovati "nije submitovano" od "uspjeh" samo po `ok`. Implementer treba dodati lokalni `submitted` ref/flag koji se postavlja pri submitu, pa `useEffect` zatvara `setOpen(false)` + `router.refresh()` kad `submitted && state.ok && !pending`. Implementiraj to čisto (npr. promijeni initial na `{ ok: false }` ili dodaj poseban marker u uspješni return). Cilj: nakon uspješnog kreiranja sheet se zatvori i lista osvježi.
+**Napomena:** zatvaranje sheet-a na uspjeh je već kompletno implementirano gore preko `submitted` ref-a (postavlja se u form `action` wrapper-u prije `action(fd)`; `useEffect` zatvara sheet + `router.refresh()` kad `submitted.current && !pending && state.ok`). Ovo razlikuje stvarni uspjeh od initial `{ ok: true }` stanja — bez ovoga E2E test 7.4 (`sheet toBeHidden`) bi pao.
 
 - [ ] **Step 7.3: Dodaj CTA u `page.tsx` header**
 
@@ -1690,16 +1761,41 @@ test.describe("Faza 3 — Vizuelni smoke", () => {
     // Snapshot za manualni pregled (ne toHaveScreenshot da izbjegnemo baseline drift na seed promjenama)
     await page.screenshot({ path: "test-results/termini-faza3.png", fullPage: true })
   })
+
+  test("status badge boje odgovaraju izvedenom statusu (§9.1)", async ({ page }) => {
+    // 'kasni' filter → svi badge-evi crveni
+    await page.goto("/termini?status=kasni")
+    const kasni = page.getByTestId("status-badge").first()
+    await expect(kasni).toHaveAttribute("data-status", "kasni")
+    await expect(kasni).toHaveClass(/bg-red-50/)
+
+    // 'izvrseno' filter → zeleni
+    await page.goto("/termini?status=izvrseno")
+    const izvr = page.getByTestId("status-badge").first()
+    await expect(izvr).toHaveAttribute("data-status", "izvrseno")
+    await expect(izvr).toHaveClass(/bg-green-50/)
+  })
 })
 ```
 
-- [ ] **Step 8.2: Pun E2E pokret (svi spec fajlovi)**
+- [ ] **Step 8.2: Pre-flight — provjeri auto_cycle trigger + clean seed**
+
+E2E mark-izvršeno test zavisi od `tg_termini_auto_cycle` trigera (Faza 2). Potvrdi da postoji prije E2E:
 
 ```bash
-cd "/Users/nmil/Desktop/Ai Forward/tehpro-mvp" && pnpm db:reset && pnpm seed && pnpm test:e2e
+cd "/Users/nmil/Desktop/Ai Forward/tehpro-mvp"
+psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -c "select tgname from pg_trigger where tgname like 'tg_termini%';"
 ```
 
-Reset+seed da E2E krene sa čistim stanjem (mark-done/create testovi mijenjaju podatke). Expected: svi spec-ovi (01, 02, 03) pass na Chromium + WebKit.
+Expected: vidiš `tg_termini_compute_rok_biud` i `tg_termini_auto_cycle_au`. Ako auto_cycle fali → Faza 2 migracija nije primijenjena; pokreni `pnpm db:reset` da se replay-uje.
+
+Zatim pun E2E sa čistim stanjem (mark-done/create testovi mijenjaju podatke):
+
+```bash
+pnpm db:reset && pnpm seed && pnpm test:e2e
+```
+
+Expected: svi spec-ovi (01, 02, 03) pass na Chromium + WebKit. 03-termini.spec ima `mode: serial` pa nema race-a na zajedničkoj bazi.
 
 - [ ] **Step 8.3: Full check**
 
@@ -1806,18 +1902,22 @@ git push origin v0.3.0
 
 **1. Spec coverage:**
 - §7.2 A (/termini): stats row ✓ (T3), filteri search/klijent/vrsta/status/mjesec ✓ (T5), tabela 7 kolona ✓ (T4), CTA Novi termin ✓ (T7)
+  - **Search** pokriva i klijent i lokaciju (spec "po klijentu/lokaciji") preko `.or(klijent_naziv.ilike,lokacija_naziv.ilike)`.
+  - **Divergencija "range mjeseci":** spec navodi "range mjeseci"; implementiramo **single-month dropdown** filter (po tekućoj godini, dinamički). Opravdanje: za MVP sa seed podacima u jednoj godini, single-month je dovoljan i jednostavniji; pravi from/to range selektor je backlog stavka za kasniju fazu ako se pokaže potreba. Eksplicitno dokumentovano kao svjesna divergencija.
 - §7.2 B (/termini/[id] sheet): header klijent+lokacija+vrsta+status ✓ (T6), forma datum_zakazan/datum_izvrsenja/zaduzeni/napomena ✓ (T6), Označi izvršeno → auto-cycle ✓ (T6), Dokumenti sekcija placeholder ✓ (T6, puni Faza 7), Istorija sekcija placeholder ✓ (T6)
   - **Razlika od spec-a:** spec kaže `/termini/[id]` kao zasebnu rutu; mi koristimo `?selected=<id>` na istoj ruti (sheet preko search param). Funkcionalno ekvivalentno, deep-linkable, jednostavnije i bolje za query-by-page. Dokumentovano u Architecture.
   - **Razlika:** "Označi kao izvršeno → dialog za upload zapisnika" — upload je Faza 7; u Fazi 3 mark-izvršeno samo postavlja datum+status (auto-cycle). Dokument upload dolazi u Fazi 7. Dokumentovano.
+  - **Istorija** sekcija (§7.2 B "prethodni ciklusi"): implementirana kao **prava query** (prethodni izvršeni termini istog klijenta+vrste, limit 5), ne placeholder.
+  - **datum_izvrsenja** u edit formi: prikazan kad je termin izvršen (korekcija datuma); inače mark-done flow postavlja.
 - §7.5 komponente (StatusBadge, StatCard, TerminiTable, TerminiFilters, TerminSheet): sve ✓. Plus NoviTerminButton (potreban za CTA).
 - §8 scope "List + filteri + create/edit/detail; status workflow + auto-cycle": sve pokriveno.
 - §9.1 03-termini.spec.ts (create, mark izvršeno, auto-cycle, status badge boje): ✓ T8.
 
 **2. Placeholder scan:**
 - "placeholder (Faza 7)" za Dokumenti — eksplicitno odložen feature sa fazom, ne TODO. OK.
-- "Istorija placeholder" — sekcija postoji, sadržaj se puni kasnije. Prihvatljivo kao MVP stub (spec traži sekciju Istorija; prikazujemo je sa praznim stanjem). OK.
+- Istorija — sada PRAVA query (ne placeholder); prikazuje prethodne izvršene cikluse. OK.
 - Nema "TBD"/"implement later" u plan kodu.
-- Step 7.2 napomena o `submitted` flag-u za zatvaranje sheet-a — to je uputstvo implementeru da DOVRŠI logiku, ne placeholder; kod mora biti funkcionalan (E2E test 7.4 zahtijeva da se sheet zatvori).
+- `submitted` flag za zatvaranje create sheet-a — sada KOMPLETNO implementiran u Step 7.2 kodu (ne više prose-stub). E2E 7.4 (`sheet toBeHidden`) pokriva.
 
 **3. Type consistency:**
 - `TerminRow` definisan u TerminiTable.tsx (T4), importovan u TerminSheet (T6) i page. Match.

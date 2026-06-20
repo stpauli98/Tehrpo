@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { StatCard } from "@/components/domain/StatCard"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
+import { TerminSheet } from "@/components/domain/TerminSheet"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { monthRange, currentYear } from "@/lib/date"
@@ -81,6 +82,41 @@ export default async function TerminiPage({
     )
   ).toString()
 
+  // TerminSheet — otvara se kad ?selected=<id>
+  const selectedId = typeof sp.selected === "string" ? sp.selected : null
+  let selectedTermin: TerminRow | null =
+    selectedId ? rows.find((r) => r.id === selectedId) ?? null : null
+
+  // Fallback fetch ako selected nije na trenutnoj stranici/filteru
+  if (selectedId && !selectedTermin) {
+    const { data } = await supabase
+      .from("termini_view")
+      .select("*")
+      .eq("id", selectedId)
+      .maybeSingle()
+    selectedTermin = (data as TerminRow | null) ?? null
+  }
+
+  // Istorija — prethodni izvršeni ciklusi istog klijenta + vrste (samo kad je sheet otvoren)
+  let istorija: TerminRow[] = []
+  if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
+    const { data } = await supabase
+      .from("termini_view")
+      .select("*")
+      .eq("klijent_id", selectedTermin.klijent_id)
+      .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
+      .eq("status", "izvrseno")
+      .neq("id", selectedTermin.id ?? "")
+      .order("datum_izvrsenja", { ascending: false })
+      .limit(5)
+    istorija = (data ?? []) as TerminRow[]
+  }
+
+  // closeHref = trenutni URL bez "selected"
+  const closeParams = new URLSearchParams(currentSearch)
+  closeParams.delete("selected")
+  const closeHref = `/termini${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+
   const pageHref = (p: number) => {
     const params = new URLSearchParams(currentSearch)
     params.set("page", String(p))
@@ -128,6 +164,10 @@ export default async function TerminiPage({
           )}
         </div>
       </div>
+
+      {selectedTermin && (
+        <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />
+      )}
     </div>
   )
 }

@@ -336,48 +336,18 @@ export type Database = {
           id: string | null
           interval_mjeseci: number | null
           klijent_id: string | null
+          klijent_naziv: string | null
+          lokacija_grad: string | null
           lokacija_id: string | null
+          lokacija_naziv: string | null
           napomena: string | null
           rok_dospijeca: string | null
           status: Database["public"]["Enums"]["termini_status"] | null
           status_izvedeni: string | null
           updated_at: string | null
+          vrsta_naziv: string | null
           vrsta_provjere_id: string | null
           zaduzeni: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          datum_izvrsenja?: string | null
-          datum_zadnjeg?: string | null
-          datum_zakazan?: string | null
-          id?: string | null
-          interval_mjeseci?: number | null
-          klijent_id?: string | null
-          lokacija_id?: string | null
-          napomena?: string | null
-          rok_dospijeca?: string | null
-          status?: Database["public"]["Enums"]["termini_status"] | null
-          status_izvedeni?: never
-          updated_at?: string | null
-          vrsta_provjere_id?: string | null
-          zaduzeni?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          datum_izvrsenja?: string | null
-          datum_zadnjeg?: string | null
-          datum_zakazan?: string | null
-          id?: string | null
-          interval_mjeseci?: number | null
-          klijent_id?: string | null
-          lokacija_id?: string | null
-          napomena?: string | null
-          rok_dospijeca?: string | null
-          status?: Database["public"]["Enums"]["termini_status"] | null
-          status_izvedeni?: never
-          updated_at?: string | null
-          vrsta_provjere_id?: string | null
-          zaduzeni?: string | null
         }
         Relationships: [
           {
@@ -405,6 +375,15 @@ export type Database = {
       }
     }
     Functions: {
+      get_termini_stats: {
+        Args: never
+        Returns: {
+          izvrseno_ovog_mjeseca: number
+          kasni: number
+          ovog_mjeseca: number
+          ukupno: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

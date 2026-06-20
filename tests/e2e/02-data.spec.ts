@@ -3,15 +3,11 @@ import { test, expect } from "@playwright/test"
 test.describe("Faza 2 data layer", () => {
   test("Termini stranica prikazuje broj termina > 0 (seed primijenjen)", async ({ page }) => {
     await page.goto("/termini")
-    const countEl = page.getByTestId("termini-count")
-    await expect(countEl).toBeVisible()
+    const ukupnoEl = page.getByTestId("stat-ukupno-value")
+    await expect(ukupnoEl).toBeVisible()
 
-    const text = await countEl.textContent()
-    expect(text).toMatch(/Termina u bazi:\s*\d+/)
-
-    // Ekstrahuj broj i potvrdi > 0
-    const match = text?.match(/Termina u bazi:\s*(\d+)/)
-    const count = match ? Number(match[1]) : 0
+    const text = await ukupnoEl.textContent()
+    const count = Number(text ?? "0")
     expect(count).toBeGreaterThan(0)
   })
 

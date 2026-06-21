@@ -112,3 +112,22 @@ test.describe("Faza 5 — Mjesečni plan", () => {
     await expect(page.getByTestId("plan-nav-label")).toContainText("2025")
   })
 })
+
+test.describe("Faza 5 — Vizuelni smoke", () => {
+  test("prikaz screenshot", async ({ page }) => {
+    await page.goto("/prikaz")
+    await page.getByTestId("prikaz-klijent").click()
+    const opt = page.getByRole("option", { name: /WAIKIKI BANJA LUKA - DELTA/ })
+    if (await opt.count()) await opt.click(); else await page.getByRole("option").first().click()
+    await page.waitForURL(/klijent=/)
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+    await page.screenshot({ path: "test-results/prikaz-faza5.png", fullPage: true })
+  })
+  test("plan screenshot", async ({ page }) => {
+    await page.goto("/plan?godina=2026&mjesec=7")
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByTestId("plan-grid")).toBeVisible()
+    await page.screenshot({ path: "test-results/plan-faza5.png", fullPage: true })
+  })
+})

@@ -60,8 +60,11 @@ export function TerminSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-auto px-4 space-y-6">
-          {/* Edit forma */}
-          <form action={updateAction} className="space-y-3" data-testid="termin-edit-form">
+          {/* Edit forma — key={termin.id} remountuje uncontrolled Input-e kad se promijeni
+              odabrani termin, pa base-ui FieldControl re-inicijalizuje defaultValue
+              (inače: dev warning "changing the default value state of an uncontrolled
+              FieldControl" + zastarjele vrijednosti u poljima pri prebacivanju termina) */}
+          <form key={termin.id} action={updateAction} className="space-y-3" data-testid="termin-edit-form">
             <input type="hidden" name="id" value={termin.id ?? ""} />
             <label className="block text-sm">
               <span className="text-slate-600">Datum zakazan</span>

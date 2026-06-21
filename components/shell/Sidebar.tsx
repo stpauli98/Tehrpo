@@ -9,6 +9,7 @@ import {
   Users,
   Bot,
   FileText,
+  Settings,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/klijenti", label: "Klijenti", icon: Users },
   { href: "/asistent", label: "Asistent", icon: Bot },
   { href: "/pregled",  label: "Pregled",  icon: FileText },
+  { href: "/postavke", label: "Postavke", icon: Settings },
 ] as const
 
 export function Sidebar() {

@@ -32,3 +32,19 @@ test.describe("Faza 5 — Prikaz chart i toolbar", () => {
     expect(errors, errors.join("\n")).toHaveLength(0)
   })
 })
+
+test.describe("Faza 5 — Matrix grid", () => {
+  test("matrica prikazuje vrste (redove) i 12 mjeseci (kolone)", async ({ page }) => {
+    await page.goto("/prikaz")
+    await page.getByTestId("prikaz-klijent").click()
+    // izaberi WAIKIKI DELTA (najviše podataka) — ili prvi
+    const opt = page.getByRole("option", { name: /WAIKIKI BANJA LUKA - DELTA/ })
+    if (await opt.count()) await opt.click(); else await page.getByRole("option").first().click()
+    await page.waitForURL(/klijent=/)
+    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+    await expect(page.getByRole("columnheader", { name: "Vrsta pregleda / ispitivanja" })).toBeVisible()
+    expect(await page.getByTestId("matrix-row").count()).toBeGreaterThan(0)
+    // bar jedna popunjena ćelija sa statusom
+    await expect(page.getByTestId("matrix-cell-filled").first()).toBeVisible()
+  })
+})

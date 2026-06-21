@@ -33,7 +33,7 @@ async function main() {
 
   const parsed = await parseTehproExcel(EXCEL_PATH)
 
-  console.log(`   ${parsed.klijenti.length} klijenata`)
+  console.log(`   ${parsed.firme.length} firmi`)
   console.log(`   ${parsed.vrste.length} vrsta provjera`)
   console.log(`   ${parsed.termini.length} termina`)
   console.log(`   ${parsed.skipped.length} skipped rows`)
@@ -48,8 +48,10 @@ async function main() {
   const supabase = createAdminSupabaseClient()
 
   // ── 1) Upsert klijenti ────────────────────────────────────────────────────
-  console.log("\n💾 Upserting klijenti...")
-  const klijentiRows = parsed.klijenti.map(naziv => ({ naziv }))
+  // NOTE: Task 3 (seed rewrite) will handle firma→klijent mapping properly.
+  // This is a temporary stub that compiles until Task 3 rewrites this script.
+  console.log("\n💾 Upserting klijenti (stub — see Task 3 for full firma/lokacija seed)...")
+  const klijentiRows = parsed.firme.map((naziv: string) => ({ naziv }))
   const { data: klijenti, error: kErr } = await supabase
     .from("klijenti")
     .upsert(klijentiRows, { onConflict: "naziv", ignoreDuplicates: false })
@@ -86,10 +88,10 @@ async function main() {
     | { klijent_id: string; vrsta_provjere_id: string; datum_zakazan: string; rok_dospijeca: string; status: "planirano" }
 
   const terminiRows = parsed.termini.flatMap<TerminRow>(t => {
-    const klijentId = klijentiMap.get(t.klijent_naziv)
+    const klijentId = klijentiMap.get(t.firma_naziv)
     const vrstaId = vrsteMap.get(t.vrsta_naziv)
     if (!klijentId || !vrstaId) {
-      skippedFK.push(`${t.klijent_naziv} / ${t.vrsta_naziv}`)
+      skippedFK.push(`${t.firma_naziv} / ${t.vrsta_naziv}`)
       return []
     }
 
@@ -138,7 +140,7 @@ async function main() {
   console.log(`   ✅ ${inserted} termina insertovano`)
 
   console.log("\n✅ Seed gotov.")
-  console.log(`   Klijenti: ${klijentiMap.size} | Vrste: ${vrsteMap.size} | Termini: ${inserted} | Skipped Excel: ${parsed.skipped.length}`)
+  console.log(`   Firme: ${klijentiMap.size} | Vrste: ${vrsteMap.size} | Termini: ${inserted} | Skipped Excel: ${parsed.skipped.length}`)
 }
 
 main().catch(err => {

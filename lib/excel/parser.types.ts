@@ -1,7 +1,8 @@
 export type Izvor = "izvrseno" | "planirano"
 
 export type ParsedTermin = {
-  klijent_naziv: string
+  firma_naziv: string
+  lokacija_naziv: string | null
   vrsta_naziv: string
   sheet_naziv: string
   datum: string // ISO "YYYY-MM-DD"
@@ -9,10 +10,11 @@ export type ParsedTermin = {
 }
 
 export type ParseResult = {
+  firme: string[]      // jedinstveni kanonski nazivi firmi
+  lokacije: { firma_naziv: string; lokacija_naziv: string }[] // dedup pari
+  vrste: string[]      // jedinstveni nazivi vrsta pregleda
   termini: ParsedTermin[]
-  klijenti: string[]   // jedinstveni nazivi
-  vrste: string[]      // jedinstveni nazivi
-  skipped: SkippedRow[] // za debugging
+  skipped: SkippedRow[]
 }
 
 export type SkippedRow = {

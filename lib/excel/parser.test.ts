@@ -1,66 +1,123 @@
 import { describe, it, expect } from "vitest"
-import { parseTehproExcel } from "./parser"
-import { fileURLToPath } from "node:url"
+import { canonicalizeNaziv, splitFirmaLokacija, parseStringDate, parseTehproExcel, POZNATE_FIRME } from "./parser"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const FIXTURE = path.join(__dirname, "../../tests/fixtures/tehpro-mini.xlsx")
 
-describe("parseTehproExcel", () => {
-  it("parsira fixture sa 2 klijenta i 3 vrste pregleda", async () => {
-    const result = await parseTehproExcel(FIXTURE)
-
-    // 2 klijenta detektovana
-    expect(result.klijenti).toEqual(["KLIJENT A", "KLIJENT B"])
-
-    // 3 vrste (4. je prazna, 6. nema datuma ali se računa u vrstama)
-    expect(result.vrste).toContain("Vrsta jedan")
-    expect(result.vrste).toContain("Vrsta dva (podkategorija)")
-    expect(result.vrste).toContain("Vrsta tri")
+// ---------------------------------------------------------------------------
+// canonicalizeNaziv
+// ---------------------------------------------------------------------------
+describe("canonicalizeNaziv", () => {
+  it("uppercase, kolaps razmaka, skida završnu tačku", () => {
+    expect(canonicalizeNaziv("  Ekonomski   institut. ")).toBe("EKONOMSKI INSTITUT")
   })
-
-  it("ekstrahuje 3 termina iz fixture-a", async () => {
-    const result = await parseTehproExcel(FIXTURE)
-    expect(result.termini).toHaveLength(3)
+  it("normalizuje razmake oko crtice", () => {
+    expect(canonicalizeNaziv("NEW YORKER-Doboj")).toBe("NEW YORKER - DOBOJ")
+    expect(canonicalizeNaziv("WAIKIKI  -  ZVORNIK")).toBe("WAIKIKI - ZVORNIK")
   })
+})
 
-  it("mapira izvrseno vs planirano kolonu pravilno", async () => {
-    const result = await parseTehproExcel(FIXTURE)
-
-    const a = result.termini.find(
-      (t) => t.klijent_naziv === "KLIJENT A" && t.vrsta_naziv === "Vrsta jedan"
-    )
-    expect(a).toEqual({
-      klijent_naziv: "KLIJENT A",
-      vrsta_naziv: "Vrsta jedan",
-      sheet_naziv: "TestMjesec",
-      datum: "2026-01-15",
-      izvor: "izvrseno",
-    })
-
-    const b = result.termini.find(
-      (t) => t.klijent_naziv === "KLIJENT B" && t.vrsta_naziv === "Vrsta jedan"
-    )
-    expect(b?.izvor).toBe("planirano")
-    expect(b?.datum).toBe("2026-02-20")
+// ---------------------------------------------------------------------------
+// splitFirmaLokacija
+// ---------------------------------------------------------------------------
+describe("splitFirmaLokacija", () => {
+  it("WAIKIKI BANJA LUKA - DELTA → firma WAIKIKI, lok 'Banja Luka - Delta'", () => {
+    const r = splitFirmaLokacija("WAIKIKI BANJA LUKA - DELTA")
+    expect(r.firma).toBe("WAIKIKI")
+    expect(r.lokacija?.toUpperCase()).toBe("BANJA LUKA - DELTA")
   })
-
-  it("normalizuje multiline vrsta naziv u jednu liniju", async () => {
-    const result = await parseTehproExcel(FIXTURE)
-    const vrstaDva = result.termini.find(
-      (t) => t.klijent_naziv === "KLIJENT A" && t.vrsta_naziv.startsWith("Vrsta dva")
-    )
-    expect(vrstaDva?.vrsta_naziv).toBe("Vrsta dva (podkategorija)")
-    expect(vrstaDva?.izvor).toBe("planirano")
-    expect(vrstaDva?.datum).toBe("2026-03-10")
+  it("NEW YORKER - Doboj → firma 'NEW YORKER', lok 'Doboj'", () => {
+    const r = splitFirmaLokacija("NEW YORKER - Doboj")
+    expect(r.firma).toBe("NEW YORKER")
+    expect(r.lokacija?.toUpperCase()).toBe("DOBOJ")
   })
+  it("MARKET AS - PJ 20 → firma 'MARKET AS' (NE 'AS'), lok 'PJ 20'", () => {
+    expect(splitFirmaLokacija("MARKET AS - PJ 20").firma).toBe("MARKET AS")
+  })
+  it("AS → firma AS, lok null", () => {
+    expect(splitFirmaLokacija("AS")).toEqual({ firma: "AS", lokacija: null })
+  })
+  it("CARMEUSE → firma CARMEUSE, lok null", () => {
+    expect(splitFirmaLokacija("CARMEUSE")).toEqual({ firma: "CARMEUSE", lokacija: null })
+  })
+  it("TRANSFERA varijante → jedna firma, 3 kanonske lokacije", () => {
+    expect(splitFirmaLokacija("TRANSFERA RS")).toEqual({ firma: "TRANSFERA", lokacija: "RS" })
+    // skladište: sa i bez crtice/case → ista lokacija
+    expect(splitFirmaLokacija("TRANSFERA FBiH - skladište").lokacija).toBe("FBiH - skladište")
+    expect(splitFirmaLokacija("TRANSFERA FBIH skladište").lokacija).toBe("FBiH - skladište")
+    expect(splitFirmaLokacija("TRANSFERA FBIH SKLADIŠTE").lokacija).toBe("FBiH - skladište")
+    // kancelarija: gola i FBIH varijanta → ista lokacija
+    expect(splitFirmaLokacija("TRANSFERA FBiH - kancelarija").lokacija).toBe("FBiH - kancelarija")
+    expect(splitFirmaLokacija("TRANSFERA kancelarija").lokacija).toBe("FBiH - kancelarija")
+  })
+  it("invarijanta: nijedan POZNATE_FIRME unos nije ' '-prefiks drugog", () => {
+    for (const a of POZNATE_FIRME) for (const b of POZNATE_FIRME) {
+      if (a !== b) expect(b.startsWith(a + " ")).toBe(false)
+    }
+  })
+})
 
-  it("ne emit-uje termin za prazne ćelije", async () => {
-    const result = await parseTehproExcel(FIXTURE)
-    // Vrsta tri nema datuma u fixture-u → 0 termina
-    const tri = result.termini.filter((t) => t.vrsta_naziv === "Vrsta tri")
-    expect(tri).toHaveLength(0)
+// ---------------------------------------------------------------------------
+// parseStringDate (range + obični)
+// ---------------------------------------------------------------------------
+describe("parseStringDate (range)", () => {
+  it("'21.-22.01.2026.' → početni 2026-01-21", () => {
+    expect(parseStringDate("21.-22.01.2026.")).toBe("2026-01-21")
+  })
+  it("'21.01.-22.01.2026.' → 2026-01-21", () => {
+    expect(parseStringDate("21.01.-22.01.2026.")).toBe("2026-01-21")
+  })
+  it("obična '20.01.2026.' i dalje radi", () => {
+    expect(parseStringDate("20.01.2026.")).toBe("2026-01-20")
+  })
+  it("datum + tekst iza → vodeći datum", () => {
+    expect(parseStringDate("25.06.2026. servis")).toBe("2026-06-25")
+  })
+  it("'03-04.04.2026.' → 2026-04-03 (crtica bez tačke)", () => {
+    expect(parseStringDate("03-04.04.2026.")).toBe("2026-04-03")
+  })
+  it("ISO se prihvata", () => {
+    expect(parseStringDate("2026-03-15")).toBe("2026-03-15")
+  })
+  it("neprepoznatljiv tekst → null", () => {
+    expect(parseStringDate("maj 2026.")).toBeNull()
+    expect(parseStringDate("")).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// parseTehproExcel — dvoblokovni fixture test
+// ---------------------------------------------------------------------------
+describe("parseTehproExcel (dvoblokovni fixture)", () => {
+  it("razdvaja Block1 (vrste) i Block2 (OBILASCI: planirano 2-3, izvrseno 4-5), izbacuje 'po ugovoru'", async () => {
+    const res = await parseTehproExcel(FIXTURE)
+
+    // firme
+    expect(res.firme).toContain("WAIKIKI")
+    expect(res.firme).toContain("CARMEUSE")
+    expect(res.firme).toContain("NEW YORKER")
+    expect(res.firme).not.toContain("PO UGOVORU")
+
+    // vrste: samo tipovi pregleda + Obilazak, NIKAD firma naziv
+    expect(res.vrste).toContain("Obilazak")
+    expect(res.vrste).toContain("Servis PP aparata")
+    expect(res.vrste).not.toContain("NEW YORKER")
+    expect(res.vrste).not.toContain("WAIKIKI")
+
+    // OBILASCI termini za NEW YORKER - Doboj
+    const obs = res.termini.filter(t => t.vrsta_naziv === "Obilazak")
+    const plan = obs.find(t => t.izvor === "planirano")
+    const izvr = obs.find(t => t.izvor === "izvrseno")
+    expect(plan?.firma_naziv).toBe("NEW YORKER")
+    expect(plan?.lokacija_naziv?.toUpperCase()).toBe("DOBOJ")
+    expect(plan?.datum).toBe("2026-01-21")
+    expect(izvr?.datum).toBe("2026-01-15")
+
+    // lokacije: WAIKIKI ZVORNIK
+    expect(res.lokacije.some(l => l.firma_naziv === "WAIKIKI" && /ZVORNIK/i.test(l.lokacija_naziv ?? ""))).toBe(true)
   })
 })

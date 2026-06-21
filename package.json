@@ -14,7 +14,8 @@
     "test:e2e:ui": "playwright test --ui",
     "db:types": "supabase gen types typescript --local 2>/dev/null > db/types.ts",
     "db:reset": "supabase db reset",
-    "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts",
+    "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

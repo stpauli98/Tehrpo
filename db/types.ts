@@ -115,6 +115,7 @@ export type Database = {
           id: string
           napomena: string | null
           naziv: string
+          podsjetnik_emails: string[]
           updated_at: string
         }
         Insert: {
@@ -122,6 +123,7 @@ export type Database = {
           id?: string
           napomena?: string | null
           naziv: string
+          podsjetnik_emails?: string[]
           updated_at?: string
         }
         Update: {
@@ -129,6 +131,7 @@ export type Database = {
           id?: string
           napomena?: string | null
           naziv?: string
+          podsjetnik_emails?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -228,6 +231,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      postavke: {
+        Row: {
+          dana_prije: number[]
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          dana_prije?: number[]
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          dana_prije?: number[]
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       termini: {
         Row: {
@@ -411,6 +432,19 @@ export type Database = {
       }
     }
     Functions: {
+      get_due_podsjetnici: {
+        Args: { dana_prije_arr: number[] }
+        Returns: {
+          dana_prije: number
+          klijent_naziv: string
+          lokacija_kontakt_email: string
+          lokacija_naziv: string
+          podsjetnik_emails: string[]
+          rok_dospijeca: string
+          termin_id: string
+          vrsta_naziv: string
+        }[]
+      }
       get_opterecenje: {
         Args: { godina: number }
         Returns: {

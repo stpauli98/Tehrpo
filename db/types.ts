@@ -411,6 +411,16 @@ export type Database = {
       }
     }
     Functions: {
+      get_opterecenje: {
+        Args: { godina: number }
+        Returns: {
+          izvrseno: number
+          kasni: number
+          mjesec: number
+          u_planu: number
+          ukupno: number
+        }[]
+      }
       get_termini_stats: {
         Args: never
         Returns: {

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentCard, type KlijentRow } from "@/components/domain/KlijentCard"
 import { KlijentiSearch } from "@/components/domain/KlijentiSearch"
+import { NoviKlijentButton } from "@/components/domain/NoviKlijentButton"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -50,7 +51,10 @@ export default async function KlijentiPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Klijenti</h1>
-        <KlijentiSearch />
+        <div className="flex items-center gap-3">
+          <KlijentiSearch />
+          <NoviKlijentButton />
+        </div>
       </div>
 
       {rows.length === 0 ? (

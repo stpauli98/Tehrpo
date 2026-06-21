@@ -42,3 +42,18 @@ test.describe("Faza 4 — Klijenti lista", () => {
     expect(errors, errors.join("\n")).toHaveLength(0)
   })
 })
+
+test.describe("Faza 4 — Novi klijent", () => {
+  test("kreira klijenta koji se pojavi u listi", async ({ page }) => {
+    const naziv = "E2E Test Klijent " + Date.now()
+    await page.goto("/klijenti")
+    const before = Number((await page.getByTestId("klijenti-total").textContent())?.match(/\d+/)?.[0] ?? "0")
+    await page.getByTestId("novi-klijent-btn").click()
+    await expect(page.getByTestId("novi-klijent-sheet")).toBeVisible()
+    await page.getByTestId("novi-klijent-naziv").fill(naziv)
+    await page.getByTestId("novi-klijent-submit").click()
+    await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden({ timeout: 5000 })
+    const after = Number((await page.getByTestId("klijenti-total").textContent())?.match(/\d+/)?.[0] ?? "0")
+    expect(after).toBe(before + 1)
+  })
+})

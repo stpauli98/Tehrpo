@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { parseEmailList } from "@/lib/reminders/recipients"
 import type { Database } from "@/db/types"
 
 type LokacijeUpdate = Database["public"]["Tables"]["lokacije"]["Update"]
@@ -50,6 +51,7 @@ const updateKlijentSchema = z.object({
   id: z.string().uuid(),
   naziv: z.string().min(1, "Naziv je obavezan").max(200).optional(),
   napomena: optionalText(2000),
+  podsjetnik_emails: z.string().max(2000).optional(),
 })
 
 export async function updateKlijent(
@@ -62,6 +64,9 @@ export async function updateKlijent(
   const patch: KlijentiUpdate = { updated_at: new Date().toISOString() }
   if (formData.has("naziv") && f.naziv) patch.naziv = f.naziv
   if (formData.has("napomena")) patch.napomena = f.napomena ?? null
+  if (formData.has("podsjetnik_emails")) {
+    patch.podsjetnik_emails = parseEmailList(f.podsjetnik_emails ?? "")
+  }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijenti").update(patch).eq("id", id)
   if (error) {

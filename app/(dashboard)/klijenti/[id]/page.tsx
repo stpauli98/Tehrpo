@@ -28,11 +28,13 @@ export default async function KlijentDetailPage({
 
   const supabase = await createServerSupabaseClient()
   // Čitamo iz klijenti_view OD POČETKA (daje naziv/napomena + broj_termina za T6 delete guard).
-  // 3 paralelna fetch-a = fan-out, nije N+1.
-  const [klijentRes, terminiRes, lokacijeRes] = await Promise.all([
+  // klijenti_view ne izlaže podsjetnik_emails, pa dodajemo 4. fetch direktno iz klijenti tabele.
+  // 4 paralelna fetch-a = fan-out, nije N+1.
+  const [klijentRes, terminiRes, lokacijeRes, primaociRes] = await Promise.all([
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("termini_view").select("*").eq("klijent_id", id).order("rok_dospijeca", { ascending: true }),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
+    supabase.from("klijenti").select("podsjetnik_emails").eq("id", id).maybeSingle(),
   ])
 
   const klijent = klijentRes.data
@@ -60,7 +62,12 @@ export default async function KlijentDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <KlijentEditForm
-            klijent={{ id: klijent.id, naziv: klijent.naziv, napomena: klijent.napomena ?? null }}
+            klijent={{
+              id: klijent.id,
+              naziv: klijent.naziv,
+              napomena: klijent.napomena ?? null,
+              podsjetnik_emails: primaociRes.data?.podsjetnik_emails ?? [],
+            }}
           />
           <ObrisiKlijentButton klijentId={klijent.id} brojTermina={klijent.broj_termina ?? 0} />
         </div>

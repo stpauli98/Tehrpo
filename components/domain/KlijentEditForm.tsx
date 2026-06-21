@@ -18,12 +18,12 @@ import { updateKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/act
 
 const initial: ActionResult = { ok: true }
 
-// Minimalni prop type — edit forma treba samo id/naziv/napomena (ne created_at/updated_at),
+// Minimalni prop type — edit forma treba samo id/naziv/napomena/podsjetnik_emails (ne created_at/updated_at),
 // pa nema rekonstrukcije iz nullable klijenti_view sa `!` asercijama.
 export function KlijentEditForm({
   klijent,
 }: {
-  klijent: { id: string; naziv: string; napomena: string | null }
+  klijent: { id: string; naziv: string; napomena: string | null; podsjetnik_emails: string[] }
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -83,6 +83,16 @@ export function KlijentEditForm({
               name="napomena"
               defaultValue={klijent.napomena ?? ""}
               data-testid="edit-klijent-napomena"
+            />
+          </label>
+
+          <label className="block text-sm">
+            <span className="text-slate-600">Primaoci podsjetnika (email, odvojeni zarezom)</span>
+            <Input
+              name="podsjetnik_emails"
+              defaultValue={klijent.podsjetnik_emails.join(", ")}
+              placeholder="npr. sef@firma.com, tehnicar@firma.com"
+              data-testid="edit-klijent-primaoci"
             />
           </label>
 

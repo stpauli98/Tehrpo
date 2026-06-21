@@ -70,6 +70,40 @@ test.describe("Faza 4 — Klijent detalji i tabovi", () => {
   })
 })
 
+test.describe("Faza 4 — Lokacije CRUD", () => {
+  test("kreira, uređuje i briše lokaciju", async ({ page }) => {
+    await page.goto("/klijenti?q=WAIK")
+    await page.getByTestId("klijent-card").first().click()
+    await page.waitForURL(/\/klijenti\//)
+    await page.getByRole("tab", { name: "Lokacije" }).click()
+    await page.waitForURL(/tab=lokacije/)
+
+    // create
+    await page.getByTestId("nova-lokacija-btn").click()
+    await expect(page.getByTestId("lokacija-sheet")).toBeVisible()
+    await page.getByTestId("lokacija-naziv").fill("Test Lokacija")
+    await page.getByTestId("lokacija-grad").fill("Banja Luka")
+    await page.getByTestId("lokacija-kontakt_osoba").fill("Marko M.")
+    await page.getByTestId("lokacija-submit").click()
+    await expect(page.getByTestId("lokacija-sheet")).toBeHidden({ timeout: 5000 })
+    await expect(page.getByTestId("lokacije-table")).toContainText("Test Lokacija")
+
+    // edit — promijeni grad
+    const row = page.getByTestId("lokacija-row").filter({ hasText: "Test Lokacija" })
+    await row.getByRole("button", { name: "Uredi" }).click()
+    await expect(page.getByTestId("lokacija-sheet")).toBeVisible()
+    await page.getByTestId("lokacija-grad").fill("Prijedor")
+    await page.getByTestId("lokacija-submit").click()
+    await expect(page.getByTestId("lokacija-sheet")).toBeHidden({ timeout: 5000 })
+    await expect(page.getByTestId("lokacija-row").filter({ hasText: "Test Lokacija" })).toContainText("Prijedor")
+
+    // delete — pozitivna provjera: red sa "Test Lokacija" nestane
+    await row.getByRole("button", { name: "Obriši" }).click()
+    await page.getByTestId("obrisi-lokaciju-potvrdi").click()
+    await expect(page.getByTestId("lokacija-row").filter({ hasText: "Test Lokacija" })).toHaveCount(0)
+  })
+})
+
 test.describe("Faza 4 — Novi klijent", () => {
   test("kreira klijenta koji se pojavi u listi", async ({ page }) => {
     const naziv = "E2E Test Klijent " + Date.now()

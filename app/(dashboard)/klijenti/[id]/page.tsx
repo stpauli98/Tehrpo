@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
+import { LokacijeTab } from "@/components/domain/LokacijeTab"
 import { formatDatum } from "@/lib/date"
 import type { Database } from "@/db/types"
 
@@ -127,14 +128,7 @@ export default async function KlijentDetailPage({
         </div>
       )}
 
-      {tab === "lokacije" && (
-        <div
-          data-testid="tab-lokacije-content"
-          className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500"
-        >
-          Lokacije se popunjavaju u Task 5.
-        </div>
-      )}
+      {tab === "lokacije" && <LokacijeTab klijentId={id} lokacije={lokacije} />}
     </div>
   )
 }

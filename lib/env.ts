@@ -1,13 +1,19 @@
 import { z } from "zod"
 
+const optionalSecret = z
+  .string()
+  .min(1)
+  .optional()
+  .or(z.literal("").transform(() => undefined))
+
 const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  RESEND_API_KEY: z.string().min(1).optional(),
-  EMAIL_FROM: z.string().min(1).optional(),
+  SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
+  RESEND_API_KEY: optionalSecret,
+  EMAIL_FROM: optionalSecret,
   REMINDER_TO: z.string().optional(),
-  CRON_SECRET: z.string().min(1).optional(),
+  CRON_SECRET: optionalSecret,
 })
 
 const parsed = envSchema.safeParse({

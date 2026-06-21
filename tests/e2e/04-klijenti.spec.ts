@@ -118,3 +118,39 @@ test.describe("Faza 4 — Novi klijent", () => {
     expect(after).toBe(before + 1)
   })
 })
+
+test.describe("Faza 4 — Klijent edit i delete", () => {
+  test("uređuje napomenu klijenta", async ({ page }) => {
+    await page.goto("/klijenti?q=WAIK")
+    await page.getByTestId("klijent-card").first().click()
+    await page.waitForURL(/\/klijenti\//)
+    await page.getByTestId("uredi-klijent-btn").click()
+    await expect(page.getByTestId("klijent-edit-sheet")).toBeVisible()
+    await page.getByTestId("edit-klijent-napomena").fill("E2E napomena " + Date.now())
+    await page.getByTestId("edit-klijent-submit").click()
+    await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden({ timeout: 5000 })
+  })
+
+  test("delete je onemogućen za klijenta sa terminima", async ({ page }) => {
+    await page.goto("/klijenti?q=WAIK")
+    await page.getByTestId("klijent-card").first().click()
+    await page.waitForURL(/\/klijenti\//)
+    await expect(page.getByTestId("obrisi-klijent-disabled")).toBeVisible()
+  })
+
+  test("kreiran prazan klijent se može obrisati", async ({ page }) => {
+    const naziv = "Brisivi Klijent " + Date.now()
+    await page.goto("/klijenti")
+    await page.getByTestId("novi-klijent-btn").click()
+    await page.getByTestId("novi-klijent-naziv").fill(naziv)
+    await page.getByTestId("novi-klijent-submit").click()
+    await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden({ timeout: 5000 })
+    await page.goto("/klijenti?q=" + encodeURIComponent("Brisivi"))
+    await page.getByTestId("klijent-card").filter({ hasText: naziv }).first().click()
+    await page.waitForURL(/\/klijenti\//)
+    await page.getByTestId("obrisi-klijent-btn").click()
+    await page.getByTestId("obrisi-klijent-potvrdi").click()
+    await page.waitForURL(/\/klijenti(\?|$)/)
+    await expect(page.getByRole("heading", { name: "Klijenti" })).toBeVisible()
+  })
+})

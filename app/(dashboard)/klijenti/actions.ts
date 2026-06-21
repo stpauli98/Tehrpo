@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import type { Database } from "@/db/types"
 
 type LokacijeUpdate = Database["public"]["Tables"]["lokacije"]["Update"]
+type KlijentiUpdate = Database["public"]["Tables"]["klijenti"]["Update"]
 
 export type ActionResult =
   | { ok: true }
@@ -36,6 +37,56 @@ export async function createKlijent(
     // UNIQUE constraint na naziv → prijateljska poruka
     const msg = /duplicate|unique/i.test(error.message)
       ? "Klijent sa tim nazivom već postoji."
+      : error.message
+    return { ok: false, message: msg }
+  }
+  revalidatePath("/klijenti")
+  return { ok: true }
+}
+
+// ─── Klijent update + delete ───────────────────────────────────────────────
+
+const updateKlijentSchema = z.object({
+  id: z.string().uuid(),
+  naziv: z.string().min(1, "Naziv je obavezan").max(200).optional(),
+  napomena: optionalText(2000),
+})
+
+export async function updateKlijent(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const parsed = updateKlijentSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, ...f } = parsed.data
+  const patch: KlijentiUpdate = { updated_at: new Date().toISOString() }
+  if (formData.has("naziv") && f.naziv) patch.naziv = f.naziv
+  if (formData.has("napomena")) patch.napomena = f.napomena ?? null
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("klijenti").update(patch).eq("id", id)
+  if (error) {
+    const msg = /duplicate|unique/i.test(error.message)
+      ? "Klijent sa tim nazivom već postoji."
+      : error.message
+    return { ok: false, message: msg }
+  }
+  revalidatePath("/klijenti", "layout")
+  return { ok: true }
+}
+
+const deleteKlijentSchema = z.object({ id: z.string().uuid() })
+
+export async function deleteKlijent(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const parsed = deleteKlijentSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("klijenti").delete().eq("id", parsed.data.id)
+  if (error) {
+    const msg = /foreign key|violates|restrict/i.test(error.message)
+      ? "Ne možete obrisati klijenta koji ima termine."
       : error.message
     return { ok: false, message: msg }
   }

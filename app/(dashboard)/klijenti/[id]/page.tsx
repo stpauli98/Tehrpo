@@ -5,6 +5,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { LokacijeTab } from "@/components/domain/LokacijeTab"
+import { KlijentEditForm } from "@/components/domain/KlijentEditForm"
+import { ObrisiKlijentButton } from "@/components/domain/ObrisiKlijentButton"
 import { formatDatum } from "@/lib/date"
 import type { Database } from "@/db/types"
 
@@ -49,11 +51,19 @@ export default async function KlijentDetailPage({
         <ChevronLeft className="w-4 h-4" aria-hidden /> Klijenti
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-semibold" data-testid="klijent-naziv">
-          {klijent.naziv}
-        </h1>
-        {klijent.napomena && <p className="mt-1 text-sm text-slate-500">{klijent.napomena}</p>}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold" data-testid="klijent-naziv">
+            {klijent.naziv}
+          </h1>
+          {klijent.napomena && <p className="mt-1 text-sm text-slate-500">{klijent.napomena}</p>}
+        </div>
+        <div className="flex items-center gap-2">
+          <KlijentEditForm
+            klijent={{ id: klijent.id, naziv: klijent.naziv, napomena: klijent.napomena ?? null }}
+          />
+          <ObrisiKlijentButton klijentId={klijent.id} brojTermina={klijent.broj_termina ?? 0} />
+        </div>
       </div>
 
       <KlijentTabs activeTab={tab} klijentId={id} />

@@ -4,22 +4,28 @@
  * Pokretanje:
  *   pnpm seed
  *
- * Idempotentno — pokretanje 2× ne pravi duplikate (.upsert na naziv).
+ * Idempotentno — pokretanje 2× ne pravi duplikate (upsert onConflict).
  *
- * Strategija:
- * 1. Parse Excel → ParseResult
- * 2. Upsert sve jedinstvene klijente (po naziv, UNIQUE constraint)
- * 3. Upsert sve jedinstvene vrste_provjera (po naziv, UNIQUE constraint)
- * 4. Delete existing termini + Insert svaki put (clean state)
- *    - izvrseno: datum_zadnjeg + datum_izvrsenja = datum; trigger compute_rok računa rok
- *    - planirano: datum_zakazan = datum; rok_dospijeca = datum (nema triggera bez datum_zadnjeg)
+ * Redoslijed (FK-safe):
+ * 1. delete termini        (CASCADE: podsjetnici/dokumenti)
+ * 2. delete lokacije       (SET NULL na termini.lokacija_id — ali termini su već obrisani)
+ * 3. upsert klijenti       from ParseResult.firme, onConflict naziv
+ * 4. upsert vrste_provjera from ParseResult.vrste (includes "Obilazak"),
+ *    onConflict naziv; NE postavljati podrazumevani_interval_mjeseci (ostaje NULL)
+ * 5. upsert lokacije       from ParseResult.lokacije: {klijent_id, naziv},
+ *    onConflict (klijent_id, naziv) [uq_lokacije_klijent_naziv]
+ * 6. insert termini        batch ~500:
+ *    - klijent_id  = firmaId(firma_naziv)
+ *    - lokacija_id = lokId(firmaId + "|" + lokacija_naziv) | null
+ *    - izvrseno: datum_zadnjeg + datum_izvrsenja + rok_dospijeca = datum
+ *    - planirano:  datum_zakazan + rok_dospijeca = datum
+ *    Skip ako firma/vrsta id missing.
  */
 
 import path from "node:path"
 import { createAdminSupabaseClient } from "../lib/supabase/admin"
 import { parseTehproExcel } from "../lib/excel/parser"
 
-// Excel je u parent direktoriju projekta (sibling od tehpro-mvp/)
 const EXCEL_PATH = path.resolve(
   __dirname,
   "..",
@@ -27,19 +33,22 @@ const EXCEL_PATH = path.resolve(
   "2026- obilasci, pregledi i ispitivanja, obuke, dokumentacija.xlsx"
 )
 
+const BATCH = 500
+
 async function main() {
   console.log("📁 Excel:", EXCEL_PATH)
   console.log("🔄 Parsing Excel...")
 
   const parsed = await parseTehproExcel(EXCEL_PATH)
 
-  console.log(`   ${parsed.firme.length} firmi`)
-  console.log(`   ${parsed.vrste.length} vrsta provjera`)
-  console.log(`   ${parsed.termini.length} termina`)
-  console.log(`   ${parsed.skipped.length} skipped rows`)
+  console.log(`   Firme:   ${parsed.firme.length}`)
+  console.log(`   Lokacije: ${parsed.lokacije.length}`)
+  console.log(`   Vrste:   ${parsed.vrste.length}`)
+  console.log(`   Termini: ${parsed.termini.length}`)
+  console.log(`   Skipped: ${parsed.skipped.length}`)
 
   if (parsed.skipped.length > 0) {
-    console.log("⚠️  Skipped rows (first 5 od ukupno " + parsed.skipped.length + "):")
+    console.log(`⚠️  Skipped rows (first 5 od ${parsed.skipped.length}):`)
     parsed.skipped.slice(0, 5).forEach(s =>
       console.log(`   Sheet=${s.sheet} R${s.row} C${s.col}: ${s.reason}`)
     )
@@ -47,100 +56,172 @@ async function main() {
 
   const supabase = createAdminSupabaseClient()
 
-  // ── 1) Upsert klijenti ────────────────────────────────────────────────────
-  // NOTE: Task 3 (seed rewrite) will handle firma→klijent mapping properly.
-  // This is a temporary stub that compiles until Task 3 rewrites this script.
-  console.log("\n💾 Upserting klijenti (stub — see Task 3 for full firma/lokacija seed)...")
+  // ── 1) Delete termini ──────────────────────────────────────────────────────
+  console.log("\n🗑️  Brisanje termini...")
+  const { error: delTErr } = await supabase
+    .from("termini")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000")
+  if (delTErr) throw new Error(`termini delete failed: ${delTErr.message}`)
+  console.log("   ✅ termini obrisani")
+
+  // ── 2) Delete lokacije ─────────────────────────────────────────────────────
+  console.log("\n🗑️  Brisanje lokacije...")
+  const { error: delLErr } = await supabase
+    .from("lokacije")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000")
+  if (delLErr) throw new Error(`lokacije delete failed: ${delLErr.message}`)
+  console.log("   ✅ lokacije obrisane")
+
+  // ── 3) Upsert klijenti ─────────────────────────────────────────────────────
+  console.log("\n💾 Upsert klijenti...")
   const klijentiRows = parsed.firme.map((naziv: string) => ({ naziv }))
   const { data: klijenti, error: kErr } = await supabase
     .from("klijenti")
     .upsert(klijentiRows, { onConflict: "naziv", ignoreDuplicates: false })
     .select("id, naziv")
   if (kErr) throw new Error(`klijenti upsert failed: ${kErr.message}`)
-  const klijentiMap = new Map((klijenti ?? []).map(k => [k.naziv, k.id]))
-  console.log(`   ✅ ${klijentiMap.size} klijenata u bazi`)
+  const firmaMap = new Map<string, string>((klijenti ?? []).map(k => [k.naziv, k.id]))
+  console.log(`   ✅ ${firmaMap.size} klijenata (firmi) u bazi`)
 
-  // ── 2) Upsert vrste_provjera ──────────────────────────────────────────────
-  console.log("\n💾 Upserting vrste_provjera...")
-  const vrsteRows = parsed.vrste.map(naziv => ({ naziv }))
+  // ── 4) Upsert vrste_provjera ───────────────────────────────────────────────
+  console.log("\n💾 Upsert vrste_provjera...")
+  // NOTE: podrazumevani_interval_mjeseci se NE postavlja — ostaje NULL.
+  // Korisnik ga unosi u /postavke.
+  const vrsteRows = parsed.vrste.map((naziv: string) => ({ naziv }))
   const { data: vrste, error: vErr } = await supabase
     .from("vrste_provjera")
     .upsert(vrsteRows, { onConflict: "naziv", ignoreDuplicates: false })
     .select("id, naziv")
-  if (vErr) throw new Error(`vrste upsert failed: ${vErr.message}`)
-  const vrsteMap = new Map((vrste ?? []).map(v => [v.naziv, v.id]))
-  console.log(`   ✅ ${vrsteMap.size} vrsta u bazi`)
+  if (vErr) throw new Error(`vrste_provjera upsert failed: ${vErr.message}`)
+  const vrstaMap = new Map<string, string>((vrste ?? []).map(v => [v.naziv, v.id]))
+  console.log(`   ✅ ${vrstaMap.size} vrsta provjera u bazi`)
 
-  // ── 3) Delete existing termini za clean seed ──────────────────────────────
-  console.log("\n🗑️  Brisanje postojećih termina za clean seed...")
-  const { error: delErr } = await supabase
-    .from("termini")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000")
-  if (delErr) throw new Error(`termini delete failed: ${delErr.message}`)
+  // ── 5) Upsert lokacije ─────────────────────────────────────────────────────
+  console.log("\n💾 Upsert lokacije...")
+  type LokacijaRow = { klijent_id: string; naziv: string }
+  const lokacijeRows: LokacijaRow[] = []
+  const lokSkipped: string[] = []
 
-  // ── 4) Build termini rows ─────────────────────────────────────────────────
+  for (const lok of parsed.lokacije) {
+    const klijentId = firmaMap.get(lok.firma_naziv)
+    if (!klijentId) {
+      lokSkipped.push(`${lok.firma_naziv} / ${lok.lokacija_naziv}`)
+      continue
+    }
+    lokacijeRows.push({ klijent_id: klijentId, naziv: lok.lokacija_naziv })
+  }
+
+  if (lokSkipped.length > 0) {
+    console.warn(`   ⚠️ ${lokSkipped.length} lokacija preskočeno (firma not in DB):`)
+    lokSkipped.slice(0, 5).forEach(s => console.warn(`      ${s}`))
+  }
+
+  // Upsert in batches (onConflict = uq_lokacije_klijent_naziv unique index)
+  const lokMap = new Map<string, string>() // "firmaId|lokNaziv" -> lokacijaId
+  for (let i = 0; i < lokacijeRows.length; i += BATCH) {
+    const batch = lokacijeRows.slice(i, i + BATCH)
+    const { data: upsertedLok, error: lErr } = await supabase
+      .from("lokacije")
+      .upsert(batch, { onConflict: "klijent_id,naziv", ignoreDuplicates: false })
+      .select("id, klijent_id, naziv")
+    if (lErr) throw new Error(`lokacije upsert failed: ${lErr.message}`)
+    for (const l of upsertedLok ?? []) {
+      lokMap.set(`${l.klijent_id}|${l.naziv}`, l.id)
+    }
+  }
+  console.log(`   ✅ ${lokMap.size} lokacija u bazi`)
+
+  // ── 6) Insert termini ──────────────────────────────────────────────────────
   console.log("\n💾 Inserting termini...")
-  const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-  const skippedFK: string[] = []
-  type TerminRow =
-    | { klijent_id: string; vrsta_provjere_id: string; datum_zadnjeg: string; datum_izvrsenja: string; rok_dospijeca: string; status: "izvrseno" }
-    | { klijent_id: string; vrsta_provjere_id: string; datum_zakazan: string; rok_dospijeca: string; status: "planirano" }
 
-  const terminiRows = parsed.termini.flatMap<TerminRow>(t => {
-    const klijentId = klijentiMap.get(t.firma_naziv)
-    const vrstaId = vrsteMap.get(t.vrsta_naziv)
+  type TerminIzvrseno = {
+    klijent_id: string
+    lokacija_id: string | null
+    vrsta_provjere_id: string
+    datum_zadnjeg: string
+    datum_izvrsenja: string
+    rok_dospijeca: string
+    status: "izvrseno"
+  }
+  type TerminPlanirano = {
+    klijent_id: string
+    lokacija_id: string | null
+    vrsta_provjere_id: string
+    datum_zakazan: string
+    rok_dospijeca: string
+    status: "planirano"
+  }
+  type TerminRow = TerminIzvrseno | TerminPlanirano
+
+  const terminiRows: TerminRow[] = []
+  const terminiSkippedFK: string[] = []
+  const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+
+  for (const t of parsed.termini) {
+    const klijentId = firmaMap.get(t.firma_naziv)
+    const vrstaId = vrstaMap.get(t.vrsta_naziv)
+
     if (!klijentId || !vrstaId) {
-      skippedFK.push(`${t.firma_naziv} / ${t.vrsta_naziv}`)
-      return []
+      terminiSkippedFK.push(`${t.firma_naziv} / ${t.vrsta_naziv}`)
+      continue
     }
 
-    const isPast = t.datum <= todayStr
+    // Resolve lokacija_id (nullable)
+    let lokacijaId: string | null = null
+    if (t.lokacija_naziv != null) {
+      lokacijaId = lokMap.get(`${klijentId}|${t.lokacija_naziv}`) ?? null
+    }
 
-    if (t.izvor === "izvrseno" && isPast) {
-      // Past izvrseno — record the completion. Trigger compute_rok calculates next due date.
-      return [{
+    // chk_termini_datumi: datum_izvrsenja <= CURRENT_DATE
+    // Future "izvrseno" dates in Excel are treated as planirano to satisfy the constraint.
+    const isReallyIzvrseno = t.izvor === "izvrseno" && t.datum <= todayStr
+
+    if (isReallyIzvrseno) {
+      terminiRows.push({
         klijent_id: klijentId,
+        lokacija_id: lokacijaId,
         vrsta_provjere_id: vrstaId,
         datum_zadnjeg: t.datum,
         datum_izvrsenja: t.datum,
-        // rok_dospijeca fallback (trigger prepiše BEFORE insert if interval exists)
+        // rok_dospijeca NOT NULL — use same date (trigger tg_termini_compute_rok
+        // may overwrite if interval is set, but seed leaves interval NULL)
         rok_dospijeca: t.datum,
-        status: "izvrseno" as const,
-      }]
+        status: "izvrseno",
+      })
     } else {
-      // planirano (both explicit "planirano" and future "izvrseno" that can't be marked done)
-      // datum_zakazan = plan datum, rok_dospijeca = isti datum
-      // (trigger compute_rok ne pali jer datum_zadnjeg = null)
-      return [{
+      terminiRows.push({
         klijent_id: klijentId,
+        lokacija_id: lokacijaId,
         vrsta_provjere_id: vrstaId,
         datum_zakazan: t.datum,
         rok_dospijeca: t.datum,
-        status: "planirano" as const,
-      }]
+        status: "planirano",
+      })
     }
-  })
-
-  if (skippedFK.length > 0) {
-    console.warn(`   ⚠️ ${skippedFK.length} termina preskočeno zbog missing FK (first 5):`)
-    skippedFK.slice(0, 5).forEach(s => console.warn(`      ${s}`))
   }
 
-  // Bulk insert u batch-ovima od 500
+  if (terminiSkippedFK.length > 0) {
+    console.warn(`   ⚠️ ${terminiSkippedFK.length} termina preskočeno (missing FK — first 5):`)
+    terminiSkippedFK.slice(0, 5).forEach(s => console.warn(`      ${s}`))
+  }
+
   let inserted = 0
-  for (let i = 0; i < terminiRows.length; i += 500) {
-    const batch = terminiRows.slice(i, i + 500)
+  for (let i = 0; i < terminiRows.length; i += BATCH) {
+    const batch = terminiRows.slice(i, i + BATCH)
     const { error: tErr, count } = await supabase
       .from("termini")
       .insert(batch, { count: "exact" })
-    if (tErr) throw new Error(`termini insert failed at batch ${i / 500 + 1}: ${tErr.message}`)
+    if (tErr) throw new Error(`termini insert failed at batch ${Math.floor(i / BATCH) + 1}: ${tErr.message}`)
     inserted += count ?? batch.length
   }
   console.log(`   ✅ ${inserted} termina insertovano`)
 
   console.log("\n✅ Seed gotov.")
-  console.log(`   Firme: ${klijentiMap.size} | Vrste: ${vrsteMap.size} | Termini: ${inserted} | Skipped Excel: ${parsed.skipped.length}`)
+  console.log(
+    `   Firme: ${firmaMap.size} | Lokacije: ${lokMap.size} | Vrste: ${vrstaMap.size} | Termini: ${inserted} | Skipped Excel: ${parsed.skipped.length}`
+  )
 }
 
 main().catch(err => {

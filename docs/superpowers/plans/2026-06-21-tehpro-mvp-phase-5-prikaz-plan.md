@@ -311,15 +311,18 @@ export function OpterecenjeChart({
   const months = Array.from({ length: 12 }, (_, i) => byMonth.get(i + 1) ?? {
     mjesec: i + 1, ukupno: 0, izvrseno: 0, kasni: 0, u_planu: 0,
   })
-  const max = Math.max(1, ...months.map((m) => m.ukupno))
+  // Visina bara = zbir VIDLJIVIH segmenata (izvrseno+kasni+u_planu), NE ukupno
+  // (ukupno može uključivati 'otkazano' koji nema segment → gap na vrhu). Tako visina = popunjenost.
+  const seg = (m: OpterecenjeRow) => m.izvrseno + m.kasni + m.u_planu
+  const max = Math.max(1, ...months.map(seg))
 
   return (
     <div data-testid="opterecenje-chart">
       <p className="text-sm font-semibold text-slate-700 mb-3">Opterećenje po mjesecima (broj termina)</p>
       <div className="flex items-end gap-2 h-44">
         {months.map((m) => (
-          <div key={m.mjesec} className="flex-1 flex flex-col items-center gap-1" data-testid="chart-bar" data-mjesec={m.mjesec} data-ukupno={m.ukupno}>
-            <div className="w-full flex flex-col-reverse" style={{ height: `${(m.ukupno / max) * 100}%` }} title={`${MONTHS_BS[m.mjesec - 1]}: ${m.ukupno}`}>
+          <div key={m.mjesec} className="flex-1 self-stretch flex flex-col items-center gap-1" data-testid="chart-bar" data-mjesec={m.mjesec} data-ukupno={m.ukupno}>
+            <div className="w-full mt-auto flex flex-col-reverse" style={{ height: `${(seg(m) / max) * 100}%` }} title={`${MONTHS_BS[m.mjesec - 1]}: ${m.ukupno}`}>
               {/* stacked: izvrseno (zeleno), kasni (crveno), u_planu (plavo) */}
               <div className="w-full bg-green-500" style={{ flexGrow: m.izvrseno }} />
               <div className="w-full bg-red-500" style={{ flexGrow: m.kasni }} />
@@ -391,7 +394,7 @@ export function PrikazToolbar({ klijenti, godine }: { klijenti: Opt[]; godine: n
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/OpterecenjeChart"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
-import { currentYear } from "@/lib/date"
+import { currentYear, todayIso } from "@/lib/date"
 
 export default async function PrikazPage({
   searchParams,
@@ -417,7 +420,7 @@ export default async function PrikazPage({
       <h1 className="text-2xl font-semibold">Prikaz</h1>
 
       <div className="rounded-xl border border-slate-200 p-4">
-        <OpterecenjeChart data={opterecenje} currentMonth={godina === currentYear() ? new Date().getUTCMonth() + 1 : undefined} />
+        <OpterecenjeChart data={opterecenje} currentMonth={godina === Number(todayIso().slice(0, 4)) ? Number(todayIso().slice(5, 7)) : undefined} />
       </div>
 
       <PrikazToolbar klijenti={klijenti} godine={godine} />
@@ -502,8 +505,8 @@ git add app/ components/domain/OpterecenjeChart.tsx components/domain/PrikazTool
 **Interfaces:**
 - Consumes: termini_view (po klijentu+godini), StatusBadge boje, formatDatum
 - Produces:
-  - `type MatrixCell = { terminId: string; dan: number; mjesec: number; status: DerivedStatus }`
-  - `<MatrixGrid rows={MatrixRow[]} currentSearch={string} />` — tabela: redovi=vrsta, kolone=12 mjeseci; sticky prva kolona; ćelija boja po statusu + datum; klik (T4)
+  - `type MatrixCell = { terminId: string; dan: number; status: DerivedStatus; brojUCeliji: number }`
+  - `<MatrixGrid rows={MatrixRow[]} />` — tabela: redovi=vrsta, kolone=12 mjeseci; sticky prva kolona; ćelija boja po statusu + datum. **(`currentSearch` prop se DODAJE u T4 za klik; u T3 je samo `rows`.)**
   - page: fetch klijentovih termina za godinu, pivot u `MatrixRow[]`
 
 - [ ] **Step 3.1: Kreiraj `components/domain/MatrixGrid.tsx`**
@@ -529,9 +532,18 @@ export type MatrixRow = {
 const CELL_CLASS: Record<DerivedStatus, string> = {
   izvrseno: "bg-green-100 text-green-800 hover:bg-green-200",
   planirano: "bg-blue-50 text-blue-800 hover:bg-blue-100",
-  zakazano: "bg-blue-50 text-blue-800 hover:bg-blue-100",
+  zakazano: "bg-cyan-50 text-cyan-800 hover:bg-cyan-100", // cyan = brand status token (uskladi sa kalendar DOTS)
   kasni: "bg-red-100 text-red-800 hover:bg-red-200",
   otkazano: "bg-slate-100 text-slate-500 hover:bg-slate-200",
+}
+
+// Sadržaj ćelije po statusu (§7.2 C: ✓ za izvršeno, ! za kasni).
+function cellLabel(cell: MatrixCell): string {
+  const dan = String(cell.dan).padStart(2, "0") + "."
+  const prefix = cell.status === "izvrseno" ? "✓ " : ""
+  const kasni = cell.status === "kasni" ? "!" : ""
+  const vise = cell.brojUCeliji > 1 ? ` (+${cell.brojUCeliji - 1})` : ""
+  return `${prefix}${dan}${kasni}${vise}`
 }
 
 export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
@@ -550,7 +562,7 @@ export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
             <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-medium text-slate-600 border-r border-slate-200 min-w-[220px]">
               Vrsta pregleda / ispitivanja
             </th>
-            {MONTHS_BS.map((m, i) => (
+            {MONTHS_BS.map((m) => (
               <th key={m} className="px-2 py-2 text-center font-medium text-slate-500 whitespace-nowrap min-w-[56px]">
                 {m.slice(0, 3)}
               </th>
@@ -573,7 +585,7 @@ export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
                         data-status={cell.status}
                         className={cn("inline-block w-full rounded px-1.5 py-1 tabular-nums", CELL_CLASS[cell.status])}
                       >
-                        {String(cell.dan).padStart(2, "0")}.{cell.brojUCeliji > 1 ? ` (+${cell.brojUCeliji - 1})` : ""}
+                        {cellLabel(cell)}
                       </span>
                     ) : (
                       <span className="text-slate-200">·</span>
@@ -594,9 +606,9 @@ export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
 Dodaj kad je `klijentId` postavljen (zamijeni placeholder blok). Dohvat ide u Promise.all (3. leg, samo kad ima klijenta — ali Promise.all je fiksne širine; uslovi se rješavaju tako da se 3. query izvrši uvijek ali brzo vrati prazno kad nema klijenta). Jednostavnije: drugi `await` nakon glavnog Promise.all (pomoćni, izuzet iz query-by-page jer je sekundaran). Implementacija:
 ```tsx
 import { MatrixGrid, type MatrixRow, type MatrixCell } from "@/components/domain/MatrixGrid"
+import type { TerminRow } from "@/components/domain/TerminiTable"
 import { toDerivedStatus, type DerivedStatus } from "@/lib/termini"
-import type { Database } from "@/db/types"
-type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
+// koristi TerminRow (= termini_view Row) svuda — isti tip kao TerminSheet props (bez lokalnog aliasa)
 
 // status prioritet za "najurgentniji" u ćeliji (kasni > planirano/zakazano > izvrseno > otkazano)
 const STATUS_PRIORITET: Record<DerivedStatus, number> = {
@@ -613,7 +625,7 @@ if (klijentId) {
     .gte("rok_dospijeca", `${godina}-01-01`)
     .lte("rok_dospijeca", `${godina}-12-31`)
     .order("vrsta_naziv")
-  const termini = (data ?? []) as TerminViewRow[]
+  const termini = (data ?? []) as TerminRow[]
   // pivot: vrsta → mjesec → najurgentniji termin
   const byVrsta = new Map<string, MatrixRow>()
   for (const t of termini) {
@@ -716,7 +728,7 @@ export function MatrixGrid({ rows, currentSearch }: { rows: MatrixRow[]; current
     data-status={cell.status}
     className={cn("inline-block w-full rounded px-1.5 py-1 tabular-nums", CELL_CLASS[cell.status])}
   >
-    {String(cell.dan).padStart(2, "0")}.{cell.brojUCeliji > 1 ? ` (+${cell.brojUCeliji - 1})` : ""}
+    {cellLabel(cell)}
   </Link>
 ) : (
   <span className="text-slate-200">·</span>
@@ -742,18 +754,18 @@ const currentSearch = new URLSearchParams(
 ).toString()
 
 const selectedId = typeof sp.selected === "string" ? sp.selected : null
-let selectedTermin: TerminViewRow | null = null
-let istorija: TerminViewRow[] = []
+let selectedTermin: TerminRow | null = null
+let istorija: TerminRow[] = []
 if (selectedId) {
   const { data } = await supabase.from("termini_view").select("*").eq("id", selectedId).maybeSingle()
-  selectedTermin = (data as TerminViewRow | null) ?? null
+  selectedTermin = (data as TerminRow | null) ?? null
   if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
     const { data: h } = await supabase.from("termini_view").select("*")
       .eq("klijent_id", selectedTermin.klijent_id)
       .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
       .eq("status", "izvrseno").neq("id", selectedTermin.id ?? "")
       .order("datum_izvrsenja", { ascending: false }).limit(5)
-    istorija = (h ?? []) as TerminViewRow[]
+    istorija = (h ?? []) as TerminRow[]
   }
 }
 const closeParams = new URLSearchParams(currentSearch); closeParams.delete("selected")
@@ -763,7 +775,7 @@ Proslijedi `currentSearch` u MatrixGrid: `<MatrixGrid rows={matrixRows} currentS
 ```tsx
 {selectedTermin && <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />}
 ```
-**Napomena:** `TerminSheet` prima `TerminRow` (iz TerminiTable) = isti tip kao `termini_view` Row. Tipovi se poklapaju; ako TS prijavi, cast `selectedTermin as never`-FREE — koristi isti tip kao termini/page.tsx (`TerminRow`). Importuj `type { TerminRow }` iz TerminiTable i koristi taj alias umjesto lokalnog TerminViewRow za selected, radi konzistentnosti sa TerminSheet props.
+**Napomena:** `selectedTermin`/`istorija` su tipovani kao `TerminRow` (importovan iz TerminiTable = `termini_view` Row) — isti tip koji `TerminSheet` prima, pa nema cast-a ni lokalnog aliasa. Identičan pattern kao termini/page.tsx.
 
 - [ ] **Step 4.3: Proširi `NoviTerminButton` opcionim prefill-om**
 Dodaj opcione props bez lomljenja postojeće upotrebe:
@@ -939,7 +951,8 @@ export function MonthCalendar({
                     <span className="truncate">{t.klijentNaziv}</span>
                   </div>
                 ))}
-                {termini.length > 3 && <div className="text-[10px] text-slate-400">još {termini.length - 3}</div>}
+                {/* "još N" — cijela ćelija je već <Link> na ?dan= (otvara sidebar); text-brand signalizira klik */}
+                {termini.length > 3 && <div className="text-[10px] text-brand font-medium">još {termini.length - 3}</div>}
               </div>
             </Link>
           )
@@ -958,8 +971,8 @@ import { PlanNav } from "@/components/domain/PlanNav"
 import { buildMonthGrid } from "@/lib/calendar"
 import { monthRange, todayIso, currentYear } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
-import type { Database } from "@/db/types"
-type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
+import type { TerminRow } from "@/components/domain/TerminiTable"
+// koristi TerminRow (= termini_view Row) — isti tip kao TerminSheet props
 
 export default async function PlanPage({
   searchParams,
@@ -980,7 +993,7 @@ export default async function PlanPage({
     .select("id, rok_dospijeca, klijent_naziv, status_izvedeni")
     .gte("rok_dospijeca", from).lte("rok_dospijeca", to)
     .order("rok_dospijeca")
-  const termini = (data ?? []) as TerminViewRow[]
+  const termini = (data ?? []) as TerminRow[]
 
   const terminiByDan = new Map<string, DayTermin[]>()
   for (const t of termini) {
@@ -1030,6 +1043,14 @@ test.describe("Faza 5 — Mjesečni plan", () => {
     await page.waitForURL(/mjesec=/)
     await expect(page.getByTestId("plan-grid")).toBeVisible()
   })
+
+  test("godina dropdown mijenja godinu (§7.2 D)", async ({ page }) => {
+    await page.goto("/plan?godina=2026&mjesec=7")
+    await page.getByTestId("plan-nav-godina").click()
+    await page.getByRole("option", { name: "2025" }).click()
+    await page.waitForURL(/godina=2025/)
+    await expect(page.getByTestId("plan-nav-label")).toContainText("2025")
+  })
 })
 ```
 
@@ -1076,23 +1097,25 @@ const selectedDan = typeof sp.dan === "string" ? sp.dan : null
 const danTermini = selectedDan ? termini.filter((t) => (t.rok_dospijeca ?? "").slice(0, 10) === selectedDan) : []
 
 const selectedId = typeof sp.selected === "string" ? sp.selected : null
-let selectedTermin: TerminViewRow | null = selectedId ? (termini.find((t) => t.id === selectedId) ?? null) : null
-let istorija: TerminViewRow[] = []
+let selectedTermin: TerminRow | null = selectedId ? (termini.find((t) => t.id === selectedId) ?? null) : null
+let istorija: TerminRow[] = []
 if (selectedId && !selectedTermin) {
   const { data: one } = await supabase.from("termini_view").select("*").eq("id", selectedId).maybeSingle()
-  selectedTermin = (one as TerminViewRow | null) ?? null
+  selectedTermin = (one as TerminRow | null) ?? null
 }
 if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
   const { data: h } = await supabase.from("termini_view").select("*")
     .eq("klijent_id", selectedTermin.klijent_id).eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
     .eq("status", "izvrseno").neq("id", selectedTermin.id ?? "")
     .order("datum_izvrsenja", { ascending: false }).limit(5)
-  istorija = (h ?? []) as TerminViewRow[]
+  istorija = (h ?? []) as TerminRow[]
 }
 const closeParams = new URLSearchParams(currentSearch); closeParams.delete("selected")
 const closeHref = `/plan${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
 const detailHref = (id: string) => { const p = new URLSearchParams(currentSearch); p.set("selected", id); return `/plan?${p.toString()}` }
 ```
+**Query-budget napomena:** `/plan` primary podaci = 1 round-trip (mjesec termini). Kad je `?selected` postavljen, dodaju se 2 sekundarna round-tripa (fallback fetch ako selected nije u tekućem mjesecu + istorija) — **izuzeti iz 1-query limita** kao sekundarni, isti pattern kao /prikaz i /termini. Fallback je potreban jer ?selected može preživjeti navigaciju iz /prikaz na termin u drugom mjesecu.
+
 Promijeni layout u grid (kalendar + sidebar kad ?dan):
 ```tsx
 <div className={selectedDan ? "grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4" : ""}>
@@ -1126,25 +1149,23 @@ Promijeni layout u grid (kalendar + sidebar kad ?dan):
 ```ts
 test.describe("Faza 5 — Plan dan sidebar", () => {
   test("klik dana sa terminima → sidebar → Detalji → sheet", async ({ page }) => {
-    // jul 2026 ima dosta termina
+    // jul 2026 ima dosta termina; data-driven: nađi dan ćeliju koja STVARNO ima termine
     await page.goto("/plan?godina=2026&mjesec=7")
-    // nađi dan ćeliju koja ima brojač termina (sadrži status dot)
-    const dayWithTermini = page.getByTestId("plan-day-cell").filter({ has: page.locator("[data-date]") })
-    // klikni prvi dan tekućeg mjeseca koji ima termine — fallback: klik ćeliju 15.
-    const cell = page.getByTestId("plan-day-cell").filter({ hasText: /\d/ }).nth(14)
-    await cell.click()
+    // dan ćelija sa terminima ima status-dot (span sa rounded-full) — biraj prvu takvu
+    const cellWithTermini = page.getByTestId("plan-day-cell").filter({ has: page.locator("span.rounded-full") }).first()
+    await expect(cellWithTermini).toBeVisible()
+    await cellWithTermini.click()
     await page.waitForURL(/dan=/)
     await expect(page.getByTestId("plan-sidebar")).toBeVisible()
-    const detalji = page.getByTestId("sidebar-detalji").first()
-    if (await detalji.count()) {
-      await detalji.click()
-      await page.waitForURL(/selected=/)
-      await expect(page.getByTestId("termin-sheet")).toBeVisible()
-    }
+    // dan ima termine → sidebar MORA imati bar jedan termin (bez guard-a)
+    await expect(page.getByTestId("sidebar-termin").first()).toBeVisible()
+    await page.getByTestId("sidebar-detalji").first().click()
+    await page.waitForURL(/selected=/)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
   })
 })
 ```
-**Napomena:** test bira ćeliju #15 (sredina mjeseca) — ako nema termina taj dan, sidebar pokazuje "Nema termina" i Detalji se preskače (guarded). Za pouzdaniji test, implementer može odabrati dan sa najviše termina iz DOM-a (data-atribut broja).
+**Napomena:** test bira dan ćeliju koja STVARNO sadrži termine (filter na status-dot `span.rounded-full`), pa Detalji→sheet put nije guard-ovan (mora raditi). Determinističko jer jul 2026 ima guste termine.
 
 - [ ] **Step 6.3: Full check**
 ```bash
@@ -1255,6 +1276,9 @@ Phase Gate: ALL PASS. Repo: https://github.com/stpauli98/Tehrpo" && git push ori
 - **Matrix orijentacija:** per-klijent **vrsta × mjesec** umjesto spec-ovog klijenti×vrste. Razlog: 51×58=2958 ćelija/89% prazno je netraktabilno; lokacije prazne. Per-klijent godišnja matrica je tractable + ima podatke + matchuje Excel-matrica intent.
 - **Chart:** čisti CSS/Tailwind barovi umjesto Recharts. Razlog: KISS/YAGNI, RSC-native, bez hydration rizika, bez dep-a; vizuelno ekvivalentno za jedan prost bar chart. Recharts dodati kasnije ako zatreba.
 - **"Toggle po mjesecu/godini":** /prikaz je godišnji (vrsta×12 mjeseci); mjesečni detalj je /plan kalendar. Spec-ov toggle realizovan kao dvije rute + godina picker.
+- **Empty-cell create:** spec §7.2 C navodi "klik prazne ćelije → novi termin sa pre-popunjenim klijent/vrsta". **Odloženo** — prazna ćelija ostaje ne-klikabilni `·`. Razlog: prosljeđivanje klijent/vrsta listi kroz matricu radi prefill-create dodaje kompleksnost za marginalnu vrijednost; kreiranje se radi preko /termini "Novi termin". Dodati u kasnijoj fazi ako zatreba.
+- **Kalendar 6 redova (42 ćelije) fiksno:** spec §7.2 D kaže "5-6 redova". Koristimo fiksnih 6 (42 ćelije) radi vizuelne stabilnosti (nema skakanja visine između mjeseci). Svjestan izbor.
+- **Cell sadržaj format:** spec §7.2 C "✓ DD.MM.YYYY / datum / Kasni!" — koristimo skraćeno "✓ DD." (izvršeno), "DD." (planirano, plava/cyan), "DD.!" (kasni, crveno) + "(+N)" za više termina u ćeliji, radi uske mjesečne kolone. Boja + marker prenose status.
 
 **2. Placeholder scan:**
 - T2 "Matrica se popunjava u Task 3" — stub zamijenjen u T3 (sekvencijalni razvoj). OK.

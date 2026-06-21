@@ -126,7 +126,7 @@ export default async function PrikazPage({
         />
       </div>
 
-      <PrikazToolbar klijenti={klijenti} godine={godine} />
+      <PrikazToolbar klijenti={klijenti} godine={godine} godina={godina} />
 
       {!klijentId ? (
         <div

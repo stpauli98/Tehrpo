@@ -8,12 +8,20 @@ import {
 
 type Opt = { id: string; naziv: string }
 
-export function PrikazToolbar({ klijenti, godine }: { klijenti: Opt[]; godine: number[] }) {
+export function PrikazToolbar({
+  klijenti,
+  godine,
+  godina: aktivnaGodina,
+}: {
+  klijenti: Opt[]
+  godine: number[]
+  godina: number
+}) {
   const router = useRouter()
   const params = useSearchParams()
   const [pending, startTransition] = useTransition()
   const klijent = params.get("klijent") ?? ""
-  const godina = params.get("godina") ?? String(godine[0] ?? "")
+  const godina = params.get("godina") ?? String(aktivnaGodina)
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString())

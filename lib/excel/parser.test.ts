@@ -109,13 +109,35 @@ describe("parseTehproExcel (dvoblokovni fixture)", () => {
     expect(res.vrste).not.toContain("WAIKIKI")
 
     // OBILASCI termini za NEW YORKER - Doboj
+    // Fixture ima DUPLIRANE labele (col2 AND col3 = "Planirano"; col4 AND col5 = "Izvršeno")
+    // i DISTINCT datume u sva 4 slota: plan=[2026-01-21, 2026-02-05], izvr=[2026-01-15, 2026-01-28].
+    // Provjera garantuje: (a) first-match header daje pCol=2/iCol=4, (b) oba slota svake grupe čitamo.
     const obs = res.termini.filter(t => t.vrsta_naziv === "Obilazak")
-    const plan = obs.find(t => t.izvor === "planirano")
-    const izvr = obs.find(t => t.izvor === "izvrseno")
-    expect(plan?.firma_naziv).toBe("NEW YORKER")
-    expect(plan?.lokacija_naziv?.toUpperCase()).toBe("DOBOJ")
-    expect(plan?.datum).toBe("2026-01-21")
-    expect(izvr?.datum).toBe("2026-01-15")
+    const planObs = obs.filter(t => t.izvor === "planirano" && t.firma_naziv === "NEW YORKER")
+    const izvrObs = obs.filter(t => t.izvor === "izvrseno"  && t.firma_naziv === "NEW YORKER")
+
+    // Mora biti točno 2 planirano i 2 izvrseno termina (oba slota svake grupe)
+    expect(planObs).toHaveLength(2)
+    expect(izvrObs).toHaveLength(2)
+
+    // Ukupno 4 Obilazak termina za NEW YORKER
+    expect(planObs.length + izvrObs.length).toBe(4)
+
+    // Planirano datumi (col2 i col3)
+    const planDatumi = planObs.map(t => t.datum).sort()
+    expect(planDatumi).toContain("2026-01-21")
+    expect(planDatumi).toContain("2026-02-05")
+
+    // Izvrseno datumi (col4 i col5)
+    const izvrDatumi = izvrObs.map(t => t.datum).sort()
+    expect(izvrDatumi).toContain("2026-01-15")
+    expect(izvrDatumi).toContain("2026-01-28")
+
+    // Firma i lokacija za sve termine
+    for (const t of [...planObs, ...izvrObs]) {
+      expect(t.firma_naziv).toBe("NEW YORKER")
+      expect(t.lokacija_naziv?.toUpperCase()).toBe("DOBOJ")
+    }
 
     // lokacije: WAIKIKI ZVORNIK
     expect(res.lokacije.some(l => l.firma_naziv === "WAIKIKI" && /ZVORNIK/i.test(l.lokacija_naziv ?? ""))).toBe(true)

@@ -316,13 +316,22 @@ export async function parseTehproExcel(filePath: string): Promise<ParseResult> {
     let pCol = 2 // default: planirano col
     let iCol = 4 // default: izvrseno col
 
+    // First-match: iterate columns ascending and only set pCol/iCol on first hit.
+    // The real Excel duplicates each label across both columns of its pair
+    // (c2 AND c3 = "Planirano"; c4 AND c5 = "Izvršeno"). Last-write-wins would
+    // resolve pCol=3, iCol=5, silently dropping col2 dates. We want pCol=2, iCol=4.
+    let pColFound = false
+    let iColFound = false
     const hRow = sheet.getRow(headerRow)
-    hRow.eachCell((cell, colNumber) => {
-      if (colNumber === 1) return
-      const v = canonicalizeNaziv(String(cell.value ?? "").trim())
-      if (v === "PLANIRANO") pCol = colNumber
-      if (v === "IZVRSENO" || v === "IZVRŠENO") iCol = colNumber
-    })
+    const colCount = hRow.cellCount || 10
+    for (let colNumber = 2; colNumber <= colCount; colNumber++) {
+      const cell = hRow.getCell(colNumber)
+      if (!cell.value) continue
+      const v = canonicalizeNaziv(String(cell.value).trim())
+      if (!pColFound && v === "PLANIRANO") { pCol = colNumber; pColFound = true }
+      if (!iColFound && (v === "IZVRSENO" || v === "IZVRŠENO")) { iCol = colNumber; iColFound = true }
+      if (pColFound && iColFound) break
+    }
 
     // Rows obilasciRow+2..lastRow: klijent u colA, datumi u pCol..pCol+1 (plan) i iCol..iCol+1 (izvr)
     for (let r = obilasciRow + 2; r <= lastRow; r++) {

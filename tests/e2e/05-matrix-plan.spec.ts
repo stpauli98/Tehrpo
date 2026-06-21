@@ -48,3 +48,20 @@ test.describe("Faza 5 — Matrix grid", () => {
     await expect(page.getByTestId("matrix-cell-filled").first()).toBeVisible()
   })
 })
+
+test.describe("Faza 5 — Matrix cell click", () => {
+  test("klik popunjene ćelije otvara TerminSheet", async ({ page }) => {
+    await page.goto("/prikaz")
+    await page.getByTestId("prikaz-klijent").click()
+    const opt = page.getByRole("option", { name: /WAIKIKI BANJA LUKA - DELTA/ })
+    if (await opt.count()) await opt.click(); else await page.getByRole("option").first().click()
+    await page.waitForURL(/klijent=/)
+    await page.getByTestId("matrix-cell-filled").first().click()
+    await page.waitForURL(/selected=/)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    // zatvori
+    await page.getByTestId("sheet-close").click()
+    await page.waitForURL((u) => !u.search.includes("selected="))
+    await expect(page.getByTestId("termin-sheet")).toBeHidden()
+  })
+})

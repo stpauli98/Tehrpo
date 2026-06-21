@@ -1,6 +1,13 @@
+import Link from "next/link"
 import { MONTHS_BS } from "@/lib/date"
 import type { DerivedStatus } from "@/lib/termini"
 import { cn } from "@/lib/utils"
+
+function withParam(search: string, key: string, value: string): string {
+  const p = new URLSearchParams(search)
+  p.set(key, value)
+  return p.toString()
+}
 
 export type MatrixCell = {
   terminId: string
@@ -33,7 +40,7 @@ function cellLabel(cell: MatrixCell): string {
   return `${prefix}${dan}${kasni}${vise}`
 }
 
-export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
+export function MatrixGrid({ rows, currentSearch }: { rows: MatrixRow[]; currentSearch: string }) {
   if (rows.length === 0) {
     return (
       <div
@@ -78,7 +85,8 @@ export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
                     data-mjesec={mj}
                   >
                     {cell ? (
-                      <span
+                      <Link
+                        href={`/prikaz?${withParam(currentSearch, "selected", cell.terminId)}`}
                         data-testid="matrix-cell-filled"
                         data-status={cell.status}
                         className={cn(
@@ -87,7 +95,7 @@ export function MatrixGrid({ rows }: { rows: MatrixRow[] }) {
                         )}
                       >
                         {cellLabel(cell)}
-                      </span>
+                      </Link>
                     ) : (
                       <span className="text-slate-200">·</span>
                     )}

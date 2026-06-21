@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/OpterecenjeChart"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
 import { MatrixGrid, type MatrixRow, type MatrixCell } from "@/components/domain/MatrixGrid"
+import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
 import { currentYear, todayIso } from "@/lib/date"
 import { toDerivedStatus, type DerivedStatus } from "@/lib/termini"
@@ -73,6 +74,43 @@ export default async function PrikazPage({
     matrixRows = Array.from(byVrsta.values())
   }
 
+  // currentSearch string (čuva sve trenutne parametre za link bazu)
+  const currentSearch = new URLSearchParams(
+    Object.entries(sp).flatMap(([k, v]) =>
+      typeof v === "string" ? [[k, v] as [string, string]] : []
+    )
+  ).toString()
+
+  // TerminSheet — otvara se kad ?selected=<id>
+  const selectedId = typeof sp.selected === "string" ? sp.selected : null
+  let selectedTermin: TerminRow | null = null
+  let istorija: TerminRow[] = []
+  if (selectedId) {
+    const { data } = await supabase
+      .from("termini_view")
+      .select("*")
+      .eq("id", selectedId)
+      .maybeSingle()
+    selectedTermin = (data as TerminRow | null) ?? null
+    if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
+      const { data: h } = await supabase
+        .from("termini_view")
+        .select("*")
+        .eq("klijent_id", selectedTermin.klijent_id)
+        .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
+        .eq("status", "izvrseno")
+        .neq("id", selectedTermin.id ?? "")
+        .order("datum_izvrsenja", { ascending: false })
+        .limit(5)
+      istorija = (h ?? []) as TerminRow[]
+    }
+  }
+
+  // closeHref = trenutni URL bez "selected", čuva klijent/godina
+  const closeParams = new URLSearchParams(currentSearch)
+  closeParams.delete("selected")
+  const closeHref = `/prikaz${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Prikaz</h1>
@@ -98,7 +136,11 @@ export default async function PrikazPage({
           Izaberite klijenta za prikaz godišnje matrice.
         </div>
       ) : (
-        <MatrixGrid rows={matrixRows} />
+        <MatrixGrid rows={matrixRows} currentSearch={currentSearch} />
+      )}
+
+      {selectedTermin && (
+        <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />
       )}
     </div>
   )

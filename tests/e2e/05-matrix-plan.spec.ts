@@ -65,3 +65,32 @@ test.describe("Faza 5 — Matrix cell click", () => {
     await expect(page.getByTestId("termin-sheet")).toBeHidden()
   })
 })
+
+test.describe("Faza 5 — Mjesečni plan", () => {
+  test("kalendar grid + navigacija", async ({ page }) => {
+    await page.goto("/plan")
+    await expect(page.getByRole("heading", { name: "Mjesečni plan" })).toBeVisible()
+    await expect(page.getByTestId("plan-grid")).toBeVisible()
+    // 42 dana ćelije
+    expect(await page.getByTestId("plan-day-cell").count()).toBe(42)
+    const label = await page.getByTestId("plan-nav-label").textContent()
+    await page.getByTestId("plan-nav-next").click()
+    await page.waitForURL(/mjesec=/)
+    await expect(page.getByTestId("plan-nav-label")).not.toHaveText(label ?? "")
+  })
+
+  test("Danas dugme vraća na tekući mjesec", async ({ page }) => {
+    await page.goto("/plan?godina=2025&mjesec=1")
+    await page.getByTestId("plan-nav-today").click()
+    await page.waitForURL(/mjesec=/)
+    await expect(page.getByTestId("plan-grid")).toBeVisible()
+  })
+
+  test("godina dropdown mijenja godinu (§7.2 D)", async ({ page }) => {
+    await page.goto("/plan?godina=2026&mjesec=7")
+    await page.getByTestId("plan-nav-godina").click()
+    await page.getByRole("option", { name: "2025" }).click()
+    await page.waitForURL(/godina=2025/)
+    await expect(page.getByTestId("plan-nav-label")).toContainText("2025")
+  })
+})

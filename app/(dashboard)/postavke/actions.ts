@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export type ActionResult =
-  | { ok: true }
+  | { ok: true; danaPrije?: number[] }
   | { ok: false; errors?: Record<string, string[] | undefined>; message?: string }
 
 const schema = z.object({
@@ -40,5 +40,5 @@ export async function updatePostavke(
     .eq("id", 1)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/postavke")
-  return { ok: true }
+  return { ok: true, danaPrije: dana }
 }

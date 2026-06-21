@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useRef } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -11,19 +11,25 @@ const initial: ActionResult = { ok: true }
 export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(updatePostavke, initial)
-  const submitted = useRef(false)
+  // Controlled value — user typing always wins; never overwritten by async effects.
+  const [value, setValue] = useState(() => danaPrije.join(", "))
+  const prevState = useRef<ActionResult>(initial)
 
   useEffect(() => {
-    if (submitted.current && !pending && state.ok) {
-      submitted.current = false
-      router.refresh()
+    // Fire once when the action produces a new result
+    if (!pending && state !== prevState.current) {
+      prevState.current = state
+      if (state.ok) {
+        // Background-refresh the server component (e.g. to sync nav/badges).
+        // Do NOT call setValue here — user may have already started typing the next value.
+        router.refresh()
+      }
     }
   }, [state, pending, router])
 
   return (
     <form
       action={(fd) => {
-        submitted.current = true
         action(fd)
       }}
       className="max-w-md space-y-3"
@@ -33,7 +39,8 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
         <span className="text-slate-600">Pragovi (dana prije roka, odvojeni zarezom)</span>
         <Input
           name="dana_prije"
-          defaultValue={danaPrije.join(", ")}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           data-testid="reminder-dana-prije"
         />
       </label>

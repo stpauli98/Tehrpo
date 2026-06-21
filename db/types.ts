@@ -178,6 +178,13 @@ export type Database = {
             referencedRelation: "klijenti"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lokacije_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       podsjetnici: {
@@ -280,6 +287,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "termini_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "termini_lokacija_id_fkey"
             columns: ["lokacija_id"]
             isOneToOne: false
@@ -327,6 +341,21 @@ export type Database = {
       }
     }
     Views: {
+      klijenti_view: {
+        Row: {
+          broj_aktivnih: number | null
+          broj_izvrseno: number | null
+          broj_kasni: number | null
+          broj_lokacija: number | null
+          broj_termina: number | null
+          created_at: string | null
+          id: string | null
+          napomena: string | null
+          naziv: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       termini_view: {
         Row: {
           created_at: string | null
@@ -355,6 +384,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termini_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
             referencedColumns: ["id"]
           },
           {

@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { href: "/plan",     label: "Plan",     icon: Calendar },
   { href: "/klijenti", label: "Klijenti", icon: Users },
   { href: "/asistent", label: "Asistent", icon: Bot },
-  { href: "/pregled",  label: "Pregled",  icon: FileText },
+  { href: "/zapisnici", label: "Zapisnici", icon: FileText },
   { href: "/postavke", label: "Postavke", icon: Settings },
 ] as const
 

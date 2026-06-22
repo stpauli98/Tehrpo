@@ -67,7 +67,7 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
     return { ok: false, message: error.message }
   }
 
-  revalidatePath("/pregled")
+  revalidatePath("/zapisnici")
   if (t.klijent_id) revalidatePath(`/klijenti/${t.klijent_id}`)
   return { ok: true }
 }

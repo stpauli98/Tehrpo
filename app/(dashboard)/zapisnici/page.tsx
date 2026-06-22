@@ -55,7 +55,7 @@ export default async function PregledPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Pregled — AI zapisnici</h1>
+      <h1 className="text-2xl font-semibold">Zapisnici</h1>
 
       {dokumenti.length === 0 ? (
         <div data-testid="pregled-prazno" className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500">
@@ -81,7 +81,7 @@ export default async function PregledPage({
                   <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-3">
-                      <Link href={`/pregled?preview=${d.id}`} className="text-brand hover:underline" data-testid="pregled-preview">
+                      <Link href={`/zapisnici?preview=${d.id}`} className="text-brand hover:underline" data-testid="pregled-preview">
                         Pregled
                       </Link>
                       <a href={`/api/dokumenti/${d.id}`} className="text-brand hover:underline" data-testid="pregled-download">
@@ -101,7 +101,7 @@ export default async function PregledPage({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">{previewNaziv}</h2>
-            <Link href="/pregled" className="text-sm text-slate-500 hover:text-slate-700" data-testid="pregled-zatvori">
+            <Link href="/zapisnici" className="text-sm text-slate-500 hover:text-slate-700" data-testid="pregled-zatvori">
               Zatvori pregled
             </Link>
           </div>

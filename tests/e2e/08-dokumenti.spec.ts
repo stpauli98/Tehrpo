@@ -43,9 +43,9 @@ test.describe("Faza Dokumenti — termin sheet", () => {
   })
 })
 
-test.describe("Faza Dokumenti — /pregled", () => {
-  test("AI zapisnik se vidi na /pregled i preview renderuje HTML", async ({ page }) => {
-    await page.goto("/pregled")
+test.describe("Faza Dokumenti — /zapisnici", () => {
+  test("AI zapisnik se vidi na /zapisnici i preview renderuje HTML", async ({ page }) => {
+    await page.goto("/zapisnici")
     await expect(page.getByTestId("pregled-tabela")).toBeVisible()
     await page.getByTestId("pregled-preview").first().click()
     await expect(page.getByTestId("docx-preview")).toBeVisible()
@@ -53,7 +53,7 @@ test.describe("Faza Dokumenti — /pregled", () => {
   })
 
   test("brisanje zapisnika ga uklanja iz liste", async ({ page }) => {
-    await page.goto("/pregled")
+    await page.goto("/zapisnici")
     const prijeRedova = await page.getByTestId("pregled-red").count()
     expect(prijeRedova).toBeGreaterThan(0)
     await page.getByTestId("pregled-delete").first().click()
@@ -64,11 +64,11 @@ test.describe("Faza Dokumenti — /pregled", () => {
 })
 
 test.describe("Faza Dokumenti — bez console grešaka", () => {
-  test("nema console grešaka na /pregled", async ({ page }) => {
+  test("nema console grešaka na /zapisnici", async ({ page }) => {
     const errors: string[] = []
     page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()) })
-    await page.goto("/pregled")
-    await expect(page.getByRole("heading", { name: /AI zapisnici/i })).toBeVisible()
+    await page.goto("/zapisnici")
+    await expect(page.getByRole("heading", { name: /Zapisnici/i })).toBeVisible()
     expect(errors).toEqual([])
   })
 })

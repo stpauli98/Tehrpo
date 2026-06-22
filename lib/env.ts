@@ -16,6 +16,7 @@ const envSchema = z.object({
   CRON_SECRET: optionalSecret,
   ANTHROPIC_API_KEY: optionalSecret,
   ZAPISNIK_DRY_RUN: z.string().optional(),
+  CHAT_DRY_RUN: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse({
@@ -28,6 +29,7 @@ const parsed = envSchema.safeParse({
   CRON_SECRET: process.env.CRON_SECRET,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   ZAPISNIK_DRY_RUN: process.env.ZAPISNIK_DRY_RUN,
+  CHAT_DRY_RUN: process.env.CHAT_DRY_RUN,
 })
 
 if (!parsed.success) {

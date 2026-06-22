@@ -42,3 +42,43 @@ export async function updatePostavke(
   revalidatePath("/postavke")
   return { ok: true, danaPrije: dana }
 }
+
+// ─── Intervali po vrsti (podrazumevani_interval_mjeseci) ─────────────────────
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export async function updateIntervali(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  // Forma šalje polja "interval_<vrsta_uuid>" = "" | "1".."120"
+  const updates: { id: string; val: number | null }[] = []
+  for (const [key, raw] of formData.entries()) {
+    if (!key.startsWith("interval_")) continue
+    const id = key.slice("interval_".length)
+    if (!UUID_RE.test(id)) continue
+    const s = String(raw).trim()
+    if (s === "") {
+      updates.push({ id, val: null })
+      continue
+    }
+    const n = Number(s)
+    if (!Number.isInteger(n) || n < 1 || n > 120) {
+      return { ok: false, message: `Interval mora biti cijeli broj 1–120 ili prazno (greška: "${s}")` }
+    }
+    updates.push({ id, val: n })
+  }
+  if (updates.length === 0) return { ok: true }
+
+  const supabase = await createServerSupabaseClient()
+  // Bez await-in-loop: svi update-ovi konkurentno
+  const results = await Promise.all(
+    updates.map((u) =>
+      supabase.from("vrste_provjera").update({ podrazumevani_interval_mjeseci: u.val }).eq("id", u.id),
+    ),
+  )
+  const errored = results.find((r) => r.error)
+  if (errored?.error) return { ok: false, message: errored.error.message }
+  revalidatePath("/postavke")
+  return { ok: true }
+}

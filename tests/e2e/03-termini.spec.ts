@@ -93,6 +93,17 @@ test.describe("Faza 3 — Termini filteri", () => {
     await expect(rows.first()).toContainText(/WAIKIKI/i)
   })
 
+  test("pretraga filtrira živo dok se kuca (bez Entera)", async ({ page }) => {
+    await page.goto("/termini")
+    const input = page.getByTestId("filter-search")
+    // kucanje karakter-po-karakter, NE pritiskamo Enter
+    await input.pressSequentially("WAIK")
+    await page.waitForURL(/q=WAIK/)
+    const rows = page.getByTestId("termin-row")
+    expect(await rows.count()).toBeGreaterThan(0)
+    await expect(rows.first()).toContainText(/WAIKIKI/i)
+  })
+
   test("status pill 'Svi' vraća sve", async ({ page }) => {
     await page.goto("/termini?status=kasni")
     await page.getByTestId("status-pill-svi").click()

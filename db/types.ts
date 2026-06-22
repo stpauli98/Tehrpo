@@ -116,6 +116,7 @@ export type Database = {
           napomena: string | null
           naziv: string
           podsjetnik_emails: string[]
+          tip_odnosa: string | null
           updated_at: string
         }
         Insert: {
@@ -124,6 +125,7 @@ export type Database = {
           napomena?: string | null
           naziv: string
           podsjetnik_emails?: string[]
+          tip_odnosa?: string | null
           updated_at?: string
         }
         Update: {
@@ -132,6 +134,7 @@ export type Database = {
           napomena?: string | null
           naziv?: string
           podsjetnik_emails?: string[]
+          tip_odnosa?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -373,6 +376,7 @@ export type Database = {
           id: string | null
           napomena: string | null
           naziv: string | null
+          tip_odnosa: string | null
           updated_at: string | null
         }
         Relationships: []

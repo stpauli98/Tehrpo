@@ -20,14 +20,14 @@
 - **Komande:**
   - Unit: `pnpm vitest run <path>`
   - E2E: `pnpm test:e2e tests/e2e/<file>` (Playwright, `--workers=1`)
-  - Migracija + tipovi: `pnpm db:reset && pnpm db:types` (Docker mora raditi)
+  - Migracija + tipovi: `pnpm db:reset && pnpm db:types && pnpm seed` (Docker mora raditi)
   - Gate faze: `pnpm lint && pnpm typecheck && pnpm build` + relevantni e2e + vizualna provjera.
 
 ## Prerequisites (jednom prije početka)
 
 - [ ] Pokrenuti lokalni Supabase: `supabase start` (Docker).
 - [ ] Provjeriti `.env.local` postoji.
-- [ ] `pnpm db:reset && pnpm db:types` — čista baza + seed + svježi `db/types.ts`.
+- [ ] `pnpm db:reset && pnpm db:types && pnpm seed` — čista baza + seed + svježi `db/types.ts`.
 - [ ] `pnpm dev` radi na `:3000`; smoke e2e prolazi: `pnpm test:e2e tests/e2e/01-smoke.spec.ts`.
 
 ---
@@ -84,7 +84,7 @@ from klijenti k;
 
 - [ ] **Step 2: Primijeniti migraciju i regenerisati tipove**
 
-Run: `pnpm db:reset && pnpm db:types`
+Run: `pnpm db:reset && pnpm db:types && pnpm seed`
 Expected: bez grešaka; `db/types.ts` sada ima `tip_odnosa` u `klijenti` Row tipu.
 
 Provjera: `grep -n "tip_odnosa" db/types.ts`

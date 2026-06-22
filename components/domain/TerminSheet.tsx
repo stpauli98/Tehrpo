@@ -77,7 +77,7 @@ export function TerminSheet({
     <Sheet open onOpenChange={(o) => { if (!o) close() }}>
       <SheetContent
         side="right"
-        className="w-full lg:max-w-md flex flex-col"
+        className="w-full lg:max-w-2xl flex flex-col"
         data-testid="termin-sheet"
       >
         <SheetHeader>
@@ -99,43 +99,46 @@ export function TerminSheet({
               FieldControl" + zastarjele vrijednosti u poljima pri prebacivanju termina) */}
           <form key={termin.id} action={updateAction} className="space-y-3" data-testid="termin-edit-form">
             <input type="hidden" name="id" value={termin.id ?? ""} />
-            <label className="block text-sm">
-              <span className="text-slate-600">Datum zakazan</span>
-              <Input
-                type="date"
-                name="datum_zakazan"
-                defaultValue={termin.datum_zakazan ?? ""}
-                data-testid="edit-datum-zakazan"
-              />
-            </label>
-            {termin.status === "izvrseno" && (
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Detalji</p>
+            <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm">
-                <span className="text-slate-600">Datum izvršenja</span>
+                <span className="text-slate-600">Datum zakazan</span>
                 <Input
                   type="date"
-                  name="datum_izvrsenja"
-                  defaultValue={termin.datum_izvrsenja ?? ""}
-                  data-testid="edit-datum-izvrsenja"
+                  name="datum_zakazan"
+                  defaultValue={termin.datum_zakazan ?? ""}
+                  data-testid="edit-datum-zakazan"
                 />
               </label>
-            )}
-            <label className="block text-sm">
-              <span className="text-slate-600">Zaduženi</span>
-              <Input
-                name="zaduzeni"
-                defaultValue={termin.zaduzeni ?? ""}
-                placeholder="npr. Marija K."
-                data-testid="edit-zaduzeni"
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="text-slate-600">Napomena</span>
-              <Input
-                name="napomena"
-                defaultValue={termin.napomena ?? ""}
-                data-testid="edit-napomena"
-              />
-            </label>
+              {termin.status === "izvrseno" && (
+                <label className="block text-sm">
+                  <span className="text-slate-600">Datum izvršenja</span>
+                  <Input
+                    type="date"
+                    name="datum_izvrsenja"
+                    defaultValue={termin.datum_izvrsenja ?? ""}
+                    data-testid="edit-datum-izvrsenja"
+                  />
+                </label>
+              )}
+              <label className="block text-sm">
+                <span className="text-slate-600">Zaduženi</span>
+                <Input
+                  name="zaduzeni"
+                  defaultValue={termin.zaduzeni ?? ""}
+                  placeholder="npr. Marija K."
+                  data-testid="edit-zaduzeni"
+                />
+              </label>
+              <label className="block text-sm col-span-2">
+                <span className="text-slate-600">Napomena</span>
+                <Input
+                  name="napomena"
+                  defaultValue={termin.napomena ?? ""}
+                  data-testid="edit-napomena"
+                />
+              </label>
+            </div>
             {updateState.ok === false && updateState.message && (
               <p className="text-sm text-red-600" role="alert">
                 {updateState.message}
@@ -146,75 +149,86 @@ export function TerminSheet({
             </Button>
           </form>
 
-          {/* Označi kao izvršeno — prikazuje se samo za ne-izvršene termine */}
+          {/* Akcije — Označi izvršeno + Otkaži, jedno pored drugog */}
           {termin.status !== "izvrseno" && (
-            <form
-              action={markAction}
-              className="space-y-2 rounded-lg border border-slate-200 p-3"
-              data-testid="mark-done-form"
-            >
-              <p className="text-sm font-medium">Označi kao izvršeno</p>
-              <input type="hidden" name="id" value={termin.id ?? ""} />
-              <Input
-                type="date"
-                name="datum_izvrsenja"
-                value={izvrDatum}
-                onChange={(e) => setIzvrDatum(e.target.value)}
-                data-testid="mark-datum"
-              />
-              {markState.ok === false && markState.message && (
-                <p className="text-sm text-red-600" role="alert">
-                  {markState.message}
-                </p>
-              )}
-              <Button
-                type="submit"
-                variant="default"
-                disabled={markPending}
-                data-testid="mark-done-submit"
-              >
-                {markPending ? "Označavam…" : "Označi izvršeno"}
-              </Button>
-              <p className="text-xs text-slate-400">
-                Sistem automatski kreira sljedeći termin u ciklusu.
-              </p>
-            </form>
-          )}
-
-          {/* Otkaži termin — za aktivne (ne izvršene/otkazane); dvostepena potvrda */}
-          {termin.status !== "izvrseno" && termin.status !== "otkazano" && (
-            <form action={otkazAction} data-testid="otkazi-form">
-              <input type="hidden" name="id" value={termin.id ?? ""} />
-              {otkazState.ok === false && otkazState.message && (
-                <p className="text-sm text-red-600" role="alert">{otkazState.message}</p>
-              )}
-              {!otkazArmed ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOtkazArmed(true)}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                  data-testid="otkazi-arm"
+            <section className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Akcije</p>
+              <div className="grid grid-cols-2 gap-3 items-start">
+                <form
+                  action={markAction}
+                  className="space-y-2 rounded-lg border border-slate-200 p-3"
+                  data-testid="mark-done-form"
                 >
-                  Otkaži termin
-                </Button>
-              ) : (
-                <div className="flex gap-2">
+                  <p className="text-sm font-medium">Označi kao izvršeno</p>
+                  <input type="hidden" name="id" value={termin.id ?? ""} />
+                  <Input
+                    type="date"
+                    name="datum_izvrsenja"
+                    value={izvrDatum}
+                    onChange={(e) => setIzvrDatum(e.target.value)}
+                    data-testid="mark-datum"
+                  />
+                  {markState.ok === false && markState.message && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {markState.message}
+                    </p>
+                  )}
                   <Button
                     type="submit"
-                    variant="outline"
-                    disabled={otkazPending}
-                    className="text-red-600 border-red-300 hover:bg-red-50"
-                    data-testid="otkazi-submit"
+                    variant="default"
+                    disabled={markPending}
+                    className="w-full"
+                    data-testid="mark-done-submit"
                   >
-                    {otkazPending ? "Otkazujem…" : "Potvrdi otkazivanje"}
+                    {markPending ? "Označavam…" : "Označi izvršeno"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setOtkazArmed(false)}>
-                    Odustani
-                  </Button>
-                </div>
-              )}
-            </form>
+                  <p className="text-xs text-slate-400">
+                    Sistem automatski kreira sljedeći termin u ciklusu.
+                  </p>
+                </form>
+
+                {/* Otkaži termin — dvostepena potvrda */}
+                {termin.status !== "otkazano" && (
+                  <form
+                    action={otkazAction}
+                    className="space-y-2 rounded-lg border border-slate-200 p-3"
+                    data-testid="otkazi-form"
+                  >
+                    <p className="text-sm font-medium">Otkaži termin</p>
+                    <input type="hidden" name="id" value={termin.id ?? ""} />
+                    {otkazState.ok === false && otkazState.message && (
+                      <p className="text-sm text-red-600" role="alert">{otkazState.message}</p>
+                    )}
+                    {!otkazArmed ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setOtkazArmed(true)}
+                        className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                        data-testid="otkazi-arm"
+                      >
+                        Otkaži termin
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          disabled={otkazPending}
+                          className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                          data-testid="otkazi-submit"
+                        >
+                          {otkazPending ? "Otkazujem…" : "Potvrdi otkazivanje"}
+                        </Button>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => setOtkazArmed(false)}>
+                          Odustani
+                        </Button>
+                      </div>
+                    )}
+                  </form>
+                )}
+              </div>
+            </section>
           )}
 
           {/* Dokumenti — upload + AI zapisnik */}

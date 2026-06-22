@@ -12,7 +12,7 @@ const TONE_CLASS: Record<Tone, string> = {
 }
 
 export function StatCard({
-  label, value, sub, icon: Icon, tone = "default", testId,
+  label, value, sub, icon: Icon, tone = "default", testId, interactive = false,
 }: {
   label: string
   value: string | number
@@ -20,9 +20,17 @@ export function StatCard({
   icon: LucideIcon
   tone?: Tone
   testId?: string
+  interactive?: boolean
 }) {
   return (
-    <Card data-testid={testId}>
+    <Card
+      data-testid={testId}
+      className={cn(
+        "h-full",
+        interactive &&
+          "cursor-pointer transition-shadow hover:shadow-md hover:border-slate-300"
+      )}
+    >
       <CardContent className="flex items-start justify-between gap-3 p-4">
         <div className="min-w-0">
           <p className="text-sm text-slate-500">{label}</p>

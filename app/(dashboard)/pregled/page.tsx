@@ -40,43 +40,46 @@ export default async function PregledPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <Link href={`/termini?mjesec=${mjesec}`}>
+        {/* Klikabilne: vode na filter koji TAČNO odgovara broju na kartici */}
+        <Link href={`/termini?mjesec=${mjesec}`} className="block" aria-label="Termini ovog mjeseca">
           <StatCard
             label="Termini ovog mjeseca"
             value={stats.ovog_mjeseca}
+            sub="rok dospijeća ovaj mjesec"
             icon={Calendar}
+            interactive
             testId="stat-card"
           />
         </Link>
-        <Link href="/termini?status=kasni" aria-label="Kasni rokovi">
+        <Link href="/termini?status=kasni" className="block" aria-label="Kasni rokovi">
           <StatCard
             label="Kasni rokovi"
             value={stats.kasni}
             tone="danger"
             sub="zahtijevaju akciju"
             icon={AlertTriangle}
+            interactive
             testId="stat-card"
           />
         </Link>
-        <Link href="/termini?status=izvrseno">
-          <StatCard
-            label="Izvršeno ovog mjeseca"
-            value={stats.izvrseno_ovog_mjeseca}
-            tone="success"
-            icon={CheckCircle}
-            testId="stat-card"
-          />
-        </Link>
-        <Link href="/termini">
-          <StatCard
-            label="Predstojeći (30 dana)"
-            value={predstojeci}
-            tone="warning"
-            sub="podsjetnici aktivni"
-            icon={Clock}
-            testId="stat-card"
-          />
-        </Link>
+        {/* Neklikabilne: metrika nema 1:1 filter u Termini listi (mjeri se po
+            datumu izvršenja / prozoru od 30 dana), pa ne vode na pogrešan prikaz */}
+        <StatCard
+          label="Izvršeni ovog mjeseca"
+          value={stats.izvrseno_ovog_mjeseca}
+          tone="success"
+          sub="završeno ovaj mjesec"
+          icon={CheckCircle}
+          testId="stat-card"
+        />
+        <StatCard
+          label="Predstojeći (30 dana)"
+          value={predstojeci}
+          tone="warning"
+          sub="još neizvršeni"
+          icon={Clock}
+          testId="stat-card"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

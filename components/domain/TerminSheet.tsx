@@ -232,7 +232,7 @@ export function TerminSheet({
           )}
 
           {/* Dokumenti — upload + AI zapisnik */}
-          <DokumentiSekcija terminId={termin.id ?? ""} dokumenti={dokumenti} />
+          <DokumentiSekcija terminId={termin.id ?? ""} dokumenti={dokumenti} izvrsen={termin.status === "izvrseno"} />
 
           {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
           <section data-testid="sheet-istorija">

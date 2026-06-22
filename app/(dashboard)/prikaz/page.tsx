@@ -2,9 +2,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/OpterecenjeChart"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
 import { MatrixGrid } from "@/components/domain/MatrixGrid"
+import type { MatrixColumn } from "@/lib/matrix"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { currentYear, todayIso, MONTHS_BS } from "@/lib/date"
+import { currentYear, todayIso, MONTHS_BS, monthRange } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
 
@@ -16,6 +17,8 @@ export default async function PrikazPage({
   const sp = await searchParams
   const godina = Number(typeof sp.godina === "string" ? sp.godina : "") || currentYear()
   const klijentId = typeof sp.klijent === "string" ? sp.klijent : ""
+  const mode = typeof sp.mode === "string" ? sp.mode : "klijent"
+  const mjesec = Number(typeof sp.mjesec === "string" ? sp.mjesec : "") || (Number(todayIso().slice(5, 7)))
 
   const supabase = await createServerSupabaseClient()
   const [opterecenjeRes, klijentiRes] = await Promise.all([
@@ -28,7 +31,31 @@ export default async function PrikazPage({
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   let matrixRows: MatrixRow[] = []
-  if (klijentId) {
+  let kolone: MatrixColumn[] = []
+  let emptyMessage = "Izaberite klijenta za prikaz godišnje matrice."
+
+  if (mode === "mjesec") {
+    const { from: od, to: doIso } = monthRange(godina, mjesec)
+    const { data } = await supabase
+      .from("termini_view")
+      .select("id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, status_izvedeni")
+      .gte("rok_dospijeca", od)
+      .lte("rok_dospijeca", doIso)
+    const termini = (data ?? []) as TerminRow[]
+    const inputs: MatrixInput[] = termini
+      .filter((t) => t.id && t.vrsta_provjere_id && t.klijent_id && t.rok_dospijeca)
+      .map((t) => ({
+        id: t.id!,
+        vrstaId: t.vrsta_provjere_id!,
+        vrstaNaziv: t.vrsta_naziv ?? "—",
+        columnKey: t.klijent_id!,
+        dan: Number(t.rok_dospijeca!.slice(8, 10)),
+        status: toDerivedStatus(t.status_izvedeni),
+      }))
+    matrixRows = buildMatrix(inputs)
+    kolone = klijenti.map((k) => ({ id: k.id, label: k.naziv }))
+    emptyMessage = "Nema termina za izabrani mjesec."
+  } else if (klijentId) {
     const { data } = await supabase
       .from("termini_view")
       .select("id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, status_izvedeni")
@@ -48,16 +75,16 @@ export default async function PrikazPage({
         status: toDerivedStatus(t.status_izvedeni),
       }))
     matrixRows = buildMatrix(inputs)
+    // Kolone matrice: 12 mjeseci
+    const currentMonthNum = Number(todayIso().slice(5, 7))
+    const currentYearNum = currentYear()
+    kolone = MONTHS_BS.map((label, i) => ({
+      id: String(i + 1),
+      label: label.slice(0, 3),
+      isCurrent: godina === currentYearNum && i + 1 === currentMonthNum,
+    }))
+    emptyMessage = "Ovaj klijent nema termina u izabranoj godini."
   }
-
-  // Kolone matrice: 12 mjeseci
-  const currentMonthNum = Number(todayIso().slice(5, 7))
-  const currentYearNum = currentYear()
-  const mjeseciKolone = MONTHS_BS.map((label, i) => ({
-    id: String(i + 1),
-    label: label.slice(0, 3),
-    isCurrent: godina === currentYearNum && i + 1 === currentMonthNum,
-  }))
 
   // currentSearch string (čuva sve trenutne parametre za link bazu)
   const currentSearch = new URLSearchParams(
@@ -104,6 +131,8 @@ export default async function PrikazPage({
   closeParams.delete("selected")
   const closeHref = `/prikaz${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
 
+  const showMatrix = mode === "mjesec" || (mode === "klijent" && !!klijentId)
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Prikaz</h1>
@@ -121,20 +150,20 @@ export default async function PrikazPage({
 
       <PrikazToolbar klijenti={klijenti} godine={godine} godina={godina} />
 
-      {!klijentId ? (
+      {showMatrix ? (
+        <MatrixGrid
+          columns={kolone}
+          rows={matrixRows}
+          currentSearch={currentSearch}
+          emptyMessage={emptyMessage}
+        />
+      ) : (
         <div
           data-testid="prikaz-empty"
           className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
         >
-          Izaberite klijenta za prikaz godišnje matrice.
+          {emptyMessage}
         </div>
-      ) : (
-        <MatrixGrid
-          columns={mjeseciKolone}
-          rows={matrixRows}
-          currentSearch={currentSearch}
-          emptyMessage="Ovaj klijent nema termina u izabranoj godini."
-        />
       )}
 
       {selectedTermin && (

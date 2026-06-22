@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test"
 
 test.describe("Faza 1 smoke", () => {
-  test("root redirects to /termini", async ({ page }) => {
+  test("root redirects to /pregled", async ({ page }) => {
     await page.goto("/")
-    await expect(page).toHaveURL("/termini")
+    await expect(page).toHaveURL("/pregled")
   })
 
   test("TopBar prikazuje Tehpro brand", async ({ page }) => {
@@ -12,15 +12,18 @@ test.describe("Faza 1 smoke", () => {
     await expect(page.getByRole("banner")).toContainText("Sistem za termine i provjere")
   })
 
-  test("Sidebar prikazuje svih 6 nav stavki", async ({ page }) => {
+  test("Sidebar prikazuje svih 9 nav stavki", async ({ page }) => {
     await page.goto("/termini")
     const nav = page.getByRole("navigation", { name: "Glavna navigacija" })
+    await expect(nav.getByRole("link", { name: "Pregled" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Termini" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Prikaz" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Plan" })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Obilasci" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Klijenti" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Asistent" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Pregled" })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Zapisnici" })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Postavke" })).toBeVisible()
   })
 
   test("Aktivna stavka u Sidebar-u ima aria-current=page", async ({ page }) => {

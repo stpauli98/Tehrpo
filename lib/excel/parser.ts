@@ -16,18 +16,35 @@ export const POZNATE_FIRME = [
 
 const FIRME_SORTED = [...POZNATE_FIRME].sort((a, b) => b.length - a.length)
 
-// Per-firma kanonizacija LOKACIJE (rješava TRANSFERA fragmentaciju: 6 varijanti → 3 lokacije).
+// Per-firma kanonizacija LOKACIJE.
 // Ulaz je već canonicalizeNaziv-ovan ostatak (UPPERCASE). Vrati kanonsku lokaciju.
 function canonLokacija(firma: string, lokRaw: string | null): string | null {
   if (lokRaw == null) return null
+
+  // Pravilo 1: Zarez → kombinovana posjeta, vrati nepromijenjeno
+  if (lokRaw.includes(",")) return lokRaw
+
   const u = lokRaw.toUpperCase()
+
+  // Pravilo 2: TRANSFERA — 3 kanonske lokacije
   if (firma === "TRANSFERA") {
     if (/SKLADI[SŠ]TE/.test(u)) return "FBiH - skladište"
     if (/KANCELARIJA/.test(u)) return "FBiH - kancelarija"
     if (u === "RS") return "RS"
-    if (u === "FBIH") return "FBiH"   // gola "TRANSFERA FBIH" (samo u OBILASCI) — zadrži kao FBiH
+    // Gola "FBIH" (iz OBILASCI "TRANSFERA FBIH") → skladište (bila "FBiH", sada ispravljeno)
+    if (u === "FBIH") return "FBiH - skladište"
   }
-  return lokRaw // ostale firme: lokacija = ostatak kakav jeste (Title-case za prikaz po želji)
+
+  // Pravilo 3: WAIKIKI / NEW YORKER — dedup BL prodavnica (Delta, Emporium, Boska, Kort)
+  if (firma === "WAIKIKI" || firma === "NEW YORKER") {
+    if (/\bDELTA\b/.test(u))    return "Banja Luka - Delta"
+    if (/\bEMPORIUM\b/.test(u)) return "Banja Luka - Emporium"
+    if (/\bBOSKA\b/.test(u))    return "Banja Luka - Boska"
+    if (/\bKORT\b/.test(u))     return "Banja Luka - Kort"
+  }
+
+  // Pravilo 4: sve ostalo — lokacija ostaje kakva jeste
+  return lokRaw
 }
 
 // ---------------------------------------------------------------------------

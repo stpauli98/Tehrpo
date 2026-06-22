@@ -28,7 +28,20 @@ describe("splitFirmaLokacija", () => {
   it("WAIKIKI BANJA LUKA - DELTA → firma WAIKIKI, lok 'Banja Luka - Delta'", () => {
     const r = splitFirmaLokacija("WAIKIKI BANJA LUKA - DELTA")
     expect(r.firma).toBe("WAIKIKI")
-    expect(r.lokacija?.toUpperCase()).toBe("BANJA LUKA - DELTA")
+    expect(r.lokacija).toBe("Banja Luka - Delta")
+  })
+  it("WAIKIKI DELTA (kratka) → 'Banja Luka - Delta' (dedup)", () => {
+    expect(splitFirmaLokacija("WAIKIKI DELTA").lokacija).toBe("Banja Luka - Delta")
+  })
+  it("NEW YORKER BOSKA → 'Banja Luka - Boska'", () => {
+    expect(splitFirmaLokacija("NEW YORKER BOSKA").lokacija).toBe("Banja Luka - Boska")
+  })
+  it("TRANSFERA FBIH (gola) → 'FBiH - skladište'", () => {
+    expect(splitFirmaLokacija("TRANSFERA FBIH").lokacija).toBe("FBiH - skladište")
+  })
+  it("WAIKIKI ZVORNIK, BRČKO, BIJELJINA → lokacija sadrži zarez (kombinirani obilazak)", () => {
+    const lok = splitFirmaLokacija("WAIKIKI ZVORNIK, BRČKO, BIJELJINA").lokacija
+    expect(lok).toContain(",")
   })
   it("NEW YORKER - Doboj → firma 'NEW YORKER', lok 'Doboj'", () => {
     const r = splitFirmaLokacija("NEW YORKER - Doboj")

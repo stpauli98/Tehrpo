@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDatum, monthRange, MONTHS_BS, todayIso } from "./date"
+import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange } from "./date"
 
 describe("formatDatum", () => {
   it("ISO datum → DD.MM.YYYY.", () => {
@@ -50,5 +50,17 @@ describe("todayIso", () => {
     const m = String(now.getUTCMonth() + 1).padStart(2, "0")
     const d = String(now.getUTCDate()).padStart(2, "0")
     expect(result).toBe(`${y}-${m}-${d}`)
+  })
+})
+
+describe("periodRange", () => {
+  it("mjesec → prvi do zadnji dan mjeseca", () => {
+    expect(periodRange("mjesec", 2026, 2)).toEqual({ od: "2026-02-01", do: "2026-02-28" })
+  })
+  it("kvartal Q2 → april–jun", () => {
+    expect(periodRange("kvartal", 2026, undefined, 2)).toEqual({ od: "2026-04-01", do: "2026-06-30" })
+  })
+  it("godina → 01-01 do 12-31", () => {
+    expect(periodRange("godina", 2026)).toEqual({ od: "2026-01-01", do: "2026-12-31" })
   })
 })

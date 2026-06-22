@@ -51,3 +51,6 @@ next-env.d.ts
 # claude / sdd scratch
 /claudedocs
 /.superpowers
+
+# agent scratch worktrees
+.claude/worktrees/

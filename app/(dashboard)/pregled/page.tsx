@@ -90,7 +90,11 @@ export default async function PregledPage() {
             godina={godina}
           />
         </div>
-        <HitnoKasniList items={hitnoKasni} ukupnoPredstojeci={predstojeci} />
+        <HitnoKasniList
+          items={hitnoKasni}
+          ukupnoKasni={stats.kasni}
+          today={todayIso()}
+        />
       </div>
     </div>
   )

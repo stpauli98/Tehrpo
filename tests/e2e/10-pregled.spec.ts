@@ -41,4 +41,21 @@ test.describe("Faza dashboard — Pregled", () => {
     await page.waitForLoadState("networkidle")
     expect(errors, errors.join("\n")).toHaveLength(0)
   })
+
+  test("klik na hitno/kasni red otvara taj termin (?selected)", async ({ page }) => {
+    await page.goto("/pregled")
+    await page.getByTestId("hitno-kasni-row").first().click()
+    await page.waitForURL(/\/termini\?selected=[0-9a-f-]{36}/)
+  })
+
+  test("hitno/kasni red ima relativnu oznaku (kasni/za/danas)", async ({ page }) => {
+    await page.goto("/pregled")
+    await expect(page.getByTestId("hitno-kasni-row").first()).toContainText(/kasni \d+|za \d+|danas/)
+  })
+
+  test("hitno/kasni footer vodi na sve kasne", async ({ page }) => {
+    await page.goto("/pregled")
+    await page.getByTestId("hitno-kasni-footer").click()
+    await page.waitForURL(/\/termini\?status=kasni/)
+  })
 })

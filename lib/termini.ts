@@ -8,6 +8,7 @@ export type HitnoKasniItem = {
   klijent_id: string
   klijent_naziv: string
   vrsta_naziv: string
+  lokacija_naziv: string | null
   rok_dospijeca: string
   status_izvedeni: string
 }
@@ -37,7 +38,7 @@ export async function getHitnoKasni(
 ): Promise<HitnoKasniItem[]> {
   const { data } = await supabase
     .from("termini_view")
-    .select("id, klijent_id, klijent_naziv, vrsta_naziv, rok_dospijeca, status_izvedeni")
+    .select("id, klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca, status_izvedeni")
     .or(`status_izvedeni.eq.kasni,and(rok_dospijeca.lte.${isoPlusDays(30)},status_izvedeni.neq.izvrseno)`)
     .order("rok_dospijeca", { ascending: true })
     .limit(limit)

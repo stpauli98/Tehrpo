@@ -1,14 +1,23 @@
 import Link from "next/link"
 import { AlertTriangle } from "lucide-react"
 import { formatDatum } from "@/lib/date"
+import { rokRelativnaOznaka } from "@/lib/hitno"
 import type { HitnoKasniItem } from "@/lib/termini"
+import { cn } from "@/lib/utils"
+
+const TONE: Record<"danger" | "warning", string> = {
+  danger: "text-red-600",
+  warning: "text-amber-600",
+}
 
 export function HitnoKasniList({
   items,
-  ukupnoPredstojeci,
+  ukupnoKasni,
+  today,
 }: {
   items: HitnoKasniItem[]
-  ukupnoPredstojeci: number
+  ukupnoKasni: number
+  today: string
 }) {
   return (
     <div className="rounded-xl border border-slate-200 p-4" data-testid="hitno-kasni-list">
@@ -22,34 +31,43 @@ export function HitnoKasniList({
         </p>
       ) : (
         <ul className="divide-y divide-slate-100">
-          {items.map((t) => (
-            <li key={t.id}>
-              <Link
-                href={`/termini?klijent_id=${t.klijent_id}`}
-                data-testid="hitno-kasni-row"
-                className="flex items-center justify-between py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
-              >
-                <span>
-                  <span className="font-medium">{t.klijent_naziv}</span>
-                  <span className="block text-xs text-slate-500">{t.vrsta_naziv}</span>
-                </span>
-                <span
-                  className={
-                    t.status_izvedeni === "kasni"
-                      ? "text-sm text-red-600"
-                      : "text-sm text-slate-600"
-                  }
+          {items.map((t) => {
+            const oznaka = rokRelativnaOznaka(t.rok_dospijeca, today)
+            return (
+              <li key={t.id}>
+                <Link
+                  href={`/termini?selected=${t.id}`}
+                  data-testid="hitno-kasni-row"
+                  className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
                 >
-                  {formatDatum(t.rok_dospijeca)}
-                </span>
-              </Link>
-            </li>
-          ))}
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{t.klijent_naziv}</span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {t.vrsta_naziv}
+                      {t.lokacija_naziv ? ` · ${t.lokacija_naziv}` : ""}
+                    </span>
+                  </span>
+                  <span
+                    className={cn("shrink-0 text-sm font-medium", TONE[oznaka.tone])}
+                    title={formatDatum(t.rok_dospijeca)}
+                  >
+                    {oznaka.text}
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       )}
-      <p className="mt-3 text-xs text-slate-400">
-        + {ukupnoPredstojeci} termina dospijeva u narednih 30 dana
-      </p>
+      {ukupnoKasni > 0 && (
+        <Link
+          href="/termini?status=kasni"
+          data-testid="hitno-kasni-footer"
+          className="mt-3 inline-block text-xs text-brand hover:underline"
+        >
+          Svi kasni rokovi ({ukupnoKasni}) →
+        </Link>
+      )}
     </div>
   )
 }

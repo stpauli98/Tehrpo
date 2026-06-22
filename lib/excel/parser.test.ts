@@ -156,3 +156,27 @@ describe("parseTehproExcel (dvoblokovni fixture)", () => {
     expect(res.lokacije.some(l => l.firma_naziv === "WAIKIKI" && /ZVORNIK/i.test(l.lokacija_naziv ?? ""))).toBe(true)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Edge-case fixevi (gate odluke): VENETO SHOES, A.D. sufiks, Dom zdravlja
+// ---------------------------------------------------------------------------
+describe("splitFirmaLokacija — edge-case fixevi", () => {
+  it("VENETO SHOES je jedna firma; bare 'VENETO' se spaja u 'VENETO SHOES'", () => {
+    expect(splitFirmaLokacija("VENETO SHOES")).toEqual({ firma: "VENETO SHOES", lokacija: null })
+    expect(splitFirmaLokacija("VENETO")).toEqual({ firma: "VENETO SHOES", lokacija: null })
+  })
+  it("MIKROELEKTRONIKA A.D. → firma bez lokacije (A.D. je pravni sufiks)", () => {
+    expect(splitFirmaLokacija("MIKROELEKTRONIKA A.D.")).toEqual({ firma: "MIKROELEKTRONIKA", lokacija: null })
+    expect(splitFirmaLokacija("MIKROELEKTRONIKA")).toEqual({ firma: "MIKROELEKTRONIKA", lokacija: null })
+  })
+  it("Dom zdravlja Dr Mladen — varijante (navodnici/dijakritika) → jedna firma", () => {
+    const a = splitFirmaLokacija('Dom zdravlja "Dr Mladen Stojanović"')
+    const b = splitFirmaLokacija("Dom zdravlja Dr Mladen Stojanovic")
+    expect(a.firma).toBe("Dom zdravlja Dr Mladen Stojanović")
+    expect(b.firma).toBe("Dom zdravlja Dr Mladen Stojanović")
+    expect(a.lokacija).toBeNull()
+  })
+  it("Dom zdravlja Laktaši → zasebna firma", () => {
+    expect(splitFirmaLokacija("Dom zdravlja Laktaši").firma).toBe("Dom zdravlja Laktaši")
+  })
+})

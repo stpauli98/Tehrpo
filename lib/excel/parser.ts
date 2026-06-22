@@ -8,13 +8,25 @@ import type { ParsedTermin, ParseResult, SkippedRow } from "./parser.types"
 // Poznate firme (whitelist prefix-match). Sortiraj po dužini DESC u kodu da duži
 // prefiks pobijedi (npr. "MARKET AS" prije "AS"). NE oslanjaj se na redoslijed liste.
 export const POZNATE_FIRME = [
-  "DOM ZDRAVLJA", "EKONOMSKI INSTITUT", "GRANT THORNTON", "NEW YORKER",
+  "EKONOMSKI INSTITUT", "GRANT THORNTON", "NEW YORKER",
   "MARKET AS", "NTS NETWORK", "CLEAN TRADE", "MIKROELEKTRONIKA",
-  "WAIKIKI", "TRANSFERA", "CARMEUSE", "VENETO", "DIORIT", "DEVTECH",
+  "WAIKIKI", "TRANSFERA", "CARMEUSE", "DIORIT", "DEVTECH",
   "MINT", "YIMMOR", "AS",
 ] as const
+// NAPOMENA: "VENETO" i "DOM ZDRAVLJA" NISU lanci — "VENETO SHOES" je puni naziv
+// firme, a "Dom zdravlja Dr Mladen Stojanović"/"...Laktaši" su 2 odvojene ustanove
+// (vidi FIRMA_ALIAS za dedup varijanti).
 
 const FIRME_SORTED = [...POZNATE_FIRME].sort((a, b) => b.length - a.length)
+
+// Eksplicitni aliasi za "prljave" pune nazive (navodnici/dijakritika variraju kroz
+// sheet-ove). Primjenjuje se PRIJE whitelist-a; vraća kanonski display naziv firme.
+const FIRMA_ALIAS: { re: RegExp; firma: string }[] = [
+  { re: /^DOM ZDRAVLJA.*MLADEN/, firma: "Dom zdravlja Dr Mladen Stojanović" },
+  { re: /^DOM ZDRAVLJA.*LAKTA/, firma: "Dom zdravlja Laktaši" },
+  // "VENETO" i "VENETO SHOES" su ista firma (Excel ima oba oblika) → spoji
+  { re: /^VENETO\b/, firma: "VENETO SHOES" },
+]
 
 // Per-firma kanonizacija LOKACIJE.
 // Ulaz je već canonicalizeNaziv-ovan ostatak (UPPERCASE). Vrati kanonsku lokaciju.
@@ -25,6 +37,9 @@ function canonLokacija(firma: string, lokRaw: string | null): string | null {
   if (lokRaw.includes(",")) return lokRaw
 
   const u = lokRaw.toUpperCase()
+
+  // Pravilo 1b: pravni sufiks (A.D., d.o.o.) NIJE lokacija (npr. MIKROELEKTRONIKA A.D.)
+  if (/^A\.?\s*D\.?$/.test(u) || /^D\.?\s*O\.?\s*O\.?$/.test(u)) return null
 
   // Pravilo 2: TRANSFERA — 3 kanonske lokacije
   if (firma === "TRANSFERA") {
@@ -57,6 +72,7 @@ function canonLokacija(firma: string, lokRaw: string | null): string | null {
  */
 export function canonicalizeNaziv(raw: string): string {
   return raw
+    .replace(/["'“”„]/g, "") // skini navodnike (npr. Dom zdravlja "Dr Mladen Stojanović")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\.$/, "")
@@ -71,6 +87,10 @@ export function canonicalizeNaziv(raw: string): string {
  */
 export function splitFirmaLokacija(naziv: string): { firma: string; lokacija: string | null } {
   const c = canonicalizeNaziv(naziv)
+  // Aliasi za prljave pune nazive (dedup navodnik/dijakritika varijanti) — prije whitelist-a
+  for (const a of FIRMA_ALIAS) {
+    if (a.re.test(c)) return { firma: a.firma, lokacija: null }
+  }
   for (const firma of FIRME_SORTED) {
     if (c === firma) {
       return { firma, lokacija: null }

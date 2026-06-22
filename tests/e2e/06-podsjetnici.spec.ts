@@ -62,13 +62,18 @@ test.describe("Faza 6 — Postavke UI", () => {
   test("uređivanje pragova se perzistira", async ({ page }) => {
     await page.goto("/postavke")
     await expect(page.getByTestId("reminder-form")).toBeVisible()
-    const input = page.getByTestId("reminder-dana-prije")
-    await input.fill("45, 7")
+    await page.getByTestId("reminder-dana-prije").fill("45, 7")
     await page.getByTestId("reminder-submit").click()
+    // Čekaj da se pending dugme vrati na "Spremi" (server action završio).
+    await expect(page.getByTestId("reminder-submit")).toHaveText("Spremi")
+    // Reload stranice — server se ponovo učitava iz DB → potvrdi perzistenciju.
+    await page.reload()
     await expect(page.getByTestId("reminder-dana-prije")).toHaveValue(/45/)
     // vrati default
-    await input.fill("30, 14, 7, 1")
+    await page.getByTestId("reminder-dana-prije").fill("30, 14, 7, 1")
     await page.getByTestId("reminder-submit").click()
+    await expect(page.getByTestId("reminder-submit")).toHaveText("Spremi")
+    await page.reload()
     await expect(page.getByTestId("reminder-dana-prije")).toHaveValue(/30/)
   })
 

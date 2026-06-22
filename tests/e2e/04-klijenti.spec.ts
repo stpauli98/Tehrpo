@@ -63,10 +63,10 @@ test.describe("Faza 4 — Klijent detalji i tabovi", () => {
     await page.getByRole("tab", { name: "Lokacije" }).click()
     await page.waitForURL(/tab=lokacije/)
     await expect(page.getByTestId("tab-lokacije-content")).toBeVisible()
-    // Dokumenti placeholder
+    // Dokumenti tab — T7 implementiran: prikazuje tabelu ili poruku o praznom stanju
     await page.getByRole("tab", { name: "Dokumenti" }).click()
     await page.waitForURL(/tab=dokumenti/)
-    await expect(page.getByTestId("tab-dokumenti-content")).toContainText("Fazi 7")
+    await expect(page.getByTestId("tab-dokumenti-content")).toBeVisible()
   })
 })
 

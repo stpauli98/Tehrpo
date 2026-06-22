@@ -3,7 +3,12 @@ import type { CalDay } from "@/lib/calendar"
 import type { DerivedStatus } from "@/lib/termini"
 import { cn } from "@/lib/utils"
 
-export type DayTermin = { id: string; klijentNaziv: string; status: DerivedStatus }
+export type DayTermin = {
+  id: string
+  klijentNaziv: string
+  lokacijaNaziv?: string | null
+  status: DerivedStatus
+}
 
 const DOTS: Record<DerivedStatus, string> = {
   izvrseno: "bg-green-500",
@@ -99,7 +104,10 @@ export function MonthCalendar({
                         DOTS[t.status],
                       )}
                     />
-                    <span className="truncate">{t.klijentNaziv}</span>
+                    <span className="truncate">
+                      {t.klijentNaziv}
+                      {t.lokacijaNaziv ? ` · ${t.lokacijaNaziv}` : ""}
+                    </span>
                   </div>
                 ))}
                 {/* "još N" — parent cell is <Link> to ?dan=; text-brand signals clickability */}

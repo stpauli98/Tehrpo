@@ -50,6 +50,7 @@ export default async function PlanPage({
     arr.push({
       id: t.id,
       klijentNaziv: t.klijent_naziv ?? "—",
+      lokacijaNaziv: t.lokacija_naziv,
       status: toDerivedStatus(t.status_izvedeni),
     })
     terminiByDan.set(dan, arr)
@@ -141,6 +142,7 @@ export default async function PlanPage({
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-slate-800 truncate">
                         {t.klijent_naziv ?? "—"}
+                        {t.lokacija_naziv ? <span className="text-slate-400"> · {t.lokacija_naziv}</span> : null}
                       </span>
                       <StatusBadge status={t.status_izvedeni} />
                     </div>

@@ -12,6 +12,7 @@ import type { Database } from "@/db/types"
 
 type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
+type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
 
 const VALID_TABS = ["termini", "lokacije", "kontakti", "dokumenti"]
 
@@ -42,6 +43,16 @@ export default async function KlijentDetailPage({
   if (!klijent || !klijent.id || !klijent.naziv) notFound()
   const termini = (terminiRes.data ?? []) as TerminViewRow[]
   const lokacije = (lokacijeRes.data ?? []) as LokacijaRow[]
+
+  const terminIdsKlijenta = termini.map((t) => t.id).filter((x): x is string => !!x)
+  const { data: dokData } = terminIdsKlijenta.length
+    ? await supabase
+        .from("dokumenti")
+        .select("*")
+        .in("termin_id", terminIdsKlijenta)
+        .order("uploaded_at", { ascending: false })
+    : { data: [] }
+  const dokumenti = (dokData ?? []) as DokumentRow[]
 
   return (
     <div className="space-y-6">
@@ -137,11 +148,36 @@ export default async function KlijentDetailPage({
       )}
 
       {tab === "dokumenti" && (
-        <div
-          data-testid="tab-dokumenti-content"
-          className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500"
-        >
-          Upload i AI generisanje zapisnika dolazi u Fazi 7.
+        <div data-testid="tab-dokumenti-content" className="rounded-xl border border-slate-200 overflow-hidden">
+          {dokumenti.length === 0 ? (
+            <div className="p-8 text-center text-sm text-slate-500">Nema dokumenata za ovog klijenta.</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  {["Naziv", "Tip", "Datum", ""].map((c) => (
+                    <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      {c}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {dokumenti.map((d) => (
+                  <tr key={d.id} className="border-t border-slate-100">
+                    <td className="px-3 py-2">{d.naziv}</td>
+                    <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? "AI zapisnik" : "Upload"}</td>
+                    <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <a href={`/api/dokumenti/${d.id}`} className="text-brand hover:underline" data-testid="klijent-dokument-download">
+                        Preuzmi
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 

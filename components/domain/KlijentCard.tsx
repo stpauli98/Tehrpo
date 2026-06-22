@@ -3,6 +3,7 @@ import { Users, MapPin, AlertTriangle } from "lucide-react"
 import type { Database } from "@/db/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 
 export type KlijentRow = Database["public"]["Views"]["klijenti_view"]["Row"]
 
@@ -17,7 +18,10 @@ export function KlijentCard({ klijent }: { klijent: KlijentRow }) {
       <Card className="h-full transition hover:border-slate-300">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-slate-900 leading-tight">{klijent.naziv}</h3>
+            <div className="flex items-center gap-2 min-w-0">
+              <h3 className="font-semibold text-slate-900 leading-tight">{klijent.naziv}</h3>
+              <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
+            </div>
             {/* Kasni badge UVIJEK prikazan (spec §7.2 E); crven kad >0, neutralan kad 0 */}
             <span
               data-testid="klijent-kasni-badge"

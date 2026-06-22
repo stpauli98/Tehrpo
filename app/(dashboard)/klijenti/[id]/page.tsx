@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/domain/StatusBadge"
 import { LokacijeTab } from "@/components/domain/LokacijeTab"
 import { KlijentEditForm } from "@/components/domain/KlijentEditForm"
 import { ObrisiKlijentButton } from "@/components/domain/ObrisiKlijentButton"
+import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { formatDatum } from "@/lib/date"
 import type { Database } from "@/db/types"
 
@@ -35,7 +36,7 @@ export default async function KlijentDetailPage({
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("termini_view").select("*").eq("klijent_id", id).order("rok_dospijeca", { ascending: true }),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
-    supabase.from("klijenti").select("podsjetnik_emails").eq("id", id).maybeSingle(),
+    supabase.from("klijenti").select("podsjetnik_emails, tip_odnosa").eq("id", id).maybeSingle(),
   ])
 
   const klijent = klijentRes.data
@@ -66,9 +67,12 @@ export default async function KlijentDetailPage({
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold" data-testid="klijent-naziv">
-            {klijent.naziv}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold" data-testid="klijent-naziv">
+              {klijent.naziv}
+            </h1>
+            <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
+          </div>
           {klijent.napomena && <p className="mt-1 text-sm text-slate-500">{klijent.napomena}</p>}
         </div>
         <div className="flex items-center gap-2">
@@ -78,6 +82,7 @@ export default async function KlijentDetailPage({
               naziv: klijent.naziv,
               napomena: klijent.napomena ?? null,
               podsjetnik_emails: primaociRes.data?.podsjetnik_emails ?? [],
+              tip_odnosa: primaociRes.data?.tip_odnosa ?? null,
             }}
           />
           <ObrisiKlijentButton klijentId={klijent.id} brojTermina={klijent.broj_termina ?? 0} />

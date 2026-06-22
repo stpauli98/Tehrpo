@@ -155,6 +155,19 @@ test.describe("Faza 4 — Klijent edit i delete", () => {
   })
 })
 
+test.describe("Faza badge — tip odnosa", () => {
+  test("uređivanje postavlja tip odnosa na 'po ugovoru'", async ({ page }) => {
+    await page.goto("/klijenti?q=WAIK")
+    await page.getByTestId("klijent-card").first().click()
+    await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
+    await page.getByRole("button", { name: "Uredi" }).click()
+    await page.getByTestId("klijent-tip-odnosa").click()
+    await page.getByRole("option", { name: "Po ugovoru" }).click()
+    await page.getByRole("button", { name: /Spremi/ }).click()
+    await expect(page.getByTestId("tip-odnosa-badge")).toContainText("po ugovoru")
+  })
+})
+
 test.describe("Faza 4 — Vizuelni smoke", () => {
   test("klijenti ekran screenshot @ 1440x900", async ({ page }) => {
     await page.goto("/klijenti")

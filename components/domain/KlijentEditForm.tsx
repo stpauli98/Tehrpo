@@ -15,6 +15,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { updateKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 
 const initial: ActionResult = { ok: true }
 
@@ -23,7 +26,7 @@ const initial: ActionResult = { ok: true }
 export function KlijentEditForm({
   klijent,
 }: {
-  klijent: { id: string; naziv: string; napomena: string | null; podsjetnik_emails: string[] }
+  klijent: { id: string; naziv: string; napomena: string | null; podsjetnik_emails: string[]; tip_odnosa?: string | null }
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -95,6 +98,23 @@ export function KlijentEditForm({
               data-testid="edit-klijent-primaoci"
             />
           </label>
+
+          <div className="space-y-1">
+            <span className="block text-sm text-slate-600">Tip odnosa</span>
+            <Select
+              name="tip_odnosa"
+              defaultValue={klijent.tip_odnosa ?? "none"}
+            >
+              <SelectTrigger data-testid="klijent-tip-odnosa" className="w-full">
+                <SelectValue placeholder="— (nije postavljeno)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— (nije postavljeno)</SelectItem>
+                <SelectItem value="ugovor">Po ugovoru</SelectItem>
+                <SelectItem value="ponuda">Po ponudi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           {state.ok === false && state.message && (
             <p className="text-sm text-red-600" role="alert">

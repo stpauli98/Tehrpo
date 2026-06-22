@@ -52,6 +52,10 @@ const updateKlijentSchema = z.object({
   naziv: z.string().min(1, "Naziv je obavezan").max(200).optional(),
   napomena: optionalText(2000),
   podsjetnik_emails: z.string().max(2000).optional(),
+  tip_odnosa: z
+    .union([z.enum(["ugovor", "ponuda"]), z.literal("none"), z.literal(""), z.null()])
+    .transform((v) => (v === "none" || v === "" ? null : v))
+    .optional(),
 })
 
 export async function updateKlijent(
@@ -66,6 +70,9 @@ export async function updateKlijent(
   if (formData.has("napomena")) patch.napomena = f.napomena ?? null
   if (formData.has("podsjetnik_emails")) {
     patch.podsjetnik_emails = parseEmailList(f.podsjetnik_emails ?? "")
+  }
+  if (formData.has("tip_odnosa")) {
+    patch.tip_odnosa = f.tip_odnosa ?? null
   }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijenti").update(patch).eq("id", id)

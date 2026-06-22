@@ -27,8 +27,16 @@ export async function POST(req: Request): Promise<Response> {
   const { konverzacija_id, userText, history } = parsed
 
   const supabase = await createServerSupabaseClient()
-  // Persist user poruku odmah (prije streama)
-  await supabase.from("chat_poruke").insert({ konverzacija_id, uloga: "user", sadrzaj: userText })
+  // Persist user poruku odmah (prije streama) — greška mora spriječiti stream
+  const { error: userErr } = await supabase
+    .from("chat_poruke")
+    .insert({ konverzacija_id, uloga: "user", sadrzaj: userText })
+  if (userErr) {
+    return new Response(JSON.stringify({ error: "Snimanje poruke nije uspjelo" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream<Uint8Array>({

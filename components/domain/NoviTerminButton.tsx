@@ -26,13 +26,24 @@ import { createTermin, type ActionResult } from "@/app/(dashboard)/termini/actio
 type Opt = { id: string; naziv: string }
 const initial: ActionResult = { ok: true }
 
-export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: Opt[] }) {
+export function NoviTerminButton({
+  klijenti,
+  vrste,
+  lokacijeByFirma,
+}: {
+  klijenti: Opt[]
+  vrste: Opt[]
+  lokacijeByFirma: Record<string, Opt[]>
+}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [klijentId, setKlijentId] = useState("")
   const [vrstaId, setVrstaId] = useState("")
+  const [lokacijaId, setLokacijaId] = useState("")
   const [state, action, pending] = useActionState(createTermin, initial)
   const submitted = useRef(false)
+
+  const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
 
   // Zatvori sheet TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).
@@ -42,6 +53,7 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
       setOpen(false)
       setKlijentId("")
       setVrstaId("")
+      setLokacijaId("")
       router.refresh()
     }
   }, [state, pending, router])
@@ -68,6 +80,7 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
           action={(fd) => {
             fd.set("klijent_id", klijentId)
             fd.set("vrsta_provjere_id", vrstaId)
+            if (lokacijaId) fd.set("lokacija_id", lokacijaId)
             submitted.current = true
             action(fd)
           }}
@@ -76,7 +89,13 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
         >
           <label className="block text-sm">
             <span className="text-slate-600">Klijent *</span>
-            <Select value={klijentId} onValueChange={(v) => setKlijentId(v ?? "")}>
+            <Select
+              value={klijentId}
+              onValueChange={(v) => {
+                setKlijentId(v ?? "")
+                setLokacijaId("") // reset lokacije kad se promijeni firma
+              }}
+            >
               <SelectTrigger data-testid="novi-klijent">
                 <SelectValue placeholder="Izaberi klijenta" />
               </SelectTrigger>
@@ -89,6 +108,24 @@ export function NoviTerminButton({ klijenti, vrste }: { klijenti: Opt[]; vrste: 
               </SelectContent>
             </Select>
           </label>
+
+          {lokacije.length > 0 && (
+            <label className="block text-sm">
+              <span className="text-slate-600">Lokacija</span>
+              <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")}>
+                <SelectTrigger data-testid="novi-lokacija">
+                  <SelectValue placeholder="Izaberi lokaciju (opcionalno)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lokacije.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.naziv}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+          )}
 
           <label className="block text-sm">
             <span className="text-slate-600">Vrsta provjere *</span>

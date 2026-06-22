@@ -59,6 +59,7 @@ export async function updateTermin(
 const createSchema = z.object({
   klijent_id: z.string().uuid("Klijent je obavezan"),
   vrsta_provjere_id: z.string().uuid("Vrsta je obavezna"),
+  lokacija_id: z.string().uuid().optional().or(z.literal("").transform(() => undefined)),
   rok_dospijeca: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Rok je obavezan"),
   datum_zakazan: optionalDate,
   zaduzeni: z.string().max(200).optional().or(z.literal("").transform(() => undefined)),
@@ -72,12 +73,26 @@ export async function createTermin(
   if (!parsed.success) {
     return { ok: false, errors: parsed.error.flatten().fieldErrors }
   }
-  const { klijent_id, vrsta_provjere_id, rok_dospijeca, datum_zakazan, zaduzeni } = parsed.data
+  const { klijent_id, vrsta_provjere_id, lokacija_id, rok_dospijeca, datum_zakazan, zaduzeni } =
+    parsed.data
 
   const supabase = await createServerSupabaseClient()
+
+  // Integritet: izabrana lokacija mora pripadati izabranoj firmi (klijentu)
+  if (lokacija_id) {
+    const { data: lok } = await supabase
+      .from("lokacije")
+      .select("id")
+      .eq("id", lokacija_id)
+      .eq("klijent_id", klijent_id)
+      .maybeSingle()
+    if (!lok) return { ok: false, message: "Lokacija ne pripada izabranom klijentu." }
+  }
+
   const { error } = await supabase.from("termini").insert({
     klijent_id,
     vrsta_provjere_id,
+    lokacija_id: lokacija_id ?? null,
     rok_dospijeca,
     datum_zakazan: datum_zakazan ?? null,
     zaduzeni: zaduzeni ?? null,

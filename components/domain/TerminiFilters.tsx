@@ -13,10 +13,11 @@ import { MONTHS_BS_OPTION } from "@/lib/termini-filters"
 type Opt = { id: string; naziv: string }
 
 export function TerminiFilters({
-  klijenti, vrste,
+  klijenti, vrste, lokacijeByFirma,
 }: {
   klijenti: Opt[]
   vrste: Opt[]
+  lokacijeByFirma: Record<string, Opt[]>
 }) {
   const router = useRouter()
   const params = useSearchParams()
@@ -27,6 +28,8 @@ export function TerminiFilters({
   const klijentId = params.get("klijent_id") ?? "svi"
   const vrstaId = params.get("vrsta_id") ?? "svi"
   const mjesec = params.get("mjesec") ?? "svi"
+  const lokacijaId = params.get("lokacija") ?? "svi"
+  const firmaLokacije = klijentId !== "svi" ? lokacijeByFirma[klijentId] ?? [] : []
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(params.toString())
@@ -34,6 +37,17 @@ export function TerminiFilters({
     else next.set(key, value)
     next.delete("page")       // reset paginaciju
     next.delete("selected")   // zatvori detalje
+    startTransition(() => router.push(`/termini?${next.toString()}`))
+  }
+
+  // Promjena firme resetuje lokaciju (stale lokacija druge firme → prazna lista)
+  function setKlijent(value: string) {
+    const next = new URLSearchParams(params.toString())
+    if (!value || value === "svi") next.delete("klijent_id")
+    else next.set("klijent_id", value)
+    next.delete("lokacija")
+    next.delete("page")
+    next.delete("selected")
     startTransition(() => router.push(`/termini?${next.toString()}`))
   }
 
@@ -60,18 +74,33 @@ export function TerminiFilters({
         ))}
       </div>
 
-      {/* Klijent dropdown */}
-      <Select value={klijentId} onValueChange={(v) => setParam("klijent_id", v)}>
+      {/* Klijent (firma) dropdown */}
+      <Select value={klijentId} onValueChange={(v) => setKlijent(v ?? "svi")}>
         <SelectTrigger className="w-48" data-testid="filter-klijent">
-          <SelectValue placeholder="Svi klijenti" />
+          <SelectValue placeholder="Sve firme" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="svi">Svi klijenti</SelectItem>
+          <SelectItem value="svi">Sve firme</SelectItem>
           {klijenti.map((k) => (
             <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>
           ))}
         </SelectContent>
       </Select>
+
+      {/* Lokacija dropdown — samo kad je firma izabrana i ima lokacija */}
+      {firmaLokacije.length > 0 && (
+        <Select value={lokacijaId} onValueChange={(v) => setParam("lokacija", v)}>
+          <SelectTrigger className="w-48" data-testid="filter-lokacija">
+            <SelectValue placeholder="Sve lokacije" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="svi">Sve lokacije</SelectItem>
+            {firmaLokacije.map((l) => (
+              <SelectItem key={l.id} value={l.id}>{l.naziv}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Vrsta dropdown */}
       <Select value={vrstaId} onValueChange={(v) => setParam("vrsta_id", v)}>

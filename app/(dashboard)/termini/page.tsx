@@ -25,6 +25,7 @@ export default async function TerminiPage({
   const statusFilter = typeof sp.status === "string" ? sp.status : "svi"
   const qFilter = typeof sp.q === "string" ? sp.q.trim() : ""
   const klijentFilter = typeof sp.klijent_id === "string" ? sp.klijent_id : ""
+  const lokacijaFilter = typeof sp.lokacija === "string" ? sp.lokacija : ""
   const vrstaFilter = typeof sp.vrsta_id === "string" ? sp.vrsta_id : ""
   const mjesecFilter = typeof sp.mjesec === "string" ? sp.mjesec : ""
 
@@ -47,6 +48,9 @@ export default async function TerminiPage({
   if (klijentFilter) {
     listQuery = listQuery.eq("klijent_id", klijentFilter)
   }
+  if (lokacijaFilter) {
+    listQuery = listQuery.eq("lokacija_id", lokacijaFilter)
+  }
   if (vrstaFilter) {
     listQuery = listQuery.eq("vrsta_provjere_id", vrstaFilter)
   }
@@ -60,12 +64,13 @@ export default async function TerminiPage({
   }
   listQuery = listQuery.range(from, to)
 
-  // Paralelno: stats RPC + filtirana lista + klijenti + vrste (dropdown opcije)
-  const [{ data: statsRows }, listRes, klijentiRes, vrsteRes] = await Promise.all([
+  // Paralelno: stats RPC + filtirana lista + klijenti(firme) + vrste + lokacije (dropdown opcije)
+  const [{ data: statsRows }, listRes, klijentiRes, vrsteRes, lokacijeRes] = await Promise.all([
     supabase.rpc("get_termini_stats"),
     listQuery,
     supabase.from("klijenti").select("id, naziv").order("naziv"),
     supabase.from("vrste_provjera").select("id, naziv").eq("aktivna", true).order("naziv"),
+    supabase.from("lokacije").select("id, naziv, klijent_id").order("naziv"),
   ])
 
   const stats = statsRows?.[0] ?? { ukupno: 0, ovog_mjeseca: 0, kasni: 0, izvrseno_ovog_mjeseca: 0 }
@@ -75,6 +80,12 @@ export default async function TerminiPage({
 
   const klijenti = (klijentiRes.data ?? []).map((k) => ({ id: k.id, naziv: k.naziv }))
   const vrste = (vrsteRes.data ?? []).map((v) => ({ id: v.id, naziv: v.naziv }))
+
+  // Lokacije grupisane po firmi (za lokacija picker + filter)
+  const lokacijeByFirma: Record<string, { id: string; naziv: string }[]> = {}
+  for (const l of lokacijeRes.data ?? []) {
+    ;(lokacijeByFirma[l.klijent_id] ??= []).push({ id: l.id, naziv: l.naziv })
+  }
 
   // currentSearch string (preserves all current params for detail link base)
   const currentSearch = new URLSearchParams(
@@ -128,7 +139,7 @@ export default async function TerminiPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Termini</h1>
-        <NoviTerminButton klijenti={klijenti} vrste={vrste} />
+        <NoviTerminButton klijenti={klijenti} vrste={vrste} lokacijeByFirma={lokacijeByFirma} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" data-testid="termini-stats">
@@ -138,7 +149,7 @@ export default async function TerminiPage({
         <StatCard testId="stat-izvrseno" label="Izvršeni ovog mjeseca" value={stats.izvrseno_ovog_mjeseca} sub="završeno" icon={CheckCircle2} tone="success" />
       </div>
 
-      <TerminiFilters klijenti={klijenti} vrste={vrste} />
+      <TerminiFilters klijenti={klijenti} vrste={vrste} lokacijeByFirma={lokacijeByFirma} />
 
       <TerminiTable rows={rows} currentSearch={currentSearch} />
 

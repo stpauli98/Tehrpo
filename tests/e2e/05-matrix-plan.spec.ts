@@ -37,9 +37,10 @@ test.describe("Faza 5 — Matrix grid", () => {
   test("matrica prikazuje vrste (redove) i 12 mjeseci (kolone)", async ({ page }) => {
     await page.goto("/prikaz")
     await page.getByTestId("prikaz-klijent").click()
-    // izaberi WAIKIKI DELTA (najviše podataka) — ili prvi
-    const opt = page.getByRole("option", { name: /WAIKIKI BANJA LUKA - DELTA/ })
-    if (await opt.count()) await opt.click(); else await page.getByRole("option").first().click()
+    // izaberi WAIKIKI (firma, najviše podataka — agregira sve lokacije)
+    const opt = page.getByRole("option", { name: /^WAIKIKI$/ })
+    await expect(opt).toBeVisible()
+    await opt.click()
     await page.waitForURL(/klijent=/)
     await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
     await expect(page.getByRole("columnheader", { name: "Vrsta pregleda / ispitivanja" })).toBeVisible()
@@ -53,8 +54,9 @@ test.describe("Faza 5 — Matrix cell click", () => {
   test("klik popunjene ćelije otvara TerminSheet", async ({ page }) => {
     await page.goto("/prikaz")
     await page.getByTestId("prikaz-klijent").click()
-    const opt = page.getByRole("option", { name: /WAIKIKI BANJA LUKA - DELTA/ })
-    if (await opt.count()) await opt.click(); else await page.getByRole("option").first().click()
+    const opt = page.getByRole("option", { name: /^WAIKIKI$/ })
+    await expect(opt).toBeVisible()
+    await opt.click()
     await page.waitForURL(/klijent=/)
     await page.getByTestId("matrix-cell-filled").first().click()
     await page.waitForURL(/selected=/)
@@ -117,8 +119,9 @@ test.describe("Faza 5 — Vizuelni smoke", () => {
   test("prikaz screenshot", async ({ page }) => {
     await page.goto("/prikaz")
     await page.getByTestId("prikaz-klijent").click()
-    const opt = page.getByRole("option", { name: /WAIKIKI BANJA LUKA - DELTA/ })
-    if (await opt.count()) await opt.click(); else await page.getByRole("option").first().click()
+    const opt = page.getByRole("option", { name: /^WAIKIKI$/ })
+    await expect(opt).toBeVisible()
+    await opt.click()
     await page.waitForURL(/klijent=/)
     await page.waitForLoadState("networkidle")
     await expect(page.getByTestId("prikaz-matrix")).toBeVisible()

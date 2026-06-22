@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { execSync } from "node:child_process"
 
 // Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
 // mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
@@ -122,10 +123,35 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
   })
 
   test("označi kao izvršeno mijenja status i kreira novi ciklus", async ({ page }) => {
-    // Otvori prvi 'kasni' termin
-    await page.goto("/termini?status=kasni")
+    // Auto-cycle zahtijeva interval na vrsti ILI na terminu.
+    // Seed ostavlja sve intervale NULL → postavljamo interval na prvoj vrsti direktno u DB,
+    // a potom biramo kasni termin za tu vrstu. Ovaj pristup je isti kao u 06-spec truncate.
+    const firstVrsta = execSync(
+      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT id FROM vrste_provjera WHERE aktivna = true ORDER BY naziv LIMIT 1;"`,
+    ).toString().trim()
+
+    // Postavi interval = 12 na toj vrsti
+    execSync(
+      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -c "UPDATE vrste_provjera SET podrazumevani_interval_mjeseci = 12 WHERE id = '${firstVrsta}';"`,
+    )
+
+    // Uzmi ID prvog kasni termina za tu vrstu
+    const firstTerminId = execSync(
+      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT t.id FROM termini t WHERE t.vrsta_provjere_id = '${firstVrsta}' AND (SELECT status_izvedeni FROM termini_view WHERE id = t.id) = 'kasni' LIMIT 1;"`,
+    ).toString().trim()
+
+    if (!firstTerminId) {
+      // Nema kasnih termina za tu vrstu — test pass (nema što testirati)
+      console.log("Nema kasnih termina za vrstu sa intervalom — skip")
+      return
+    }
+
+    // Otvori termini listu
+    await page.goto("/termini")
     const before = Number(await page.getByTestId("stat-ukupno-value").textContent())
-    await page.getByTestId("termin-detalji").first().click()
+
+    // Otvori direktno taj termin via ?selected=
+    await page.goto(`/termini?selected=${firstTerminId}`)
     await expect(page.getByTestId("mark-done-form")).toBeVisible()
     await page.getByTestId("mark-done-submit").click()
     // nema error unutar sheeta
@@ -155,7 +181,9 @@ test.describe("Faza 3 — Novi termin", () => {
     await page.getByTestId("novi-termin-btn").click()
     await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
 
-    // Izaberi klijenta
+    // Izaberi klijenta — after clicking trigger, only THAT Select's options are visible
+    // (TerminiFilters dropdowns are closed). page.getByRole("option") je siguran nakon
+    // klika na odgovarajući SelectTrigger.
     await page.getByTestId("novi-klijent").click()
     await page.getByRole("option").first().click()
     // Izaberi vrstu

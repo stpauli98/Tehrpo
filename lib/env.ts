@@ -14,6 +14,8 @@ const envSchema = z.object({
   EMAIL_FROM: optionalSecret,
   REMINDER_TO: z.string().optional(),
   CRON_SECRET: optionalSecret,
+  ANTHROPIC_API_KEY: optionalSecret,
+  ZAPISNIK_DRY_RUN: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse({
@@ -24,6 +26,8 @@ const parsed = envSchema.safeParse({
   EMAIL_FROM: process.env.EMAIL_FROM,
   REMINDER_TO: process.env.REMINDER_TO,
   CRON_SECRET: process.env.CRON_SECRET,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  ZAPISNIK_DRY_RUN: process.env.ZAPISNIK_DRY_RUN,
 })
 
 if (!parsed.success) {

@@ -30,6 +30,12 @@ export function ObilasciToolbar({
 
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
+  const periodItems: Record<string, string> = { mjesec: "Mjesec", kvartal: "Kvartal", godina: "Godina" }
+  const mjesecItems: Record<string, string> = Object.fromEntries(
+    MONTHS_BS.map((label, i) => [String(i + 1), label])
+  )
+  const kvartalItems: Record<string, string> = { "1": "Q1", "2": "Q2", "3": "Q3", "4": "Q4" }
+
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(sp.toString())
     if (value) next.set(key, value)
@@ -39,7 +45,7 @@ export function ObilasciToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-3" data-testid="obilasci-toolbar">
-      <Select value={period} onValueChange={(v) => setParam("period", v ?? "")}>
+      <Select value={period} onValueChange={(v) => setParam("period", v ?? "")} items={periodItems}>
 
         <SelectTrigger data-testid="obilasci-period" className="w-40">
           <SelectValue />
@@ -52,9 +58,9 @@ export function ObilasciToolbar({
       </Select>
 
       {period === "mjesec" && (
-        <Select value={mjesecStr} onValueChange={(v) => setParam("mjesec", v ?? "")}>
+        <Select value={mjesecStr} onValueChange={(v) => setParam("mjesec", v ?? "")} items={mjesecItems}>
           <SelectTrigger data-testid="obilasci-mjesec" className="w-40">
-            <SelectValue placeholder="Månac" />
+            <SelectValue placeholder="Mjesec" />
           </SelectTrigger>
           <SelectContent>
             {MONTHS_BS.map((m, i) => (
@@ -65,7 +71,7 @@ export function ObilasciToolbar({
       )}
 
       {period === "kvartal" && (
-        <Select value={kvartalStr} onValueChange={(v) => setParam("kvartal", v ?? "")}>
+        <Select value={kvartalStr} onValueChange={(v) => setParam("kvartal", v ?? "")} items={kvartalItems}>
           <SelectTrigger data-testid="obilasci-kvartal" className="w-32">
             <SelectValue placeholder="Kvartal" />
           </SelectTrigger>

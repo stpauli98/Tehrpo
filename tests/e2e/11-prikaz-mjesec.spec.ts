@@ -20,8 +20,11 @@ test.describe("Faza matrica — po mjesecu", () => {
     await page.getByTestId("prikaz-mode-mjesec").click()
     await page.waitForURL(/mode=mjesec/)
     await expect(page.getByTestId("prikaz-mode-toggle")).toBeVisible()
-    // matrica treba biti vidljiva (tekući mjesec se koristi kao default)
-    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+    // U mjesec-modu se renderuje matrica ILI matrix-empty (nikad per-klijent
+    // prikaz-empty) — deterministički bez obzira na to ima li tekući mjesec podataka.
+    await expect(
+      page.getByTestId("prikaz-matrix").or(page.getByTestId("matrix-empty"))
+    ).toBeVisible()
   })
 
   test("povratak 'Po klijentu' radi", async ({ page }) => {

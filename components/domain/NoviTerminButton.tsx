@@ -45,6 +45,11 @@ export function NoviTerminButton({
 
   const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
 
+  // items mape (value→label) za base-ui SelectValue (prikaz labele kad je zatvoreno)
+  const klijentItems: Record<string, string> = Object.fromEntries(klijenti.map((k) => [k.id, k.naziv]))
+  const vrstaItems: Record<string, string> = Object.fromEntries(vrste.map((v) => [v.id, v.naziv]))
+  const lokacijaItems: Record<string, string> = Object.fromEntries(lokacije.map((l) => [l.id, l.naziv]))
+
   // Zatvori sheet TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).
   useEffect(() => {
@@ -95,6 +100,7 @@ export function NoviTerminButton({
                 setKlijentId(v ?? "")
                 setLokacijaId("") // reset lokacije kad se promijeni firma
               }}
+              items={klijentItems}
             >
               <SelectTrigger data-testid="novi-klijent">
                 <SelectValue placeholder="Izaberi klijenta" />
@@ -112,7 +118,7 @@ export function NoviTerminButton({
           {lokacije.length > 0 && (
             <label className="block text-sm">
               <span className="text-slate-600">Lokacija</span>
-              <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")}>
+              <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")} items={lokacijaItems}>
                 <SelectTrigger data-testid="novi-lokacija">
                   <SelectValue placeholder="Izaberi lokaciju (opcionalno)" />
                 </SelectTrigger>
@@ -129,7 +135,7 @@ export function NoviTerminButton({
 
           <label className="block text-sm">
             <span className="text-slate-600">Vrsta provjere *</span>
-            <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")}>
+            <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
               <SelectTrigger data-testid="novi-vrsta">
                 <SelectValue placeholder="Izaberi vrstu" />
               </SelectTrigger>

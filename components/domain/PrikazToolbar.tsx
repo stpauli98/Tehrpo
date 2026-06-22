@@ -22,6 +22,8 @@ export function PrikazToolbar({
   const [pending, startTransition] = useTransition()
   const klijent = params.get("klijent") ?? ""
   const godina = params.get("godina") ?? String(aktivnaGodina)
+  // items mapa (value→label) za base-ui SelectValue (prikaz imena firme kad je zatvoreno)
+  const klijentItems: Record<string, string> = Object.fromEntries(klijenti.map((k) => [k.id, k.naziv]))
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString())
@@ -33,7 +35,7 @@ export function PrikazToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-testid="prikaz-toolbar" data-pending={pending}>
-      <Select value={klijent} onValueChange={(v) => setParam("klijent", v ?? "")}>
+      <Select value={klijent} onValueChange={(v) => setParam("klijent", v ?? "")} items={klijentItems}>
         <SelectTrigger className="w-72" data-testid="prikaz-klijent"><SelectValue placeholder="Izaberi klijenta" /></SelectTrigger>
         <SelectContent>
           {klijenti.map((k) => <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>)}

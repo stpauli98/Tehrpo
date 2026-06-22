@@ -31,6 +31,12 @@ export function TerminiFilters({
   const lokacijaId = params.get("lokacija") ?? "svi"
   const firmaLokacije = klijentId !== "svi" ? lokacijeByFirma[klijentId] ?? [] : []
 
+  // items mape (value→label) — base-ui SelectValue prikazuje labelu kad je dropdown zatvoren
+  const firmaItems: Record<string, string> = { svi: "Sve firme", ...Object.fromEntries(klijenti.map((k) => [k.id, k.naziv])) }
+  const lokacijaItems: Record<string, string> = { svi: "Sve lokacije", ...Object.fromEntries(firmaLokacije.map((l) => [l.id, l.naziv])) }
+  const vrstaItems: Record<string, string> = { svi: "Sve vrste", ...Object.fromEntries(vrste.map((v) => [v.id, v.naziv])) }
+  const mjesecItems: Record<string, string> = { svi: "Svi mjeseci", ...Object.fromEntries(MONTHS_BS_OPTION.map((m) => [m.value, m.label])) }
+
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(params.toString())
     if (!value || value === "svi" || value === "") next.delete(key)
@@ -75,7 +81,7 @@ export function TerminiFilters({
       </div>
 
       {/* Klijent (firma) dropdown */}
-      <Select value={klijentId} onValueChange={(v) => setKlijent(v ?? "svi")}>
+      <Select value={klijentId} onValueChange={(v) => setKlijent(v ?? "svi")} items={firmaItems}>
         <SelectTrigger className="w-48" data-testid="filter-klijent">
           <SelectValue placeholder="Sve firme" />
         </SelectTrigger>
@@ -89,7 +95,7 @@ export function TerminiFilters({
 
       {/* Lokacija dropdown — samo kad je firma izabrana i ima lokacija */}
       {firmaLokacije.length > 0 && (
-        <Select value={lokacijaId} onValueChange={(v) => setParam("lokacija", v)}>
+        <Select value={lokacijaId} onValueChange={(v) => setParam("lokacija", v)} items={lokacijaItems}>
           <SelectTrigger className="w-48" data-testid="filter-lokacija">
             <SelectValue placeholder="Sve lokacije" />
           </SelectTrigger>
@@ -103,7 +109,7 @@ export function TerminiFilters({
       )}
 
       {/* Vrsta dropdown */}
-      <Select value={vrstaId} onValueChange={(v) => setParam("vrsta_id", v)}>
+      <Select value={vrstaId} onValueChange={(v) => setParam("vrsta_id", v)} items={vrstaItems}>
         <SelectTrigger className="w-48" data-testid="filter-vrsta">
           <SelectValue placeholder="Sve vrste" />
         </SelectTrigger>
@@ -116,7 +122,7 @@ export function TerminiFilters({
       </Select>
 
       {/* Mjesec dropdown */}
-      <Select value={mjesec} onValueChange={(v) => setParam("mjesec", v)}>
+      <Select value={mjesec} onValueChange={(v) => setParam("mjesec", v)} items={mjesecItems}>
         <SelectTrigger className="w-36" data-testid="filter-mjesec">
           <SelectValue placeholder="Svi mjeseci" />
         </SelectTrigger>

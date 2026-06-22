@@ -1,25 +1,15 @@
 import Link from "next/link"
-import { MONTHS_BS } from "@/lib/date"
 import type { DerivedStatus } from "@/lib/termini"
 import { cn } from "@/lib/utils"
+import type { MatrixRow, MatrixColumn, MatrixCell } from "@/lib/matrix"
+
+// Re-export types for consumers that reference them from this module
+export type { MatrixCell, MatrixRow, MatrixColumn } from "@/lib/matrix"
 
 function withParam(search: string, key: string, value: string): string {
   const p = new URLSearchParams(search)
   p.set(key, value)
   return p.toString()
-}
-
-export type MatrixCell = {
-  terminId: string
-  dan: number // dan u mjesecu (za prikaz DD.)
-  status: DerivedStatus
-  brojUCeliji: number
-}
-export type MatrixRow = {
-  vrstaId: string
-  vrstaNaziv: string
-  // index 1..12 → ćelija ili null
-  mjeseci: Record<number, MatrixCell | null>
 }
 
 // boja ćelije po izvedenom statusu (mockup cell-done/plan/late)
@@ -40,14 +30,24 @@ function cellLabel(cell: MatrixCell): string {
   return `${prefix}${dan}${kasni}${vise}`
 }
 
-export function MatrixGrid({ rows, currentSearch }: { rows: MatrixRow[]; currentSearch: string }) {
+export function MatrixGrid({
+  columns,
+  rows,
+  currentSearch,
+  emptyMessage = "Nema podataka.",
+}: {
+  columns: MatrixColumn[]
+  rows: MatrixRow[]
+  currentSearch: string
+  emptyMessage?: string
+}) {
   if (rows.length === 0) {
     return (
       <div
         data-testid="matrix-empty"
         className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
       >
-        Ovaj klijent nema termina u izabranoj godini.
+        {emptyMessage}
       </div>
     )
   }
@@ -59,30 +59,33 @@ export function MatrixGrid({ rows, currentSearch }: { rows: MatrixRow[]; current
             <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-medium text-slate-600 border-r border-slate-200 min-w-[220px]">
               Vrsta pregleda / ispitivanja
             </th>
-            {MONTHS_BS.map((m) => (
+            {columns.map((c) => (
               <th
-                key={m}
-                className="px-2 py-2 text-center font-medium text-slate-500 whitespace-nowrap min-w-[56px]"
+                key={c.id}
+                className={cn(
+                  "px-2 py-2 text-center font-medium text-slate-500 whitespace-nowrap min-w-[56px]",
+                  c.isCurrent && "ring-2 ring-brand rounded",
+                )}
               >
-                {m.slice(0, 3)}
+                {c.label}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.vrstaId} data-testid="matrix-row" className="border-t border-slate-100">
+          {rows.map((row) => (
+            <tr key={row.rowId} data-testid="matrix-row" className="border-t border-slate-100">
               <td className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-700 border-r border-slate-100 min-w-[220px]">
-                {r.vrstaNaziv}
+                {row.rowLabel}
               </td>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((mj) => {
-                const cell = r.mjeseci[mj] ?? null
+              {columns.map((c) => {
+                const cell = row.cells[c.id] ?? null
                 return (
                   <td
-                    key={mj}
+                    key={c.id}
                     className="p-1 text-center align-middle"
                     data-testid="matrix-cell"
-                    data-mjesec={mj}
+                    data-col={c.id}
                   >
                     {cell ? (
                       <Link

@@ -1,20 +1,12 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/OpterecenjeChart"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
-import { MatrixGrid, type MatrixRow, type MatrixCell } from "@/components/domain/MatrixGrid"
+import { MatrixGrid } from "@/components/domain/MatrixGrid"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { currentYear, todayIso } from "@/lib/date"
-import { toDerivedStatus, type DerivedStatus } from "@/lib/termini"
-
-// status prioritet za "najurgentniji" u ćeliji (kasni > planirano/zakazano > izvrseno > otkazano)
-const STATUS_PRIORITET: Record<DerivedStatus, number> = {
-  kasni: 4,
-  planirano: 3,
-  zakazano: 3,
-  izvrseno: 2,
-  otkazano: 1,
-}
+import { currentYear, todayIso, MONTHS_BS } from "@/lib/date"
+import { toDerivedStatus } from "@/lib/termini"
+import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
 
 export default async function PrikazPage({
   searchParams,
@@ -45,34 +37,27 @@ export default async function PrikazPage({
       .lte("rok_dospijeca", `${godina}-12-31`)
       .order("vrsta_naziv")
     const termini = (data ?? []) as TerminRow[]
-    // pivot: vrsta → mjesec → najurgentniji termin
-    const byVrsta = new Map<string, MatrixRow>()
-    for (const t of termini) {
-      if (!t.id || !t.vrsta_provjere_id || !t.rok_dospijeca) continue
-      const vrstaId = t.vrsta_provjere_id
-      let row = byVrsta.get(vrstaId)
-      if (!row) {
-        row = { vrstaId, vrstaNaziv: t.vrsta_naziv ?? "—", mjeseci: {} }
-        byVrsta.set(vrstaId, row)
-      }
-      const mj = Number(t.rok_dospijeca.slice(5, 7))
-      const dan = Number(t.rok_dospijeca.slice(8, 10))
-      const status = toDerivedStatus(t.status_izvedeni)
-      const existing: MatrixCell | null | undefined = row.mjeseci[mj]
-      if (!existing) {
-        row.mjeseci[mj] = { terminId: t.id, dan, status, brojUCeliji: 1 }
-      } else {
-        existing.brojUCeliji += 1
-        // zadrži najurgentniji status + njegov datum
-        if (STATUS_PRIORITET[status] > STATUS_PRIORITET[existing.status]) {
-          existing.terminId = t.id
-          existing.dan = dan
-          existing.status = status
-        }
-      }
-    }
-    matrixRows = Array.from(byVrsta.values())
+    const inputs: MatrixInput[] = termini
+      .filter((t) => t.id && t.vrsta_provjere_id && t.rok_dospijeca)
+      .map((t) => ({
+        id: t.id!,
+        vrstaId: t.vrsta_provjere_id!,
+        vrstaNaziv: t.vrsta_naziv ?? "—",
+        columnKey: String(Number(t.rok_dospijeca!.slice(5, 7))),
+        dan: Number(t.rok_dospijeca!.slice(8, 10)),
+        status: toDerivedStatus(t.status_izvedeni),
+      }))
+    matrixRows = buildMatrix(inputs)
   }
+
+  // Kolone matrice: 12 mjeseci
+  const currentMonthNum = Number(todayIso().slice(5, 7))
+  const currentYearNum = currentYear()
+  const mjeseciKolone = MONTHS_BS.map((label, i) => ({
+    id: String(i + 1),
+    label: label.slice(0, 3),
+    isCurrent: godina === currentYearNum && i + 1 === currentMonthNum,
+  }))
 
   // currentSearch string (čuva sve trenutne parametre za link bazu)
   const currentSearch = new URLSearchParams(
@@ -144,7 +129,12 @@ export default async function PrikazPage({
           Izaberite klijenta za prikaz godišnje matrice.
         </div>
       ) : (
-        <MatrixGrid rows={matrixRows} currentSearch={currentSearch} />
+        <MatrixGrid
+          columns={mjeseciKolone}
+          rows={matrixRows}
+          currentSearch={currentSearch}
+          emptyMessage="Ovaj klijent nema termina u izabranoj godini."
+        />
       )}
 
       {selectedTermin && (

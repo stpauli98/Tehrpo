@@ -74,7 +74,7 @@ export function NoviTerminButton({
       />
       <SheetContent
         side="right"
-        className="w-full lg:max-w-md flex flex-col"
+        className="w-full lg:max-w-xl flex flex-col"
         data-testid="novi-termin-sheet"
       >
         <SheetHeader>
@@ -102,13 +102,13 @@ export function NoviTerminButton({
               }}
               items={klijentItems}
             >
-              <SelectTrigger data-testid="novi-klijent">
+              <SelectTrigger className="w-full" data-testid="novi-klijent">
                 <SelectValue placeholder="Izaberi klijenta" />
               </SelectTrigger>
               <SelectContent>
                 {klijenti.map((k) => (
                   <SelectItem key={k.id} value={k.id}>
-                    {k.naziv}
+                    <span className="whitespace-normal">{k.naziv}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -119,13 +119,13 @@ export function NoviTerminButton({
             <label className="block text-sm">
               <span className="text-slate-600">Lokacija</span>
               <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")} items={lokacijaItems}>
-                <SelectTrigger data-testid="novi-lokacija">
+                <SelectTrigger className="w-full" data-testid="novi-lokacija">
                   <SelectValue placeholder="Izaberi lokaciju (opcionalno)" />
                 </SelectTrigger>
                 <SelectContent>
                   {lokacije.map((l) => (
                     <SelectItem key={l.id} value={l.id}>
-                      {l.naziv}
+                      <span className="whitespace-normal">{l.naziv}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -136,13 +136,13 @@ export function NoviTerminButton({
           <label className="block text-sm">
             <span className="text-slate-600">Vrsta provjere *</span>
             <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
-              <SelectTrigger data-testid="novi-vrsta">
+              <SelectTrigger className="w-full" data-testid="novi-vrsta">
                 <SelectValue placeholder="Izaberi vrstu" />
               </SelectTrigger>
               <SelectContent>
                 {vrste.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
-                    {v.naziv}
+                    <span className="whitespace-normal">{v.naziv}</span>
                   </SelectItem>
                 ))}
               </SelectContent>

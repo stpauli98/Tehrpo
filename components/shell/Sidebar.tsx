@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  LayoutDashboard,
   ClipboardList,
   Grid3x3,
   Calendar,
@@ -14,13 +15,14 @@ import {
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
-  { href: "/termini",  label: "Termini",  icon: ClipboardList },
-  { href: "/prikaz",   label: "Prikaz",   icon: Grid3x3 },
-  { href: "/plan",     label: "Plan",     icon: Calendar },
-  { href: "/klijenti", label: "Klijenti", icon: Users },
-  { href: "/asistent", label: "Asistent", icon: Bot },
+  { href: "/pregled",   label: "Pregled",   icon: LayoutDashboard },
+  { href: "/termini",   label: "Termini",   icon: ClipboardList },
+  { href: "/prikaz",    label: "Prikaz",    icon: Grid3x3 },
+  { href: "/plan",      label: "Plan",      icon: Calendar },
+  { href: "/klijenti",  label: "Klijenti",  icon: Users },
+  { href: "/asistent",  label: "Asistent",  icon: Bot },
   { href: "/zapisnici", label: "Zapisnici", icon: FileText },
-  { href: "/postavke", label: "Postavke", icon: Settings },
+  { href: "/postavke",  label: "Postavke",  icon: Settings },
 ] as const
 
 export function Sidebar() {

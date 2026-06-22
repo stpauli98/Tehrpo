@@ -43,6 +43,7 @@ export default async function PregledPage({
       .from("dokumenti")
       .select("storage_path, naziv")
       .eq("id", previewId)
+      .eq("generated_by_ai", true)
       .maybeSingle()
     if (dok) {
       const buffer = await downloadDokument(dok.storage_path)

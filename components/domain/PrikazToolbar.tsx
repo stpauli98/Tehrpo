@@ -5,6 +5,8 @@ import { useTransition } from "react"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
+import { MONTHS_BS } from "@/lib/date"
 
 type Opt = { id: string; naziv: string }
 
@@ -22,8 +24,13 @@ export function PrikazToolbar({
   const [pending, startTransition] = useTransition()
   const klijent = params.get("klijent") ?? ""
   const godina = params.get("godina") ?? String(aktivnaGodina)
+  const mode = params.get("mode") ?? "klijent"
+  const mjesec = params.get("mjesec") ?? ""
   // items mapa (value→label) za base-ui SelectValue (prikaz imena firme kad je zatvoreno)
   const klijentItems: Record<string, string> = Object.fromEntries(klijenti.map((k) => [k.id, k.naziv]))
+  const mjesecItems: Record<string, string> = Object.fromEntries(
+    MONTHS_BS.map((label, i) => [String(i + 1), label])
+  )
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString())
@@ -35,18 +42,62 @@ export function PrikazToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-testid="prikaz-toolbar" data-pending={pending}>
-      <Select value={klijent} onValueChange={(v) => setParam("klijent", v ?? "")} items={klijentItems}>
-        <SelectTrigger className="w-72" data-testid="prikaz-klijent"><SelectValue placeholder="Izaberi klijenta" /></SelectTrigger>
-        <SelectContent>
-          {klijenti.map((k) => <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <Select value={godina} onValueChange={(v) => setParam("godina", v ?? "")}>
-        <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder="Godina" /></SelectTrigger>
-        <SelectContent>
-          {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <div className="inline-flex rounded-lg border border-slate-200 p-0.5" data-testid="prikaz-mode-toggle">
+        <button
+          data-testid="prikaz-mode-klijent"
+          onClick={() => setParam("mode", "klijent")}
+          className={cn(
+            "px-3 py-1 text-sm rounded-md transition-colors",
+            mode === "klijent" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+          )}
+        >
+          Po klijentu
+        </button>
+        <button
+          data-testid="prikaz-mode-mjesec"
+          onClick={() => setParam("mode", "mjesec")}
+          className={cn(
+            "px-3 py-1 text-sm rounded-md transition-colors",
+            mode === "mjesec" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+          )}
+        >
+          Po mjesecu
+        </button>
+      </div>
+
+      {mode === "klijent" ? (
+        <>
+          <Select value={klijent} onValueChange={(v) => setParam("klijent", v ?? "")} items={klijentItems}>
+            <SelectTrigger className="w-72" data-testid="prikaz-klijent"><SelectValue placeholder="Izaberi klijenta" /></SelectTrigger>
+            <SelectContent>
+              {klijenti.map((k) => <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={godina} onValueChange={(v) => setParam("godina", v ?? "")}>
+            <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder="Godina" /></SelectTrigger>
+            <SelectContent>
+              {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </>
+      ) : (
+        <>
+          <Select value={mjesec} onValueChange={(v) => setParam("mjesec", v ?? "")} items={mjesecItems}>
+            <SelectTrigger className="w-40" data-testid="prikaz-mjesec"><SelectValue placeholder="Izaberi mjesec" /></SelectTrigger>
+            <SelectContent>
+              {MONTHS_BS.map((label, i) => (
+                <SelectItem key={i + 1} value={String(i + 1)}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={godina} onValueChange={(v) => setParam("godina", v ?? "")}>
+            <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder="Godina" /></SelectTrigger>
+            <SelectContent>
+              {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </>
+      )}
     </div>
   )
 }

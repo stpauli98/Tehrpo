@@ -112,6 +112,19 @@ test.describe("Faza 3 — Termini filteri", () => {
     await expect(page.getByTestId("status-pill-kasni")).toHaveAttribute("data-active", "true")
   })
 
+  test("klik na red (ne na Detalji) otvara TerminSheet", async ({ page }) => {
+    await page.goto("/termini")
+    await page.getByTestId("termin-row").first().click()
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+  })
+
+  test("Godina dropdown se pojavljuje samo uz odabran mjesec", async ({ page }) => {
+    await page.goto("/termini")
+    await expect(page.getByTestId("filter-godina")).toHaveCount(0)
+    await page.goto("/termini?mjesec=2")
+    await expect(page.getByTestId("filter-godina")).toBeVisible()
+  })
+
   test("status pill 'Svi' vraća sve", async ({ page }) => {
     await page.goto("/termini?status=kasni")
     await page.getByTestId("status-pill-svi").click()
@@ -208,8 +221,10 @@ test.describe("Faza 3 — Novi termin", () => {
     // Izaberi vrstu
     await page.getByTestId("novi-vrsta").click()
     await page.getByRole("option").first().click()
-    // Rok
-    await page.getByTestId("novi-rok").fill("2026-12-31")
+    // Rok — jedinstven po prolazu (provjera duplikata blokira isti klijent+vrsta+rok)
+    const base = new Date(Date.UTC(2035, 0, 1))
+    base.setUTCDate(base.getUTCDate() + (Date.now() % 20000))
+    await page.getByTestId("novi-rok").fill(base.toISOString().slice(0, 10))
 
     await page.getByTestId("novi-submit").click()
 
@@ -217,6 +232,30 @@ test.describe("Faza 3 — Novi termin", () => {
     await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
     const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
     expect(after).toBe(before + 1)
+  })
+
+  test("duplikat (isti klijent+vrsta+rok) je odbijen porukom", async ({ page }) => {
+    const base = new Date(Date.UTC(2045, 0, 1))
+    base.setUTCDate(base.getUTCDate() + (Date.now() % 20000))
+    const rok = base.toISOString().slice(0, 10)
+
+    async function popuni() {
+      await page.getByTestId("novi-termin-btn").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+      await page.getByTestId("novi-klijent").click()
+      await page.getByRole("option").first().click()
+      await page.getByTestId("novi-vrsta").click()
+      await page.getByRole("option").first().click()
+      await page.getByTestId("novi-rok").fill(rok)
+      await page.getByTestId("novi-submit").click()
+    }
+
+    await page.goto("/termini")
+    await popuni()
+    await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+    // drugi put isti klijent+vrsta+rok → odbijen
+    await popuni()
+    await expect(page.getByText("Termin za istu firmu, vrstu i rok već postoji.")).toBeVisible()
   })
 })
 

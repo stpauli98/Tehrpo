@@ -89,6 +89,20 @@ export async function createTermin(
     if (!lok) return { ok: false, message: "Lokacija ne pripada izabranom klijentu." }
   }
 
+  // Provjera duplikata: isti klijent + vrsta + rok (+ ista lokacija) koji nije otkazan
+  let dupQuery = supabase
+    .from("termini")
+    .select("id")
+    .eq("klijent_id", klijent_id)
+    .eq("vrsta_provjere_id", vrsta_provjere_id)
+    .eq("rok_dospijeca", rok_dospijeca)
+    .neq("status", "otkazano")
+  dupQuery = lokacija_id ? dupQuery.eq("lokacija_id", lokacija_id) : dupQuery.is("lokacija_id", null)
+  const { data: dup } = await dupQuery.limit(1)
+  if (dup && dup.length > 0) {
+    return { ok: false, message: "Termin za istu firmu, vrstu i rok već postoji." }
+  }
+
   const { error } = await supabase.from("termini").insert({
     klijent_id,
     vrsta_provjere_id,

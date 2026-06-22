@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/shell/Sidebar"
 import { TopBar } from "@/components/shell/TopBar"
 import { DesktopOnlyGate } from "@/components/shell/DesktopOnlyGate"
+import { Toaster } from "@/components/ui/sonner"
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,7 @@ export default function DashboardLayout({
           <main className="flex-1 overflow-auto p-6">{children}</main>
         </div>
       </div>
+      <Toaster />
     </>
   )
 }

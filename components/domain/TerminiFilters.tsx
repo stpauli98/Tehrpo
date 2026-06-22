@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 import { MONTHS_BS_OPTION } from "@/lib/termini-filters"
+import { currentYear } from "@/lib/date"
 
 type Opt = { id: string; naziv: string }
 
@@ -29,6 +30,9 @@ export function TerminiFilters({
   const vrstaId = params.get("vrsta_id") ?? "svi"
   const mjesec = params.get("mjesec") ?? "svi"
   const lokacijaId = params.get("lokacija") ?? "svi"
+  const godina = params.get("godina") ?? String(currentYear())
+  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
+  const godinaItems: Record<string, string> = Object.fromEntries(godine.map((g) => [String(g), String(g)]))
   const firmaLokacije = klijentId !== "svi" ? lokacijeByFirma[klijentId] ?? [] : []
 
   // items mape (value→label) — base-ui SelectValue prikazuje labelu kad je dropdown zatvoren
@@ -153,6 +157,20 @@ export function TerminiFilters({
           ))}
         </SelectContent>
       </Select>
+
+      {/* Godina — relevantna samo uz odabran mjesec */}
+      {mjesec !== "svi" && (
+        <Select value={godina} onValueChange={(v) => setParam("godina", v)} items={godinaItems}>
+          <SelectTrigger className="w-24" data-testid="filter-godina">
+            <SelectValue placeholder="Godina" />
+          </SelectTrigger>
+          <SelectContent>
+            {godine.map((g) => (
+              <SelectItem key={g} value={String(g)}>{g}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Search — live (debounce); Enter samo ubrza */}
       <Input

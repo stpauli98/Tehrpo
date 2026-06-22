@@ -28,6 +28,8 @@ export default async function TerminiPage({
   const lokacijaFilter = typeof sp.lokacija === "string" ? sp.lokacija : ""
   const vrstaFilter = typeof sp.vrsta_id === "string" ? sp.vrsta_id : ""
   const mjesecFilter = typeof sp.mjesec === "string" ? sp.mjesec : ""
+  // Godina za mjesečni filter (default tekuća); primjenjuje se samo uz odabran mjesec
+  const godinaFilter = (typeof sp.godina === "string" ? Number(sp.godina) : 0) || currentYear()
   // Trenutni mjesec u formatu filtera ("1".."12", bez vodeće nule) — za KPI "Ovog mjeseca"
   const ovajMjesec = String(Number(todayIso().slice(5, 7)))
 
@@ -59,8 +61,8 @@ export default async function TerminiPage({
   if (mjesecFilter) {
     const mn = Number(mjesecFilter)
     if (mn >= 1 && mn <= 12) {
-      // miesec se odnosi na rok_dospijeca u tekućoj godini (dinamički)
-      const { from: mFrom, to: mTo } = monthRange(currentYear(), mn)
+      // mjesec se odnosi na rok_dospijeca u odabranoj godini (default tekuća)
+      const { from: mFrom, to: mTo } = monthRange(godinaFilter, mn)
       listQuery = listQuery.gte("rok_dospijeca", mFrom).lte("rok_dospijeca", mTo)
     }
   }

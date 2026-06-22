@@ -1,7 +1,11 @@
+"use client"
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import type { Database } from "@/db/types"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { formatDatum } from "@/lib/date"
+import { cn } from "@/lib/utils"
 
 export type TerminRow = Database["public"]["Views"]["termini_view"]["Row"]
 
@@ -22,6 +26,8 @@ export function TerminiTable({
   rows: TerminRow[]
   currentSearch: string
 }) {
+  const router = useRouter()
+
   if (rows.length === 0) {
     return (
       <div
@@ -53,7 +59,11 @@ export function TerminiTable({
             <tr
               key={r.id ?? `row-${idx}`}
               data-testid="termin-row"
-              className="border-t border-slate-100 hover:bg-slate-50"
+              onClick={r.id ? () => router.push(detailHref(r.id!, currentSearch)) : undefined}
+              className={cn(
+                "border-t border-slate-100 hover:bg-slate-50",
+                r.id && "cursor-pointer",
+              )}
             >
               <td className="px-3 py-2 whitespace-nowrap tabular-nums">{formatDatum(r.rok_dospijeca)}</td>
               <td className="px-3 py-2 font-medium text-slate-900">{r.klijent_naziv ?? "—"}</td>
@@ -65,6 +75,7 @@ export function TerminiTable({
                 {r.id && (
                   <Link
                     href={detailHref(r.id, currentSearch)}
+                    onClick={(e) => e.stopPropagation()}
                     className="text-brand hover:underline font-medium"
                     data-testid="termin-detalji"
                   >

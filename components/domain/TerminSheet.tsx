@@ -1,7 +1,8 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   Sheet,
   SheetContent,
@@ -39,6 +40,23 @@ export function TerminSheet({
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
   const [izvrDatum, setIzvrDatum] = useState(todayIso())
+
+  // Toast potvrda kad akcija prijeđe iz pending u uspjeh (greška ostaje inline)
+  const prevUpdPending = useRef(updatePending)
+  useEffect(() => {
+    if (prevUpdPending.current && !updatePending && updateState.ok) {
+      toast.success("Izmjene sačuvane")
+    }
+    prevUpdPending.current = updatePending
+  }, [updatePending, updateState])
+
+  const prevMarkPending = useRef(markPending)
+  useEffect(() => {
+    if (prevMarkPending.current && !markPending && markState.ok) {
+      toast.success("Termin označen izvršenim")
+    }
+    prevMarkPending.current = markPending
+  }, [markPending, markState])
 
   function close() {
     router.push(closeHref)

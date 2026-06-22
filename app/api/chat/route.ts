@@ -45,12 +45,13 @@ export async function POST(req: Request): Promise<Response> {
       try {
         const { assistantText, toolsUsed } = await runChat(history as ChatTurn[], userText, send)
         // Persist assistant poruku (sa korištenim alatima u alat_pozivi)
-        await supabase.from("chat_poruke").insert({
+        const { error: asstErr } = await supabase.from("chat_poruke").insert({
           konverzacija_id,
           uloga: "assistant",
           sadrzaj: assistantText || "(bez teksta)",
           alat_pozivi: toolsUsed.length ? toolsUsed : null,
         })
+        if (asstErr) console.error("Snimanje assistant poruke nije uspjelo:", asstErr.message)
       } catch (e) {
         send({ type: "error", message: e instanceof Error ? e.message : "Greška asistenta" })
         send({ type: "done" })

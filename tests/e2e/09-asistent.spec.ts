@@ -25,7 +25,7 @@ test.describe("Faza 8 — AI Asistent (mock)", () => {
     await expect(page.getByTestId("snimi-zapisnik")).toBeVisible()
     // mock proposal koristi nepostojeći termin → klik vraća kontrolisanu grešku (bez upisa)
     await page.getByTestId("snimi-zapisnik").click()
-    await expect(page.getByText(/Termin ne postoji|Snimljeno/)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/Termin ne postoji/)).toBeVisible({ timeout: 10000 })
   })
 
   test("follow-up poruka u istom razgovoru", async ({ page }) => {

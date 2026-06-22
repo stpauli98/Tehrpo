@@ -54,13 +54,15 @@ export function AsistentChat({
           let ev: StreamEvent
           try { ev = JSON.parse(line) as StreamEvent } catch { continue } // preskoči nevalidnu/parcijalnu liniju
           setPoruke((prev) => {
-            const next = [...prev]
-            const last = next[next.length - 1]
-            if (!last || last.role !== "assistant") return prev
+            const lastOrig = prev[prev.length - 1]
+            if (!lastOrig || lastOrig.role !== "assistant") return prev
+            const last = { ...lastOrig, tools: [...(lastOrig.tools ?? [])] }
             if (ev.type === "text") last.text += ev.text
-            else if (ev.type === "tool") last.tools = [...(last.tools ?? []), ev.tool]
+            else if (ev.type === "tool") last.tools = [...last.tools, ev.tool]
             else if (ev.type === "proposal") last.proposal = ev.data
             else if (ev.type === "error") last.text += `\n[Greška: ${ev.message}]`
+            const next = [...prev]
+            next[next.length - 1] = last
             return next
           })
           scrollDown()

@@ -195,6 +195,36 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
     expect(after).toBe(before + 1)
   })
 
+  // Postojeći termin iz datog pula (otkaži ⇒ kasni, zakazano ⇒ planirano — različiti
+  // pulovi pa nema sudara; svaki test mutira po jedan, pulovi su veliki).
+  function pickId(status: string): string {
+    const out = execSync(
+      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT id FROM termini_view WHERE status_izvedeni='${status}' LIMIT 1;"`,
+    ).toString()
+    return (out.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/) ?? [""])[0]
+  }
+
+  test("Otkaži termin → status postaje Otkazano", async ({ page }) => {
+    const id = pickId("kasni")
+    expect(id).toMatch(/[0-9a-f-]{36}/)
+    await page.goto(`/termini?selected=${id}`)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    await page.getByTestId("otkazi-arm").click()
+    await page.getByTestId("otkazi-submit").click()
+    await expect(page.getByTestId("termin-sheet")).toContainText("Otkazano")
+    await expect(page.getByTestId("otkazi-arm")).toHaveCount(0)
+  })
+
+  test("uređivanje 'Datum zakazan' prebaci planirano → Zakazano", async ({ page }) => {
+    const id = pickId("planirano")
+    expect(id).toMatch(/[0-9a-f-]{36}/)
+    await page.goto(`/termini?selected=${id}`)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    await page.getByTestId("edit-datum-zakazan").fill("2030-08-01")
+    await page.getByTestId("edit-save").click()
+    await expect(page.getByTestId("termin-sheet")).toContainText("Zakazano")
+  })
+
   test("Zatvori sheet vraća na listu", async ({ page }) => {
     await page.goto("/termini")
     await page.getByTestId("termin-detalji").first().click()

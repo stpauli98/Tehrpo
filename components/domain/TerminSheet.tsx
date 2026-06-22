@@ -17,6 +17,7 @@ import { formatDatum, todayIso } from "@/lib/date"
 import {
   updateTermin,
   markIzvrseno,
+  otkaziTermin,
   type ActionResult,
 } from "@/app/(dashboard)/termini/actions"
 import type { TerminRow } from "@/components/domain/TerminiTable"
@@ -39,7 +40,9 @@ export function TerminSheet({
   const router = useRouter()
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
+  const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)
   const [izvrDatum, setIzvrDatum] = useState(todayIso())
+  const [otkazArmed, setOtkazArmed] = useState(false)
 
   // Toast potvrda kad akcija prijeđe iz pending u uspjeh (greška ostaje inline)
   const prevUpdPending = useRef(updatePending)
@@ -57,6 +60,14 @@ export function TerminSheet({
     }
     prevMarkPending.current = markPending
   }, [markPending, markState])
+
+  const prevOtkazPending = useRef(otkazPending)
+  useEffect(() => {
+    if (prevOtkazPending.current && !otkazPending && otkazState.ok) {
+      toast.success("Termin otkazan")
+    }
+    prevOtkazPending.current = otkazPending
+  }, [otkazPending, otkazState])
 
   function close() {
     router.push(closeHref)
@@ -167,6 +178,42 @@ export function TerminSheet({
               <p className="text-xs text-slate-400">
                 Sistem automatski kreira sljedeći termin u ciklusu.
               </p>
+            </form>
+          )}
+
+          {/* Otkaži termin — za aktivne (ne izvršene/otkazane); dvostepena potvrda */}
+          {termin.status !== "izvrseno" && termin.status !== "otkazano" && (
+            <form action={otkazAction} data-testid="otkazi-form">
+              <input type="hidden" name="id" value={termin.id ?? ""} />
+              {otkazState.ok === false && otkazState.message && (
+                <p className="text-sm text-red-600" role="alert">{otkazState.message}</p>
+              )}
+              {!otkazArmed ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOtkazArmed(true)}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  data-testid="otkazi-arm"
+                >
+                  Otkaži termin
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={otkazPending}
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                    data-testid="otkazi-submit"
+                  >
+                    {otkazPending ? "Otkazujem…" : "Potvrdi otkazivanje"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setOtkazArmed(false)}>
+                    Odustani
+                  </Button>
+                </div>
+              )}
             </form>
           )}
 

@@ -45,13 +45,40 @@ export async function updateTermin(
   if (formData.has("napomena")) patch.napomena = fields.napomena ?? null
   if (fields.status) patch.status = fields.status
 
+  const supabase = await createServerSupabaseClient()
+
+  // Sinhronizuj status sa "Datum zakazan": planirano ↔ zakazano
+  // (ne diramo izvrseno/otkazano; kasni je izvedeni status, raw je planirano/zakazano)
+  if (formData.has("datum_zakazan") && !fields.status) {
+    const { data: cur } = await supabase
+      .from("termini").select("status").eq("id", id).maybeSingle()
+    if (cur?.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
+    else if (cur?.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
+  }
+
   if (Object.keys(patch).length === 0) return { ok: true }
 
-  const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("termini").update(patch).eq("id", id)
 
   if (error) return { ok: false, message: error.message }
 
+  revalidatePath("/termini")
+  return { ok: true }
+}
+
+const otkaziSchema = z.object({ id: z.string().uuid() })
+
+/** Otkaži termin — postavi status na 'otkazano'. */
+export async function otkaziTermin(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const parsed = otkaziSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("termini").update({ status: "otkazano" }).eq("id", parsed.data.id)
+  if (error) return { ok: false, message: error.message }
   revalidatePath("/termini")
   return { ok: true }
 }

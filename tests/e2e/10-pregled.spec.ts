@@ -20,6 +20,14 @@ test.describe("Faza dashboard — Pregled", () => {
     await page.waitForURL(/\/termini\?status=kasni/)
   })
 
+  test("klik na mjesec u chartu vodi na Prikaz 'Po mjesecu'", async ({ page }) => {
+    await page.goto("/pregled")
+    // Februar (mjesec=2) ima podataka u seedu
+    await page.locator('[data-testid="chart-bar"][data-mjesec="2"]').click()
+    await page.waitForURL(/\/prikaz\?mode=mjesec.*mjesec=2/)
+    await expect(page.getByTestId("prikaz-mode-mjesec")).toBeVisible()
+  })
+
   test("nav 'Pregled' je aktivan", async ({ page }) => {
     await page.goto("/pregled")
     await expect(page.getByRole("link", { name: "Pregled", exact: true })).toHaveAttribute("aria-current", "page")

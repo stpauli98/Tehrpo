@@ -87,6 +87,7 @@ export default async function PregledPage() {
           <OpterecenjeChart
             data={opterecenje}
             currentMonth={mjesec}
+            godina={godina}
           />
         </div>
         <HitnoKasniList items={hitnoKasni} ukupnoPredstojeci={predstojeci} />

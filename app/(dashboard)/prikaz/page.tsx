@@ -145,6 +145,7 @@ export default async function PrikazPage({
               ? Number(todayIso().slice(5, 7))
               : undefined
           }
+          godina={godina}
         />
       </div>
 

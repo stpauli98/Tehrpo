@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { MONTHS_BS } from "@/lib/date"
 import { cn } from "@/lib/utils"
 
@@ -10,10 +11,12 @@ export type OpterecenjeRow = {
 }
 
 export function OpterecenjeChart({
-  data, currentMonth,
+  data, currentMonth, godina,
 }: {
   data: OpterecenjeRow[]
   currentMonth?: number
+  // Kad je zadana godina, svaki mjesec je link na Prikaz "Po mjesecu" za taj mjesec.
+  godina?: number
 }) {
   // Popuni svih 12 mjeseci (RPC vraća samo mjesece sa podacima)
   const byMonth = new Map(data.map((r) => [r.mjesec, r]))
@@ -29,17 +32,38 @@ export function OpterecenjeChart({
     <div data-testid="opterecenje-chart">
       <p className="text-sm font-semibold text-slate-700 mb-3">Opterećenje po mjesecima (broj termina)</p>
       <div className="flex items-end gap-2 h-44">
-        {months.map((m) => (
-          <div key={m.mjesec} className="flex-1 self-stretch flex flex-col items-center gap-1" data-testid="chart-bar" data-mjesec={m.mjesec} data-ukupno={m.ukupno}>
-            <div className="w-full mt-auto flex flex-col-reverse" style={{ height: `${(seg(m) / max) * 100}%` }} title={`${MONTHS_BS[m.mjesec - 1]}: ${m.ukupno}`}>
-              {/* stacked: izvrseno (zeleno), kasni (crveno), u_planu (plavo) */}
-              <div className="w-full bg-green-500" style={{ flexGrow: m.izvrseno }} />
-              <div className="w-full bg-red-500" style={{ flexGrow: m.kasni }} />
-              <div className={cn("w-full rounded-t bg-blue-500", currentMonth === m.mjesec && "ring-2 ring-brand")} style={{ flexGrow: m.u_planu }} />
+        {months.map((m) => {
+          const naziv = MONTHS_BS[m.mjesec - 1] ?? ""
+          const inner = (
+            <>
+              <div className="w-full mt-auto flex flex-col-reverse" style={{ height: `${(seg(m) / max) * 100}%` }} title={`${naziv}: ${m.ukupno}`}>
+                {/* stacked: izvrseno (zeleno), kasni (crveno), u_planu (plavo) */}
+                <div className="w-full bg-green-500" style={{ flexGrow: m.izvrseno }} />
+                <div className="w-full bg-red-500" style={{ flexGrow: m.kasni }} />
+                <div className={cn("w-full rounded-t bg-blue-500", currentMonth === m.mjesec && "ring-2 ring-brand")} style={{ flexGrow: m.u_planu }} />
+              </div>
+              <span className="text-[10px] text-slate-400">{naziv.slice(0, 3)}</span>
+            </>
+          )
+          const common = "flex-1 self-stretch flex flex-col items-center gap-1"
+          return godina ? (
+            <Link
+              key={m.mjesec}
+              href={`/prikaz?mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`}
+              data-testid="chart-bar"
+              data-mjesec={m.mjesec}
+              data-ukupno={m.ukupno}
+              aria-label={`${naziv}: ${m.ukupno} termina — otvori mjesec u Prikazu`}
+              className={cn(common, "cursor-pointer rounded transition hover:bg-slate-50")}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={m.mjesec} data-testid="chart-bar" data-mjesec={m.mjesec} data-ukupno={m.ukupno} className={common}>
+              {inner}
             </div>
-            <span className="text-[10px] text-slate-400">{(MONTHS_BS[m.mjesec - 1] ?? "").slice(0, 3)}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" />Izvršeno</span>

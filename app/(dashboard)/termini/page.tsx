@@ -124,6 +124,14 @@ export default async function TerminiPage({
     istorija = (data ?? []) as TerminRow[]
   }
 
+  const dokumenti = selectedTermin?.id
+    ? ((await supabase
+        .from("dokumenti")
+        .select("*")
+        .eq("termin_id", selectedTermin.id)
+        .order("uploaded_at", { ascending: false })).data ?? [])
+    : []
+
   // closeHref = trenutni URL bez "selected"
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
@@ -179,7 +187,7 @@ export default async function TerminiPage({
       </div>
 
       {selectedTermin && (
-        <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />
+        <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
       )}
     </div>
   )

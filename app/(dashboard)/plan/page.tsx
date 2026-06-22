@@ -100,6 +100,14 @@ export default async function PlanPage({
     istorija = (h ?? []) as TerminRow[]
   }
 
+  const dokumenti = selectedTermin?.id
+    ? ((await supabase
+        .from("dokumenti")
+        .select("*")
+        .eq("termin_id", selectedTermin.id)
+        .order("uploaded_at", { ascending: false })).data ?? [])
+    : []
+
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
   const closeHref = `/plan${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
@@ -164,7 +172,7 @@ export default async function PlanPage({
         )}
       </div>
       {selectedTermin && (
-        <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />
+        <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
       )}
     </div>
   )

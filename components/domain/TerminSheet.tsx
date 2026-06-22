@@ -19,16 +19,20 @@ import {
   type ActionResult,
 } from "@/app/(dashboard)/termini/actions"
 import type { TerminRow } from "@/components/domain/TerminiTable"
+import { DokumentiSekcija } from "@/components/domain/DokumentiSekcija"
+import type { Database } from "@/db/types"
 
 const initial: ActionResult = { ok: true }
 
 export function TerminSheet({
   termin,
   istorija,
+  dokumenti,
   closeHref,
 }: {
   termin: TerminRow
   istorija: TerminRow[]
+  dokumenti: Database["public"]["Tables"]["dokumenti"]["Row"][]
   closeHref: string
 }) {
   const router = useRouter()
@@ -148,13 +152,8 @@ export function TerminSheet({
             </form>
           )}
 
-          {/* Dokumenti — placeholder (Faza 7) */}
-          <section data-testid="sheet-dokumenti">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Dokumenti</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Upload i AI generisanje zapisnika dolazi u Fazi 7.
-            </p>
-          </section>
+          {/* Dokumenti — upload + AI zapisnik */}
+          <DokumentiSekcija terminId={termin.id ?? ""} dokumenti={dokumenti} />
 
           {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
           <section data-testid="sheet-istorija">

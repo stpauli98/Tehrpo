@@ -106,6 +106,14 @@ export default async function PrikazPage({
     }
   }
 
+  const dokumenti = selectedTermin?.id
+    ? ((await supabase
+        .from("dokumenti")
+        .select("*")
+        .eq("termin_id", selectedTermin.id)
+        .order("uploaded_at", { ascending: false })).data ?? [])
+    : []
+
   // closeHref = trenutni URL bez "selected", čuva klijent/godina
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
@@ -140,7 +148,7 @@ export default async function PrikazPage({
       )}
 
       {selectedTermin && (
-        <TerminSheet termin={selectedTermin} istorija={istorija} closeHref={closeHref} />
+        <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
       )}
     </div>
   )

@@ -12,7 +12,7 @@ const TONE_CLASS: Record<Tone, string> = {
 }
 
 export function StatCard({
-  label, value, sub, icon: Icon, tone = "default", testId, interactive = false,
+  label, value, sub, icon: Icon, tone = "default", testId, interactive = false, active = false,
 }: {
   label: string
   value: string | number
@@ -21,14 +21,17 @@ export function StatCard({
   tone?: Tone
   testId?: string
   interactive?: boolean
+  active?: boolean
 }) {
   return (
     <Card
       data-testid={testId}
+      data-active={active || undefined}
       className={cn(
         "h-full",
         interactive &&
-          "cursor-pointer transition-shadow hover:shadow-md hover:border-slate-300"
+          "cursor-pointer transition-shadow hover:shadow-md hover:border-slate-300",
+        active && "ring-2 ring-brand border-brand"
       )}
     >
       <CardContent className="flex items-start justify-between gap-3 p-4">

@@ -104,6 +104,14 @@ test.describe("Faza 3 — Termini filteri", () => {
     await expect(rows.first()).toContainText(/WAIKIKI/i)
   })
 
+  test("klik na KPI 'Kasni rokovi' filtrira listu na kasne", async ({ page }) => {
+    await page.goto("/termini")
+    await page.getByTestId("stat-kasni").click()
+    await page.waitForURL(/status=kasni/)
+    await expect(page.getByTestId("stat-kasni")).toHaveAttribute("data-active", "true")
+    await expect(page.getByTestId("status-pill-kasni")).toHaveAttribute("data-active", "true")
+  })
+
   test("status pill 'Svi' vraća sve", async ({ page }) => {
     await page.goto("/termini?status=kasni")
     await page.getByTestId("status-pill-svi").click()

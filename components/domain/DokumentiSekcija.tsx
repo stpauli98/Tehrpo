@@ -64,7 +64,7 @@ export function DokumentiSekcija({
           </Button>
         </form>
 
-        <form action={uploadAction} className="flex items-center gap-2">
+        <form action={uploadAction} className="flex min-w-0 items-center gap-2">
           <input type="hidden" name="termin_id" value={terminId} />
           <input
             ref={fileRef}
@@ -72,7 +72,7 @@ export function DokumentiSekcija({
             name="file"
             accept=".docx,.pdf,image/png,image/jpeg,image/webp"
             data-testid="dokument-file"
-            className="text-sm"
+            className="min-w-0 max-w-full text-sm"
           />
           <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
             {uploadPending ? "Šaljem…" : "Upload"}

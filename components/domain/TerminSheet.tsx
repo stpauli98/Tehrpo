@@ -77,7 +77,7 @@ export function TerminSheet({
     <Sheet open onOpenChange={(o) => { if (!o) close() }}>
       <SheetContent
         side="right"
-        className="w-full lg:max-w-2xl flex flex-col"
+        className="data-[side=right]:max-w-3xl flex flex-col"
         data-testid="termin-sheet"
       >
         <SheetHeader>
@@ -92,7 +92,7 @@ export function TerminSheet({
           <p className="text-xs text-slate-400">Rok: {formatDatum(termin.rok_dospijeca)}</p>
         </SheetHeader>
 
-        <div className="flex-1 overflow-auto px-4 space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-6">
           {/* Edit forma — key={termin.id} remountuje uncontrolled Input-e kad se promijeni
               odabrani termin, pa base-ui FieldControl re-inicijalizuje defaultValue
               (inače: dev warning "changing the default value state of an uncontrolled

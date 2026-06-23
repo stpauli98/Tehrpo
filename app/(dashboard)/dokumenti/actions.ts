@@ -103,10 +103,15 @@ export async function generateZapisnikAction(
   const supabase = await createServerSupabaseClient()
   const { data: t } = await supabase
     .from("termini_view")
-    .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja, zaduzeni")
+    .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja, zaduzeni, status")
     .eq("id", termin_id)
     .maybeSingle()
   if (!t) return { ok: false, message: "Termin ne postoji." }
+
+  // Zapisnik dokumentuje IZVRŠENU provjeru — ne generiši za otkazane/neizvršene termine
+  if (t.status !== "izvrseno") {
+    return { ok: false, message: "Zapisnik se generiše samo za izvršen termin." }
+  }
 
   const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
   const content = await generateZapisnik({

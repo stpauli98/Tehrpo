@@ -18,9 +18,11 @@ const initial: ActionResult = { ok: true }
 export function DokumentiSekcija({
   terminId,
   dokumenti,
+  izvrsen,
 }: {
   terminId: string
   dokumenti: DokumentRow[]
+  izvrsen: boolean
 }) {
   const router = useRouter()
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)
@@ -57,14 +59,20 @@ export function DokumentiSekcija({
       <p className="text-xs uppercase tracking-wide text-slate-400">Dokumenti</p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <form action={genAction}>
-          <input type="hidden" name="termin_id" value={terminId} />
-          <Button type="submit" variant="default" disabled={genPending} data-testid="generisi-zapisnik">
-            <Sparkles className="w-4 h-4" aria-hidden /> {genPending ? "Generišem…" : "Generiši zapisnik (AI)"}
-          </Button>
-        </form>
+        {izvrsen ? (
+          <form action={genAction}>
+            <input type="hidden" name="termin_id" value={terminId} />
+            <Button type="submit" variant="default" disabled={genPending} data-testid="generisi-zapisnik">
+              <Sparkles className="w-4 h-4" aria-hidden /> {genPending ? "Generišem…" : "Generiši zapisnik (AI)"}
+            </Button>
+          </form>
+        ) : (
+          <p className="text-xs text-slate-400" data-testid="zapisnik-nedostupan">
+            Zapisnik (AI) je dostupan tek nakon što je termin izvršen.
+          </p>
+        )}
 
-        <form action={uploadAction} className="flex items-center gap-2">
+        <form action={uploadAction} className="flex min-w-0 items-center gap-2">
           <input type="hidden" name="termin_id" value={terminId} />
           <input
             ref={fileRef}
@@ -72,7 +80,7 @@ export function DokumentiSekcija({
             name="file"
             accept=".docx,.pdf,image/png,image/jpeg,image/webp"
             data-testid="dokument-file"
-            className="text-sm"
+            className="min-w-0 max-w-full text-sm"
           />
           <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
             {uploadPending ? "Šaljem…" : "Upload"}

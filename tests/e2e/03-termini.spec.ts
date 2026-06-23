@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { execSync } from "node:child_process"
+import { terminIdByStatus, firstActiveVrstaId, setVrstaInterval, kasniTerminForVrsta } from "./db"
 
 // Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
 // mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
@@ -93,6 +93,38 @@ test.describe("Faza 3 — Termini filteri", () => {
     await expect(rows.first()).toContainText(/WAIKIKI/i)
   })
 
+  test("pretraga filtrira živo dok se kuca (bez Entera)", async ({ page }) => {
+    await page.goto("/termini")
+    const input = page.getByTestId("filter-search")
+    // kucanje karakter-po-karakter, NE pritiskamo Enter
+    await input.pressSequentially("WAIK")
+    await page.waitForURL(/q=WAIK/)
+    const rows = page.getByTestId("termin-row")
+    expect(await rows.count()).toBeGreaterThan(0)
+    await expect(rows.first()).toContainText(/WAIKIKI/i)
+  })
+
+  test("klik na KPI 'Kasni rokovi' filtrira listu na kasne", async ({ page }) => {
+    await page.goto("/termini")
+    await page.getByTestId("stat-kasni").click()
+    await page.waitForURL(/status=kasni/)
+    await expect(page.getByTestId("stat-kasni")).toHaveAttribute("data-active", "true")
+    await expect(page.getByTestId("status-pill-kasni")).toHaveAttribute("data-active", "true")
+  })
+
+  test("klik na red (ne na Detalji) otvara TerminSheet", async ({ page }) => {
+    await page.goto("/termini")
+    await page.getByTestId("termin-row").first().click()
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+  })
+
+  test("Godina dropdown se pojavljuje samo uz odabran mjesec", async ({ page }) => {
+    await page.goto("/termini")
+    await expect(page.getByTestId("filter-godina")).toHaveCount(0)
+    await page.goto("/termini?mjesec=2")
+    await expect(page.getByTestId("filter-godina")).toBeVisible()
+  })
+
   test("status pill 'Svi' vraća sve", async ({ page }) => {
     await page.goto("/termini?status=kasni")
     await page.getByTestId("status-pill-svi").click()
@@ -124,21 +156,11 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
 
   test("označi kao izvršeno mijenja status i kreira novi ciklus", async ({ page }) => {
     // Auto-cycle zahtijeva interval na vrsti ILI na terminu.
-    // Seed ostavlja sve intervale NULL → postavljamo interval na prvoj vrsti direktno u DB,
-    // a potom biramo kasni termin za tu vrstu. Ovaj pristup je isti kao u 06-spec truncate.
-    const firstVrsta = execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT id FROM vrste_provjera WHERE aktivna = true ORDER BY naziv LIMIT 1;"`,
-    ).toString().trim()
-
-    // Postavi interval = 12 na toj vrsti
-    execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -c "UPDATE vrste_provjera SET podrazumevani_interval_mjeseci = 12 WHERE id = '${firstVrsta}';"`,
-    )
-
-    // Uzmi ID prvog kasni termina za tu vrstu
-    const firstTerminId = execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT t.id FROM termini t WHERE t.vrsta_provjere_id = '${firstVrsta}' AND (SELECT status_izvedeni FROM termini_view WHERE id = t.id) = 'kasni' LIMIT 1;"`,
-    ).toString().trim()
+    // Seed ostavlja sve intervale NULL → postavljamo interval na prvoj vrsti (cloud DB),
+    // a potom biramo kasni termin za tu vrstu.
+    const firstVrsta = await firstActiveVrstaId()
+    await setVrstaInterval(firstVrsta, 12)
+    const firstTerminId = await kasniTerminForVrsta(firstVrsta)
 
     if (!firstTerminId) {
       // Nema kasnih termina za tu vrstu — test pass (nema što testirati)
@@ -161,6 +183,30 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
     await page.goto("/termini")
     const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
     expect(after).toBe(before + 1)
+  })
+
+  // Postojeći termin iz datog pula (otkaži ⇒ kasni, zakazano ⇒ planirano — različiti
+  // pulovi pa nema sudara; svaki test mutira po jedan, pulovi su veliki).
+
+  test("Otkaži termin → status postaje Otkazano", async ({ page }) => {
+    const id = await terminIdByStatus("kasni")
+    expect(id).toMatch(/[0-9a-f-]{36}/)
+    await page.goto(`/termini?selected=${id}`)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    await page.getByTestId("otkazi-arm").click()
+    await page.getByTestId("otkazi-submit").click()
+    await expect(page.getByTestId("termin-sheet")).toContainText("Otkazano")
+    await expect(page.getByTestId("otkazi-arm")).toHaveCount(0)
+  })
+
+  test("uređivanje 'Datum zakazan' prebaci planirano → Zakazano", async ({ page }) => {
+    const id = await terminIdByStatus("planirano")
+    expect(id).toMatch(/[0-9a-f-]{36}/)
+    await page.goto(`/termini?selected=${id}`)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    await page.getByTestId("edit-datum-zakazan").fill("2030-08-01")
+    await page.getByTestId("edit-save").click()
+    await expect(page.getByTestId("termin-sheet")).toContainText("Zakazano")
   })
 
   test("Zatvori sheet vraća na listu", async ({ page }) => {
@@ -189,8 +235,10 @@ test.describe("Faza 3 — Novi termin", () => {
     // Izaberi vrstu
     await page.getByTestId("novi-vrsta").click()
     await page.getByRole("option").first().click()
-    // Rok
-    await page.getByTestId("novi-rok").fill("2026-12-31")
+    // Rok — jedinstven po prolazu (provjera duplikata blokira isti klijent+vrsta+rok)
+    const base = new Date(Date.UTC(2035, 0, 1))
+    base.setUTCDate(base.getUTCDate() + (Date.now() % 20000))
+    await page.getByTestId("novi-rok").fill(base.toISOString().slice(0, 10))
 
     await page.getByTestId("novi-submit").click()
 
@@ -198,6 +246,30 @@ test.describe("Faza 3 — Novi termin", () => {
     await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
     const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
     expect(after).toBe(before + 1)
+  })
+
+  test("duplikat (isti klijent+vrsta+rok) je odbijen porukom", async ({ page }) => {
+    const base = new Date(Date.UTC(2045, 0, 1))
+    base.setUTCDate(base.getUTCDate() + (Date.now() % 20000))
+    const rok = base.toISOString().slice(0, 10)
+
+    async function popuni() {
+      await page.getByTestId("novi-termin-btn").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+      await page.getByTestId("novi-klijent").click()
+      await page.getByRole("option").first().click()
+      await page.getByTestId("novi-vrsta").click()
+      await page.getByRole("option").first().click()
+      await page.getByTestId("novi-rok").fill(rok)
+      await page.getByTestId("novi-submit").click()
+    }
+
+    await page.goto("/termini")
+    await popuni()
+    await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+    // drugi put isti klijent+vrsta+rok → odbijen
+    await popuni()
+    await expect(page.getByText("Termin za istu firmu, vrstu i rok već postoji.")).toBeVisible()
   })
 })
 

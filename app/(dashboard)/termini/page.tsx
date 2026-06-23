@@ -8,7 +8,7 @@ import { TerminSheet } from "@/components/domain/TerminSheet"
 import { NoviTerminButton } from "@/components/domain/NoviTerminButton"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { monthRange, currentYear } from "@/lib/date"
+import { monthRange, currentYear, todayIso } from "@/lib/date"
 
 const PER_PAGE = 50
 
@@ -28,6 +28,10 @@ export default async function TerminiPage({
   const lokacijaFilter = typeof sp.lokacija === "string" ? sp.lokacija : ""
   const vrstaFilter = typeof sp.vrsta_id === "string" ? sp.vrsta_id : ""
   const mjesecFilter = typeof sp.mjesec === "string" ? sp.mjesec : ""
+  // Godina za mjesečni filter (default tekuća); primjenjuje se samo uz odabran mjesec
+  const godinaFilter = (typeof sp.godina === "string" ? Number(sp.godina) : 0) || currentYear()
+  // Trenutni mjesec u formatu filtera ("1".."12", bez vodeće nule) — za KPI "Ovog mjeseca"
+  const ovajMjesec = String(Number(todayIso().slice(5, 7)))
 
   const supabase = await createServerSupabaseClient()
 
@@ -57,8 +61,8 @@ export default async function TerminiPage({
   if (mjesecFilter) {
     const mn = Number(mjesecFilter)
     if (mn >= 1 && mn <= 12) {
-      // miesec se odnosi na rok_dospijeca u tekućoj godini (dinamički)
-      const { from: mFrom, to: mTo } = monthRange(currentYear(), mn)
+      // mjesec se odnosi na rok_dospijeca u odabranoj godini (default tekuća)
+      const { from: mFrom, to: mTo } = monthRange(godinaFilter, mn)
       listQuery = listQuery.gte("rok_dospijeca", mFrom).lte("rok_dospijeca", mTo)
     }
   }
@@ -150,11 +154,24 @@ export default async function TerminiPage({
         <NoviTerminButton klijenti={klijenti} vrste={vrste} lokacijeByFirma={lokacijeByFirma} />
       </div>
 
+      {/* Klikabilne KPI kartice → postave brzi filter na listu (aktivna je uokvirena) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" data-testid="termini-stats">
-        <StatCard testId="stat-ukupno" label="Ukupno termina" value={stats.ukupno} icon={ClipboardList} />
-        <StatCard testId="stat-ovog-mjeseca" label="Ovog mjeseca" value={stats.ovog_mjeseca} sub="rok dospijeća" icon={Bell} tone="warning" />
-        <StatCard testId="stat-kasni" label="Kasni rokovi" value={stats.kasni} sub="zahtijevaju akciju" icon={AlertTriangle} tone="danger" />
-        <StatCard testId="stat-izvrseno" label="Izvršeni ovog mjeseca" value={stats.izvrseno_ovog_mjeseca} sub="završeno" icon={CheckCircle2} tone="success" />
+        <Link href="/termini" className="block">
+          <StatCard testId="stat-ukupno" label="Ukupno termina" value={stats.ukupno} sub="svi termini" icon={ClipboardList} interactive
+            active={statusFilter === "svi" && mjesecFilter === ""} />
+        </Link>
+        <Link href={`/termini?mjesec=${ovajMjesec}`} className="block">
+          <StatCard testId="stat-ovog-mjeseca" label="Ovog mjeseca" value={stats.ovog_mjeseca} sub="rok dospijeća" icon={Bell} tone="warning" interactive
+            active={mjesecFilter === ovajMjesec} />
+        </Link>
+        <Link href="/termini?status=kasni" className="block">
+          <StatCard testId="stat-kasni" label="Kasni rokovi" value={stats.kasni} sub="zahtijevaju akciju" icon={AlertTriangle} tone="danger" interactive
+            active={statusFilter === "kasni"} />
+        </Link>
+        <Link href="/termini?status=izvrseno" className="block">
+          <StatCard testId="stat-izvrseno" label="Izvršeni ovog mjeseca" value={stats.izvrseno_ovog_mjeseca} sub="završeno" icon={CheckCircle2} tone="success" interactive
+            active={statusFilter === "izvrseno"} />
+        </Link>
       </div>
 
       <TerminiFilters klijenti={klijenti} vrste={vrste} lokacijeByFirma={lokacijeByFirma} />

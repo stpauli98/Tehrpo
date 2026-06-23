@@ -2,9 +2,9 @@ import { test, expect } from "@playwright/test"
 
 test.describe.configure({ mode: "serial" })
 
-// Otvara prvi termin u listi klikom na "Detalji" link i čeka sheet.
+// Otvara prvi IZVRŠEN termin (AI zapisnik je dostupan samo za izvršene).
 async function otvoriPrviTermin(page: import("@playwright/test").Page) {
-  await page.goto("/termini")
+  await page.goto("/termini?status=izvrseno")
   const prviDetalji = page.getByTestId("termin-detalji").first()
   await expect(prviDetalji).toBeVisible()
   await prviDetalji.click()
@@ -17,6 +17,14 @@ test.describe("Faza Dokumenti — termin sheet", () => {
     await page.getByTestId("generisi-zapisnik").click()
     await expect(page.getByTestId("dokumenti-lista")).toBeVisible()
     await expect(page.getByTestId("dokument-ai-badge").first()).toBeVisible()
+  })
+
+  test("neizvršen termin: nema 'Generiši zapisnik (AI)', stoji napomena", async ({ page }) => {
+    await page.goto("/termini?status=kasni")
+    await page.getByTestId("termin-detalji").first().click()
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    await expect(page.getByTestId("generisi-zapisnik")).toHaveCount(0)
+    await expect(page.getByTestId("zapisnik-nedostupan")).toBeVisible()
   })
 
   test("upload PDF → pojavi se u listi", async ({ page }) => {

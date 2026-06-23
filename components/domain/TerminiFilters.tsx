@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 import { Input } from "@/components/ui/input"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 import { MONTHS_BS_OPTION } from "@/lib/termini-filters"
+import { currentYear } from "@/lib/date"
 
 type Opt = { id: string; naziv: string }
 
@@ -29,6 +30,9 @@ export function TerminiFilters({
   const vrstaId = params.get("vrsta_id") ?? "svi"
   const mjesec = params.get("mjesec") ?? "svi"
   const lokacijaId = params.get("lokacija") ?? "svi"
+  const godina = params.get("godina") ?? String(currentYear())
+  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
+  const godinaItems: Record<string, string> = Object.fromEntries(godine.map((g) => [String(g), String(g)]))
   const firmaLokacije = klijentId !== "svi" ? lokacijeByFirma[klijentId] ?? [] : []
 
   // items mape (value→label) — base-ui SelectValue prikazuje labelu kad je dropdown zatvoren
@@ -55,6 +59,26 @@ export function TerminiFilters({
     next.delete("page")
     next.delete("selected")
     startTransition(() => router.push(`/termini?${next.toString()}`))
+  }
+
+  // Live search: kontrolisani input + debounce (filtrira čim se kuca, bez Entera).
+  const [term, setTerm] = useState(q)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Sinhronizuj kad se q promijeni izvana (reset filtera / nazad dugme) —
+  // adjust-state-during-render obrazac (bez useEffect-a, bez kaskadnih rendera)
+  const [prevQ, setPrevQ] = useState(q)
+  if (q !== prevQ) {
+    setPrevQ(q)
+    setTerm(q)
+  }
+  function pushSearch(value: string) {
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    setParam("q", value)
+  }
+  function onSearchChange(value: string) {
+    setTerm(value)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(() => setParam("q", value), 300)
   }
 
   return (
@@ -134,16 +158,30 @@ export function TerminiFilters({
         </SelectContent>
       </Select>
 
-      {/* Search */}
+      {/* Godina — relevantna samo uz odabran mjesec */}
+      {mjesec !== "svi" && (
+        <Select value={godina} onValueChange={(v) => setParam("godina", v)} items={godinaItems}>
+          <SelectTrigger className="w-24" data-testid="filter-godina">
+            <SelectValue placeholder="Godina" />
+          </SelectTrigger>
+          <SelectContent>
+            {godine.map((g) => (
+              <SelectItem key={g} value={String(g)}>{g}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* Search — live (debounce); Enter samo ubrza */}
       <Input
-        key={q}
         type="search"
         placeholder="Pretraga firme..."
-        defaultValue={q}
+        value={term}
         data-testid="filter-search"
         className="w-56 ml-auto"
+        onChange={(e) => onSearchChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") setParam("q", (e.target as HTMLInputElement).value)
+          if (e.key === "Enter") pushSearch((e.target as HTMLInputElement).value)
         }}
       />
     </div>

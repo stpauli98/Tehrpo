@@ -4,6 +4,7 @@ import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { parseEmailList } from "@/lib/reminders/recipients"
+import { addMjeseci } from "@/lib/date"
 import type { Database } from "@/db/types"
 
 type LokacijeUpdate = Database["public"]["Tables"]["lokacije"]["Update"]
@@ -183,6 +184,65 @@ export async function deleteLokacija(
 }
 
 // ─── Profil provjere ───────────────────────────────────────────────────────
+
+export async function createProfilProvjere(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const klijent_id = String(formData.get("klijent_id") ?? "")
+  const vrsta_provjere_id = String(formData.get("vrsta_provjere_id") ?? "")
+  const lokRaw = String(formData.get("lokacija_id") ?? "")
+  const lokacija_id = lokRaw && lokRaw !== "none" ? lokRaw : null
+  const intRaw = String(formData.get("interval_mjeseci") ?? "").trim()
+  const interval_override = intRaw ? Number(intRaw) : null
+  const zadnji_datum = String(formData.get("zadnji_datum") ?? "")
+
+  if (!klijent_id || !vrsta_provjere_id || !zadnji_datum) {
+    return { ok: false, message: "Vrsta i zadnji datum su obavezni." }
+  }
+  if (interval_override !== null && (!Number.isInteger(interval_override) || interval_override < 1 || interval_override > 120)) {
+    return { ok: false, message: "Interval mora biti 1–120 mjeseci." }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  // lokacija mora pripadati klijentu
+  if (lokacija_id) {
+    const { data: lok } = await supabase.from("lokacije").select("id").eq("id", lokacija_id).eq("klijent_id", klijent_id).maybeSingle()
+    if (!lok) return { ok: false, message: "Lokacija ne pripada klijentu." }
+  }
+
+  // interval: override → vrsta default
+  const { data: vrsta } = await supabase.from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", vrsta_provjere_id).maybeSingle()
+  const interval = interval_override ?? (vrsta?.podrazumevani_interval_mjeseci ?? null)
+  if (!interval) return { ok: false, message: "Interval je obavezan (vrsta nema podrazumevani)." }
+
+  // upiši profil-stavku
+  const { error: insErr } = await supabase.from("klijent_provjere").insert({
+    klijent_id, vrsta_provjere_id, lokacija_id,
+    interval_mjeseci: interval_override, zadnji_datum,
+  })
+  if (insErr) {
+    return insErr.code === "23505"
+      ? { ok: false, message: "Ova provjera već postoji u profilu." }
+      : { ok: false, message: insErr.message }
+  }
+
+  // generiši jedan termin ako ne postoji aktivan za (klijent+vrsta+lokacija)
+  const rok = addMjeseci(zadnji_datum, interval)
+  let q = supabase.from("termini").select("id").eq("klijent_id", klijent_id).eq("vrsta_provjere_id", vrsta_provjere_id).not("status", "in", "(izvrseno,otkazano)")
+  q = lokacija_id ? q.eq("lokacija_id", lokacija_id) : q.is("lokacija_id", null)
+  const { data: postoji } = await q.limit(1)
+  if (!postoji || postoji.length === 0) {
+    await supabase.from("termini").insert({
+      klijent_id, vrsta_provjere_id, lokacija_id,
+      rok_dospijeca: rok, status: "planirano", interval_mjeseci: interval,
+    })
+  }
+
+  revalidatePath(`/klijenti/${klijent_id}`)
+  return { ok: true }
+}
 
 export async function deleteProfilProvjere(
   _prev: ActionResult,

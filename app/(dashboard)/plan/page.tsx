@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/domain/StatusBadge"
 import { buildMonthGrid } from "@/lib/calendar"
 import { monthRange, todayIso, currentYear, formatDatum } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
+import { PlanLegenda } from "@/components/domain/PlanLegenda"
 import type { TerminRow } from "@/components/domain/TerminiTable"
 
 export default async function PlanPage({
@@ -171,6 +172,7 @@ export default async function PlanPage({
           </aside>
         )}
       </div>
+      <PlanLegenda />
       {selectedTermin && (
         <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
       )}

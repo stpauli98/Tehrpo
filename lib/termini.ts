@@ -65,6 +65,15 @@ export const STATUS_BADGE_CLASS: Record<DerivedStatus, string> = {
   otkazano: "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-500/20",
 }
 
+/** Pune tačke za kalendar (bg-*-500 skala). Jedan izvor istine za MonthCalendar + PlanLegenda. */
+export const STATUS_DOT_CLASS: Record<DerivedStatus, string> = {
+  planirano: "bg-blue-500",
+  zakazano: "bg-cyan-500",
+  izvrseno: "bg-green-500",
+  kasni: "bg-red-500",
+  otkazano: "bg-slate-400",
+}
+
 export const STATUS_FILTER_OPTIONS = [
   { value: "svi", label: "Svi" },
   { value: "kasni", label: "Kasni" },

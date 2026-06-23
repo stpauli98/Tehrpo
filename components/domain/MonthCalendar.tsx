@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { CalDay } from "@/lib/calendar"
-import type { DerivedStatus } from "@/lib/termini"
+import { STATUS_DOT_CLASS, type DerivedStatus } from "@/lib/termini"
 import { cn } from "@/lib/utils"
 
 export type DayTermin = {
@@ -8,14 +8,6 @@ export type DayTermin = {
   klijentNaziv: string
   lokacijaNaziv?: string | null
   status: DerivedStatus
-}
-
-const DOTS: Record<DerivedStatus, string> = {
-  izvrseno: "bg-green-500",
-  planirano: "bg-blue-500",
-  zakazano: "bg-cyan-500",
-  kasni: "bg-red-500",
-  otkazano: "bg-slate-400",
 }
 
 const DANI = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"]
@@ -86,11 +78,6 @@ export function MonthCalendar({
                 >
                   {c.day}
                 </span>
-                {termini.length > 0 && (
-                  <span className="text-[10px] text-slate-400">
-                    {termini.length}
-                  </span>
-                )}
               </div>
               <div className="mt-1 space-y-0.5">
                 {termini.slice(0, 3).map((t) => (
@@ -101,7 +88,7 @@ export function MonthCalendar({
                     <span
                       className={cn(
                         "w-1.5 h-1.5 rounded-full shrink-0",
-                        DOTS[t.status],
+                        STATUS_DOT_CLASS[t.status],
                       )}
                     />
                     <span className="truncate">

@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test"
-import { terminIdByStatus, firstActiveVrstaId, setVrstaInterval, kasniTerminForVrsta } from "./db"
+import {
+  firstActiveVrstaId, setVrstaInterval, getVrstaInterval,
+  insertTermin, deleteTerminiByKlijent, insertKlijent, deleteKlijentByNaziv,
+} from "./db"
 
 // Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
 // mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
@@ -143,70 +146,83 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
   })
 
   test("uredi napomenu i spremi", async ({ page }) => {
-    await page.goto("/termini")
-    await page.getByTestId("termin-detalji").first().click()
-    await expect(page.getByTestId("termin-sheet")).toBeVisible()
-    const napomena = page.getByTestId("edit-napomena")
-    await napomena.fill("E2E test napomena")
-    await page.getByTestId("edit-save").click()
-    // nakon spremanja, nema error alert-a unutar sheeta
-    const sheet = page.getByTestId("termin-sheet")
-    await expect(sheet.locator("[role=alert]")).toHaveCount(0)
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      const vrsta = await firstActiveVrstaId()
+      const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2027-05-01" })
+      await page.goto(`/termini?selected=${tid}`)
+      await expect(page.getByTestId("termin-sheet")).toBeVisible()
+      await page.getByTestId("edit-napomena").fill("E2E test napomena")
+      await page.getByTestId("edit-save").click()
+      await expect(page.getByTestId("termin-sheet").locator("[role=alert]")).toHaveCount(0)
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 
   test("označi kao izvršeno mijenja status i kreira novi ciklus", async ({ page }) => {
-    // Auto-cycle zahtijeva interval na vrsti ILI na terminu.
-    // Seed ostavlja sve intervale NULL → postavljamo interval na prvoj vrsti (cloud DB),
-    // a potom biramo kasni termin za tu vrstu.
-    const firstVrsta = await firstActiveVrstaId()
-    await setVrstaInterval(firstVrsta, 12)
-    const firstTerminId = await kasniTerminForVrsta(firstVrsta)
-
-    if (!firstTerminId) {
-      // Nema kasnih termina za tu vrstu — test pass (nema što testirati)
-      console.log("Nema kasnih termina za vrstu sa intervalom — skip")
-      return
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    const vrsta = await firstActiveVrstaId()
+    const origInterval = await getVrstaInterval(vrsta)
+    try {
+      await setVrstaInterval(vrsta, 12)
+      // kasni termin (rok u prošlosti) za throwaway klijent
+      const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2025-01-15" })
+      await page.goto("/termini")
+      const before = Number(await page.getByTestId("stat-ukupno-value").textContent())
+      await page.goto(`/termini?selected=${tid}`)
+      await expect(page.getByTestId("mark-done-form")).toBeVisible()
+      await page.getByTestId("mark-done-submit").click()
+      await expect(page.getByTestId("termin-sheet").locator("[role=alert]")).toHaveCount(0)
+      await page.goto("/termini")
+      const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
+      expect(after).toBe(before + 1)
+    } finally {
+      await setVrstaInterval(vrsta, origInterval)
+      await deleteTerminiByKlijent(kid) // briše izvršeni + auto-cycle dijete
+      await deleteKlijentByNaziv(naziv)
     }
-
-    // Otvori termini listu
-    await page.goto("/termini")
-    const before = Number(await page.getByTestId("stat-ukupno-value").textContent())
-
-    // Otvori direktno taj termin via ?selected=
-    await page.goto(`/termini?selected=${firstTerminId}`)
-    await expect(page.getByTestId("mark-done-form")).toBeVisible()
-    await page.getByTestId("mark-done-submit").click()
-    // nema error unutar sheeta
-    const sheet = page.getByTestId("termin-sheet")
-    await expect(sheet.locator("[role=alert]")).toHaveCount(0)
-    // ukupno termina poraslo za 1 (auto-cycle kreirao sljedeći)
-    await page.goto("/termini")
-    const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
-    expect(after).toBe(before + 1)
   })
 
   // Postojeći termin iz datog pula (otkaži ⇒ kasni, zakazano ⇒ planirano — različiti
   // pulovi pa nema sudara; svaki test mutira po jedan, pulovi su veliki).
 
   test("Otkaži termin → status postaje Otkazano", async ({ page }) => {
-    const id = await terminIdByStatus("kasni")
-    expect(id).toMatch(/[0-9a-f-]{36}/)
-    await page.goto(`/termini?selected=${id}`)
-    await expect(page.getByTestId("termin-sheet")).toBeVisible()
-    await page.getByTestId("otkazi-arm").click()
-    await page.getByTestId("otkazi-submit").click()
-    await expect(page.getByTestId("termin-sheet")).toContainText("Otkazano")
-    await expect(page.getByTestId("otkazi-arm")).toHaveCount(0)
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      const vrsta = await firstActiveVrstaId()
+      const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2027-06-10" })
+      await page.goto(`/termini?selected=${tid}`)
+      await expect(page.getByTestId("termin-sheet")).toBeVisible()
+      await page.getByTestId("otkazi-arm").click()
+      await page.getByTestId("otkazi-submit").click()
+      await expect(page.getByTestId("termin-sheet")).toContainText("Otkazano")
+      await expect(page.getByTestId("otkazi-arm")).toHaveCount(0)
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 
   test("uređivanje 'Datum zakazan' prebaci planirano → Zakazano", async ({ page }) => {
-    const id = await terminIdByStatus("planirano")
-    expect(id).toMatch(/[0-9a-f-]{36}/)
-    await page.goto(`/termini?selected=${id}`)
-    await expect(page.getByTestId("termin-sheet")).toBeVisible()
-    await page.getByTestId("edit-datum-zakazan").fill("2030-08-01")
-    await page.getByTestId("edit-save").click()
-    await expect(page.getByTestId("termin-sheet")).toContainText("Zakazano")
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      const vrsta = await firstActiveVrstaId()
+      const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2027-07-20" })
+      await page.goto(`/termini?selected=${tid}`)
+      await expect(page.getByTestId("termin-sheet")).toBeVisible()
+      await page.getByTestId("edit-datum-zakazan").fill("2030-08-01")
+      await page.getByTestId("edit-save").click()
+      await expect(page.getByTestId("termin-sheet")).toContainText("Zakazano")
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 
   test("Zatvori sheet vraća na listu", async ({ page }) => {
@@ -221,55 +237,52 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
 
 test.describe("Faza 3 — Novi termin", () => {
   test("kreira novi termin koji se pojavi u listi", async ({ page }) => {
-    await page.goto("/termini")
-    const before = Number(await page.getByTestId("stat-ukupno-value").textContent())
-
-    await page.getByTestId("novi-termin-btn").click()
-    await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
-
-    // Izaberi klijenta — after clicking trigger, only THAT Select's options are visible
-    // (TerminiFilters dropdowns are closed). page.getByRole("option") je siguran nakon
-    // klika na odgovarajući SelectTrigger.
-    await page.getByTestId("novi-klijent").click()
-    await page.getByRole("option").first().click()
-    // Izaberi vrstu
-    await page.getByTestId("novi-vrsta").click()
-    await page.getByRole("option").first().click()
-    // Rok — jedinstven po prolazu (provjera duplikata blokira isti klijent+vrsta+rok)
-    const base = new Date(Date.UTC(2035, 0, 1))
-    base.setUTCDate(base.getUTCDate() + (Date.now() % 20000))
-    await page.getByTestId("novi-rok").fill(base.toISOString().slice(0, 10))
-
-    await page.getByTestId("novi-submit").click()
-
-    // Sheet se zatvori, ukupno +1
-    await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
-    const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
-    expect(after).toBe(before + 1)
-  })
-
-  test("duplikat (isti klijent+vrsta+rok) je odbijen porukom", async ({ page }) => {
-    const base = new Date(Date.UTC(2045, 0, 1))
-    base.setUTCDate(base.getUTCDate() + (Date.now() % 20000))
-    const rok = base.toISOString().slice(0, 10)
-
-    async function popuni() {
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      await page.goto("/termini")
+      const before = Number(await page.getByTestId("stat-ukupno-value").textContent())
       await page.getByTestId("novi-termin-btn").click()
       await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
       await page.getByTestId("novi-klijent").click()
-      await page.getByRole("option").first().click()
+      await page.getByRole("option", { name: naziv }).click()
       await page.getByTestId("novi-vrsta").click()
       await page.getByRole("option").first().click()
-      await page.getByTestId("novi-rok").fill(rok)
+      await page.getByTestId("novi-rok").fill("2029-03-15")
       await page.getByTestId("novi-submit").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+      const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
+      expect(after).toBe(before + 1)
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
     }
+  })
 
-    await page.goto("/termini")
-    await popuni()
-    await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
-    // drugi put isti klijent+vrsta+rok → odbijen
-    await popuni()
-    await expect(page.getByText("Termin za istu firmu, vrstu i rok već postoji.")).toBeVisible()
+  test("duplikat (isti klijent+vrsta+rok) je odbijen porukom", async ({ page }) => {
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    const rok = "2029-04-20"
+    try {
+      async function popuni() {
+        await page.getByTestId("novi-termin-btn").click()
+        await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+        await page.getByTestId("novi-klijent").click()
+        await page.getByRole("option", { name: naziv }).click()
+        await page.getByTestId("novi-vrsta").click()
+        await page.getByRole("option").first().click()
+        await page.getByTestId("novi-rok").fill(rok)
+        await page.getByTestId("novi-submit").click()
+      }
+      await page.goto("/termini")
+      await popuni()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+      await popuni()
+      await expect(page.getByText("Termin za istu firmu, vrstu i rok već postoji.")).toBeVisible()
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 })
 

@@ -8,14 +8,15 @@ import { LokacijeTab } from "@/components/domain/LokacijeTab"
 import { KlijentEditForm } from "@/components/domain/KlijentEditForm"
 import { ObrisiKlijentButton } from "@/components/domain/ObrisiKlijentButton"
 import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
-import { formatDatum } from "@/lib/date"
+import { ProfilTab } from "@/components/domain/ProfilTab"
+import { formatDatum, addMjeseci } from "@/lib/date"
 import type { Database } from "@/db/types"
 
 type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
 
-const VALID_TABS = ["termini", "lokacije", "kontakti", "dokumenti"]
+const VALID_TABS = ["termini", "lokacije", "kontakti", "dokumenti", "profil"]
 
 export default async function KlijentDetailPage({
   params,
@@ -54,6 +55,28 @@ export default async function KlijentDetailPage({
         .order("uploaded_at", { ascending: false })
     : { data: [] }
   const dokumenti = (dokData ?? []) as DokumentRow[]
+
+  const [profilRes, vrsteRes] = await Promise.all([
+    supabase
+      .from("klijent_provjere")
+      .select("id, interval_mjeseci, zadnji_datum, vrsta_provjere:vrste_provjera(naziv, podrazumevani_interval_mjeseci), lokacija:lokacije(naziv)")
+      .eq("klijent_id", id)
+      .order("created_at", { ascending: true }),
+    supabase.from("vrste_provjera").select("id, naziv, podrazumevani_interval_mjeseci").eq("aktivna", true).order("naziv"),
+  ])
+  const profilStavke = (profilRes.data ?? []).map((p) => {
+    const interval = p.interval_mjeseci ?? (p.vrsta_provjere as { podrazumevani_interval_mjeseci: number | null } | null)?.podrazumevani_interval_mjeseci ?? null
+    return {
+      id: p.id as string,
+      vrsta_naziv: (p.vrsta_provjere as { naziv: string } | null)?.naziv ?? "—",
+      lokacija_naziv: (p.lokacija as { naziv: string } | null)?.naziv ?? null,
+      interval_mjeseci: p.interval_mjeseci as number | null,
+      zadnji_datum: p.zadnji_datum as string,
+      sljedeci_rok: interval ? addMjeseci(p.zadnji_datum as string, interval) : (p.zadnji_datum as string),
+    }
+  })
+  const vrsteOpcije = (vrsteRes.data ?? []).map((v) => ({ id: v.id as string, naziv: v.naziv as string, interval: v.podrazumevani_interval_mjeseci as number | null }))
+  const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
 
   return (
     <div className="space-y-6">
@@ -187,6 +210,10 @@ export default async function KlijentDetailPage({
       )}
 
       {tab === "lokacije" && <LokacijeTab klijentId={id} lokacije={lokacije} />}
+
+      {tab === "profil" && (
+        <ProfilTab klijentId={id} stavke={profilStavke} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />
+      )}
     </div>
   )
 }

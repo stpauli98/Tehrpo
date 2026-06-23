@@ -181,3 +181,17 @@ export async function deleteLokacija(
   revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
+
+// ─── Profil provjere ───────────────────────────────────────────────────────
+
+export async function deleteProfilProvjere(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const id = String(formData.get("id") ?? "")
+  if (!id) return { ok: false, message: "Nedostaje id." }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("klijent_provjere").delete().eq("id", id)
+  if (error) return { ok: false, message: error.message }
+  return { ok: true }
+}

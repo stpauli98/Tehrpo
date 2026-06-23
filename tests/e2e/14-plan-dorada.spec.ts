@@ -34,3 +34,25 @@ test.describe("Plan dorada — mjesec dropdown", () => {
     await expect(page.getByTestId("plan-nav-label")).toContainText("Decembar")
   })
 })
+
+test.describe("Plan dorada — klik model ćelije", () => {
+  test("klik na pojedinačni termin otvara TerminSheet direktno", async ({ page }) => {
+    await page.goto("/plan?godina=2026&mjesec=7")
+    const termin = page.getByTestId("cell-termin").first()
+    await expect(termin).toBeVisible()
+    await termin.click()
+    await page.waitForURL(/selected=/)
+    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+  })
+
+  test("klik na pozadinu dana (ne na termin) otvara dnevni sidebar", async ({ page }) => {
+    await page.goto("/plan?godina=2026&mjesec=7")
+    // dan 28 ima puno termina; klik na pozadinski dan-link (broj/prazni dio)
+    const dayLink = page.locator('[data-testid="plan-day-cell"][data-date="2026-07-28"]')
+    await expect(dayLink).toBeVisible()
+    // Klikamo pri vrhu ćelije (oblast broja dana) gdje nema cell-termin linkova
+    await dayLink.click({ position: { x: 10, y: 6 } })
+    await page.waitForURL(/dan=2026-07-28/)
+    await expect(page.getByTestId("plan-sidebar")).toBeVisible()
+  })
+})

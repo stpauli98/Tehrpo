@@ -32,6 +32,13 @@ export function MonthCalendar({
     return `/plan?${p.toString()}`
   }
 
+  const terminHref = (id: string) => {
+    const p = new URLSearchParams(currentSearch)
+    p.set("selected", id)
+    p.delete("dan")
+    return `/plan?${p.toString()}`
+  }
+
   return (
     <div
       className="rounded-xl border border-slate-200 overflow-hidden"
@@ -54,57 +61,71 @@ export function MonthCalendar({
           const isSelected = c.date === selectedDan
 
           return (
-            <Link
+            <div
               key={c.date}
-              href={dayHref(c.date)}
-              data-testid="plan-day-cell"
-              data-date={c.date}
-              data-selected={isSelected}
               className={cn(
-                "min-h-[84px] border-t border-l border-slate-100 p-1.5 text-left align-top transition",
+                "relative min-h-[84px] border-t border-l border-slate-100 transition",
                 !c.inMonth && "bg-slate-50/50 text-slate-300",
                 isSelected
                   ? "ring-2 ring-inset ring-brand bg-brand-light/30"
                   : "hover:bg-slate-50",
               )}
             >
-              <div className="flex items-center justify-between">
-                <span
-                  className={cn(
-                    "text-xs",
-                    isToday &&
-                      "inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-white font-semibold",
-                  )}
-                >
-                  {c.day}
-                </span>
-              </div>
-              <div className="mt-1 space-y-0.5">
-                {termini.slice(0, 3).map((t) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center gap-1 truncate text-[11px] text-slate-600"
+              {/* Pozadinski sloj: klik na cijeli dan → ?dan sidebar */}
+              <Link
+                href={dayHref(c.date)}
+                data-testid="plan-day-cell"
+                data-date={c.date}
+                data-selected={isSelected}
+                aria-label={`Dan ${c.day}`}
+                className="absolute inset-0"
+              />
+              {/* Sloj sadržaja: broj dana + termini (klikovi prolaze do pozadine osim na linkovima) */}
+              <div className="relative pointer-events-none p-1.5 text-left align-top">
+                <div className="flex items-center justify-between">
+                  <span
+                    className={cn(
+                      "text-xs",
+                      isToday &&
+                        "inline-grid place-items-center w-5 h-5 rounded-full bg-brand text-white font-semibold",
+                    )}
                   >
-                    <span
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full shrink-0",
-                        STATUS_DOT_CLASS[t.status],
-                      )}
-                    />
-                    <span className="truncate">
-                      {t.klijentNaziv}
-                      {t.lokacijaNaziv ? ` · ${t.lokacijaNaziv}` : ""}
-                    </span>
-                  </div>
-                ))}
-                {/* "još N" — parent cell is <Link> to ?dan=; text-brand signals clickability */}
-                {termini.length > 3 && (
-                  <div className="text-[10px] text-brand font-medium">
-                    još {termini.length - 3}
-                  </div>
-                )}
+                    {c.day}
+                  </span>
+                </div>
+                <div className="mt-1 space-y-0.5">
+                  {termini.slice(0, 3).map((t) => (
+                    <Link
+                      key={t.id}
+                      href={terminHref(t.id)}
+                      data-testid="cell-termin"
+                      data-status={t.status}
+                      className="pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-slate-600 hover:bg-slate-100"
+                    >
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full shrink-0",
+                          STATUS_DOT_CLASS[t.status],
+                        )}
+                      />
+                      <span className="truncate">
+                        {t.klijentNaziv}
+                        {t.lokacijaNaziv ? ` · ${t.lokacijaNaziv}` : ""}
+                      </span>
+                    </Link>
+                  ))}
+                  {termini.length > 3 && (
+                    <Link
+                      href={dayHref(c.date)}
+                      data-testid="cell-vise"
+                      className="pointer-events-auto block text-[10px] text-brand font-medium hover:underline"
+                    >
+                      još {termini.length - 3}
+                    </Link>
+                  )}
+                </div>
               </div>
-            </Link>
+            </div>
           )
         })}
       </div>

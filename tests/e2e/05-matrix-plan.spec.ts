@@ -75,15 +75,13 @@ test.describe("Faza 5 — Matrix cell click", () => {
 
 test.describe("Faza 5 — Plan dan sidebar", () => {
   test("klik dana sa terminima → sidebar → Detalji → sheet", async ({ page }) => {
-    // jul 2026 ima dosta termina; data-driven: nađi dan ćeliju koja STVARNO ima termine
+    // jul 2026, dan 28 ima dosta termina (data-driven: poznat gust dan)
     await page.goto("/plan?godina=2026&mjesec=7")
-    // dan ćelija sa terminima ima status-dot (span sa rounded-full) — biraj prvu takvu
-    const cellWithTermini = page.getByTestId("plan-day-cell").filter({ has: page.locator("span.rounded-full") }).first()
-    await expect(cellWithTermini).toBeVisible()
-    await cellWithTermini.click()
-    await page.waitForURL(/dan=/)
+    const dayLink = page.locator('[data-testid="plan-day-cell"][data-date="2026-07-28"]')
+    await expect(dayLink).toBeVisible()
+    await dayLink.click({ position: { x: 10, y: 6 } })
+    await page.waitForURL(/dan=2026-07-28/)
     await expect(page.getByTestId("plan-sidebar")).toBeVisible()
-    // dan ima termine → sidebar MORA imati bar jedan termin (bez guard-a)
     await expect(page.getByTestId("sidebar-termin").first()).toBeVisible()
     await page.getByTestId("sidebar-detalji").first().click()
     await page.waitForURL(/selected=/)

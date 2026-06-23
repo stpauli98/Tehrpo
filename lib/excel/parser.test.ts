@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { canonicalizeNaziv, splitFirmaLokacija, parseStringDate, parseTehproExcel, POZNATE_FIRME } from "./parser"
+import { canonicalizeNaziv, splitFirmaLokacija, parseStringDate, parseTehproExcel, POZNATE_FIRME, dedupeTermini } from "./parser"
+import type { ParsedTermin } from "./parser.types"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -178,5 +179,37 @@ describe("splitFirmaLokacija — edge-case fixevi", () => {
   })
   it("Dom zdravlja Laktaši → zasebna firma", () => {
     expect(splitFirmaLokacija("Dom zdravlja Laktaši").firma).toBe("Dom zdravlja Laktaši")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// dedupeTermini
+// ---------------------------------------------------------------------------
+const t = (over: Partial<ParsedTermin>): ParsedTermin => ({
+  firma_naziv: "AS", lokacija_naziv: null, vrsta_naziv: "Akt o procjeni rizika - revizija",
+  sheet_naziv: "Januar", datum: "2026-12-31", izvor: "planirano", ...over,
+})
+
+describe("dedupeTermini", () => {
+  it("kolabira identične iz više sheetova u jedan", () => {
+    const res = dedupeTermini([
+      t({ sheet_naziv: "Januar" }), t({ sheet_naziv: "Februar" }), t({ sheet_naziv: "Mart" }),
+    ])
+    expect(res).toHaveLength(1)
+  })
+  it("izvrseno pobjeđuje planirano na isti (firma,vrsta,lokacija,datum)", () => {
+    const res = dedupeTermini([
+      t({ izvor: "planirano" }), t({ izvor: "izvrseno" }),
+    ])
+    expect(res).toHaveLength(1)
+    expect(res[0]!.izvor).toBe("izvrseno")
+  })
+  it("različit datum / lokacija / vrsta NIJE duplikat", () => {
+    const res = dedupeTermini([
+      t({ datum: "2026-01-10" }), t({ datum: "2026-02-10" }),
+      t({ lokacija_naziv: "BIJELJINA", datum: "2026-01-10" }),
+      t({ vrsta_naziv: "Obilazak", datum: "2026-01-10" }),
+    ])
+    expect(res).toHaveLength(4)
   })
 })

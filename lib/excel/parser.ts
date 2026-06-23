@@ -230,6 +230,19 @@ function normalizeVrsta(raw: string): string {
  * - Row obilasciRow+1: header Block2 (col2 = Planirano, col4 = Izvršeno)
  * - Rows obilasciRow+2..end: Block2 — klijent u colA, datumi u col2-3 (plan) i col4-5 (izvr)
  */
+
+/** Dedupe termina: jedan po (firma|vrsta|lokacija|datum); izvrseno ima prednost nad planirano. */
+export function dedupeTermini(termini: ParsedTermin[]): ParsedTermin[] {
+  const map = new Map<string, ParsedTermin>()
+  for (const t of termini) {
+    const key = `${t.firma_naziv}||${t.vrsta_naziv}||${t.lokacija_naziv ?? "∅"}||${t.datum}`
+    const post = map.get(key)
+    if (!post) { map.set(key, t); continue }
+    if (post.izvor !== "izvrseno" && t.izvor === "izvrseno") map.set(key, t)
+  }
+  return Array.from(map.values())
+}
+
 export async function parseTehproExcel(filePath: string): Promise<ParseResult> {
   const wb = new ExcelJS.Workbook()
   await wb.xlsx.readFile(filePath)
@@ -433,7 +446,7 @@ export async function parseTehproExcel(filePath: string): Promise<ParseResult> {
     firme: Array.from(firmeSet).sort(),
     lokacije: lokacijeArr,
     vrste: Array.from(vrsteSet).sort(),
-    termini,
+    termini: dedupeTermini(termini),
     skipped,
   }
 }

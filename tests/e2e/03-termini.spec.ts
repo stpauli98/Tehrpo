@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { execSync } from "node:child_process"
+import { terminIdByStatus, firstActiveVrstaId, setVrstaInterval, kasniTerminForVrsta } from "./db"
 
 // Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
 // mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
@@ -156,21 +156,11 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
 
   test("označi kao izvršeno mijenja status i kreira novi ciklus", async ({ page }) => {
     // Auto-cycle zahtijeva interval na vrsti ILI na terminu.
-    // Seed ostavlja sve intervale NULL → postavljamo interval na prvoj vrsti direktno u DB,
-    // a potom biramo kasni termin za tu vrstu. Ovaj pristup je isti kao u 06-spec truncate.
-    const firstVrsta = execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT id FROM vrste_provjera WHERE aktivna = true ORDER BY naziv LIMIT 1;"`,
-    ).toString().trim()
-
-    // Postavi interval = 12 na toj vrsti
-    execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -c "UPDATE vrste_provjera SET podrazumevani_interval_mjeseci = 12 WHERE id = '${firstVrsta}';"`,
-    )
-
-    // Uzmi ID prvog kasni termina za tu vrstu
-    const firstTerminId = execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT t.id FROM termini t WHERE t.vrsta_provjere_id = '${firstVrsta}' AND (SELECT status_izvedeni FROM termini_view WHERE id = t.id) = 'kasni' LIMIT 1;"`,
-    ).toString().trim()
+    // Seed ostavlja sve intervale NULL → postavljamo interval na prvoj vrsti (cloud DB),
+    // a potom biramo kasni termin za tu vrstu.
+    const firstVrsta = await firstActiveVrstaId()
+    await setVrstaInterval(firstVrsta, 12)
+    const firstTerminId = await kasniTerminForVrsta(firstVrsta)
 
     if (!firstTerminId) {
       // Nema kasnih termina za tu vrstu — test pass (nema što testirati)
@@ -197,15 +187,9 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
 
   // Postojeći termin iz datog pula (otkaži ⇒ kasni, zakazano ⇒ planirano — različiti
   // pulovi pa nema sudara; svaki test mutira po jedan, pulovi su veliki).
-  function pickId(status: string): string {
-    const out = execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -t -c "SELECT id FROM termini_view WHERE status_izvedeni='${status}' LIMIT 1;"`,
-    ).toString()
-    return (out.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/) ?? [""])[0]
-  }
 
   test("Otkaži termin → status postaje Otkazano", async ({ page }) => {
-    const id = pickId("kasni")
+    const id = await terminIdByStatus("kasni")
     expect(id).toMatch(/[0-9a-f-]{36}/)
     await page.goto(`/termini?selected=${id}`)
     await expect(page.getByTestId("termin-sheet")).toBeVisible()
@@ -216,7 +200,7 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
   })
 
   test("uređivanje 'Datum zakazan' prebaci planirano → Zakazano", async ({ page }) => {
-    const id = pickId("planirano")
+    const id = await terminIdByStatus("planirano")
     expect(id).toMatch(/[0-9a-f-]{36}/)
     await page.goto(`/termini?selected=${id}`)
     await expect(page.getByTestId("termin-sheet")).toBeVisible()

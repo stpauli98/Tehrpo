@@ -61,7 +61,9 @@ export default async function ObilasciPage({
           <section key={g.grad} data-testid="obilasci-grupa" className="rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="w-4 h-4 text-red-600" aria-hidden />
-              <h2 className="font-semibold">{g.grad}</h2>
+              <h2 className="font-semibold">
+                {g.grad} <span className="text-slate-400 font-normal">({g.items.length})</span>
+              </h2>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
               {g.items.map((t) => (

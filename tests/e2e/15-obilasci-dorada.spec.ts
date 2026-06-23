@@ -14,3 +14,15 @@ test.describe("Obilasci dorada — status filter", () => {
     await expect(page.getByTestId("obilasci-card").locator('[data-status="izvrseno"]').first()).toBeVisible()
   })
 })
+
+test.describe("Obilasci dorada — grupisanje po gradu", () => {
+  test("ima više grupa gradova (ne samo 'Bez grada') i broj u zaglavlju", async ({ page }) => {
+    await page.goto("/obilasci?period=godina&godina=2026&status=svi")
+    const grupe = page.getByTestId("obilasci-grupa")
+    expect(await grupe.count()).toBeGreaterThan(1)
+    // bar jedno zaglavlje sadrži grad Banja Luka ili Prijedor
+    await expect(page.getByRole("heading", { name: /Banja Luka|Prijedor|Zvornik/ }).first()).toBeVisible()
+    // zaglavlje prikazuje broj u zagradama, npr. "(3)"
+    await expect(page.getByTestId("obilasci-grupa").first().getByText(/\(\d+\)/).first()).toBeVisible()
+  })
+})

@@ -16,6 +16,7 @@
     "db:reset": "supabase db reset",
     "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts",
     "backfill:grad": "tsx --env-file=.env.local scripts/backfill-lokacija-grad.ts",
+    "dedup:termini": "tsx --env-file=.env.local scripts/dedup-termini.ts",
     "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts",
     "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts"
   },

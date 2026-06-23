@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/OpterecenjeChart"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
 import { MatrixGrid } from "@/components/domain/MatrixGrid"
+import { MatrixLegenda } from "@/components/domain/MatrixLegenda"
 import type { MatrixColumn } from "@/lib/matrix"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
@@ -152,12 +153,15 @@ export default async function PrikazPage({
       <PrikazToolbar klijenti={klijenti} godine={godine} godina={godina} />
 
       {showMatrix ? (
-        <MatrixGrid
-          columns={kolone}
-          rows={matrixRows}
-          currentSearch={currentSearch}
-          emptyMessage={emptyMessage}
-        />
+        <div className="space-y-2">
+          <MatrixGrid
+            columns={kolone}
+            rows={matrixRows}
+            currentSearch={currentSearch}
+            emptyMessage={emptyMessage}
+          />
+          <MatrixLegenda />
+        </div>
       ) : (
         <div
           data-testid="prikaz-empty"

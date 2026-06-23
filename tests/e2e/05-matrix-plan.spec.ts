@@ -54,11 +54,15 @@ test.describe("Faza 5 — Matrix cell click", () => {
   test("klik popunjene ćelije otvara TerminSheet", async ({ page }) => {
     await page.goto("/prikaz")
     await page.getByTestId("prikaz-klijent").click()
-    const opt = page.getByRole("option", { name: /^WAIKIKI$/ })
+    // CARMEUSE ima single-termin ćelije u 2026 → TerminSheet test
+    const opt = page.getByRole("option", { name: /^CARMEUSE$/ })
     await expect(opt).toBeVisible()
     await opt.click()
     await page.waitForURL(/klijent=/)
-    await page.getByTestId("matrix-cell-filled").first().click()
+    // Klikni prvu single-ćeliju (href sadrži selected=, ne /termini)
+    const singleCell = page.locator('a[data-testid="matrix-cell-filled"][href*="selected="]').first()
+    await expect(singleCell).toBeVisible()
+    await singleCell.click()
     await page.waitForURL(/selected=/)
     await expect(page.getByTestId("termin-sheet")).toBeVisible()
     // zatvori

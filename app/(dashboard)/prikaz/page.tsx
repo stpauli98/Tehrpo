@@ -87,6 +87,12 @@ export default async function PrikazPage({
     emptyMessage = "Ovaj klijent nema termina u izabranoj godini."
   }
 
+  // multiHref: za ćelije sa više termina (brojUCeliji > 1) → /termini filtriran
+  const multiHref = (vrstaId: string, colId: string): string =>
+    mode === "mjesec"
+      ? `/termini?klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`
+      : `/termini?klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`
+
   // currentSearch string (čuva sve trenutne parametre za link bazu)
   const currentSearch = new URLSearchParams(
     Object.entries(sp).flatMap(([k, v]) =>
@@ -159,6 +165,7 @@ export default async function PrikazPage({
             rows={matrixRows}
             currentSearch={currentSearch}
             emptyMessage={emptyMessage}
+            multiHref={multiHref}
           />
           <MatrixLegenda />
         </div>

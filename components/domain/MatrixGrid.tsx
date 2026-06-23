@@ -35,11 +35,13 @@ export function MatrixGrid({
   rows,
   currentSearch,
   emptyMessage = "Nema podataka.",
+  multiHref,
 }: {
   columns: MatrixColumn[]
   rows: MatrixRow[]
   currentSearch: string
   emptyMessage?: string
+  multiHref?: (rowId: string, colId: string) => string
 }) {
   if (rows.length === 0) {
     return (
@@ -80,6 +82,12 @@ export function MatrixGrid({
               </td>
               {columns.map((c) => {
                 const cell = row.cells[c.id] ?? null
+                const href =
+                  cell && cell.brojUCeliji > 1 && multiHref
+                    ? multiHref(row.rowId, c.id)
+                    : cell
+                    ? `/prikaz?${withParam(currentSearch, "selected", cell.terminId)}`
+                    : ""
                 return (
                   <td
                     key={c.id}
@@ -89,9 +97,10 @@ export function MatrixGrid({
                   >
                     {cell ? (
                       <Link
-                        href={`/prikaz?${withParam(currentSearch, "selected", cell.terminId)}`}
+                        href={href}
                         data-testid="matrix-cell-filled"
                         data-status={cell.status}
+                        title={cell.brojUCeliji > 1 ? "Više termina — otvori listu" : undefined}
                         className={cn(
                           "inline-block w-full rounded px-1.5 py-1 tabular-nums",
                           CELL_CLASS[cell.status],

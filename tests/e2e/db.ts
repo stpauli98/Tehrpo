@@ -72,3 +72,33 @@ export async function kasniTerminForVrsta(vrstaId: string): Promise<string> {
 export async function clearPodsjetnici(): Promise<void> {
   await db.from("podsjetnici").delete().gte("dana_prije", 0)
 }
+
+/** Prvi klijent (id) po nazivu. */
+export async function firstKlijentId(): Promise<string> {
+  const { data } = await db.from("klijenti").select("id").order("naziv").limit(1)
+  return (data?.[0]?.id as string) ?? ""
+}
+
+/** Ubaci planirani termin; vrati id. */
+export async function insertTermin(input: {
+  klijentId: string
+  vrstaId: string
+  rok: string
+}): Promise<string> {
+  const { data } = await db
+    .from("termini")
+    .insert({
+      klijent_id: input.klijentId,
+      vrsta_provjere_id: input.vrstaId,
+      rok_dospijeca: input.rok,
+      status: "planirano",
+    })
+    .select("id")
+    .single()
+  return (data?.id as string) ?? ""
+}
+
+/** Obriši termin po id-u (čišćenje nakon testa). */
+export async function deleteTermin(id: string): Promise<void> {
+  if (id) await db.from("termini").delete().eq("id", id)
+}

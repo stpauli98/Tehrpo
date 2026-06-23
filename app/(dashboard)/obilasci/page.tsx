@@ -17,15 +17,19 @@ export default async function ObilasciPage({
   const today = todayIso()
   const mjesec = Number(typeof sp.mjesec === "string" ? sp.mjesec : "") || Number(today.slice(5, 7))
   const kvartal = Number(typeof sp.kvartal === "string" ? sp.kvartal : "") || 1
+  const status = typeof sp.status === "string" ? sp.status : "aktivni"
 
   const { od, do: doIso } = periodRange(period, godina, mjesec, kvartal)
 
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
+  let q = supabase
     .from("termini_view")
     .select("id, klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, lokacija_grad, rok_dospijeca, status_izvedeni")
     .gte("rok_dospijeca", od)
     .lte("rok_dospijeca", doIso)
+  if (status === "aktivni") q = q.not("status_izvedeni", "in", "(izvrseno,otkazano)")
+  else if (status !== "svi") q = q.eq("status_izvedeni", status)
+  const { data } = await q
     .order("lokacija_grad", { ascending: true })
     .order("rok_dospijeca", { ascending: true })
 

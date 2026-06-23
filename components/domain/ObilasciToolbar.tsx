@@ -27,10 +27,15 @@ export function ObilasciToolbar({
   const godinaStr = sp.get("godina") ?? String(initialGodina ?? currentYear())
   const mjesecStr = sp.get("mjesec") ?? (initialMjesec ? String(initialMjesec) : "")
   const kvartalStr = sp.get("kvartal") ?? (initialKvartal ? String(initialKvartal) : "")
+  const status = sp.get("status") ?? "aktivni"
 
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   const periodItems: Record<string, string> = { mjesec: "Mjesec", kvartal: "Kvartal", godina: "Godina" }
+  const statusItems: Record<string, string> = {
+    aktivni: "Aktivni", svi: "Svi", kasni: "Kasni", planirano: "Planirano",
+    zakazano: "Zakazano", izvrseno: "Izvršeno", otkazano: "Otkazano",
+  }
   const mjesecItems: Record<string, string> = Object.fromEntries(
     MONTHS_BS.map((label, i) => [String(i + 1), label])
   )
@@ -54,6 +59,21 @@ export function ObilasciToolbar({
           <SelectItem value="mjesec">Mjesec</SelectItem>
           <SelectItem value="kvartal">Kvartal</SelectItem>
           <SelectItem value="godina">Godina</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={status} onValueChange={(v) => setParam("status", v ?? "")} items={statusItems}>
+        <SelectTrigger data-testid="obilasci-status" className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="aktivni">Aktivni</SelectItem>
+          <SelectItem value="svi">Svi</SelectItem>
+          <SelectItem value="kasni">Kasni</SelectItem>
+          <SelectItem value="planirano">Planirano</SelectItem>
+          <SelectItem value="zakazano">Zakazano</SelectItem>
+          <SelectItem value="izvrseno">Izvršeno</SelectItem>
+          <SelectItem value="otkazano">Otkazano</SelectItem>
         </SelectContent>
       </Select>
 

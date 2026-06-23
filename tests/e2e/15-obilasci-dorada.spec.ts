@@ -5,11 +5,19 @@ test.describe("Obilasci dorada — status filter", () => {
     await page.goto("/obilasci?period=godina&godina=2026")
     // default Aktivni → nijedna kartica nema status badge "Izvršen"
     await expect(page.getByTestId("obilasci-status")).toBeVisible()
+    // čekaj da se sadržaj renderuje (hidracija) prije count(0) i interakcije sa Select-om —
+    // toHaveCount(0) bi prošao vakuumski na još-praznoj stranici i klik bi se izgubio
+    await expect(page.getByTestId("obilasci-grupa").first()).toBeVisible()
+    // čekaj da mreža stane (hidracija JS završena) — bez ovoga prvi klik može biti zagubljen
+    await page.waitForLoadState("networkidle")
     const izvrseniDefault = page.getByTestId("obilasci-card").locator('[data-status="izvrseno"]')
     await expect(izvrseniDefault).toHaveCount(0)
     // prebaci na Svi → pojave se izvršeni
-    await page.getByTestId("obilasci-status").click()
-    await page.getByRole("option", { name: "Svi" }).click()
+    const statusTrigger = page.getByTestId("obilasci-status")
+    await statusTrigger.click()
+    const sviOpcija = page.getByRole("option", { name: "Svi" })
+    await expect(sviOpcija).toBeVisible()
+    await sviOpcija.click()
     await page.waitForURL(/status=svi/)
     await expect(page.getByTestId("obilasci-card").locator('[data-status="izvrseno"]').first()).toBeVisible()
   })

@@ -102,3 +102,9 @@ export async function insertTermin(input: {
 export async function deleteTermin(id: string): Promise<void> {
   if (id) await db.from("termini").delete().eq("id", id)
 }
+
+/** Obriši klijenta po nazivu (lokacije cascade; termini restrict — koristiti samo za throwaway klijente bez termina). */
+export async function deleteKlijentByNaziv(naziv: string): Promise<void> {
+  const { error } = await db.from("klijenti").delete().eq("naziv", naziv)
+  if (error) throw new Error(`deleteKlijentByNaziv(${naziv}): ${error.message}`)
+}

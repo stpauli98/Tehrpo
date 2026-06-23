@@ -35,6 +35,9 @@ export function ObrisiProfilButton({ id }: { id: string }) {
         <p className="text-sm text-slate-600">
           Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).
         </p>
+        {state.ok === false && state.message && (
+          <p className="text-sm text-red-600" role="alert">{state.message}</p>
+        )}
         <DialogFooter>
           <DialogClose render={<Button variant="outline">Otkaži</Button>} />
           <form action={(fd) => { submitted.current = true; action(fd) }}>

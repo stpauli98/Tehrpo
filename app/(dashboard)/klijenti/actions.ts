@@ -193,5 +193,6 @@ export async function deleteProfilProvjere(
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijent_provjere").delete().eq("id", id)
   if (error) return { ok: false, message: error.message }
+  revalidatePath("/klijenti", "layout")
   return { ok: true }
 }

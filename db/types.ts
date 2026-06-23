@@ -109,6 +109,68 @@ export type Database = {
           },
         ]
       }
+      klijent_provjere: {
+        Row: {
+          aktivan: boolean
+          created_at: string
+          id: string
+          interval_mjeseci: number | null
+          klijent_id: string
+          lokacija_id: string | null
+          vrsta_provjere_id: string
+          zadnji_datum: string
+        }
+        Insert: {
+          aktivan?: boolean
+          created_at?: string
+          id?: string
+          interval_mjeseci?: number | null
+          klijent_id: string
+          lokacija_id?: string | null
+          vrsta_provjere_id: string
+          zadnji_datum: string
+        }
+        Update: {
+          aktivan?: boolean
+          created_at?: string
+          id?: string
+          interval_mjeseci?: number | null
+          klijent_id?: string
+          lokacija_id?: string | null
+          vrsta_provjere_id?: string
+          zadnji_datum?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klijent_provjere_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klijent_provjere_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klijent_provjere_lokacija_id_fkey"
+            columns: ["lokacija_id"]
+            isOneToOne: false
+            referencedRelation: "lokacije"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klijent_provjere_vrsta_provjere_id_fkey"
+            columns: ["vrsta_provjere_id"]
+            isOneToOne: false
+            referencedRelation: "vrste_provjera"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       klijenti: {
         Row: {
           created_at: string
@@ -609,4 +671,3 @@ export const Constants = {
     },
   },
 } as const
-

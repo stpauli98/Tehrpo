@@ -19,7 +19,8 @@
     "dedup:termini": "tsx --env-file=.env.local scripts/dedup-termini.ts",
     "cleanup:test-data": "tsx --env-file=.env.local scripts/cleanup-test-data.ts",
     "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts",
-    "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts"
+    "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts",
+    "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
@@ -46,11 +47,13 @@
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "pg": "^8.22.0",
     "postcss": "^8.5.15",
     "shadcn": "^4.11.0",
     "tailwindcss": "^4.3.1",

@@ -16,6 +16,24 @@ test.describe("Prikaz — dorada", () => {
     await expect(page.getByTestId("matrix-legenda")).toHaveCount(0)
   })
 
+  test("'Po mjesecu' iz default-a postavi ?mjesec na tekući", async ({ page }) => {
+    await page.goto("/prikaz")
+    await page.getByTestId("prikaz-mode-mjesec").click()
+    await page.waitForURL(/mode=mjesec/)
+    await page.waitForURL(/mjesec=\d+/)
+    await expect(page.getByTestId("prikaz-mjesec")).toBeVisible()
+  })
+
+  test("klijent reset '— svi —' vraća na prazno stanje", async ({ page }) => {
+    const { firstKlijentId } = await import("./db")
+    const klijentId = await firstKlijentId()
+    await page.goto(`/prikaz?mode=klijent&klijent=${klijentId}&godina=2026`)
+    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+    await page.getByTestId("prikaz-klijent").click()
+    await page.getByRole("option", { name: "— svi klijenti —" }).click()
+    await expect(page.getByTestId("prikaz-empty")).toBeVisible()
+  })
+
   test("(+N) ćelija vodi na filtrirane Termine", async ({ page }) => {
     const klijentId = await firstKlijentId()
     const vrstaId = await firstActiveVrstaId()

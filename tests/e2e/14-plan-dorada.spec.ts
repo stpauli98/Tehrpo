@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Plan dorada — legenda i čćelija", () => {
+test.describe("Plan dorada — legenda i ćelija", () => {
   test("legenda je vidljiva ispod kalendara sa 5 statusa", async ({ page }) => {
     await page.goto("/plan?godina=2026&mjesec=7")
     const legenda = page.getByTestId("plan-legenda")
@@ -18,5 +18,8 @@ test.describe("Plan dorada — legenda i čćelija", () => {
     // Provjeravamo da ćelija sa terminima NE sadrži drugi broj pored broja dana;
     // umjesto toga preljev se vidi kroz "još N".
     await expect(page.getByText(/^još \d+$/).first()).toBeVisible()
+    // negativna: uklonjeni count-span je imao klase text-[10px] text-slate-400 (sivi broj);
+    // "još N" koristi text-brand pa se ne poklapa — ovo mora biti 0
+    await expect(page.locator('.text-\\[10px\\].text-slate-400')).toHaveCount(0)
   })
 })

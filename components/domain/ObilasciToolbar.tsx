@@ -12,11 +12,13 @@ export function ObilasciToolbar({
   godina: initialGodina,
   mjesec: initialMjesec,
   kvartal: initialKvartal,
+  gradovi,
 }: {
   period?: string
   godina?: number
   mjesec?: number
   kvartal?: number
+  gradovi?: string[]
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -28,6 +30,7 @@ export function ObilasciToolbar({
   const mjesecStr = sp.get("mjesec") ?? (initialMjesec ? String(initialMjesec) : "")
   const kvartalStr = sp.get("kvartal") ?? (initialKvartal ? String(initialKvartal) : "")
   const status = sp.get("status") ?? "aktivni"
+  const grad = sp.get("grad") ?? "svi"
 
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
@@ -35,6 +38,10 @@ export function ObilasciToolbar({
   const statusItems: Record<string, string> = {
     aktivni: "Aktivni", svi: "Svi", kasni: "Kasni", planirano: "Planirano",
     zakazano: "Zakazano", izvrseno: "Izvršeno", otkazano: "Otkazano",
+  }
+  const gradItems: Record<string, string> = {
+    svi: "Svi gradovi", __bez__: "Bez grada",
+    ...Object.fromEntries((gradovi ?? []).map((g) => [g, g])),
   }
   const mjesecItems: Record<string, string> = Object.fromEntries(
     MONTHS_BS.map((label, i) => [String(i + 1), label])
@@ -74,6 +81,19 @@ export function ObilasciToolbar({
           <SelectItem value="zakazano">Zakazano</SelectItem>
           <SelectItem value="izvrseno">Izvršeno</SelectItem>
           <SelectItem value="otkazano">Otkazano</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={grad} onValueChange={(v) => setParam("grad", v === "svi" ? "" : (v ?? ""))} items={gradItems}>
+        <SelectTrigger data-testid="obilasci-grad" className="w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="svi">Svi gradovi</SelectItem>
+          {(gradovi ?? []).map((g) => (
+            <SelectItem key={g} value={g}>{g}</SelectItem>
+          ))}
+          <SelectItem value="__bez__">Bez grada</SelectItem>
         </SelectContent>
       </Select>
 

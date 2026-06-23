@@ -34,3 +34,20 @@ test.describe("Obilasci dorada — grupisanje po gradu", () => {
     await expect(page.getByTestId("obilasci-grupa").first().getByText(/\(\d+\)/).first()).toBeVisible()
   })
 })
+
+test.describe("Obilasci dorada — filter po gradu", () => {
+  test("izbor grada suzi listu na taj grad", async ({ page }) => {
+    await page.goto("/obilasci?period=godina&godina=2026&status=svi")
+    await expect(page.getByTestId("obilasci-grupa").first()).toBeVisible()
+    await page.waitForLoadState("networkidle")
+    // otvori grad Select i izaberi Banja Luka
+    await page.getByTestId("obilasci-grad").click()
+    const opt = page.getByRole("option", { name: "Banja Luka" })
+    await expect(opt).toBeVisible()
+    await opt.click()
+    await page.waitForURL(/grad=Banja(\+|%20)Luka/)
+    // sada postoji tačno jedna grupa i to Banja Luka
+    await expect(page.getByTestId("obilasci-grupa")).toHaveCount(1)
+    await expect(page.getByRole("heading", { name: /Banja Luka/ })).toBeVisible()
+  })
+})

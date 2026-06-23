@@ -50,7 +50,7 @@ export async function firstActiveVrstaId(): Promise<string> {
 }
 
 /** Postavi podrazumevani interval (mjeseci) na vrsti. */
-export async function setVrstaInterval(vrstaId: string, mjeseci: number): Promise<void> {
+export async function setVrstaInterval(vrstaId: string, mjeseci: number | null): Promise<void> {
   await db
     .from("vrste_provjera")
     .update({ podrazumevani_interval_mjeseci: mjeseci })
@@ -107,4 +107,24 @@ export async function deleteTermin(id: string): Promise<void> {
 export async function deleteKlijentByNaziv(naziv: string): Promise<void> {
   const { error } = await db.from("klijenti").delete().eq("naziv", naziv)
   if (error) throw new Error(`deleteKlijentByNaziv(${naziv}): ${error.message}`)
+}
+
+export async function insertKlijent(naziv: string): Promise<string> {
+  const { data, error } = await db.from("klijenti").insert({ naziv }).select("id").single()
+  if (error) throw new Error(`insertKlijent(${naziv}): ${error.message}`)
+  return data.id as string
+}
+
+export async function deleteTerminiByKlijent(klijentId: string): Promise<void> {
+  const { error } = await db.from("termini").delete().eq("klijent_id", klijentId)
+  if (error) throw new Error(`deleteTerminiByKlijent(${klijentId}): ${error.message}`)
+}
+
+export async function getVrstaInterval(vrstaId: string): Promise<number | null> {
+  const { data } = await db
+    .from("vrste_provjera")
+    .select("podrazumevani_interval_mjeseci")
+    .eq("id", vrstaId)
+    .single()
+  return (data?.podrazumevani_interval_mjeseci as number | null) ?? null
 }

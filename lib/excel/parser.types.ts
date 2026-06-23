@@ -11,7 +11,7 @@ export type ParsedTermin = {
 
 export type ParseResult = {
   firme: string[]      // jedinstveni kanonski nazivi firmi
-  lokacije: { firma_naziv: string; lokacija_naziv: string }[] // dedup pari
+  lokacije: { firma_naziv: string; lokacija_naziv: string; grad: string | null }[] // dedup pari
   vrste: string[]      // jedinstveni nazivi vrsta pregleda
   termini: ParsedTermin[]
   skipped: SkippedRow[]

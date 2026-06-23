@@ -52,7 +52,7 @@ test.describe("Faza 5 — Matrix grid", () => {
 
 test.describe("Faza 5 — Matrix cell click", () => {
   test("klik popunjene ćelije otvara TerminSheet", async ({ page }) => {
-    await page.goto("/prikaz")
+    await page.goto("/prikaz?godina=2026") // pin godine — CARMEUSE ima single-ćelije u 2026
     await page.getByTestId("prikaz-klijent").click()
     // CARMEUSE ima single-termin ćelije u 2026 → TerminSheet test
     const opt = page.getByRole("option", { name: /^CARMEUSE$/ })

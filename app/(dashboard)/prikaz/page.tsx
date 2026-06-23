@@ -166,6 +166,7 @@ export default async function PrikazPage({
             currentSearch={currentSearch}
             emptyMessage={emptyMessage}
             multiHref={multiHref}
+            fillWidth={mode === "klijent"}
           />
           <MatrixLegenda />
         </div>

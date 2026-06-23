@@ -36,12 +36,16 @@ export function MatrixGrid({
   currentSearch,
   emptyMessage = "Nema podataka.",
   multiHref,
+  fillWidth = false,
 }: {
   columns: MatrixColumn[]
   rows: MatrixRow[]
   currentSearch: string
   emptyMessage?: string
   multiHref?: (rowId: string, colId: string) => string
+  // true → kolone se rašire preko cijele širine (klijent-mod, 12 mjeseci);
+  // false → sadržaj-široke kolone + horizontalni scroll (mjesec-mod, puno firmi)
+  fillWidth?: boolean
 }) {
   if (rows.length === 0) {
     return (
@@ -55,10 +59,16 @@ export function MatrixGrid({
   }
   return (
     <div className="rounded-xl border border-slate-200 overflow-x-auto">
-      <table className="text-xs border-collapse" data-testid="prikaz-matrix">
+      <table
+        className={cn("text-xs border-collapse", fillWidth && "w-full table-fixed")}
+        data-testid="prikaz-matrix"
+      >
         <thead className="bg-slate-50">
           <tr>
-            <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-medium text-slate-600 border-r border-slate-200 min-w-[220px]">
+            <th className={cn(
+              "sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-medium text-slate-600 border-r border-slate-200",
+              fillWidth ? "w-[220px]" : "min-w-[220px]",
+            )}>
               Vrsta pregleda / ispitivanja
             </th>
             {columns.map((c) => (

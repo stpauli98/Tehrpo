@@ -100,7 +100,7 @@ async function main() {
 
   // ── 5) Upsert lokacije ─────────────────────────────────────────────────────
   console.log("\n💾 Upsert lokacije...")
-  type LokacijaRow = { klijent_id: string; naziv: string }
+  type LokacijaRow = { klijent_id: string; naziv: string; grad: string | null }
   const lokacijeRows: LokacijaRow[] = []
   const lokSkipped: string[] = []
 
@@ -110,7 +110,7 @@ async function main() {
       lokSkipped.push(`${lok.firma_naziv} / ${lok.lokacija_naziv}`)
       continue
     }
-    lokacijeRows.push({ klijent_id: klijentId, naziv: lok.lokacija_naziv })
+    lokacijeRows.push({ klijent_id: klijentId, naziv: lok.lokacija_naziv, grad: lok.grad })
   }
 
   if (lokSkipped.length > 0) {

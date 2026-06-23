@@ -15,6 +15,7 @@
     "db:types": "supabase gen types typescript --local 2>/dev/null > db/types.ts",
     "db:reset": "supabase db reset",
     "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts",
+    "backfill:grad": "tsx --env-file=.env.local scripts/backfill-lokacija-grad.ts",
     "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts",
     "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts"
   },

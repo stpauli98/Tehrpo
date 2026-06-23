@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs"
 import type { ParsedTermin, ParseResult, SkippedRow } from "./parser.types"
+import { izvediGrad } from "../obilasci"
 
 // ---------------------------------------------------------------------------
 // Konstante — kanonizacijska osnova
@@ -237,7 +238,7 @@ export async function parseTehproExcel(filePath: string): Promise<ParseResult> {
   const firmeSet = new Set<string>()
   // lokacije: dedup set po "firma|lokacija"
   const lokacijeSet = new Set<string>()
-  const lokacijeArr: { firma_naziv: string; lokacija_naziv: string }[] = []
+  const lokacijeArr: { firma_naziv: string; lokacija_naziv: string; grad: string | null }[] = []
   const vrsteSet = new Set<string>()
   const skipped: SkippedRow[] = []
 
@@ -248,7 +249,7 @@ export async function parseTehproExcel(filePath: string): Promise<ParseResult> {
       const key = `${firma}|${lokacija}`
       if (!lokacijeSet.has(key)) {
         lokacijeSet.add(key)
-        lokacijeArr.push({ firma_naziv: firma, lokacija_naziv: lokacija })
+        lokacijeArr.push({ firma_naziv: firma, lokacija_naziv: lokacija, grad: izvediGrad(lokacija) })
       }
     }
     return { firma, lokacija }

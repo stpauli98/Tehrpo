@@ -17,15 +17,27 @@ export default async function ObilasciPage({
   const today = todayIso()
   const mjesec = Number(typeof sp.mjesec === "string" ? sp.mjesec : "") || Number(today.slice(5, 7))
   const kvartal = Number(typeof sp.kvartal === "string" ? sp.kvartal : "") || 1
+  const status = typeof sp.status === "string" ? sp.status : "aktivni"
+  const grad = typeof sp.grad === "string" ? sp.grad : ""
 
   const { od, do: doIso } = periodRange(period, godina, mjesec, kvartal)
 
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
+  const { data: lokGrad } = await supabase.from("lokacije").select("grad")
+  const gradovi = Array.from(
+    new Set((lokGrad ?? []).map((l) => l.grad).filter((g): g is string => !!g && g.trim() !== ""))
+  ).sort((a, b) => a.localeCompare(b))
+
+  let q = supabase
     .from("termini_view")
     .select("id, klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, lokacija_grad, rok_dospijeca, status_izvedeni")
     .gte("rok_dospijeca", od)
     .lte("rok_dospijeca", doIso)
+  if (status === "aktivni") q = q.not("status_izvedeni", "in", "(izvrseno,otkazano)")
+  else if (status !== "svi") q = q.eq("status_izvedeni", status)
+  if (grad === "__bez__") q = q.is("lokacija_grad", null)
+  else if (grad && grad !== "svi") q = q.eq("lokacija_grad", grad)
+  const { data } = await q
     .order("lokacija_grad", { ascending: true })
     .order("rok_dospijeca", { ascending: true })
 
@@ -43,6 +55,7 @@ export default async function ObilasciPage({
         godina={godina}
         mjesec={mjesec}
         kvartal={kvartal}
+        gradovi={gradovi}
       />
 
       {grupe.length === 0 ? (
@@ -57,7 +70,9 @@ export default async function ObilasciPage({
           <section key={g.grad} data-testid="obilasci-grupa" className="rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="w-4 h-4 text-red-600" aria-hidden />
-              <h2 className="font-semibold">{g.grad}</h2>
+              <h2 className="font-semibold">
+                {g.grad} <span className="text-slate-400 font-normal">({g.items.length})</span>
+              </h2>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
               {g.items.map((t) => (

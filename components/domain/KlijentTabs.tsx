@@ -8,6 +8,7 @@ const TABS = [
   { value: "lokacije", label: "Lokacije" },
   { value: "kontakti", label: "Kontakti" },
   { value: "dokumenti", label: "Dokumenti" },
+  { value: "profil", label: "Profil" },
 ] as const
 
 export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klijentId: string }) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange } from "./date"
+import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange, addMjeseci } from "./date"
 
 describe("formatDatum", () => {
   it("ISO datum → DD.MM.YYYY.", () => {
@@ -62,5 +62,24 @@ describe("periodRange", () => {
   })
   it("godina → 01-01 do 12-31", () => {
     expect(periodRange("godina", 2026)).toEqual({ od: "2026-01-01", do: "2026-12-31" })
+  })
+})
+
+describe("addMjeseci", () => {
+  it("dodaje mjesece unutar godine", () => {
+    expect(addMjeseci("2026-03-15", 3)).toBe("2026-06-15")
+  })
+  it("prelazi godinu", () => {
+    expect(addMjeseci("2026-11-15", 3)).toBe("2027-02-15")
+  })
+  it("clamp na zadnji dan kraćeg mjeseca (31 jan +1 → 28 feb)", () => {
+    expect(addMjeseci("2026-01-31", 1)).toBe("2026-02-28")
+  })
+  it("prestupna godina (29 feb)", () => {
+    expect(addMjeseci("2024-01-31", 1)).toBe("2024-02-29")
+  })
+  it("0 i 12 mjeseci", () => {
+    expect(addMjeseci("2026-05-10", 0)).toBe("2026-05-10")
+    expect(addMjeseci("2026-05-10", 12)).toBe("2027-05-10")
   })
 })

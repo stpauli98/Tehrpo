@@ -40,6 +40,19 @@ export function monthRange(year: number, month1to12: number): { from: string; to
   return { from, to }
 }
 
+/** Datum (ISO 'YYYY-MM-DD') + N mjeseci, TZ-safe; clamp na zadnji dan ako kraći mjesec. */
+export function addMjeseci(isoDatum: string, mjeseci: number): string {
+  const [g, m, d] = isoDatum.split("-").map(Number)
+  const baza = new Date(Date.UTC(g!, m! - 1, 1)) // prvi dan, izbjegava overflow
+  baza.setUTCMonth(baza.getUTCMonth() + mjeseci)
+  const ciljG = baza.getUTCFullYear()
+  const ciljM = baza.getUTCMonth() // 0-indeksiran
+  const zadnjiDan = new Date(Date.UTC(ciljG, ciljM + 1, 0)).getUTCDate()
+  const dan = Math.min(d!, zadnjiDan)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${ciljG}-${pad(ciljM + 1)}-${pad(dan)}`
+}
+
 /** Raspon datuma za period (mjesec, kvartal ili godina). */
 export function periodRange(
   period: "mjesec" | "kvartal" | "godina",

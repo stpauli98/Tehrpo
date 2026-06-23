@@ -11,6 +11,7 @@ async function main() {
   const { data: termini, error } = await sb
     .from("termini")
     .select("id, klijent_id, vrsta_provjere_id, lokacija_id, rok_dospijeca, status")
+    .limit(100000)
   if (error) throw new Error(`select termini failed: ${error.message}`)
   const rows = (termini ?? []) as TerminRed[]
 

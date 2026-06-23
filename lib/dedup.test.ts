@@ -33,4 +33,7 @@ describe("odaberiCuvara", () => {
     const { keep } = odaberiCuvara([r({ id: "z" }), r({ id: "a" })], new Set())
     expect(keep.id).toBe("a")
   })
+  it("prazan niz baca grešku", () => {
+    expect(() => odaberiCuvara([], new Set())).toThrow()
+  })
 })

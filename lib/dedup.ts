@@ -18,6 +18,7 @@ export function grupaKljuc(t: TerminRed): string {
 
 /** Bira jedan red (keep) po grupi: dokument-bearing > status-prioritet > stabilno (id). */
 export function odaberiCuvara(rows: TerminRed[], docIds: Set<string>): { keep: TerminRed; drop: TerminRed[] } {
+  if (rows.length === 0) throw new Error("odaberiCuvara: rows must not be empty")
   const sorted = [...rows].sort((a, b) => {
     const ad = docIds.has(a.id) ? 1 : 0, bd = docIds.has(b.id) ? 1 : 0
     if (ad !== bd) return bd - ad

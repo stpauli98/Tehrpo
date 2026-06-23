@@ -18,7 +18,8 @@ test.describe("Faza 5 — Prikaz chart i toolbar", () => {
   test("izbor klijenta postavlja ?klijent= i prikazuje matricu (placeholder/grid)", async ({ page }) => {
     await page.goto("/prikaz")
     await page.getByTestId("prikaz-klijent").click()
-    await page.getByRole("option").first().click()
+    // prvi REALNI klijent (preskoči "— svi klijenti —" reset sentinel)
+    await page.getByRole("option").filter({ hasNotText: "svi klijenti" }).first().click()
     await page.waitForURL(/klijent=/)
     await expect(page.getByTestId("prikaz-empty")).toBeHidden()
   })

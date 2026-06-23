@@ -23,3 +23,14 @@ test.describe("Plan dorada — legenda i ćelija", () => {
     await expect(page.locator('.text-\\[10px\\].text-slate-400')).toHaveCount(0)
   })
 })
+
+test.describe("Plan dorada — mjesec dropdown", () => {
+  test("izbor mjeseca mijenja ?mjesec= i label", async ({ page }) => {
+    await page.goto("/plan?godina=2026&mjesec=7")
+    await expect(page.getByTestId("plan-nav-label")).toContainText("Jul")
+    await page.getByTestId("plan-nav-mjesec").click()
+    await page.getByRole("option", { name: "Decembar" }).click()
+    await page.waitForURL(/mjesec=12/)
+    await expect(page.getByTestId("plan-nav-label")).toContainText("Decembar")
+  })
+})

@@ -12,6 +12,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { prevMonth, nextMonth, monthLabel } from "@/lib/calendar"
+import { MONTHS_BS } from "@/lib/date"
 import { cn } from "@/lib/utils"
 
 export function PlanNav({
@@ -74,6 +75,29 @@ export function PlanNav({
       >
         Danas
       </Link>
+
+      <Select
+        value={String(mjesec)}
+        onValueChange={(v) => {
+          const m = Number(v)
+          if (m) router.push(href(godina, m))
+        }}
+      >
+        <SelectTrigger
+          size="sm"
+          className="w-32"
+          data-testid="plan-nav-mjesec"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {MONTHS_BS.map((naziv, i) => (
+            <SelectItem key={naziv} value={String(i + 1)}>
+              {naziv}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <Select
         value={String(godina)}

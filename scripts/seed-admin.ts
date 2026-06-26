@@ -9,7 +9,8 @@ async function main() {
   const admin = createAdminSupabaseClient()
 
   // 1. Nađi ili kreiraj auth korisnika
-  const { data: list } = await admin.auth.admin.listUsers()
+  const { data: list, error: listErr } = await admin.auth.admin.listUsers()
+  if (listErr) throw listErr
   let userId = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())?.id
   if (!userId) {
     const { data, error } = await admin.auth.admin.createUser({

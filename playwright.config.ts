@@ -8,23 +8,26 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3001",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, storageState: "tests/e2e/.auth/admin.json" },
+      dependencies: ["setup"],
     },
     {
       name: "webkit",
-      use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } },
+      use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 }, storageState: "tests/e2e/.auth/admin.json" },
+      dependencies: ["setup"],
     },
   ],
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000",
+    command: "next dev -p 3001",
+    url: "http://localhost:3001",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: { ZAPISNIK_DRY_RUN: "1", CHAT_DRY_RUN: "1" },

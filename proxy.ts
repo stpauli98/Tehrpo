@@ -1,6 +1,7 @@
 // proxy.ts — auth gate (Next.js 16: "middleware" renamed to "proxy")
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 import { env } from "@/lib/env"
 
 const PUBLIC = ["/prijava", "/zaboravljena-lozinka", "/auth"]
@@ -40,7 +41,15 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && !isPublic) {
-    const { data: profil } = await supabase
+    // Use service-role client to bypass RLS for the aktivan check.
+    // The anon/user client cannot read korisnici when RLS is enabled without policies.
+    const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY ?? env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const adminDb = createClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      serviceKey,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    )
+    const { data: profil } = await adminDb
       .from("korisnici")
       .select("aktivan")
       .eq("id", user.id)

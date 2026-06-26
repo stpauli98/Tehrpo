@@ -34,6 +34,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          akcija: string
+          entitet: string
+          entitet_id: string | null
+          id: number
+          korisnik_id: string | null
+          novo: Json | null
+          staro: Json | null
+          vrijeme: string
+        }
+        Insert: {
+          akcija: string
+          entitet: string
+          entitet_id?: string | null
+          id?: never
+          korisnik_id?: string | null
+          novo?: Json | null
+          staro?: Json | null
+          vrijeme?: string
+        }
+        Update: {
+          akcija?: string
+          entitet?: string
+          entitet_id?: string | null
+          id?: never
+          korisnik_id?: string | null
+          novo?: Json | null
+          staro?: Json | null
+          vrijeme?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_korisnik_id_fkey"
+            columns: ["korisnik_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_poruke: {
         Row: {
           alat_pozivi: Json | null
@@ -200,6 +241,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      korisnici: {
+        Row: {
+          aktivan: boolean
+          created_at: string
+          email: string
+          id: string
+          ime: string
+          uloga: Database["public"]["Enums"]["korisnik_uloga"]
+        }
+        Insert: {
+          aktivan?: boolean
+          created_at?: string
+          email: string
+          id: string
+          ime: string
+          uloga?: Database["public"]["Enums"]["korisnik_uloga"]
+        }
+        Update: {
+          aktivan?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          ime?: string
+          uloga?: Database["public"]["Enums"]["korisnik_uloga"]
+        }
+        Relationships: []
+      }
+      korisnik_klijent: {
+        Row: {
+          klijent_id: string
+          korisnik_id: string
+        }
+        Insert: {
+          klijent_id: string
+          korisnik_id: string
+        }
+        Update: {
+          klijent_id?: string
+          korisnik_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "korisnik_klijent_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "korisnik_klijent_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "korisnik_klijent_korisnik_id_fkey"
+            columns: ["korisnik_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lokacije: {
         Row: {
@@ -530,11 +635,15 @@ export type Database = {
           ukupno: number
         }[]
       }
+      ima_pristup_klijentu: { Args: { p_klijent_id: string }; Returns: boolean }
+      je_admin: { Args: never; Returns: boolean }
+      je_pregled: { Args: never; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       chat_uloga: "user" | "assistant"
+      korisnik_uloga: "admin" | "operater" | "pregled"
       termini_status: "planirano" | "zakazano" | "izvrseno" | "otkazano"
     }
     CompositeTypes: {
@@ -667,7 +776,9 @@ export const Constants = {
   public: {
     Enums: {
       chat_uloga: ["user", "assistant"],
+      korisnik_uloga: ["admin", "operater", "pregled"],
       termini_status: ["planirano", "zakazano", "izvrseno", "otkazano"],
     },
   },
 } as const
+

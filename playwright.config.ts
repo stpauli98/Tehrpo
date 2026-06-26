@@ -26,7 +26,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "next dev -p 3000",
+    // --webpack je OBAVEZAN: Turbopack u ovom okruženju puca s
+    // "Next.js package not found" (get_next_server_import_map) — uzrok je razmak
+    // u putanji projekta ("Ai Forward"). Reprodukovano live (panic log) i pod
+    // paralelnim Playwright workerima. Webpack to korektno hendla. Ne vraćaj na
+    // Turbopack dok je putanja s razmakom (ili premjesti projekat u putanju bez razmaka).
+    command: "next dev -p 3000 --webpack",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

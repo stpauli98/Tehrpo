@@ -7,7 +7,14 @@ const PUBLIC = ["/prijava", "/zaboravljena-lozinka", "/auth"]
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const response = NextResponse.next({ request })
+
+  // Official @supabase/ssr Next.js proxy pattern: the supabaseResponse must
+  // be recreated whenever setAll() fires (token refresh) so that:
+  //   a) subsequent getAll() calls in the same request see the updated cookies
+  //      (via request.cookies.set), and
+  //   b) the refreshed cookies are forwarded to the browser in the response.
+  // Using `let` allows the closure inside setAll() to swap supabaseResponse.
+  let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
@@ -18,8 +25,18 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // Step 1: propagate new/refreshed cookies to the request so any
+          //         subsequent getAll() in this same invocation sees them.
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          )
+          // Step 2: recreate the response carrying the updated request so that
+          //         Next.js forwards the refreshed cookies downstream.
+          supabaseResponse = NextResponse.next({ request })
+          // Step 3: stamp the same cookies onto the new response headers so
+          //         the browser receives Set-Cookie for the refreshed session.
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           )
         },
       },
@@ -59,17 +76,18 @@ export async function proxy(request: NextRequest) {
       url.searchParams.set("greska", "deaktiviran")
 
       // Copy session-clearing cookies set by signOut() onto the redirect response.
-      // (signOut writes to `response` via setAll; without this copy the cookies
-      // would not be included in the redirect and the session would not be cleared.)
+      // signOut() writes to supabaseResponse via setAll(); without this copy the
+      // cookies would not be included in the redirect and the session would not
+      // be cleared.
       const redirectRes = NextResponse.redirect(url)
-      response.cookies.getAll().forEach(({ name, value, ...attrs }) =>
+      supabaseResponse.cookies.getAll().forEach(({ name, value, ...attrs }) =>
         redirectRes.cookies.set(name, value, attrs),
       )
       return redirectRes
     }
   }
 
-  return response
+  return supabaseResponse
 }
 
 export const config = {

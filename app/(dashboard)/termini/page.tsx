@@ -156,7 +156,9 @@ export default async function TerminiPage({
 
       {/* Klikabilne KPI kartice → postave brzi filter na listu (aktivna je uokvirena) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" data-testid="termini-stats">
-        <Link href="/termini" className="block">
+        {/* aria-label prevents the link from matching generic "Termini" role selectors
+            that are intended for the sidebar navigation item. */}
+        <Link href="/termini" className="block" aria-label="Ukupno termina">
           <StatCard testId="stat-ukupno" label="Ukupno termina" value={stats.ukupno} sub="svi termini" icon={ClipboardList} interactive
             active={statusFilter === "svi" && mjesecFilter === ""} />
         </Link>

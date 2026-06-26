@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://localhost:3001",
+    baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -26,8 +26,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "next dev -p 3001",
-    url: "http://localhost:3001",
+    command: "next dev -p 3000",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: { ZAPISNIK_DRY_RUN: "1", CHAT_DRY_RUN: "1" },

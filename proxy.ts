@@ -49,7 +49,10 @@ export async function proxy(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle()
 
-    if (!profil?.aktivan) {
+    // Fail-OPEN: sign out ONLY a confirmed-deactivated user. A missing row or a
+    // read hiccup must NOT revoke the session (signOut deletes it server-side and
+    // would cascade to all requests). Deaktivacija = eksplicitno aktivan === false.
+    if (profil && profil.aktivan === false) {
       await supabase.auth.signOut()
 
       const url = new URL("/prijava", request.url)

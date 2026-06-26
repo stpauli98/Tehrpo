@@ -1,8 +1,13 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { ReminderForm } from "@/components/domain/ReminderForm"
 import { IntervaliForm } from "@/components/domain/IntervaliForm"
+import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
+import { KorisniciTab } from "@/components/domain/KorisniciTab"
 
 export default async function PostavkePage() {
+  const korisnik = await getTrenutniKorisnik()
+  const jeAdminKor = korisnik?.uloga === "admin"
   const supabase = await createServerSupabaseClient()
   const [postRes, vrsteRes] = await Promise.all([
     supabase.from("postavke").select("dana_prije").eq("id", 1).maybeSingle(),
@@ -31,13 +36,18 @@ export default async function PostavkePage() {
       </section>
 
       <section className="rounded-xl border border-slate-200 p-4">
-        <h2 className="mb-1 text-base font-medium">Intervali po vrsti pregleda</h2>
+        <div className="mb-1 flex items-start justify-between gap-4">
+          <h2 className="text-base font-medium">Vrste pregleda i intervali</h2>
+          <NovaVrstaButton />
+        </div>
         <p className="mb-4 text-sm text-slate-500">
           Interval (mjeseci) koji sistem koristi da po izvršenju automatski zakaže sljedeći termin
-          u ciklusu. Prazno = bez auto-zakazivanja.
+          u ciklusu. Prazno = bez auto-zakazivanja. Vrijednosti su polazne — slobodno ih prilagodi.
         </p>
         <IntervaliForm vrste={vrste} />
       </section>
+
+      {jeAdminKor && <KorisniciTab />}
     </div>
   )
 }

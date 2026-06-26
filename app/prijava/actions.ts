@@ -1,6 +1,7 @@
 "use server"
 import { z } from "zod"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export type ActionResult = { ok: false; message?: string } | { ok: true }
@@ -19,5 +20,6 @@ export async function prijaviSe(_prev: ActionResult, formData: FormData): Promis
     password: parsed.data.lozinka,
   })
   if (error) return { ok: false, message: "Pogrešan email ili lozinka." }
+  revalidatePath("/", "layout")
   redirect("/pregled")
 }

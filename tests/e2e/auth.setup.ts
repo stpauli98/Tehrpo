@@ -1,31 +1,47 @@
 // tests/e2e/auth.setup.ts
 //
-// Root cause (Next.js 16 + @supabase/ssr): when signInWithPassword() is
-// called inside a Server Action and redirect() throws immediately after,
-// Next.js catches the NEXT_REDIRECT error in action-handler.js. That path
-// never calls appendMutableCookies(), so the Set-Cookie headers for the auth
-// session are NOT sent to the browser. The browser navigates to /pregled
-// without cookies, the proxy's getUser() returns null, and the setup test
-// fails with a redirect loop back to /prijava.
+// Context: real UI login (form /prijava → redirect /pregled) works correctly
+// in Next.js 16.2.9 + @supabase/ssr (verified empirically). The original E2E
+// redirect loop was caused by a fail-closed proxy signOut path that rejected
+// any session where profil.aktivan was null; that bug is now fixed in
+// middleware/proxy.ts (`if (profil && profil.aktivan === false)`).
 //
-// Fix: call the Supabase REST API directly from the Playwright Node.js
-// process, encode the session in the exact cookie format @supabase/ssr
-// expects (base64url), inject it into the browser context, then verify that
-// /pregled is reachable before saving storageState.  This is the standard
-// E2E pattern for auth bypass and avoids the broken Server-Action cookie
-// propagation path entirely.
+// This file uses a REST + cookie-injection approach as a FAST, rate-limit-safe
+// storageState fast-path for the non-login specs. It is NOT here because real
+// login is broken — it is here so the ~230 downstream specs can share a single
+// pre-authenticated state without firing Supabase signIn 230 times.
+//
+// Encoding note: @supabase/ssr's createServerClient defaults to
+// cookieEncoding "base64url". The cookie value format is:
+//   "base64-" + base64url( JSON.stringify(session) )
+// See node_modules/@supabase/ssr/dist/module/cookies.js: applyServerStorage()
 
+import { readFileSync } from "node:fs"
 import { test as setup, expect } from "@playwright/test"
 
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ??
-  "https://fqtqkehjidkzeasiegnq.supabase.co"
-const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  "sb_publishable_I8GNrBXowDijr2IjlcYi8A_MTG6Su18"
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "admin@tehpro.test"
-const ADMIN_LOZINKA =
-  process.env.E2E_ADMIN_LOZINKA ?? "9YcluZJpmTYPpIwhQfc4Aa1!"
+function envVar(key: string): string {
+  if (process.env[key]) return process.env[key] as string
+  let content = ""
+  try {
+    content = readFileSync(".env.local", "utf8")
+  } catch {
+    return ""
+  }
+  const line = content
+    .split("\n")
+    .find((l) => l.trimStart().startsWith(`${key}=`))
+  return line ? line.slice(line.indexOf("=") + 1).trim() : ""
+}
+
+const SUPABASE_URL = envVar("NEXT_PUBLIC_SUPABASE_URL")
+const SUPABASE_ANON_KEY = envVar("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+const ADMIN_EMAIL = envVar("E2E_ADMIN_EMAIL")
+const ADMIN_LOZINKA = envVar("E2E_ADMIN_LOZINKA")
+
+if (!SUPABASE_URL) throw new Error("auth.setup: nedostaje NEXT_PUBLIC_SUPABASE_URL")
+if (!SUPABASE_ANON_KEY) throw new Error("auth.setup: nedostaje NEXT_PUBLIC_SUPABASE_ANON_KEY")
+if (!ADMIN_EMAIL) throw new Error("auth.setup: nedostaje E2E_ADMIN_EMAIL")
+if (!ADMIN_LOZINKA) throw new Error("auth.setup: nedostaje E2E_ADMIN_LOZINKA")
 
 // @supabase/supabase-js derives the default storageKey as:
 //   `sb-${hostname.split('.')[0]}-auth-token`

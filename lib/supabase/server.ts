@@ -19,7 +19,7 @@ export async function createServerSupabaseClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Server Component poziva — set se ignoriše (auth dolazi kasnije)
+            // U RSC render kontekstu set baca — middleware osvježava sesiju, pa je ovo bezbjedno ignorisati.
           }
         },
       },

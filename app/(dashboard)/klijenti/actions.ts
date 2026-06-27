@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { parseEmailList } from "@/lib/reminders/recipients"
 import { addMjeseci } from "@/lib/date"
+import { validUgovorDatumi } from "@/lib/ugovori"
 import type { Database } from "@/db/types"
 
 type LokacijeUpdate = Database["public"]["Tables"]["lokacije"]["Update"]
@@ -277,5 +278,74 @@ export async function deleteProfilProvjere(
   const { error } = await supabase.from("klijent_provjere").delete().eq("id", id)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/klijenti", "layout")
+  return { ok: true }
+}
+
+// ─── Ugovori ────────────────────────────────────────────────────────────────
+
+const intOrNull = (min: number, max: number) =>
+  z.string().trim().optional()
+    .transform((s) => (!s ? null : Number(s)))
+    .refine((n) => n === null || (Number.isInteger(n) && n >= min && n <= max), `Broj mora biti ${min}–${max}`)
+
+const dateOrNull = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Neispravan datum").optional()
+  .or(z.literal("").transform(() => undefined)).transform((v) => v ?? null)
+
+const boolFromCheckbox = z.string().optional().transform((v) => v === "on" || v === "true")
+
+const ugovorFields = {
+  zavodni_broj: optionalText(120),
+  datum_potpisivanja: dateOrNull,
+  datum_isteka: dateOrNull,
+  vazenje_mjeseci: intOrNull(1, 600),
+  broj_obilazaka_mjesecno: intOrNull(0, 31),
+  automatsko_obnavljanje: boolFromCheckbox,
+  aktivan: boolFromCheckbox,
+  napomena: optionalText(2000),
+}
+
+const createUgovorSchema = z.object({ klijent_id: z.string().uuid(), ...ugovorFields })
+const updateUgovorSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid(), ...ugovorFields })
+
+// "Jedan aktivan ugovor po klijentu" se enforce-uje DB trigerom
+// (tg_ugovor_jedan_aktivan) atomično — app ne radi zasebnu deaktivaciju.
+
+export async function createUgovor(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = createUgovorSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { klijent_id, aktivan, ...f } = parsed.data
+  if (!validUgovorDatumi(f.datum_potpisivanja, f.datum_isteka)) {
+    return { ok: false, message: "Datum isteka mora biti nakon datuma potpisivanja." }
+  }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("ugovori").insert({ klijent_id, aktivan, ...f })
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijent_id}`)
+  return { ok: true }
+}
+
+export async function updateUgovor(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = updateUgovorSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, klijent_id, aktivan, ...f } = parsed.data
+  if (!validUgovorDatumi(f.datum_potpisivanja, f.datum_isteka)) {
+    return { ok: false, message: "Datum isteka mora biti nakon datuma potpisivanja." }
+  }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("ugovori").update({ aktivan, ...f }).eq("id", id)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijent_id}`)
+  return { ok: true }
+}
+
+export async function deleteUgovor(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid() })
+    .safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
+  const { id, klijent_id } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("ugovori").delete().eq("id", id)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }

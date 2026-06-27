@@ -41,6 +41,8 @@ test.describe("Plan aktivnosti — konsolidacija", () => {
     await page.goto("/pregled")
     const nav = page.getByRole("navigation", { name: "Glavna navigacija" })
     await expect(nav.getByRole("link", { name: "Plan aktivnosti" })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Termini", exact: true })).toHaveCount(0)
     await expect(nav.getByRole("link", { name: "Prikaz", exact: true })).toHaveCount(0)
+    await expect(nav.getByRole("link", { name: "Plan", exact: true })).toHaveCount(0)
   })
 })

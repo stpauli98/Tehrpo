@@ -128,3 +128,25 @@ export async function getVrstaInterval(vrstaId: string): Promise<number | null> 
     .single()
   return (data?.podrazumevani_interval_mjeseci as number | null) ?? null
 }
+
+/** Nađi/kreiraj operatera sa fiksnom lozinkom; vrati id. */
+export async function ensureOperater(email: string, lozinka: string, ime: string): Promise<string> {
+  const { data: list } = await db.auth.admin.listUsers()
+  let id = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())?.id
+  if (!id) {
+    const { data, error } = await db.auth.admin.createUser({ email, password: lozinka, email_confirm: true })
+    if (error) throw error
+    id = data.user.id
+  }
+  const { error } = await db.from("korisnici").upsert({ id, ime, email, uloga: "operater", aktivan: true }, { onConflict: "id" })
+  if (error) throw new Error(`ensureOperater upsert: ${error.message}`)
+  return id
+}
+export async function assignKlijent(korisnikId: string, klijentId: string): Promise<void> {
+  const { error } = await db.from("korisnik_klijent").upsert({ korisnik_id: korisnikId, klijent_id: klijentId })
+  if (error) throw new Error(`assignKlijent(${korisnikId},${klijentId}): ${error.message}`)
+}
+export async function clearDodjele(korisnikId: string): Promise<void> {
+  const { error } = await db.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
+  if (error) throw new Error(`clearDodjele(${korisnikId}): ${error.message}`)
+}

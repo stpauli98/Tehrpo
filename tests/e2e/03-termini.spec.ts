@@ -176,7 +176,10 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
       await page.goto(`/termini?selected=${tid}`)
       await expect(page.getByTestId("mark-done-form")).toBeVisible()
       await page.getByTestId("mark-done-submit").click()
-      await expect(page.getByTestId("termin-sheet").locator("[role=alert]")).toHaveCount(0)
+      // Sačekaj da Server Action commit-uje: nakon uspjeha + revalidate, sheet se
+      // re-renderuje i "Označi izvršeno" forma nestaje (termin.status === "izvrseno").
+      // Bez ovoga test čita stat PRIJE commita — RLS/proxy latencija je tu trku razotkrila.
+      await expect(page.getByTestId("mark-done-form")).toHaveCount(0)
       await page.goto("/termini")
       const after = Number(await page.getByTestId("stat-ukupno-value").textContent())
       expect(after).toBe(before + 1)

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "next dev -p 3000 --webpack",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint .",
@@ -12,7 +12,7 @@
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test --workers=1",
     "test:e2e:ui": "playwright test --ui",
-    "db:types": "supabase gen types typescript --local 2>/dev/null > db/types.ts",
+    "db:types": "supabase gen types typescript --db-url \"$(grep -E '^DATABASE_URL=' .env.local | cut -d= -f2-)\" > db/types.ts",
     "db:reset": "supabase db reset",
     "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts",
     "backfill:grad": "tsx --env-file=.env.local scripts/backfill-lokacija-grad.ts",
@@ -20,7 +20,8 @@
     "cleanup:test-data": "tsx --env-file=.env.local scripts/cleanup-test-data.ts",
     "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts",
     "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts",
-    "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts"
+    "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts",
+    "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

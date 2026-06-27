@@ -226,6 +226,10 @@ export async function uploadKlijentDokumentAction(
   if (file.size > MAX_BYTES) return { ok: false, message: "Fajl je veći od 50 MB." }
 
   const supabase = await createServerSupabaseClient()
+  // Pristup PRIJE upload-a u storage: RLS vraća null ako korisnik nema pristup klijentu
+  // → izbjegava tranzitni orphan blob za neovlaštenog korisnika.
+  const { data: kl } = await supabase.from("klijenti").select("id").eq("id", klijent_id).maybeSingle()
+  if (!kl) return { ok: false, message: "Klijent ne postoji ili nemate pristup." }
   // Integritet: ako je dat ugovor, mora pripadati klijentu
   if (ugovor_id) {
     const { data: ug } = await supabase.from("ugovori").select("id").eq("id", ugovor_id).eq("klijent_id", klijent_id).maybeSingle()

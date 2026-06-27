@@ -7,6 +7,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "github" : "list",
+  // Auth gate (proxy) + RLS dodaju ~150-250ms po zahtjevu; podigni expect timeout
+  // da latencijom-osjetljive provjere (toBeHidden/toContainText) ne flake-uju, naročito webkit.
+  expect: { timeout: 15_000 },
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",

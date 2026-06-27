@@ -25,8 +25,14 @@ const initial: ActionResult = { ok: true }
 // pa nema rekonstrukcije iz nullable klijenti_view sa `!` asercijama.
 export function KlijentEditForm({
   klijent,
+  korisnici,
 }: {
-  klijent: { id: string; naziv: string; napomena: string | null; podsjetnik_emails: string[]; tip_odnosa?: string | null }
+  klijent: {
+    id: string; naziv: string; napomena: string | null; podsjetnik_emails: string[]; tip_odnosa?: string | null
+    adresa?: string | null; pib?: string | null; maticni_broj?: string | null; sifra_djelatnosti?: string | null
+    telefon?: string | null; email?: string | null; zaduzeni_tehpro_id?: string | null
+  }
+  korisnici: { id: string; ime: string }[]
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -88,6 +94,39 @@ export function KlijentEditForm({
               data-testid="edit-klijent-napomena"
             />
           </label>
+
+          {([
+            ["adresa", "Adresa"],
+            ["telefon", "Telefon"],
+            ["email", "Email"],
+            ["pib", "PIB"],
+            ["maticni_broj", "Matični broj"],
+            ["sifra_djelatnosti", "Šifra djelatnosti"],
+          ] as const).map(([name, label]) => (
+            <label key={name} className="block text-sm">
+              <span className="text-slate-600">{label}</span>
+              <Input
+                name={name}
+                defaultValue={(klijent[name] as string | null | undefined) ?? ""}
+                data-testid={`edit-klijent-${name}`}
+              />
+            </label>
+          ))}
+
+          <div className="space-y-1">
+            <span className="block text-sm text-slate-600">Zadužena osoba (TEHPRO)</span>
+            <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"}>
+              <SelectTrigger data-testid="edit-klijent-zaduzeni" className="w-full">
+                <SelectValue placeholder="— (nije postavljeno)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— (nije postavljeno)</SelectItem>
+                {korisnici.map((k) => (
+                  <SelectItem key={k.id} value={k.id}>{k.ime}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <label className="block text-sm">
             <span className="text-slate-600">Primaoci podsjetnika (email, odvojeni zarezom)</span>

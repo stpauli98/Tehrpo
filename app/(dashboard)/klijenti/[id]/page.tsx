@@ -37,7 +37,7 @@ export default async function KlijentDetailPage({
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("termini_view").select("*").eq("klijent_id", id).order("rok_dospijeca", { ascending: true }),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
-    supabase.from("klijenti").select("podsjetnik_emails, tip_odnosa").eq("id", id).maybeSingle(),
+    supabase.from("klijenti").select("podsjetnik_emails, tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id").eq("id", id).maybeSingle(),
   ])
 
   const klijent = klijentRes.data
@@ -77,6 +77,8 @@ export default async function KlijentDetailPage({
   })
   const vrsteOpcije = (vrsteRes.data ?? []).map((v) => ({ id: v.id as string, naziv: v.naziv as string, interval: v.podrazumevani_interval_mjeseci as number | null }))
   const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
+  const { data: korisniciData } = await supabase.from("korisnici").select("id, ime").eq("aktivan", true).order("ime")
+  const korisnici = (korisniciData ?? []).map((k) => ({ id: k.id, ime: k.ime }))
 
   return (
     <div className="space-y-6">
@@ -106,7 +108,15 @@ export default async function KlijentDetailPage({
               napomena: klijent.napomena ?? null,
               podsjetnik_emails: primaociRes.data?.podsjetnik_emails ?? [],
               tip_odnosa: primaociRes.data?.tip_odnosa ?? null,
+              adresa: primaociRes.data?.adresa ?? null,
+              pib: primaociRes.data?.pib ?? null,
+              maticni_broj: primaociRes.data?.maticni_broj ?? null,
+              sifra_djelatnosti: primaociRes.data?.sifra_djelatnosti ?? null,
+              telefon: primaociRes.data?.telefon ?? null,
+              email: primaociRes.data?.email ?? null,
+              zaduzeni_tehpro_id: primaociRes.data?.zaduzeni_tehpro_id ?? null,
             }}
+            korisnici={korisnici}
           />
           <ObrisiKlijentButton klijentId={klijent.id} brojTermina={klijent.broj_termina ?? 0} />
         </div>

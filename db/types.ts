@@ -214,33 +214,62 @@ export type Database = {
       }
       klijenti: {
         Row: {
+          adresa: string | null
           created_at: string
+          email: string | null
           id: string
+          maticni_broj: string | null
           napomena: string | null
           naziv: string
+          pib: string | null
           podsjetnik_emails: string[]
+          sifra_djelatnosti: string | null
+          telefon: string | null
           tip_odnosa: string | null
           updated_at: string
+          zaduzeni_tehpro_id: string | null
         }
         Insert: {
+          adresa?: string | null
           created_at?: string
+          email?: string | null
           id?: string
+          maticni_broj?: string | null
           napomena?: string | null
           naziv: string
+          pib?: string | null
           podsjetnik_emails?: string[]
+          sifra_djelatnosti?: string | null
+          telefon?: string | null
           tip_odnosa?: string | null
           updated_at?: string
+          zaduzeni_tehpro_id?: string | null
         }
         Update: {
+          adresa?: string | null
           created_at?: string
+          email?: string | null
           id?: string
+          maticni_broj?: string | null
           napomena?: string | null
           naziv?: string
+          pib?: string | null
           podsjetnik_emails?: string[]
+          sifra_djelatnosti?: string | null
+          telefon?: string | null
           tip_odnosa?: string | null
           updated_at?: string
+          zaduzeni_tehpro_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "klijenti_zaduzeni_tehpro_id_fkey"
+            columns: ["zaduzeni_tehpro_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       korisnici: {
         Row: {

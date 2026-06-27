@@ -158,6 +158,7 @@ export type Database = {
           interval_mjeseci: number | null
           klijent_id: string
           lokacija_id: string | null
+          ugovor_id: string | null
           vrsta_provjere_id: string
           zadnji_datum: string
         }
@@ -168,6 +169,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id: string
           lokacija_id?: string | null
+          ugovor_id?: string | null
           vrsta_provjere_id: string
           zadnji_datum: string
         }
@@ -178,6 +180,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id?: string
           lokacija_id?: string | null
+          ugovor_id?: string | null
           vrsta_provjere_id?: string
           zadnji_datum?: string
         }
@@ -201,6 +204,13 @@ export type Database = {
             columns: ["lokacija_id"]
             isOneToOne: false
             referencedRelation: "lokacije"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klijent_provjere_ugovor_id_fkey"
+            columns: ["ugovor_id"]
+            isOneToOne: false
+            referencedRelation: "ugovori"
             referencedColumns: ["id"]
           },
           {

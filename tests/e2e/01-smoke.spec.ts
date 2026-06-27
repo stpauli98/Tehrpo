@@ -22,6 +22,7 @@ test.describe("Faza 1 smoke", () => {
     await expect(nav.getByRole("link", { name: "Asistent" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Zapisnici" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Postavke" })).toBeVisible()
+    await expect(nav.getByRole("link")).toHaveCount(7)
   })
 
   test("Aktivna stavka u Sidebar-u ima aria-current=page", async ({ page }) => {

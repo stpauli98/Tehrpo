@@ -49,11 +49,11 @@ export function OpterecenjeChart({
           return godina ? (
             <Link
               key={m.mjesec}
-              href={`/prikaz?mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`}
+              href={`/plan-aktivnosti?view=matrica&mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`}
               data-testid="chart-bar"
               data-mjesec={m.mjesec}
               data-ukupno={m.ukupno}
-              aria-label={`${naziv}: ${m.ukupno} termina — otvori mjesec u Prikazu`}
+              aria-label={`${naziv}: ${m.ukupno} termina — otvori mjesec u matrici`}
               className={cn(common, "cursor-pointer rounded transition hover:bg-slate-50")}
             >
               {inner}

@@ -47,7 +47,7 @@ export function TerminiFilters({
     else next.set(key, value)
     next.delete("page")       // reset paginaciju
     next.delete("selected")   // zatvori detalje
-    startTransition(() => router.push(`/termini?${next.toString()}`))
+    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
   }
 
   // Promjena firme resetuje lokaciju (stale lokacija druge firme → prazna lista)
@@ -58,7 +58,7 @@ export function TerminiFilters({
     next.delete("lokacija")
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(`/termini?${next.toString()}`))
+    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
   }
 
   // Live search: kontrolisani input + debounce (filtrira čim se kuca, bez Entera).

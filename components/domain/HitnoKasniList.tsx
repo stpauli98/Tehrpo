@@ -36,7 +36,7 @@ export function HitnoKasniList({
             return (
               <li key={t.id}>
                 <Link
-                  href={`/termini?selected=${t.id}`}
+                  href={`/plan-aktivnosti?view=lista&selected=${t.id}`}
                   data-testid="hitno-kasni-row"
                   className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
                 >

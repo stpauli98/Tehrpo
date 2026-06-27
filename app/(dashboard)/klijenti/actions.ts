@@ -332,7 +332,7 @@ export async function updateUgovor(_prev: ActionResult, formData: FormData): Pro
     return { ok: false, message: "Datum isteka mora biti nakon datuma potpisivanja." }
   }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("ugovori").update({ aktivan, ...f }).eq("id", id)
+  const { error } = await supabase.from("ugovori").update({ aktivan, ...f }).eq("id", id).eq("klijent_id", klijent_id)
   if (error) return { ok: false, message: error.message }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
@@ -344,7 +344,56 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("ugovori").delete().eq("id", id)
+  const { error } = await supabase.from("ugovori").delete().eq("id", id).eq("klijent_id", klijent_id)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijent_id}`)
+  return { ok: true }
+}
+
+// ─── Kontakt osobe ────────────────────────────────────────────────────────────
+
+const kontaktFields = {
+  ime: z.string().min(1, "Ime je obavezno").max(200),
+  funkcija: optionalText(120),
+  telefon: optionalText(60),
+  email: optionalText(200),
+}
+const createKontaktSchema = z.object({ klijent_id: z.string().uuid(), ...kontaktFields })
+const updateKontaktSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid(), ...kontaktFields })
+const deleteKontaktSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid() })
+
+export async function createKontakt(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = createKontaktSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { klijent_id, ...f } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("kontakt_osobe").insert({
+    klijent_id, ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
+  })
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijent_id}`)
+  return { ok: true }
+}
+
+export async function updateKontakt(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = updateKontaktSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, klijent_id, ...f } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("kontakt_osobe").update({
+    ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
+  }).eq("id", id).eq("klijent_id", klijent_id)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijent_id}`)
+  return { ok: true }
+}
+
+export async function deleteKontakt(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = deleteKontaktSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
+  const { id, klijent_id } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("kontakt_osobe").delete().eq("id", id).eq("klijent_id", klijent_id)
   if (error) return { ok: false, message: error.message }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }

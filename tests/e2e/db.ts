@@ -138,12 +138,15 @@ export async function ensureOperater(email: string, lozinka: string, ime: string
     if (error) throw error
     id = data.user.id
   }
-  await db.from("korisnici").upsert({ id, ime, email, uloga: "operater", aktivan: true }, { onConflict: "id" })
+  const { error } = await db.from("korisnici").upsert({ id, ime, email, uloga: "operater", aktivan: true }, { onConflict: "id" })
+  if (error) throw new Error(`ensureOperater upsert: ${error.message}`)
   return id
 }
 export async function assignKlijent(korisnikId: string, klijentId: string): Promise<void> {
-  await db.from("korisnik_klijent").upsert({ korisnik_id: korisnikId, klijent_id: klijentId })
+  const { error } = await db.from("korisnik_klijent").upsert({ korisnik_id: korisnikId, klijent_id: klijentId })
+  if (error) throw new Error(`assignKlijent(${korisnikId},${klijentId}): ${error.message}`)
 }
 export async function clearDodjele(korisnikId: string): Promise<void> {
-  await db.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
+  const { error } = await db.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
+  if (error) throw new Error(`clearDodjele(${korisnikId}): ${error.message}`)
 }

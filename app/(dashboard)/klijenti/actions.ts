@@ -48,6 +48,15 @@ export async function createKlijent(
 
 // ─── Klijent update + delete ───────────────────────────────────────────────
 
+const UUID_OR_EMPTY = z
+  .string()
+  .optional()
+  .transform((v) => (!v || v === "none" ? undefined : v))
+  .refine(
+    (v) => v === undefined || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
+    "Neispravan korisnik",
+  )
+
 const updateKlijentSchema = z.object({
   id: z.string().uuid(),
   naziv: z.string().min(1, "Naziv je obavezan").max(200).optional(),
@@ -57,6 +66,13 @@ const updateKlijentSchema = z.object({
     .union([z.enum(["ugovor", "ponuda"]), z.literal("none"), z.literal(""), z.null()])
     .transform((v) => (v === "none" || v === "" ? null : v))
     .optional(),
+  adresa: optionalText(300),
+  pib: optionalText(40),
+  maticni_broj: optionalText(40),
+  sifra_djelatnosti: optionalText(40),
+  telefon: optionalText(60),
+  email: optionalText(200),
+  zaduzeni_tehpro_id: UUID_OR_EMPTY,
 })
 
 export async function updateKlijent(
@@ -75,6 +91,13 @@ export async function updateKlijent(
   if (formData.has("tip_odnosa")) {
     patch.tip_odnosa = f.tip_odnosa ?? null
   }
+  if (formData.has("adresa")) patch.adresa = f.adresa ?? null
+  if (formData.has("pib")) patch.pib = f.pib ?? null
+  if (formData.has("maticni_broj")) patch.maticni_broj = f.maticni_broj ?? null
+  if (formData.has("sifra_djelatnosti")) patch.sifra_djelatnosti = f.sifra_djelatnosti ?? null
+  if (formData.has("telefon")) patch.telefon = f.telefon ?? null
+  if (formData.has("email")) patch.email = f.email ?? null
+  if (formData.has("zaduzeni_tehpro_id")) patch.zaduzeni_tehpro_id = f.zaduzeni_tehpro_id ?? null
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijenti").update(patch).eq("id", id)
   if (error) {

@@ -42,7 +42,7 @@ export function PrikazToolbar({
     if (m === "mjesec" && !next.get("mjesec")) {
       next.set("mjesec", String(Number(todayIso().slice(5, 7))))
     }
-    startTransition(() => router.push(`/prikaz?${next.toString()}`))
+    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
   }
 
   function setParam(key: string, value: string) {
@@ -50,7 +50,7 @@ export function PrikazToolbar({
     if (value) next.set(key, value)
     else next.delete(key)
     next.delete("selected")
-    startTransition(() => router.push(`/prikaz?${next.toString()}`))
+    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
   }
 
   return (

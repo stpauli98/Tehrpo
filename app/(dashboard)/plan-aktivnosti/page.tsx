@@ -2,6 +2,7 @@ import { PlanViewSwitcher } from "@/components/domain/PlanViewSwitcher"
 import { jeValidanView, type PlanView } from "@/lib/plan-view"
 import { ListaView } from "./_views/lista"
 import { KalendarView } from "./_views/kalendar"
+import { MatricaView } from "./_views/matrica"
 
 export default async function PlanAktivnostiPage({
   searchParams,
@@ -20,6 +21,7 @@ export default async function PlanAktivnostiPage({
       </div>
       {view === "lista" && <ListaView searchParams={sp} />}
       {view === "kalendar" && <KalendarView searchParams={sp} />}
+      {view === "matrica" && <MatricaView searchParams={sp} />}
     </div>
   )
 }

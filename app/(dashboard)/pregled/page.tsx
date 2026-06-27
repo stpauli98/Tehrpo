@@ -41,7 +41,7 @@ export default async function PregledPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Klikabilne: vode na filter koji TAČNO odgovara broju na kartici */}
-        <Link href={`/termini?mjesec=${mjesec}`} className="block" aria-label="Termini ovog mjeseca">
+        <Link href={`/plan-aktivnosti?view=lista&mjesec=${mjesec}`} className="block" aria-label="Termini ovog mjeseca">
           <StatCard
             label="Termini ovog mjeseca"
             value={stats.ovog_mjeseca}
@@ -51,7 +51,7 @@ export default async function PregledPage() {
             testId="stat-card"
           />
         </Link>
-        <Link href="/termini?status=kasni" className="block" aria-label="Kasni rokovi">
+        <Link href="/plan-aktivnosti?view=lista&status=kasni" className="block" aria-label="Kasni rokovi">
           <StatCard
             label="Kasni rokovi"
             value={stats.kasni}

@@ -61,7 +61,7 @@ export function HitnoKasniList({
       )}
       {ukupnoKasni > 0 && (
         <Link
-          href="/termini?status=kasni"
+          href="/plan-aktivnosti?view=lista&status=kasni"
           data-testid="hitno-kasni-footer"
           className="mt-3 inline-block text-xs text-brand hover:underline"
         >

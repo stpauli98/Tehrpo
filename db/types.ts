@@ -649,6 +649,7 @@ export type Database = {
           naziv: string
           podrazumevani_interval_mjeseci: number | null
           sifra: string | null
+          vodi_dokumentaciju: boolean
           zakonski_osnov: string | null
         }
         Insert: {
@@ -658,6 +659,7 @@ export type Database = {
           naziv: string
           podrazumevani_interval_mjeseci?: number | null
           sifra?: string | null
+          vodi_dokumentaciju?: boolean
           zakonski_osnov?: string | null
         }
         Update: {
@@ -667,6 +669,7 @@ export type Database = {
           naziv?: string
           podrazumevani_interval_mjeseci?: number | null
           sifra?: string | null
+          vodi_dokumentaciju?: boolean
           zakonski_osnov?: string | null
         }
         Relationships: []

@@ -71,10 +71,12 @@ export async function uploadDokumentAction(
 
   const { error } = await supabase.from("dokumenti").insert({
     termin_id,
+    klijent_id: termin.klijent_id,
     naziv,
     storage_path: path,
     mime_type: file.type,
     velicina_bajt: file.size,
+    tip: "strucni_nalaz",
     generated_by_ai: false,
   })
   if (error) {
@@ -106,7 +108,7 @@ export async function generateZapisnikAction(
     .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja, zaduzeni, status")
     .eq("id", termin_id)
     .maybeSingle()
-  if (!t) return { ok: false, message: "Termin ne postoji." }
+  if (!t || !t.klijent_id) return { ok: false, message: "Termin ne postoji." }
 
   // Zapisnik dokumentuje IZVRŠENU provjeru — ne generiši za otkazane/neizvršene termine
   if (t.status !== "izvrseno") {
@@ -143,10 +145,12 @@ export async function generateZapisnikAction(
 
   const { error } = await supabase.from("dokumenti").insert({
     termin_id,
+    klijent_id: t.klijent_id,
     naziv,
     storage_path: path,
     mime_type: DOCX_MIME,
     velicina_bajt: docx.length,
+    tip: "zapisnik",
     generated_by_ai: true,
   })
   if (error) {
@@ -175,18 +179,10 @@ export async function deleteDokumentAction(
   const supabase = await createServerSupabaseClient()
   const { data: dok } = await supabase
     .from("dokumenti")
-    .select("storage_path, termin_id")
+    .select("storage_path, klijent_id")
     .eq("id", dokument_id)
     .maybeSingle()
   if (!dok) return { ok: false, message: "Dokument ne postoji." }
-
-  // klijent_id preko zasebnog upita (BEZ embed-a) — dokumenti↔termini ima dvostruku
-  // FK relaciju u tipovima (termini + termini_view) pa embed kardinalnost nije pouzdana.
-  const { data: termin } = await supabase
-    .from("termini")
-    .select("klijent_id")
-    .eq("id", dok.termin_id)
-    .maybeSingle()
 
   // App-level cleanup: prvo fajl, pa red (orphan red gori od orphan fajla).
   try {
@@ -197,6 +193,6 @@ export async function deleteDokumentAction(
   const { error } = await supabase.from("dokumenti").delete().eq("id", dokument_id)
   if (error) return { ok: false, message: error.message }
 
-  revalidateDokumenti(termin?.klijent_id ?? null)
+  revalidateDokumenti(dok.klijent_id)
   return { ok: true }
 }

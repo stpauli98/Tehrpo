@@ -11,7 +11,7 @@ export async function posaljiReset(_prev: ActionResult, formData: FormData): Pro
   const origin = (await headers()).get("origin") ?? ""
   const supabase = await createServerSupabaseClient()
   await supabase.auth.resetPasswordForEmail(email.data, {
-    redirectTo: `${origin}/auth/nova-lozinka`,
+    redirectTo: `${origin}/auth/confirm`,
   })
   // Uvijek isti odgovor (ne otkrivaj postoji li email).
   return { ok: true, message: "Ako nalog postoji, poslali smo link za reset." }

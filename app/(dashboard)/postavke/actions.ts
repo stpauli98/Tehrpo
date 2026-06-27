@@ -31,6 +31,7 @@ export async function updatePostavke(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  await zahtijevajAdmina()
   const parsed = schema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   // dedupe + sort opadajuće (30,14,7,1)
@@ -53,6 +54,7 @@ export async function updateIntervali(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  await zahtijevajAdmina()
   // Forma šalje polja "interval_<vrsta_uuid>" = "" | "1".."120"
   const updates: { id: string; val: number | null }[] = []
   for (const [key, raw] of formData.entries()) {
@@ -112,6 +114,7 @@ export async function createVrsta(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  await zahtijevajAdmina()
   const parsed = createVrstaSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
     return { ok: false, errors: parsed.error.flatten().fieldErrors }
@@ -162,7 +165,11 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
   const { error: pErr } = await admin.from("korisnici").insert({
     id: data.user.id, ime: parsed.data.ime, email: parsed.data.email, uloga: parsed.data.uloga, aktivan: true,
   })
-  if (pErr) return { ok: false, message: pErr.message }
+  if (pErr) {
+    // Rollback: ukloni auth korisnika kako ne bi zauzimao email
+    await admin.auth.admin.deleteUser(data.user.id)
+    return { ok: false, message: pErr.message }
+  }
   revalidatePath("/postavke")
   return { ok: true }
 }
@@ -189,6 +196,13 @@ export async function postaviAktivan(korisnikId: string, aktivan: boolean): Prom
 export async function postaviDodjele(korisnikId: string, klijentIds: string[]): Promise<ActionResult> {
   await zahtijevajAdmina()
   const admin = createAdminSupabaseClient()
+  // Provjeri da svi klijent ID-jevi postoje prije brisanja (atomičnost)
+  if (klijentIds.length > 0) {
+    const { data: valid } = await admin.from("klijenti").select("id").in("id", klijentIds)
+    if (!valid || valid.length !== klijentIds.length) {
+      return { ok: false, message: "Nepostojeći klijent u dodjeli." }
+    }
+  }
   const { error: delErr } = await admin.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
   if (delErr) return { ok: false, message: delErr.message }
   if (klijentIds.length > 0) {

@@ -106,34 +106,57 @@ export type Database = {
         Row: {
           generated_by_ai: boolean
           id: string
+          klijent_id: string
           mime_type: string | null
           naziv: string
           storage_path: string
-          termin_id: string
+          termin_id: string | null
+          tip: string
+          ugovor_id: string | null
           uploaded_at: string
           velicina_bajt: number | null
         }
         Insert: {
           generated_by_ai?: boolean
           id?: string
+          klijent_id: string
           mime_type?: string | null
           naziv: string
           storage_path: string
-          termin_id: string
+          termin_id?: string | null
+          tip?: string
+          ugovor_id?: string | null
           uploaded_at?: string
           velicina_bajt?: number | null
         }
         Update: {
           generated_by_ai?: boolean
           id?: string
+          klijent_id?: string
           mime_type?: string | null
           naziv?: string
           storage_path?: string
-          termin_id?: string
+          termin_id?: string | null
+          tip?: string
+          ugovor_id?: string | null
           uploaded_at?: string
           velicina_bajt?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "dokumenti_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dokumenti_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "dokumenti_termin_id_fkey"
             columns: ["termin_id"]
@@ -146,6 +169,13 @@ export type Database = {
             columns: ["termin_id"]
             isOneToOne: false
             referencedRelation: "termini_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dokumenti_ugovor_id_fkey"
+            columns: ["ugovor_id"]
+            isOneToOne: false
+            referencedRelation: "ugovori"
             referencedColumns: ["id"]
           },
         ]

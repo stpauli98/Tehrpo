@@ -10,6 +10,7 @@ import { ObrisiKlijentButton } from "@/components/domain/ObrisiKlijentButton"
 import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { ProfilTab } from "@/components/domain/ProfilTab"
 import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload"
+import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { formatDatum, addMjeseci } from "@/lib/date"
 import type { Database } from "@/db/types"
 
@@ -17,7 +18,7 @@ type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
 
-const VALID_TABS = ["termini", "lokacije", "kontakti", "dokumenti", "profil"]
+const VALID_TABS = ["id-karta", "termini", "lokacije", "kontakti", "dokumenti", "profil"]
 
 export default async function KlijentDetailPage({
   params,
@@ -78,6 +79,17 @@ export default async function KlijentDetailPage({
   const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
   const { data: korisniciData } = await supabase.from("korisnici").select("id, ime").eq("aktivan", true).order("ime")
   const korisnici = (korisniciData ?? []).map((k) => ({ id: k.id, ime: k.ime }))
+  // Ugovori/kontakti trebaju samo na "id-karta" tabu → ne dohvaćaj ih bez potrebe.
+  const ugovori = tab === "id-karta"
+    ? ((await supabase.from("ugovori").select("*").eq("klijent_id", id)
+        .order("aktivan", { ascending: false }).order("created_at", { ascending: false })).data ?? [])
+    : []
+  const kontakti = tab === "id-karta"
+    ? ((await supabase.from("kontakt_osobe").select("*").eq("klijent_id", id).order("ime")).data ?? [])
+    : []
+  const zaduzeniIme = primaociRes.data?.zaduzeni_tehpro_id
+    ? (korisnici.find((k) => k.id === primaociRes.data!.zaduzeni_tehpro_id)?.ime ?? null)
+    : null
 
   return (
     <div className="space-y-6">
@@ -122,6 +134,24 @@ export default async function KlijentDetailPage({
       </div>
 
       <KlijentTabs activeTab={tab} klijentId={id} />
+
+      {tab === "id-karta" && (
+        <IdKartaTab
+          klijentId={id}
+          osnovni={{
+            adresa: primaociRes.data?.adresa ?? null,
+            telefon: primaociRes.data?.telefon ?? null,
+            email: primaociRes.data?.email ?? null,
+            pib: primaociRes.data?.pib ?? null,
+            maticni_broj: primaociRes.data?.maticni_broj ?? null,
+            sifra_djelatnosti: primaociRes.data?.sifra_djelatnosti ?? null,
+          }}
+          zaduzeniIme={zaduzeniIme}
+          ugovori={ugovori}
+          kontakti={kontakti}
+          usluge={profilStavke.map((p) => ({ vrsta_naziv: p.vrsta_naziv, lokacija_naziv: p.lokacija_naziv, sljedeci_rok: p.sljedeci_rok }))}
+        />
+      )}
 
       {tab === "termini" && (
         <div data-testid="tab-termini-content" className="rounded-xl border border-slate-200 overflow-hidden">

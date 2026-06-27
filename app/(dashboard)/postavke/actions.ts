@@ -215,3 +215,51 @@ export async function postaviDodjele(korisnikId: string, klijentIds: string[]): 
   revalidatePath("/postavke")
   return { ok: true }
 }
+
+// ─── Uređivanje / deaktivacija vrste ─────────────────────────────────────────
+
+const updateVrstaSchema = z.object({
+  id: z.string().uuid(),
+  naziv: z.string().trim().min(1, "Naziv je obavezan").max(200),
+  interval: z
+    .string()
+    .trim()
+    .optional()
+    .transform((s) => (s && s.length > 0 ? s : undefined))
+    .refine(
+      (s) => s === undefined || (Number.isInteger(Number(s)) && Number(s) >= 1 && Number(s) <= 120),
+      { message: "Interval mora biti 1–120 ili prazno" },
+    )
+    .transform((s) => (s === undefined ? null : Number(s))),
+  zakonski_osnov: z.string().trim().max(500).optional().or(z.literal("").transform(() => undefined)),
+  vodi_dokumentaciju: z.string().optional().transform((v) => v === "on" || v === "true"),
+})
+
+export async function updateVrsta(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const parsed = updateVrstaSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, naziv, interval, zakonski_osnov, vodi_dokumentaciju } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("vrste_provjera").update({
+    naziv,
+    podrazumevani_interval_mjeseci: interval,
+    zakonski_osnov: zakonski_osnov ?? null,
+    vodi_dokumentaciju,
+  }).eq("id", id)
+  if (error) {
+    const msg = /duplicate|unique/i.test(error.message) ? "Vrsta sa tim nazivom već postoji." : error.message
+    return { ok: false, message: msg }
+  }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+export async function postaviVrstaAktivna(vrstaId: string, aktivna: boolean): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("vrste_provjera").update({ aktivna }).eq("id", vrstaId)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath("/postavke")
+  return { ok: true }
+}

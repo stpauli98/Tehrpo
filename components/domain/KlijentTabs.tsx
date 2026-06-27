@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const TABS = [
+  { value: "id-karta", label: "ID karta" },
   { value: "termini", label: "Termini" },
   { value: "lokacije", label: "Lokacije" },
   { value: "kontakti", label: "Kontakti" },

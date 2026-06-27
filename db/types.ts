@@ -529,6 +529,63 @@ export type Database = {
           },
         ]
       }
+      ugovori: {
+        Row: {
+          aktivan: boolean
+          automatsko_obnavljanje: boolean
+          broj_obilazaka_mjesecno: number | null
+          created_at: string
+          datum_isteka: string | null
+          datum_potpisivanja: string | null
+          id: string
+          klijent_id: string
+          napomena: string | null
+          vazenje_mjeseci: number | null
+          zavodni_broj: string | null
+        }
+        Insert: {
+          aktivan?: boolean
+          automatsko_obnavljanje?: boolean
+          broj_obilazaka_mjesecno?: number | null
+          created_at?: string
+          datum_isteka?: string | null
+          datum_potpisivanja?: string | null
+          id?: string
+          klijent_id: string
+          napomena?: string | null
+          vazenje_mjeseci?: number | null
+          zavodni_broj?: string | null
+        }
+        Update: {
+          aktivan?: boolean
+          automatsko_obnavljanje?: boolean
+          broj_obilazaka_mjesecno?: number | null
+          created_at?: string
+          datum_isteka?: string | null
+          datum_potpisivanja?: string | null
+          id?: string
+          klijent_id?: string
+          napomena?: string | null
+          vazenje_mjeseci?: number | null
+          zavodni_broj?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ugovori_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ugovori_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vrste_provjera: {
         Row: {
           aktivna: boolean

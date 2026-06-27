@@ -12,13 +12,11 @@ test.describe("Faza 1 smoke", () => {
     await expect(page.getByRole("banner")).toContainText("Sistem za termine i provjere")
   })
 
-  test("Sidebar prikazuje svih 9 nav stavki", async ({ page }) => {
-    await page.goto("/termini")
+  test("Sidebar prikazuje svih 7 nav stavki", async ({ page }) => {
+    await page.goto("/plan-aktivnosti")
     const nav = page.getByRole("navigation", { name: "Glavna navigacija" })
     await expect(nav.getByRole("link", { name: "Pregled" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Termini" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Prikaz" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Plan" })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Plan aktivnosti" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Obilasci" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Klijenti" })).toBeVisible()
     await expect(nav.getByRole("link", { name: "Asistent" })).toBeVisible()
@@ -27,14 +25,14 @@ test.describe("Faza 1 smoke", () => {
   })
 
   test("Aktivna stavka u Sidebar-u ima aria-current=page", async ({ page }) => {
-    await page.goto("/termini")
-    const active = page.getByRole("link", { name: "Termini" })
+    await page.goto("/plan-aktivnosti")
+    const active = page.getByRole("link", { name: "Plan aktivnosti" })
     await expect(active).toHaveAttribute("aria-current", "page")
   })
 
-  test("Termini stub page render-uje naslov", async ({ page }) => {
-    await page.goto("/termini")
-    await expect(page.getByRole("heading", { name: "Termini" })).toBeVisible()
+  test("Plan aktivnosti page render-uje naslov", async ({ page }) => {
+    await page.goto("/plan-aktivnosti")
+    await expect(page.getByRole("heading", { name: "Plan aktivnosti" })).toBeVisible()
   })
 
   test("Desktop-only gate VIDLJIV na 1023px", async ({ page }) => {

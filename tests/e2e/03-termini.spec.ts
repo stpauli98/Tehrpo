@@ -12,7 +12,7 @@ test.describe.configure({ mode: "serial" })
 test.describe("Faza 3 — Termini stats", () => {
   test("prikazuje 4 stat kartice sa brojevima", async ({ page }) => {
     await page.goto("/termini")
-    await expect(page.getByRole("heading", { name: "Termini" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Plan aktivnosti" })).toBeVisible()
 
     const stats = page.getByTestId("termini-stats")
     await expect(stats).toBeVisible()
@@ -73,8 +73,9 @@ test.describe("Faza 3 — Termini filteri", () => {
     await page.goto("/termini")
     await page.getByTestId("status-pill-kasni").click()
     await page.waitForURL(/status=kasni/)
-    // svi vidljivi status badge-evi su 'kasni'
+    // svi vidljivi status badge-evi su 'kasni'; čekamo s timeout-om jer fetch može kasniti
     const badges = page.getByTestId("status-badge")
+    await expect(badges.first()).toBeVisible()
     const n = await badges.count()
     expect(n).toBeGreaterThan(0)
     await Promise.all(
@@ -91,6 +92,7 @@ test.describe("Faza 3 — Termini filteri", () => {
     await input.press("Enter")
     await page.waitForURL(/q=WAIKIKI/)
     const rows = page.getByTestId("termin-row")
+    await expect(rows.first()).toBeVisible()
     expect(await rows.count()).toBeGreaterThan(0)
     // bar prvi red sadrži WAIKIKI (case-insensitive)
     await expect(rows.first()).toContainText(/WAIKIKI/i)
@@ -103,6 +105,7 @@ test.describe("Faza 3 — Termini filteri", () => {
     await input.pressSequentially("WAIK")
     await page.waitForURL(/q=WAIK/)
     const rows = page.getByTestId("termin-row")
+    await expect(rows.first()).toBeVisible()
     expect(await rows.count()).toBeGreaterThan(0)
     await expect(rows.first()).toContainText(/WAIKIKI/i)
   })

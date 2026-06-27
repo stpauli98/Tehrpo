@@ -47,9 +47,9 @@ test.describe("Temelj — Lokacija filter u /termini", () => {
     // URL sadrži ?lokacija=
     expect(page.url()).toContain("lokacija=")
 
-    // Lista ima redove (nije prazna)
+    // Lista ima redove (nije prazna); čekamo s timeout-om jer fetch može kasniti
     const rows = page.getByTestId("termin-row")
-    expect(await rows.count()).toBeGreaterThan(0)
+    await expect(rows).not.toHaveCount(0)
 
     // Svaki vidljivi red sadrži naziv lokacije ILI klijenta (WAIKIKI)
     // (Dovoljno je da rezultati nisu prazni i da URL filter radi)
@@ -111,6 +111,8 @@ test.describe("Temelj — Postavke intervali", () => {
     const newValue = originalValue === "12" ? "24" : "12"
     await firstInput.fill(newValue)
     await page.getByTestId("intervali-submit").click()
+    // Sačekaj da server action završi prije reload-a (cloud DB latencija)
+    await page.waitForLoadState("networkidle")
 
     // Reload — provjeri da je vrijednost sačuvana
     await page.reload()

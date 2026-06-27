@@ -43,8 +43,8 @@ test.describe("Prikaz — dorada", () => {
     try {
       await page.goto(`/prikaz?mode=klijent&klijent=${klijentId}&godina=2035`)
       await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
-      // Jedina ćelija koja vodi na /termini je naša (+1); single ćelije vode na /prikaz?selected
-      const multi = page.locator('a[data-testid="matrix-cell-filled"][href*="/termini"]')
+      // Jedina ćelija koja vodi na /plan-aktivnosti je naša (+1); single ćelije vode na ?selected
+      const multi = page.locator('a[data-testid="matrix-cell-filled"][href*="/plan-aktivnosti"]')
       await expect(multi).toHaveCount(1)
       const href = await multi.getAttribute("href")
       expect(href).toMatch(new RegExp(`vrsta_id=${vrstaId}`))

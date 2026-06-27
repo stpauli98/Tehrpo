@@ -14,10 +14,10 @@ test.describe("Faza dashboard — Pregled", () => {
     await expect(page.getByTestId("hitno-kasni-list")).toBeVisible()
   })
 
-  test("klik 'Kasni rokovi' vodi na filtriran /termini", async ({ page }) => {
+  test("klik 'Kasni rokovi' vodi na filtriran /plan-aktivnosti?view=lista", async ({ page }) => {
     await page.goto("/pregled")
     await page.getByRole("link", { name: /Kasni rokovi/ }).click()
-    await page.waitForURL(/\/termini\?status=kasni/)
+    await page.waitForURL(/\/plan-aktivnosti.*status=kasni/)
   })
 
   test("klik na mjesec u chartu vodi na Prikaz 'Po mjesecu'", async ({ page }) => {
@@ -56,6 +56,6 @@ test.describe("Faza dashboard — Pregled", () => {
   test("hitno/kasni footer vodi na sve kasne", async ({ page }) => {
     await page.goto("/pregled")
     await page.getByTestId("hitno-kasni-footer").click()
-    await page.waitForURL(/\/termini\?status=kasni/)
+    await page.waitForURL(/\/plan-aktivnosti.*status=kasni/)
   })
 })

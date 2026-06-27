@@ -167,7 +167,8 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
   })
   if (pErr) {
     // Rollback: ukloni auth korisnika kako ne bi zauzimao email
-    await admin.auth.admin.deleteUser(data.user.id)
+    const { error: delErr } = await admin.auth.admin.deleteUser(data.user.id)
+    if (delErr) console.error("Rollback orphan auth korisnika nije uspio:", data.user.id, delErr.message)
     return { ok: false, message: pErr.message }
   }
   revalidatePath("/postavke")
@@ -198,7 +199,8 @@ export async function postaviDodjele(korisnikId: string, klijentIds: string[]): 
   const admin = createAdminSupabaseClient()
   // Provjeri da svi klijent ID-jevi postoje prije brisanja (atomičnost)
   if (klijentIds.length > 0) {
-    const { data: valid } = await admin.from("klijenti").select("id").in("id", klijentIds)
+    const { data: valid, error: chkErr } = await admin.from("klijenti").select("id").in("id", klijentIds)
+    if (chkErr) return { ok: false, message: chkErr.message }
     if (!valid || valid.length !== klijentIds.length) {
       return { ok: false, message: "Nepostojeći klijent u dodjeli." }
     }

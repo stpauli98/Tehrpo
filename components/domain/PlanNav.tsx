@@ -35,7 +35,7 @@ export function PlanNav({
     p.set("mjesec", String(m))
     p.delete("dan")
     p.delete("selected")
-    return `/plan?${p.toString()}`
+    return `/plan-aktivnosti?${p.toString()}`
   }
 
   const p = prevMonth(godina, mjesec)

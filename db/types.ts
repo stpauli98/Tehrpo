@@ -271,6 +271,51 @@ export type Database = {
           },
         ]
       }
+      kontakt_osobe: {
+        Row: {
+          created_at: string
+          email: string | null
+          funkcija: string | null
+          id: string
+          ime: string
+          klijent_id: string
+          telefon: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          funkcija?: string | null
+          id?: string
+          ime: string
+          klijent_id: string
+          telefon?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          funkcija?: string | null
+          id?: string
+          ime?: string
+          klijent_id?: string
+          telefon?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kontakt_osobe_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kontakt_osobe_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       korisnici: {
         Row: {
           aktivan: boolean

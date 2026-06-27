@@ -3,7 +3,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { env } from "@/lib/env"
 
-const PUBLIC = ["/prijava", "/zaboravljena-lozinka", "/auth"]
+// /api/cron je Bearer-authed (CRON_SECRET) i nema Supabase user cookie → mora
+// zaobići auth gate, inače getUser()=null → redirect /prijava (gasi podsjetnike).
+const PUBLIC = ["/prijava", "/zaboravljena-lozinka", "/auth", "/api/cron"]
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl

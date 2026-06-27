@@ -30,7 +30,7 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
     .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
     .eq("id", termin_id)
     .maybeSingle()
-  if (!t) return { ok: false, message: "Termin ne postoji." }
+  if (!t || !t.klijent_id) return { ok: false, message: "Termin ne postoji." }
 
   const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
   const docx = await buildZapisnikDocx({
@@ -52,10 +52,12 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
   }
   const { error } = await supabase.from("dokumenti").insert({
     termin_id,
+    klijent_id: t.klijent_id,
     naziv,
     storage_path: path,
     mime_type: DOCX_MIME,
     velicina_bajt: docx.length,
+    tip: "zapisnik",
     generated_by_ai: true,
   })
   if (error) {

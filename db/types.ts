@@ -106,34 +106,57 @@ export type Database = {
         Row: {
           generated_by_ai: boolean
           id: string
+          klijent_id: string
           mime_type: string | null
           naziv: string
           storage_path: string
-          termin_id: string
+          termin_id: string | null
+          tip: string
+          ugovor_id: string | null
           uploaded_at: string
           velicina_bajt: number | null
         }
         Insert: {
           generated_by_ai?: boolean
           id?: string
+          klijent_id: string
           mime_type?: string | null
           naziv: string
           storage_path: string
-          termin_id: string
+          termin_id?: string | null
+          tip?: string
+          ugovor_id?: string | null
           uploaded_at?: string
           velicina_bajt?: number | null
         }
         Update: {
           generated_by_ai?: boolean
           id?: string
+          klijent_id?: string
           mime_type?: string | null
           naziv?: string
           storage_path?: string
-          termin_id?: string
+          termin_id?: string | null
+          tip?: string
+          ugovor_id?: string | null
           uploaded_at?: string
           velicina_bajt?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "dokumenti_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dokumenti_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "dokumenti_termin_id_fkey"
             columns: ["termin_id"]
@@ -148,6 +171,13 @@ export type Database = {
             referencedRelation: "termini_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "dokumenti_ugovor_id_fkey"
+            columns: ["ugovor_id"]
+            isOneToOne: false
+            referencedRelation: "ugovori"
+            referencedColumns: ["id"]
+          },
         ]
       }
       klijent_provjere: {
@@ -158,6 +188,7 @@ export type Database = {
           interval_mjeseci: number | null
           klijent_id: string
           lokacija_id: string | null
+          ugovor_id: string | null
           vrsta_provjere_id: string
           zadnji_datum: string
         }
@@ -168,6 +199,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id: string
           lokacija_id?: string | null
+          ugovor_id?: string | null
           vrsta_provjere_id: string
           zadnji_datum: string
         }
@@ -178,6 +210,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id?: string
           lokacija_id?: string | null
+          ugovor_id?: string | null
           vrsta_provjere_id?: string
           zadnji_datum?: string
         }
@@ -204,6 +237,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "klijent_provjere_ugovor_id_fkey"
+            columns: ["ugovor_id"]
+            isOneToOne: false
+            referencedRelation: "ugovori"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "klijent_provjere_vrsta_provjere_id_fkey"
             columns: ["vrsta_provjere_id"]
             isOneToOne: false
@@ -214,33 +254,107 @@ export type Database = {
       }
       klijenti: {
         Row: {
+          adresa: string | null
           created_at: string
+          email: string | null
           id: string
+          maticni_broj: string | null
           napomena: string | null
           naziv: string
+          pib: string | null
           podsjetnik_emails: string[]
+          sifra_djelatnosti: string | null
+          telefon: string | null
           tip_odnosa: string | null
           updated_at: string
+          zaduzeni_tehpro_id: string | null
+        }
+        Insert: {
+          adresa?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          maticni_broj?: string | null
+          napomena?: string | null
+          naziv: string
+          pib?: string | null
+          podsjetnik_emails?: string[]
+          sifra_djelatnosti?: string | null
+          telefon?: string | null
+          tip_odnosa?: string | null
+          updated_at?: string
+          zaduzeni_tehpro_id?: string | null
+        }
+        Update: {
+          adresa?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          maticni_broj?: string | null
+          napomena?: string | null
+          naziv?: string
+          pib?: string | null
+          podsjetnik_emails?: string[]
+          sifra_djelatnosti?: string | null
+          telefon?: string | null
+          tip_odnosa?: string | null
+          updated_at?: string
+          zaduzeni_tehpro_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klijenti_zaduzeni_tehpro_id_fkey"
+            columns: ["zaduzeni_tehpro_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kontakt_osobe: {
+        Row: {
+          created_at: string
+          email: string | null
+          funkcija: string | null
+          id: string
+          ime: string
+          klijent_id: string
+          telefon: string | null
         }
         Insert: {
           created_at?: string
+          email?: string | null
+          funkcija?: string | null
           id?: string
-          napomena?: string | null
-          naziv: string
-          podsjetnik_emails?: string[]
-          tip_odnosa?: string | null
-          updated_at?: string
+          ime: string
+          klijent_id: string
+          telefon?: string | null
         }
         Update: {
           created_at?: string
+          email?: string | null
+          funkcija?: string | null
           id?: string
-          napomena?: string | null
-          naziv?: string
-          podsjetnik_emails?: string[]
-          tip_odnosa?: string | null
-          updated_at?: string
+          ime?: string
+          klijent_id?: string
+          telefon?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kontakt_osobe_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kontakt_osobe_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       korisnici: {
         Row: {
@@ -500,6 +614,63 @@ export type Database = {
           },
         ]
       }
+      ugovori: {
+        Row: {
+          aktivan: boolean
+          automatsko_obnavljanje: boolean
+          broj_obilazaka_mjesecno: number | null
+          created_at: string
+          datum_isteka: string | null
+          datum_potpisivanja: string | null
+          id: string
+          klijent_id: string
+          napomena: string | null
+          vazenje_mjeseci: number | null
+          zavodni_broj: string | null
+        }
+        Insert: {
+          aktivan?: boolean
+          automatsko_obnavljanje?: boolean
+          broj_obilazaka_mjesecno?: number | null
+          created_at?: string
+          datum_isteka?: string | null
+          datum_potpisivanja?: string | null
+          id?: string
+          klijent_id: string
+          napomena?: string | null
+          vazenje_mjeseci?: number | null
+          zavodni_broj?: string | null
+        }
+        Update: {
+          aktivan?: boolean
+          automatsko_obnavljanje?: boolean
+          broj_obilazaka_mjesecno?: number | null
+          created_at?: string
+          datum_isteka?: string | null
+          datum_potpisivanja?: string | null
+          id?: string
+          klijent_id?: string
+          napomena?: string | null
+          vazenje_mjeseci?: number | null
+          zavodni_broj?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ugovori_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ugovori_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vrste_provjera: {
         Row: {
           aktivna: boolean
@@ -508,6 +679,7 @@ export type Database = {
           naziv: string
           podrazumevani_interval_mjeseci: number | null
           sifra: string | null
+          vodi_dokumentaciju: boolean
           zakonski_osnov: string | null
         }
         Insert: {
@@ -517,6 +689,7 @@ export type Database = {
           naziv: string
           podrazumevani_interval_mjeseci?: number | null
           sifra?: string | null
+          vodi_dokumentaciju?: boolean
           zakonski_osnov?: string | null
         }
         Update: {
@@ -526,6 +699,7 @@ export type Database = {
           naziv?: string
           podrazumevani_interval_mjeseci?: number | null
           sifra?: string | null
+          vodi_dokumentaciju?: boolean
           zakonski_osnov?: string | null
         }
         Relationships: []

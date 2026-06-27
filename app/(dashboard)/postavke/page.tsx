@@ -3,6 +3,7 @@ import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { ReminderForm } from "@/components/domain/ReminderForm"
 import { IntervaliForm } from "@/components/domain/IntervaliForm"
 import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
+import { VrstaSheet } from "@/components/domain/VrstaSheet"
 import { KorisniciTab } from "@/components/domain/KorisniciTab"
 
 export default async function PostavkePage() {
@@ -13,16 +14,21 @@ export default async function PostavkePage() {
     supabase.from("postavke").select("dana_prije").eq("id", 1).maybeSingle(),
     supabase
       .from("vrste_provjera")
-      .select("id, naziv, podrazumevani_interval_mjeseci")
-      .eq("aktivna", true)
+      .select("id, naziv, podrazumevani_interval_mjeseci, zakonski_osnov, aktivna, vodi_dokumentaciju")
+      .order("aktivna", { ascending: false })
       .order("naziv"),
   ])
   const danaPrije = postRes.data?.dana_prije ?? [30, 14, 7, 1]
-  const vrste = (vrsteRes.data ?? []).map((v) => ({
+  const vrsteSve = (vrsteRes.data ?? []).map((v) => ({
     id: v.id,
     naziv: v.naziv,
     interval: v.podrazumevani_interval_mjeseci,
+    zakonski_osnov: v.zakonski_osnov,
+    aktivna: v.aktivna,
+    vodi_dokumentaciju: v.vodi_dokumentaciju,
   }))
+  // IntervaliForm radi samo sa aktivnim vrstama (neaktivne se ne zakazuju)
+  const vrste = vrsteSve.filter((v) => v.aktivna).map(({ id, naziv, interval }) => ({ id, naziv, interval }))
 
   return (
     <div className="space-y-6">
@@ -49,6 +55,24 @@ export default async function PostavkePage() {
             u ciklusu. Prazno = bez auto-zakazivanja. Vrijednosti su polazne — slobodno ih prilagodi.
           </p>
           <IntervaliForm vrste={vrste} />
+        </section>
+      )}
+
+      {jeAdminKor && (
+        <section className="rounded-xl border border-slate-200 p-4">
+          <h2 className="mb-3 text-base font-medium">Upravljanje vrstama</h2>
+          <ul className="divide-y divide-slate-100" data-testid="vrste-lista">
+            {vrsteSve.map((v) => (
+              <li key={v.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <span>
+                  <span className={v.aktivna ? "" : "text-slate-400 line-through"}>{v.naziv}</span>
+                  {!v.vodi_dokumentaciju && <span className="ml-2 text-xs text-slate-400">(bez dokumentacije)</span>}
+                  {!v.aktivna && <span className="ml-2 text-xs text-red-500">neaktivna</span>}
+                </span>
+                <VrstaSheet vrsta={v} />
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

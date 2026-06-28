@@ -38,6 +38,10 @@ export function IntervaliForm({ vrste }: { vrste: Vrsta[] }) {
                 <td className="px-3 py-2">{v.naziv}</td>
                 <td className="px-3 py-2">
                   <Input
+                    // Stabilan key uključuje server-vrijednost: kad se interval
+                    // promijeni nakon router.refresh(), Input se remountuje umjesto
+                    // da mijenja defaultValue uncontrolled polja (Base UI warning).
+                    key={`${v.id}:${v.interval ?? ""}`}
                     name={`interval_${v.id}`}
                     type="number"
                     min={1}

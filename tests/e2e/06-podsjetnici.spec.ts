@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test"
 import { readFileSync } from "node:fs"
-import { execSync } from "node:child_process"
 import path from "node:path"
+import { clearPodsjetnici } from "./db"
 
 // Pročitaj CRON_SECRET iz .env.local apsolutnom putanjom (nezavisno od cwd).
 // Dev server (pnpm dev) već koristi istu vrijednost.
@@ -20,11 +20,9 @@ test.describe("Faza 6 — Cron endpoint", () => {
   // Svaki browser projekt (chromium/webkit) pokreće ove testove serijski
   // protiv iste baze. Prva iteracija upisuje audit redove; drugi projekt bi
   // ih zatekao i first.sent.length bi bio 0 → lažan fail.
-  // Rješenje: before svakog projekta truncate podsjetnici tablice.
-  test.beforeAll(() => {
-    execSync(
-      `docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -c "truncate podsjetnici;"`,
-    )
+  // Rješenje: prije svakog projekta očisti podsjetnici tablicu (cloud DB).
+  test.beforeAll(async () => {
+    await clearPodsjetnici()
   })
 
   test("bez secret-a → 401", async ({ request }) => {
@@ -59,22 +57,26 @@ test.describe("Faza 6 — Cron endpoint", () => {
 })
 
 test.describe("Faza 6 — Postavke UI", () => {
-  test("uređivanje pragova se perzistira", async ({ page }) => {
+  test("dodavanje/uklanjanje praga se perzistira", async ({ page }) => {
     await page.goto("/postavke")
     await expect(page.getByTestId("reminder-form")).toBeVisible()
-    await page.getByTestId("reminder-dana-prije").fill("45, 7")
+    // Dodaj custom prag 45 (nije u presetima → ide kroz custom unos)
+    await page.getByTestId("reminder-custom-input").fill("45")
+    await page.getByTestId("reminder-custom-add").click()
+    await expect(page.getByTestId("reminder-chip-45")).toBeVisible()
     await page.getByTestId("reminder-submit").click()
     // Čekaj da se pending dugme vrati na "Spremi" (server action završio).
     await expect(page.getByTestId("reminder-submit")).toHaveText("Spremi")
-    // Reload stranice — server se ponovo učitava iz DB → potvrdi perzistenciju.
+    // Reload — server se ponovo učitava iz DB → potvrdi perzistenciju.
     await page.reload()
-    await expect(page.getByTestId("reminder-dana-prije")).toHaveValue(/45/)
-    // vrati default
-    await page.getByTestId("reminder-dana-prije").fill("30, 14, 7, 1")
+    await expect(page.getByTestId("reminder-chip-45")).toBeVisible()
+    // Ukloni 45 (cleanup) i potvrdi da nestaje i ostaje uklonjen
+    await page.getByTestId("reminder-chip-remove-45").click()
+    await expect(page.getByTestId("reminder-chip-45")).toHaveCount(0)
     await page.getByTestId("reminder-submit").click()
     await expect(page.getByTestId("reminder-submit")).toHaveText("Spremi")
     await page.reload()
-    await expect(page.getByTestId("reminder-dana-prije")).toHaveValue(/30/)
+    await expect(page.getByTestId("reminder-chip-45")).toHaveCount(0)
   })
 
   test("bez console grešaka na /postavke", async ({ page }) => {

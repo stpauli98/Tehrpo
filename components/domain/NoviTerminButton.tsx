@@ -71,6 +71,11 @@ export function NoviTerminButton({
       setVrstaId("")
       setLokacijaId("")
       void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
+      // Novi termin pripada i matrica/kalendar prikazima (rok_dospijeca); ti su keševi
+      // perzistentni preko view-switch-a (staleTime 60s), pa ih eksplicitno invalidiraj
+      // da se novi termin vidi pri povratku na te prikaze (mirror TerminSheet handlera).
+      void queryClient.invalidateQueries({ queryKey: ["termini-matrica"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
       router.refresh()
     }
   }, [state, pending, router, queryClient])

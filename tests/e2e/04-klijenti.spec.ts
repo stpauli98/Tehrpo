@@ -10,7 +10,7 @@ async function kreirajKlijent(page: import("@playwright/test").Page, naziv: stri
 }
 
 async function otvoriKlijent(page: import("@playwright/test").Page, naziv: string) {
-  await page.goto("/klijenti?q=" + encodeURIComponent(naziv))
+  await page.goto("/klijenti?q=" + encodeURIComponent(naziv), { waitUntil: "domcontentloaded" })
   await page.getByTestId("klijent-card").filter({ hasText: naziv }).first().click()
   await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
 }

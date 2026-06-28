@@ -23,10 +23,8 @@ export default async function ObilasciPage({
   const { od, do: doIso } = periodRange(period, godina, mjesec, kvartal)
 
   const supabase = await createServerSupabaseClient()
-  const { data: lokGrad } = await supabase.from("lokacije").select("grad")
-  const gradovi = Array.from(
-    new Set((lokGrad ?? []).map((l) => l.grad).filter((g): g is string => !!g && g.trim() !== ""))
-  ).sort((a, b) => a.localeCompare(b))
+
+  const lokGradPromise = supabase.from("lokacije").select("grad")
 
   let q = supabase
     .from("termini_view")
@@ -37,11 +35,16 @@ export default async function ObilasciPage({
   else if (status !== "svi") q = q.eq("status_izvedeni", status)
   if (grad === "__bez__") q = q.is("lokacija_grad", null)
   else if (grad && grad !== "svi") q = q.eq("lokacija_grad", grad)
-  const { data } = await q
-    .order("lokacija_grad", { ascending: true })
-    .order("rok_dospijeca", { ascending: true })
 
-  const grupe = groupByGrad((data ?? []) as ObilazakItem[])
+  const [lokGradRes, terminiRes] = await Promise.all([
+    lokGradPromise,
+    q.order("lokacija_grad", { ascending: true }).order("rok_dospijeca", { ascending: true }),
+  ])
+
+  const gradovi = Array.from(
+    new Set((lokGradRes.data ?? []).map((l) => l.grad).filter((g): g is string => !!g && g.trim() !== ""))
+  ).sort((a, b) => a.localeCompare(b))
+  const grupe = groupByGrad((terminiRes.data ?? []) as ObilazakItem[])
 
   return (
     <div className="space-y-6">

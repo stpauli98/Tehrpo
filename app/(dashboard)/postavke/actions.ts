@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { revalidateVrste } from "@/lib/cache"
 
 export type ActionResult =
   | { ok: true; danaPrije?: number[] }
@@ -83,6 +84,7 @@ export async function updateIntervali(
   )
   const errored = results.find((r) => r.error)
   if (errored?.error) return { ok: false, message: errored.error.message }
+  revalidateVrste()
   revalidatePath("/postavke")
   return { ok: true }
 }
@@ -132,6 +134,7 @@ export async function createVrsta(
       : error.message
     return { ok: false, message: msg }
   }
+  revalidateVrste()
   revalidatePath("/postavke")
   return { ok: true }
 }
@@ -251,6 +254,7 @@ export async function updateVrsta(_prev: ActionResult, formData: FormData): Prom
     const msg = /duplicate|unique/i.test(error.message) ? "Vrsta sa tim nazivom već postoji." : error.message
     return { ok: false, message: msg }
   }
+  revalidateVrste()
   revalidatePath("/postavke")
   return { ok: true }
 }
@@ -260,6 +264,7 @@ export async function postaviVrstaAktivna(vrstaId: string, aktivna: boolean): Pr
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("vrste_provjera").update({ aktivna }).eq("id", vrstaId)
   if (error) return { ok: false, message: error.message }
+  revalidateVrste()
   revalidatePath("/postavke")
   return { ok: true }
 }

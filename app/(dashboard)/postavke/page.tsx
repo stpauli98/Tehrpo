@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { getCachedVrste } from "@/lib/cache"
 import { ReminderForm } from "@/components/domain/ReminderForm"
 import { IntervaliForm } from "@/components/domain/IntervaliForm"
 import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
@@ -10,16 +11,12 @@ export default async function PostavkePage() {
   const korisnik = await getTrenutniKorisnik()
   const jeAdminKor = korisnik?.uloga === "admin"
   const supabase = await createServerSupabaseClient()
-  const [postRes, vrsteRes] = await Promise.all([
+  const [postRes, vrsteData] = await Promise.all([
     supabase.from("postavke").select("dana_prije").eq("id", 1).maybeSingle(),
-    supabase
-      .from("vrste_provjera")
-      .select("id, naziv, podrazumevani_interval_mjeseci, zakonski_osnov, aktivna, vodi_dokumentaciju")
-      .order("aktivna", { ascending: false })
-      .order("naziv"),
+    getCachedVrste(),
   ])
   const danaPrije = postRes.data?.dana_prije ?? [30, 14, 7, 1]
-  const vrsteSve = (vrsteRes.data ?? []).map((v) => ({
+  const vrsteSve = (vrsteData ?? []).map((v) => ({
     id: v.id,
     naziv: v.naziv,
     interval: v.podrazumevani_interval_mjeseci,

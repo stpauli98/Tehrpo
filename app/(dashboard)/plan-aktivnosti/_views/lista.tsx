@@ -113,28 +113,31 @@ export async function ListaView({
     selectedTermin = (data as TerminRow | null) ?? null
   }
 
-  // Istorija — prethodni izvršeni ciklusi istog klijenta + vrste (samo kad je sheet otvoren)
-  let istorija: TerminRow[] = []
-  if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
-    const { data } = await supabase
-      .from("termini_view")
-      .select("*")
-      .eq("klijent_id", selectedTermin.klijent_id)
-      .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
-      .eq("status", "izvrseno")
-      .neq("id", selectedTermin.id ?? "")
-      .order("datum_izvrsenja", { ascending: false })
-      .limit(5)
-    istorija = (data ?? []) as TerminRow[]
-  }
-
-  const dokumenti = selectedTermin?.id
-    ? ((await supabase
-        .from("dokumenti")
-        .select("*")
-        .eq("termin_id", selectedTermin.id)
-        .order("uploaded_at", { ascending: false })).data ?? [])
-    : []
+  // Istorija + dokumenti — prethodni izvršeni ciklusi i dokumenti za selektovani termin (paralelno)
+  const [istorija, dokumenti] = selectedTermin
+    ? await Promise.all([
+        selectedTermin.klijent_id && selectedTermin.vrsta_provjere_id
+          ? supabase
+              .from("termini_view")
+              .select("*")
+              .eq("klijent_id", selectedTermin.klijent_id)
+              .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
+              .eq("status", "izvrseno")
+              .neq("id", selectedTermin.id ?? "")
+              .order("datum_izvrsenja", { ascending: false })
+              .limit(5)
+              .then((r) => (r.data ?? []) as TerminRow[])
+          : Promise.resolve([] as TerminRow[]),
+        selectedTermin.id
+          ? supabase
+              .from("dokumenti")
+              .select("*")
+              .eq("termin_id", selectedTermin.id)
+              .order("uploaded_at", { ascending: false })
+              .then((r) => r.data ?? [])
+          : Promise.resolve([]),
+      ])
+    : [[] as TerminRow[], []]
 
   // closeHref = trenutni URL bez "selected"
   const closeParams = new URLSearchParams(currentSearch)

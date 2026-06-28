@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Sparkles, Trash2, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,6 +26,7 @@ export function DokumentiSekcija({
   izvrsen: boolean
 }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)
   const [genState, genAction, genPending] = useActionState(generateZapisnikAction, initial)
   const [delState, delAction, delPending] = useActionState(deleteDokumentAction, initial)
@@ -44,9 +46,13 @@ export function DokumentiSekcija({
     prev.current = { u: uploadState, g: genState, d: delState }
     if (uspjeh) {
       if (uChanged && uploadState.ok && fileRef.current) fileRef.current.value = ""
+      // router.refresh() osvježava server caches/zapisnici (revalidatePath), ali NE refetch-uje
+      // TanStack ["termin-detail", id] query koji sada hrani `dokumenti` prop u sheet-u — pa
+      // eksplicitno invalidiraj taj keš da nova/generisana/obrisana stavka odmah bude vidljiva.
+      void queryClient.invalidateQueries({ queryKey: ["termin-detail", terminId] })
       router.refresh()
     }
-  }, [uploadState, genState, delState, router])
+  }, [uploadState, genState, delState, router, queryClient, terminId])
 
   const greska =
     (uploadState.ok === false && uploadState.message) ||

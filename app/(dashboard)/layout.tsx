@@ -3,6 +3,7 @@ import { TopBar } from "@/components/shell/TopBar"
 import { DesktopOnlyGate } from "@/components/shell/DesktopOnlyGate"
 import { Toaster } from "@/components/ui/sonner"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { DashboardQueryProvider } from "@/providers/dashboard-query-provider"
 
 export default async function DashboardLayout({
   children,
@@ -11,7 +12,7 @@ export default async function DashboardLayout({
 }) {
   const korisnik = await getTrenutniKorisnik()
   return (
-    <>
+    <DashboardQueryProvider>
       <DesktopOnlyGate />
       <div className="hidden lg:flex flex-col h-screen">
         <TopBar korisnik={korisnik} />
@@ -21,6 +22,6 @@ export default async function DashboardLayout({
         </div>
       </div>
       <Toaster />
-    </>
+    </DashboardQueryProvider>
   )
 }

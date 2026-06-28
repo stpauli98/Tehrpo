@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
   Sheet,
@@ -38,36 +39,49 @@ export function TerminSheet({
   closeHref: string
 }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
   const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)
   const [izvrDatum, setIzvrDatum] = useState(todayIso())
   const [otkazArmed, setOtkazArmed] = useState(false)
 
-  // Toast potvrda kad akcija prijeđe iz pending u uspjeh (greška ostaje inline)
+  // Toast potvrda + TanStack Query invalidacija kad akcija prijeđe iz pending u uspjeh
   const prevUpdPending = useRef(updatePending)
   useEffect(() => {
     if (prevUpdPending.current && !updatePending && updateState.ok) {
       toast.success("Izmjene sačuvane")
+      if (termin.id) {
+        void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
+      }
+      void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
     }
     prevUpdPending.current = updatePending
-  }, [updatePending, updateState])
+  }, [updatePending, updateState, queryClient, termin.id])
 
   const prevMarkPending = useRef(markPending)
   useEffect(() => {
     if (prevMarkPending.current && !markPending && markState.ok) {
       toast.success("Termin označen izvršenim")
+      if (termin.id) {
+        void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
+      }
+      void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
     }
     prevMarkPending.current = markPending
-  }, [markPending, markState])
+  }, [markPending, markState, queryClient, termin.id])
 
   const prevOtkazPending = useRef(otkazPending)
   useEffect(() => {
     if (prevOtkazPending.current && !otkazPending && otkazState.ok) {
       toast.success("Termin otkazan")
+      if (termin.id) {
+        void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
+      }
+      void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
     }
     prevOtkazPending.current = otkazPending
-  }, [otkazPending, otkazState])
+  }, [otkazPending, otkazState, queryClient, termin.id])
 
   function close() {
     router.push(closeHref)

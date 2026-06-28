@@ -1,28 +1,53 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
+import { Skeleton } from "@/components/ui/skeleton"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
 import { MatrixGrid } from "@/components/domain/MatrixGrid"
 import { MatrixLegenda } from "@/components/domain/MatrixLegenda"
 import type { MatrixColumn } from "@/lib/matrix"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { currentYear, todayIso, MONTHS_BS, monthRange } from "@/lib/date"
+import { currentYear, todayIso, MONTHS_BS } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
+import { getTerminiMatrica, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import type { Database } from "@/db/types"
 
-export async function MatricaView({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>
-}) {
-  const sp = searchParams
-  const godina = Number(typeof sp.godina === "string" ? sp.godina : "") || currentYear()
-  const klijentId = typeof sp.klijent === "string" ? sp.klijent : ""
-  const mode = typeof sp.mode === "string" ? sp.mode : "klijent"
-  const mjesec = Number(typeof sp.mjesec === "string" ? sp.mjesec : "") || (Number(todayIso().slice(5, 7)))
+export function MatricaView() {
+  const searchParams = useSearchParams()
 
-  const supabase = await createServerSupabaseClient()
-  const { data: klijentiData } = await supabase.from("klijenti").select("id, naziv").order("naziv")
-  const klijenti = (klijentiData ?? []).map((k) => ({ id: k.id, naziv: k.naziv }))
+  const today = todayIso()
+  const godina = Number(searchParams.get("godina")) || currentYear()
+  const klijentId = searchParams.get("klijent") ?? ""
+  const mode = searchParams.get("mode") ?? "klijent"
+  const mjesec = Math.min(
+    12,
+    Math.max(1, Number(searchParams.get("mjesec")) || Number(today.slice(5, 7))),
+  )
+  const selectedId = searchParams.get("selected")
+
+  const filters = { mode, klijent: klijentId, godina, mjesec }
+
+  const { data, isPending } = useQuery({
+    queryKey: ["termini-matrica", filters],
+    queryFn: () => getTerminiMatrica(filters),
+    staleTime: 60_000,
+  })
+
+  const { data: detailData } = useQuery({
+    queryKey: ["termin-detail", selectedId],
+    queryFn: () => getTerminDetail(selectedId!),
+    enabled: !!selectedId,
+    staleTime: 60_000,
+  })
+
+  const klijenti = ((data?.klijenti ?? []) as { id: string; naziv: string }[]).map((k) => ({
+    id: k.id,
+    naziv: k.naziv,
+  }))
+  const termini = (data?.termini ?? []) as TerminRow[]
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   let matrixRows: MatrixRow[] = []
@@ -30,13 +55,6 @@ export async function MatricaView({
   let emptyMessage = "Izaberite klijenta za prikaz godišnje matrice."
 
   if (mode === "mjesec") {
-    const { from: od, to: doIso } = monthRange(godina, mjesec)
-    const { data } = await supabase
-      .from("termini_view")
-      .select("id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, status_izvedeni")
-      .gte("rok_dospijeca", od)
-      .lte("rok_dospijeca", doIso)
-    const termini = (data ?? []) as TerminRow[]
     const inputs: MatrixInput[] = termini
       .filter((t) => t.id && t.vrsta_provjere_id && t.klijent_id && t.rok_dospijeca)
       .map((t) => ({
@@ -51,14 +69,6 @@ export async function MatricaView({
     kolone = klijenti.map((k) => ({ id: k.id, label: k.naziv }))
     emptyMessage = "Nema termina za izabrani mjesec."
   } else if (klijentId) {
-    const { data } = await supabase
-      .from("termini_view")
-      .select("id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, status_izvedeni")
-      .eq("klijent_id", klijentId)
-      .gte("rok_dospijeca", `${godina}-01-01`)
-      .lte("rok_dospijeca", `${godina}-12-31`)
-      .order("vrsta_naziv")
-    const termini = (data ?? []) as TerminRow[]
     const inputs: MatrixInput[] = termini
       .filter((t) => t.id && t.vrsta_provjere_id && t.rok_dospijeca)
       .map((t) => ({
@@ -70,8 +80,7 @@ export async function MatricaView({
         status: toDerivedStatus(t.status_izvedeni),
       }))
     matrixRows = buildMatrix(inputs)
-    // Kolone matrice: 12 mjeseci
-    const currentMonthNum = Number(todayIso().slice(5, 7))
+    const currentMonthNum = Number(today.slice(5, 7))
     const currentYearNum = currentYear()
     kolone = MONTHS_BS.map((label, i) => ({
       id: String(i + 1),
@@ -87,45 +96,13 @@ export async function MatricaView({
       ? `/plan-aktivnosti?view=lista&klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`
       : `/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`
 
-  // currentSearch string (čuva sve trenutne parametre za link bazu)
-  const currentSearch = new URLSearchParams(
-    Object.entries(sp).flatMap(([k, v]) =>
-      typeof v === "string" ? [[k, v] as [string, string]] : []
-    )
-  ).toString()
+  const currentSearch = searchParams.toString()
 
-  // TerminSheet — otvara se kad ?selected=<id>
-  const selectedId = typeof sp.selected === "string" ? sp.selected : null
-  let selectedTermin: TerminRow | null = null
-  let istorija: TerminRow[] = []
-  if (selectedId) {
-    const { data } = await supabase
-      .from("termini_view")
-      .select("*")
-      .eq("id", selectedId)
-      .maybeSingle()
-    selectedTermin = (data as TerminRow | null) ?? null
-    if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
-      const { data: h } = await supabase
-        .from("termini_view")
-        .select("*")
-        .eq("klijent_id", selectedTermin.klijent_id)
-        .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
-        .eq("status", "izvrseno")
-        .neq("id", selectedTermin.id ?? "")
-        .order("datum_izvrsenja", { ascending: false })
-        .limit(5)
-      istorija = (h ?? []) as TerminRow[]
-    }
-  }
-
-  const dokumenti = selectedTermin?.id
-    ? ((await supabase
-        .from("dokumenti")
-        .select("*")
-        .eq("termin_id", selectedTermin.id)
-        .order("uploaded_at", { ascending: false })).data ?? [])
-    : []
+  const selectedTermin = selectedId
+    ? ((detailData?.termin ?? null) as TerminRow | null)
+    : null
+  const istorija = (detailData?.istorija ?? []) as TerminRow[]
+  const dokumenti = (detailData?.dokumenti ?? []) as Database["public"]["Tables"]["dokumenti"]["Row"][]
 
   // closeHref = trenutni URL bez "selected", čuva klijent/godina
   const closeParams = new URLSearchParams(currentSearch)
@@ -133,6 +110,19 @@ export async function MatricaView({
   const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
 
   const showMatrix = mode === "mjesec" || (mode === "klijent" && !!klijentId)
+
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full" />
+        <div className="space-y-2">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -160,7 +150,12 @@ export async function MatricaView({
       )}
 
       {selectedTermin && (
-        <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
+        <TerminSheet
+          termin={selectedTermin}
+          istorija={istorija}
+          dokumenti={dokumenti}
+          closeHref={closeHref}
+        />
       )}
     </div>
   )

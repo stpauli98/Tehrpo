@@ -1,47 +1,54 @@
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { Skeleton } from "@/components/ui/skeleton"
 import { MonthCalendar, type DayTermin } from "@/components/domain/MonthCalendar"
 import { PlanNav } from "@/components/domain/PlanNav"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { buildMonthGrid } from "@/lib/calendar"
-import { monthRange, todayIso, currentYear, formatDatum } from "@/lib/date"
+import { todayIso, currentYear, formatDatum } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { PlanLegenda } from "@/components/domain/PlanLegenda"
 import type { TerminRow } from "@/components/domain/TerminiTable"
+import { getTerminiKalendar, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import type { Database } from "@/db/types"
 
-export async function KalendarView({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>
-}) {
-  const sp = searchParams
+export function KalendarView() {
+  const searchParams = useSearchParams()
+
   const today = todayIso()
-
   const godina =
-    Number(typeof sp.godina === "string" ? sp.godina : "") ||
-    Number(today.slice(0, 4))
+    Number(searchParams.get("godina")) || Number(today.slice(0, 4))
   const mjesecRaw =
-    Number(typeof sp.mjesec === "string" ? sp.mjesec : "") ||
-    Number(today.slice(5, 7))
+    Number(searchParams.get("mjesec")) || Number(today.slice(5, 7))
   const mjesec = Math.min(12, Math.max(1, mjesecRaw))
+  const selectedId = searchParams.get("selected")
+  const selectedDan = searchParams.get("dan")
 
   const danas = {
     godina: Number(today.slice(0, 4)),
     mjesec: Number(today.slice(5, 7)),
   }
 
-  const supabase = await createServerSupabaseClient()
-  const { from, to } = monthRange(godina, mjesec)
+  const { data, isPending } = useQuery({
+    queryKey: ["termini-kalendar", godina, mjesec],
+    queryFn: () => getTerminiKalendar(godina, mjesec),
+    staleTime: 60_000,
+  })
 
-  const { data } = await supabase
-    .from("termini_view")
-    .select("*")
-    .gte("rok_dospijeca", from)
-    .lte("rok_dospijeca", to)
-    .order("rok_dospijeca")
+  const { data: detailData } = useQuery({
+    queryKey: ["termin-detail", selectedId],
+    queryFn: () => getTerminDetail(selectedId!),
+    enabled: !!selectedId,
+    staleTime: 60_000,
+  })
 
-  const termini = (data ?? []) as TerminRow[]
+  const termini = (data?.termini ?? []) as TerminRow[]
+  const grid = buildMonthGrid(godina, mjesec)
+  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   const terminiByDan = new Map<string, DayTermin[]>()
   for (const t of termini) {
@@ -57,57 +64,19 @@ export async function KalendarView({
     terminiByDan.set(dan, arr)
   }
 
-  const grid = buildMonthGrid(godina, mjesec)
-  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
-
-  const currentSearch = new URLSearchParams(
-    Object.entries(sp).flatMap(([k, v]) =>
-      typeof v === "string" ? ([[k, v]] as [string, string][]) : [],
-    ),
-  ).toString()
+  const currentSearch = searchParams.toString()
 
   // ?dan sidebar
-  const selectedDan = typeof sp.dan === "string" ? sp.dan : null
   const danTermini = selectedDan
     ? termini.filter((t) => (t.rok_dospijeca ?? "").slice(0, 10) === selectedDan)
     : []
 
   // ?selected TerminSheet
-  const selectedId = typeof sp.selected === "string" ? sp.selected : null
-  let selectedTermin: TerminRow | null = selectedId
-    ? (termini.find((t) => t.id === selectedId) ?? null)
+  const selectedTermin = selectedId
+    ? ((detailData?.termin ?? null) as TerminRow | null)
     : null
-  let istorija: TerminRow[] = []
-
-  if (selectedId && !selectedTermin) {
-    const { data: one } = await supabase
-      .from("termini_view")
-      .select("*")
-      .eq("id", selectedId)
-      .maybeSingle()
-    selectedTermin = (one as TerminRow | null) ?? null
-  }
-
-  if (selectedTermin?.klijent_id && selectedTermin?.vrsta_provjere_id) {
-    const { data: h } = await supabase
-      .from("termini_view")
-      .select("*")
-      .eq("klijent_id", selectedTermin.klijent_id)
-      .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
-      .eq("status", "izvrseno")
-      .neq("id", selectedTermin.id ?? "")
-      .order("datum_izvrsenja", { ascending: false })
-      .limit(5)
-    istorija = (h ?? []) as TerminRow[]
-  }
-
-  const dokumenti = selectedTermin?.id
-    ? ((await supabase
-        .from("dokumenti")
-        .select("*")
-        .eq("termin_id", selectedTermin.id)
-        .order("uploaded_at", { ascending: false })).data ?? [])
-    : []
+  const istorija = (detailData?.istorija ?? []) as TerminRow[]
+  const dokumenti = (detailData?.dokumenti ?? []) as Database["public"]["Tables"]["dokumenti"]["Row"][]
 
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
@@ -117,6 +86,21 @@ export async function KalendarView({
     const p = new URLSearchParams(currentSearch)
     p.set("selected", id)
     return `/plan-aktivnosti?${p.toString()}`
+  }
+
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-end gap-4">
+          <Skeleton className="h-10 w-80" />
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 42 }, (_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -150,7 +134,9 @@ export async function KalendarView({
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-slate-800 truncate">
                         {t.klijent_naziv ?? "—"}
-                        {t.lokacija_naziv ? <span className="text-slate-400"> · {t.lokacija_naziv}</span> : null}
+                        {t.lokacija_naziv ? (
+                          <span className="text-slate-400"> · {t.lokacija_naziv}</span>
+                        ) : null}
                       </span>
                       <StatusBadge status={t.status_izvedeni} />
                     </div>
@@ -173,7 +159,12 @@ export async function KalendarView({
       </div>
       <PlanLegenda />
       {selectedTermin && (
-        <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
+        <TerminSheet
+          termin={selectedTermin}
+          istorija={istorija}
+          dokumenti={dokumenti}
+          closeHref={closeHref}
+        />
       )}
     </div>
   )

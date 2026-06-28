@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import {
   Sheet,
@@ -36,6 +37,7 @@ export function NoviTerminButton({
   lokacijeByFirma: Record<string, Opt[]>
 }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [klijentId, setKlijentId] = useState("")
   const [vrstaId, setVrstaId] = useState("")
@@ -52,16 +54,26 @@ export function NoviTerminButton({
 
   // Zatvori sheet TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).
+  // Optimistički uvećaj stats.ukupno u svim cached lista upitima, pa pokreni
+  // background refetch da se potvrdi stvarna vrijednost iz baze.
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
       submitted.current = false
+      // Optimistic update — sync, tako da Playwright vidi novu vrijednost odmah
+      queryClient.setQueriesData({ queryKey: ["termini-lista"] }, (old: unknown) => {
+        if (!old || typeof old !== "object" || !("stats" in old)) return old
+        const data = old as { stats: { ukupno: number } | null }
+        if (!data.stats) return old
+        return { ...data, stats: { ...data.stats, ukupno: data.stats.ukupno + 1 } }
+      })
       setOpen(false)
       setKlijentId("")
       setVrstaId("")
       setLokacijaId("")
+      void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
       router.refresh()
     }
-  }, [state, pending, router])
+  }, [state, pending, router, queryClient])
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

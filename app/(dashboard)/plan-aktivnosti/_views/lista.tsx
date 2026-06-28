@@ -1,145 +1,92 @@
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
 import { ClipboardList, AlertTriangle, CheckCircle2, Bell } from "lucide-react"
 import Link from "next/link"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { StatCard } from "@/components/domain/StatCard"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import { NoviTerminButton } from "@/components/domain/NoviTerminButton"
 import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { monthRange, currentYear, todayIso } from "@/lib/date"
+import { currentYear, todayIso } from "@/lib/date"
+import { getTerminiLista, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import type { Database } from "@/db/types"
 
 const PER_PAGE = 50
 
-export async function ListaView({
-  searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>
-}) {
-  const sp = searchParams
-  const pageNum = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1)
-  const from = (pageNum - 1) * PER_PAGE
-  const to = from + PER_PAGE - 1
+export function ListaView() {
+  const searchParams = useSearchParams()
 
-  const statusFilter = typeof sp.status === "string" ? sp.status : "svi"
-  const qFilter = typeof sp.q === "string" ? sp.q.trim() : ""
-  const klijentFilter = typeof sp.klijent_id === "string" ? sp.klijent_id : ""
-  const lokacijaFilter = typeof sp.lokacija === "string" ? sp.lokacija : ""
-  const vrstaFilter = typeof sp.vrsta_id === "string" ? sp.vrsta_id : ""
-  const mjesecFilter = typeof sp.mjesec === "string" ? sp.mjesec : ""
-  // Godina za mjesečni filter (default tekuća); primjenjuje se samo uz odabran mjesec
-  const godinaFilter = (typeof sp.godina === "string" ? Number(sp.godina) : 0) || currentYear()
-  // Trenutni mjesec u formatu filtera ("1".."12", bez vodeće nule) — za KPI "Ovog mjeseca"
+  const pageNum = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
+  const statusFilter = searchParams.get("status") ?? "svi"
+  const qFilter = (searchParams.get("q") ?? "").trim()
+  const klijentFilter = searchParams.get("klijent_id") ?? ""
+  const lokacijaFilter = searchParams.get("lokacija") ?? ""
+  const vrstaFilter = searchParams.get("vrsta_id") ?? ""
+  const mjesecFilter = searchParams.get("mjesec") ?? ""
+  const godinaFilter = Number(searchParams.get("godina")) || currentYear()
+  const selectedId = searchParams.get("selected")
+
   const ovajMjesec = String(Number(todayIso().slice(5, 7)))
 
-  const supabase = await createServerSupabaseClient()
-
-  // Build list query sa filterima
-  let listQuery = supabase
-    .from("termini_view")
-    .select("*", { count: "exact" })
-    .order("rok_dospijeca", { ascending: true })
-
-  if (statusFilter && statusFilter !== "svi") {
-    listQuery = listQuery.eq("status_izvedeni", statusFilter)
+  const filters = {
+    page: pageNum,
+    status: statusFilter,
+    q: qFilter,
+    klijent_id: klijentFilter,
+    lokacija: lokacijaFilter,
+    vrsta_id: vrstaFilter,
+    mjesec: mjesecFilter,
+    godina: godinaFilter,
   }
-  if (qFilter) {
-    // Pretraga po klijentu ILI lokaciji — escape PostgREST or() meta-znakove
-    const safe = qFilter.replace(/[(),]/g, " ")
-    listQuery = listQuery.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
-  }
-  if (klijentFilter) {
-    listQuery = listQuery.eq("klijent_id", klijentFilter)
-  }
-  if (lokacijaFilter) {
-    listQuery = listQuery.eq("lokacija_id", lokacijaFilter)
-  }
-  if (vrstaFilter) {
-    listQuery = listQuery.eq("vrsta_provjere_id", vrstaFilter)
-  }
-  if (mjesecFilter) {
-    const mn = Number(mjesecFilter)
-    if (mn >= 1 && mn <= 12) {
-      // mjesec se odnosi na rok_dospijeca u odabranoj godini (default tekuća)
-      const { from: mFrom, to: mTo } = monthRange(godinaFilter, mn)
-      listQuery = listQuery.gte("rok_dospijeca", mFrom).lte("rok_dospijeca", mTo)
-    }
-  }
-  listQuery = listQuery.range(from, to)
 
-  // Paralelno: stats RPC + filtirana lista + klijenti(firme) + vrste + lokacije (dropdown opcije)
-  const [{ data: statsRows }, listRes, klijentiRes, vrsteRes, lokacijeRes] = await Promise.all([
-    supabase.rpc("get_termini_stats"),
-    listQuery,
-    supabase.from("klijenti").select("id, naziv").order("naziv"),
-    supabase.from("vrste_provjera").select("id, naziv").eq("aktivna", true).order("naziv"),
-    supabase.from("lokacije").select("id, naziv, klijent_id").order("naziv"),
-  ])
+  const { data, isPending } = useQuery({
+    queryKey: ["termini-lista", filters],
+    queryFn: () => getTerminiLista(filters),
+    staleTime: 60_000,
+  })
 
-  const stats = statsRows?.[0] ?? { ukupno: 0, ovog_mjeseca: 0, kasni: 0, izvrseno_ovog_mjeseca: 0 }
-  const rows = (listRes.data ?? []) as TerminRow[]
-  const total = listRes.count ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
+  const { data: detailData } = useQuery({
+    queryKey: ["termin-detail", selectedId],
+    queryFn: () => getTerminDetail(selectedId!),
+    enabled: !!selectedId,
+    staleTime: 60_000,
+  })
 
-  const klijenti = (klijentiRes.data ?? []).map((k) => ({ id: k.id, naziv: k.naziv }))
-  const vrste = (vrsteRes.data ?? []).map((v) => ({ id: v.id, naziv: v.naziv }))
+  const rows = (data?.rows ?? []) as TerminRow[]
+  const total = data?.total ?? 0
+  const stats = data?.stats ?? {
+    ukupno: 0,
+    ovog_mjeseca: 0,
+    kasni: 0,
+    izvrseno_ovog_mjeseca: 0,
+  }
+  const klijenti = (data?.klijenti ?? []) as { id: string; naziv: string }[]
+  const vrste = (data?.vrste ?? []) as { id: string; naziv: string }[]
+  const lokacije = (data?.lokacije ?? []) as {
+    id: string
+    naziv: string
+    klijent_id: string
+  }[]
 
-  // Lokacije grupisane po firmi (za lokacija picker + filter)
   const lokacijeByFirma: Record<string, { id: string; naziv: string }[]> = {}
-  for (const l of lokacijeRes.data ?? []) {
+  for (const l of lokacije) {
     ;(lokacijeByFirma[l.klijent_id] ??= []).push({ id: l.id, naziv: l.naziv })
   }
 
-  // currentSearch string (preserves all current params for detail link base)
-  const currentSearch = new URLSearchParams(
-    Object.entries(sp).flatMap(([k, v]) =>
-      typeof v === "string" ? [[k, v] as [string, string]] : []
-    )
-  ).toString()
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
+  const currentSearch = searchParams.toString()
 
-  // TerminSheet — otvara se kad ?selected=<id>
-  const selectedId = typeof sp.selected === "string" ? sp.selected : null
-  let selectedTermin: TerminRow | null =
-    selectedId ? rows.find((r) => r.id === selectedId) ?? null : null
+  const selectedTermin = selectedId
+    ? ((detailData?.termin ?? null) as TerminRow | null)
+    : null
+  const istorija = (detailData?.istorija ?? []) as TerminRow[]
+  const dokumenti = (detailData?.dokumenti ?? []) as Database["public"]["Tables"]["dokumenti"]["Row"][]
 
-  // Fallback fetch ako selected nije na trenutnoj stranici/filteru
-  if (selectedId && !selectedTermin) {
-    const { data } = await supabase
-      .from("termini_view")
-      .select("*")
-      .eq("id", selectedId)
-      .maybeSingle()
-    selectedTermin = (data as TerminRow | null) ?? null
-  }
-
-  // Istorija + dokumenti — prethodni izvršeni ciklusi i dokumenti za selektovani termin (paralelno)
-  const [istorija, dokumenti] = selectedTermin
-    ? await Promise.all([
-        selectedTermin.klijent_id && selectedTermin.vrsta_provjere_id
-          ? supabase
-              .from("termini_view")
-              .select("*")
-              .eq("klijent_id", selectedTermin.klijent_id)
-              .eq("vrsta_provjere_id", selectedTermin.vrsta_provjere_id)
-              .eq("status", "izvrseno")
-              .neq("id", selectedTermin.id ?? "")
-              .order("datum_izvrsenja", { ascending: false })
-              .limit(5)
-              .then((r) => (r.data ?? []) as TerminRow[])
-          : Promise.resolve([] as TerminRow[]),
-        selectedTermin.id
-          ? supabase
-              .from("dokumenti")
-              .select("*")
-              .eq("termin_id", selectedTermin.id)
-              .order("uploaded_at", { ascending: false })
-              .then((r) => r.data ?? [])
-          : Promise.resolve([]),
-      ])
-    : [[] as TerminRow[], []]
-
-  // closeHref = trenutni URL bez "selected"
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
   const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
@@ -150,6 +97,26 @@ export async function ListaView({
     return `/plan-aktivnosti?${params.toString()}`
   }
 
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-end">
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="space-y-2">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end">
@@ -158,23 +125,52 @@ export async function ListaView({
 
       {/* Klikabilne KPI kartice → postave brzi filter na listu (aktivna je uokvirena) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" data-testid="termini-stats">
-        {/* aria-label prevents the link from matching generic "Termini" role selectors
-            that are intended for the sidebar navigation item. */}
         <Link href="/plan-aktivnosti?view=lista" className="block" aria-label="Ukupno termina">
-          <StatCard testId="stat-ukupno" label="Ukupno termina" value={stats.ukupno} sub="svi termini" icon={ClipboardList} interactive
-            active={statusFilter === "svi" && mjesecFilter === ""} />
+          <StatCard
+            testId="stat-ukupno"
+            label="Ukupno termina"
+            value={stats.ukupno}
+            sub="svi termini"
+            icon={ClipboardList}
+            interactive
+            active={statusFilter === "svi" && mjesecFilter === ""}
+          />
         </Link>
         <Link href={`/plan-aktivnosti?view=lista&mjesec=${ovajMjesec}`} className="block">
-          <StatCard testId="stat-ovog-mjeseca" label="Ovog mjeseca" value={stats.ovog_mjeseca} sub="rok dospijeća" icon={Bell} tone="warning" interactive
-            active={mjesecFilter === ovajMjesec} />
+          <StatCard
+            testId="stat-ovog-mjeseca"
+            label="Ovog mjeseca"
+            value={stats.ovog_mjeseca}
+            sub="rok dospijeća"
+            icon={Bell}
+            tone="warning"
+            interactive
+            active={mjesecFilter === ovajMjesec}
+          />
         </Link>
         <Link href="/plan-aktivnosti?view=lista&status=kasni" className="block">
-          <StatCard testId="stat-kasni" label="Kasni rokovi" value={stats.kasni} sub="zahtijevaju akciju" icon={AlertTriangle} tone="danger" interactive
-            active={statusFilter === "kasni"} />
+          <StatCard
+            testId="stat-kasni"
+            label="Kasni rokovi"
+            value={stats.kasni}
+            sub="zahtijevaju akciju"
+            icon={AlertTriangle}
+            tone="danger"
+            interactive
+            active={statusFilter === "kasni"}
+          />
         </Link>
         <Link href="/plan-aktivnosti?view=lista&status=izvrseno" className="block">
-          <StatCard testId="stat-izvrseno" label="Izvršeni ovog mjeseca" value={stats.izvrseno_ovog_mjeseca} sub="završeno" icon={CheckCircle2} tone="success" interactive
-            active={statusFilter === "izvrseno"} />
+          <StatCard
+            testId="stat-izvrseno"
+            label="Izvršeni ovog mjeseca"
+            value={stats.izvrseno_ovog_mjeseca}
+            sub="završeno"
+            icon={CheckCircle2}
+            tone="success"
+            interactive
+            active={statusFilter === "izvrseno"}
+          />
         </Link>
       </div>
 
@@ -182,25 +178,46 @@ export async function ListaView({
 
       <TerminiTable rows={rows} currentSearch={currentSearch} />
 
-      <div className="flex items-center justify-between text-sm text-slate-600" data-testid="termini-pagination">
+      <div
+        className="flex items-center justify-between text-sm text-slate-600"
+        data-testid="termini-pagination"
+      >
         <span data-testid="termini-total">Ukupno rezultata: {total}</span>
         <div className="flex items-center gap-2">
           {pageNum <= 1 ? (
-            <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>
+            <span
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "pointer-events-none opacity-50",
+              )}
+            >
               Prethodna
             </span>
           ) : (
-            <Link href={pageHref(pageNum - 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link
+              href={pageHref(pageNum - 1)}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
               Prethodna
             </Link>
           )}
-          <span data-testid="termini-page">Strana {pageNum} / {totalPages}</span>
+          <span data-testid="termini-page">
+            Strana {pageNum} / {totalPages}
+          </span>
           {pageNum >= totalPages ? (
-            <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>
+            <span
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "pointer-events-none opacity-50",
+              )}
+            >
               Sljedeća
             </span>
           ) : (
-            <Link href={pageHref(pageNum + 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link
+              href={pageHref(pageNum + 1)}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
               Sljedeća
             </Link>
           )}
@@ -208,7 +225,12 @@ export async function ListaView({
       </div>
 
       {selectedTermin && (
-        <TerminSheet termin={selectedTermin} istorija={istorija} dokumenti={dokumenti} closeHref={closeHref} />
+        <TerminSheet
+          termin={selectedTermin}
+          istorija={istorija}
+          dokumenti={dokumenti}
+          closeHref={closeHref}
+        />
       )}
     </div>
   )

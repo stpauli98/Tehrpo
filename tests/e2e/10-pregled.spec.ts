@@ -14,17 +14,17 @@ test.describe("Faza dashboard — Pregled", () => {
     await expect(page.getByTestId("hitno-kasni-list")).toBeVisible()
   })
 
-  test("klik 'Kasni rokovi' vodi na filtriran /termini", async ({ page }) => {
+  test("klik 'Kasni rokovi' vodi na filtriran /plan-aktivnosti?view=lista", async ({ page }) => {
     await page.goto("/pregled")
     await page.getByRole("link", { name: /Kasni rokovi/ }).click()
-    await page.waitForURL(/\/termini\?status=kasni/)
+    await page.waitForURL(/\/plan-aktivnosti.*status=kasni/)
   })
 
   test("klik na mjesec u chartu vodi na Prikaz 'Po mjesecu'", async ({ page }) => {
     await page.goto("/pregled")
     // Februar (mjesec=2) ima podataka u seedu
     await page.locator('[data-testid="chart-bar"][data-mjesec="2"]').click()
-    await page.waitForURL(/\/prikaz\?mode=mjesec.*mjesec=2/)
+    await page.waitForURL(/\/plan-aktivnosti.*view=matrica.*mjesec=2/)
     await expect(page.getByTestId("prikaz-mode-mjesec")).toBeVisible()
   })
 
@@ -45,7 +45,7 @@ test.describe("Faza dashboard — Pregled", () => {
   test("klik na hitno/kasni red otvara taj termin (?selected)", async ({ page }) => {
     await page.goto("/pregled")
     await page.getByTestId("hitno-kasni-row").first().click()
-    await page.waitForURL(/\/termini\?selected=[0-9a-f-]{36}/)
+    await page.waitForURL(/\/plan-aktivnosti.*selected=[0-9a-f-]{36}/)
   })
 
   test("hitno/kasni red ima relativnu oznaku (kasni/za/danas)", async ({ page }) => {
@@ -56,6 +56,6 @@ test.describe("Faza dashboard — Pregled", () => {
   test("hitno/kasni footer vodi na sve kasne", async ({ page }) => {
     await page.goto("/pregled")
     await page.getByTestId("hitno-kasni-footer").click()
-    await page.waitForURL(/\/termini\?status=kasni/)
+    await page.waitForURL(/\/plan-aktivnosti.*status=kasni/)
   })
 })

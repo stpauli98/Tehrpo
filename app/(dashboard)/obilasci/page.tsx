@@ -78,7 +78,7 @@ export default async function ObilasciPage({
               {g.items.map((t) => (
                 <Link
                   key={t.id}
-                  href={`/termini?klijent_id=${t.klijent_id}`}
+                  href={`/plan-aktivnosti?view=lista&klijent_id=${t.klijent_id}`}
                   data-testid="obilasci-card"
                   className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
                 >

@@ -4,9 +4,10 @@ test.describe.configure({ mode: "serial" })
 
 test.describe("Faza 5 — Prikaz chart i toolbar", () => {
   test("opterećenje chart se renderuje sa 12 barova", async ({ page }) => {
-    await page.goto("/prikaz")
-    await expect(page.getByRole("heading", { name: "Prikaz" })).toBeVisible()
-    await expect(page.getByTestId("opterecenje-chart")).toBeVisible()
+    // chart premješten na Pregled (Prikaz/matrica ga više nema)
+    await page.goto("/pregled")
+    await expect(page.getByRole("heading", { name: "Pregled" })).toBeVisible()
+    await expect(page.getByTestId("dashboard-chart")).toBeVisible()
     expect(await page.getByTestId("chart-bar").count()).toBe(12)
   })
 
@@ -91,8 +92,8 @@ test.describe("Faza 5 — Plan dan sidebar", () => {
 
 test.describe("Faza 5 — Mjesečni plan", () => {
   test("kalendar grid + navigacija", async ({ page }) => {
-    await page.goto("/plan")
-    await expect(page.getByRole("heading", { name: "Mjesečni plan" })).toBeVisible()
+    await page.goto("/plan-aktivnosti?view=kalendar")
+    await expect(page.getByRole("heading", { name: "Plan aktivnosti" })).toBeVisible()
     await expect(page.getByTestId("plan-grid")).toBeVisible()
     // 42 dana ćelije
     expect(await page.getByTestId("plan-day-cell").count()).toBe(42)

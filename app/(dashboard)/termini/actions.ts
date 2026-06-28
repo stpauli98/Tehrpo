@@ -62,7 +62,7 @@ export async function updateTermin(
 
   if (error) return { ok: false, message: error.message }
 
-  revalidatePath("/termini")
+  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }
 
@@ -79,7 +79,7 @@ export async function otkaziTermin(
   const { error } = await supabase
     .from("termini").update({ status: "otkazano" }).eq("id", parsed.data.id)
   if (error) return { ok: false, message: error.message }
-  revalidatePath("/termini")
+  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }
 
@@ -142,7 +142,7 @@ export async function createTermin(
 
   if (error) return { ok: false, message: error.message }
 
-  revalidatePath("/termini")
+  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }
 
@@ -170,6 +170,6 @@ export async function markIzvrseno(
 
   if (error) return { ok: false, message: error.message }
 
-  revalidatePath("/termini")
+  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }

@@ -4,8 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
-  ClipboardList,
-  Grid3x3,
   Calendar,
   Map,
   Users,
@@ -16,10 +14,8 @@ import {
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
-  { href: "/pregled",   label: "Pregled",   icon: LayoutDashboard },
-  { href: "/termini",   label: "Termini",   icon: ClipboardList },
-  { href: "/prikaz",    label: "Prikaz",    icon: Grid3x3 },
-  { href: "/plan",      label: "Plan",      icon: Calendar },
+  { href: "/pregled",        label: "Pregled",        icon: LayoutDashboard },
+  { href: "/plan-aktivnosti", label: "Plan aktivnosti", icon: Calendar },
   { href: "/obilasci",  label: "Obilasci",  icon: Map },
   { href: "/klijenti",  label: "Klijenti",  icon: Users },
   { href: "/asistent",  label: "Asistent",  icon: Bot },

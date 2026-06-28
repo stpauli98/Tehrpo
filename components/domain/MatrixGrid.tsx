@@ -96,7 +96,7 @@ export function MatrixGrid({
                   cell && cell.brojUCeliji > 1 && multiHref
                     ? multiHref(row.rowId, c.id)
                     : cell
-                    ? `/prikaz?${withParam(currentSearch, "selected", cell.terminId)}`
+                    ? `/plan-aktivnosti?${withParam(currentSearch, "selected", cell.terminId)}`
                     : ""
                 return (
                   <td

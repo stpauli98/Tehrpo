@@ -29,14 +29,14 @@ export function MonthCalendar({
     const p = new URLSearchParams(currentSearch)
     p.set("dan", date)
     p.delete("selected")
-    return `/plan?${p.toString()}`
+    return `/plan-aktivnosti?${p.toString()}`
   }
 
   const terminHref = (id: string) => {
     const p = new URLSearchParams(currentSearch)
     p.set("selected", id)
     p.delete("dan")
-    return `/plan?${p.toString()}`
+    return `/plan-aktivnosti?${p.toString()}`
   }
 
   return (

@@ -17,7 +17,7 @@ const COLS = [
 function detailHref(id: string, currentSearch: string): string {
   const params = new URLSearchParams(currentSearch)
   params.set("selected", id)
-  return `/termini?${params.toString()}`
+  return `/plan-aktivnosti?${params.toString()}`
 }
 
 export function TerminiTable({

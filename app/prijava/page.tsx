@@ -3,6 +3,7 @@ import { useActionState } from "react"
 import { prijaviSe, type ActionResult } from "./actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { APP_NAME, APP_INITIAL } from "@/lib/brand"
 
 const initial: ActionResult = { ok: true }
 
@@ -12,8 +13,8 @@ export default function PrijavaPage() {
     <div className="min-h-screen grid place-items-center bg-slate-50">
       <form action={action} className="w-80 rounded-xl border border-slate-200 bg-white p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-brand text-white text-xs font-bold grid place-items-center">T</div>
-          <span className="font-semibold">Tehpro</span>
+          <div className="w-7 h-7 rounded bg-brand text-white text-xs font-bold grid place-items-center">{APP_INITIAL}</div>
+          <span className="font-semibold">{APP_NAME}</span>
         </div>
         <h1 className="text-lg font-medium">Prijava</h1>
         <Input name="email" type="email" placeholder="Email" autoComplete="username" required />

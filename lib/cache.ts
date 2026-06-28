@@ -18,5 +18,7 @@ export const getCachedVrste = unstable_cache(
 )
 
 export function revalidateVrste() {
-  revalidateTag("vrste", "default")
+  // expire:0 → trenutna ekspiracija unstable_cache "vrste" taga (immediate hard expiry),
+  // za razliku od imenovanog profila koji nosi stale-while-revalidate semantiku.
+  revalidateTag("vrste", { expire: 0 })
 }

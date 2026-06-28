@@ -1,5 +1,6 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx"
 import type { ZapisnikInput } from "./content"
+import { APP_NAME } from "../brand"
 
 export type ZapisnikData = ZapisnikInput & { nalaz: string; zakljucak: string }
 
@@ -25,7 +26,7 @@ export async function buildZapisnikDocx(data: ZapisnikData): Promise<Buffer> {
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: "Tehpro — zaštita na radu", italics: true })],
+            children: [new TextRun({ text: `${APP_NAME} — zaštita na radu`, italics: true })],
           }),
           new Paragraph({ text: "" }),
           red("Klijent", data.klijent),

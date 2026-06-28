@@ -1,3 +1,5 @@
+import { APP_NAME } from "../brand"
+
 export type ZapisnikInput = {
   klijent: string
   lokacija: string | null
@@ -24,7 +26,7 @@ export function dryGenerateZapisnik(input: ZapisnikInput): ZapisnikContent {
 
 export function buildPrompt(input: ZapisnikInput): string {
   return (
-    `Ti si stručnjak za zaštitu na radu u firmi Tehpro (Bosna i Hercegovina). ` +
+    `Ti si stručnjak za zaštitu na radu u firmi ${APP_NAME} (Bosna i Hercegovina). ` +
     `Napiši profesionalan zapisnik o izvršenoj provjeri.\n` +
     `Klijent: ${input.klijent}\n` +
     `Lokacija: ${input.lokacija ?? "—"}\n` +

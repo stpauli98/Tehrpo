@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     .maybeSingle()
 
   if (error) {
-    return NextResponse.json({ error }, { status: 400 })
+    return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
   const termin = (terminData as TerminRow | null)

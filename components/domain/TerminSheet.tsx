@@ -55,6 +55,8 @@ export function TerminSheet({
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
       void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-matrica"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
     }
     prevUpdPending.current = updatePending
   }, [updatePending, updateState, queryClient, termin.id])
@@ -67,6 +69,8 @@ export function TerminSheet({
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
       void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-matrica"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
     }
     prevMarkPending.current = markPending
   }, [markPending, markState, queryClient, termin.id])
@@ -79,6 +83,8 @@ export function TerminSheet({
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
       void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-matrica"] })
+      void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
     }
     prevOtkazPending.current = otkazPending
   }, [otkazPending, otkazState, queryClient, termin.id])

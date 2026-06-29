@@ -2,15 +2,14 @@ import { NextResponse } from "next/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { runReminders } from "@/lib/reminders/runReminders"
 import { drySend } from "@/lib/email/resend"
+import { isCronAuthorized } from "@/lib/reminders/cronAuth"
 import { env } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(req: Request) {
-  const secret = env.CRON_SECRET
-  const auth = req.headers.get("authorization")
-  if (!secret || auth !== `Bearer ${secret}`) {
+async function handle(req: Request) {
+  if (!isCronAuthorized(req.headers.get("authorization"), env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -19,7 +18,7 @@ export async function POST(req: Request) {
     const body = (await req.json()) as { dryRun?: boolean } | null
     dryRun = body?.dryRun === true
   } catch {
-    // prazno telo je OK
+    // prazno telo (Vercel Cron šalje GET bez tijela) je OK → dryRun = false
   }
 
   try {
@@ -31,3 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
+// Vercel Cron poziva GET (uz Authorization: Bearer $CRON_SECRET); POST ostaje za ručno/test.
+export const GET = handle
+export const POST = handle

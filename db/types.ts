@@ -780,11 +780,11 @@ export type Database = {
       get_due_podsjetnici: {
         Args: { dana_prije_arr: number[] }
         Returns: {
+          dana_do_roka: number
           dana_prije: number
+          klijent_id: string
           klijent_naziv: string
-          lokacija_kontakt_email: string
           lokacija_naziv: string
-          podsjetnik_emails: string[]
           rok_dospijeca: string
           termin_id: string
           vrsta_naziv: string

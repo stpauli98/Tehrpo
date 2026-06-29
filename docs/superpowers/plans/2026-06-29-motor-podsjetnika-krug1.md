@@ -926,16 +926,16 @@ Expected: bez grešaka.
 Run: `TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres pnpm test:unit`
 Expected: svi PASS, uključujući 5 `dueRpc` integracionih.
 
-- [ ] **Step 4: Ručna end-to-end provjera (dry-run nad lokalnim seedom)**
+- [ ] **Step 4: End-to-end provjera RPC-a nad lokalnim DB (bez cloud-a)**
 
-Run:
+⚠️ `pnpm seed` i `pnpm reminders` čitaju `.env.local`, koje u ovom okruženju pokazuje na **CLOUD** (`*.supabase.co` / `aws-0-eu-west-1.pooler.supabase.com`). NE pokretati ih za lokalnu provjeru — pisali bi/čitali iz produkcijskog cloud-a (koji još nema ovu migraciju). Live dry-run pripada **cloud rollout-u** (korisnik, vidi dolje).
+
+Lokalna provjera (sigurna, preko lokalnog DB na `127.0.0.1:54322`):
 ```bash
-pnpm db:reset && pnpm seed
-pnpm reminders -- --dry
+docker exec supabase_db_tehpro-mvp psql -U postgres -d postgres -tAc \
+  "select array_to_string(dana_prije,',') from postavke where id=1;"   # → 60,30,15,7
 ```
-Expected: JSON izvještaj; `sent` redovi imaju `to` = admin email(ovi) (ne klijentske adrese); za termine u kašnjenju subjekt sadrži „kasni". Ponovni `pnpm reminders -- --dry` isti dan → ti redovi prelaze u `skipped` (`vec poslat`/idempotentno).
-
-> Napomena: za realne admine u seedu pokreni `pnpm seed:admin <email> <pw> "<ime>"` prije provjere, inače interna lista može biti prazna (`skipped: nema primalaca`).
+Ponašanje motora (catch-up, post-due, idempotencija) je pokriveno integracionim testom `lib/reminders/dueRpc.integration.test.ts` (5/5 nad lokalnim Postgresom) i unit testom `runReminders.test.ts` (primaoci=admini, dana_do_roka tekst, idempotencija, skip-bez-admina). Live proces (`pnpm reminders`) protiv cloud-a radi korisnik nakon `db:apply-cloud`.
 
 - [ ] **Step 5: Označi kriterijume prihvatanja u specu**
 

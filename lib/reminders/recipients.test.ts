@@ -12,19 +12,15 @@ describe("parseEmailList", () => {
 })
 
 describe("assembleRecipients", () => {
-  it("spaja bazu + klijent + lokaciju, dedupe (case-insensitive), filtrira nevalidne", () => {
+  it("spaja REMINDER_TO bazu + admine, dedupe (case-insensitive), filtrira nevalidne", () => {
     const out = assembleRecipients({
       base: ["tehpro@x.com"],
-      klijentEmails: ["TEHPRO@x.com", "sef@k.com", "nevalidno"],
-      lokacijaEmail: "lok@l.com",
+      adminEmails: ["TEHPRO@x.com", "admin@tehpro.com", "nevalidno"],
     })
-    expect(out).toEqual(["tehpro@x.com", "sef@k.com", "lok@l.com"])
+    expect(out).toEqual(["tehpro@x.com", "admin@tehpro.com"])
   })
-  it("lokacija null se ignoriše", () => {
-    expect(assembleRecipients({ base: ["a@x.com"], klijentEmails: [], lokacijaEmail: null }))
-      .toEqual(["a@x.com"])
-  })
-  it("prazno kad nema validnih", () => {
-    expect(assembleRecipients({ base: [], klijentEmails: ["x"], lokacijaEmail: null })).toEqual([])
+  it("prazno kad nema validnih primalaca", () => {
+    expect(assembleRecipients({ base: [], adminEmails: [] })).toEqual([])
+    expect(assembleRecipients({ base: [], adminEmails: ["x"] })).toEqual([])
   })
 })

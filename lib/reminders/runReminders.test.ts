@@ -123,4 +123,32 @@ describe("runReminders", () => {
     expect(res.skipped).toHaveLength(1)
     expect(res.skipped[0]!.razlog).toBe("nema primalaca")
   })
+
+  it("throttling cap: šalje najviše maxPerRun, ostatak je deferred", async () => {
+    let n = 0
+    const send = async (): Promise<SendResult> => {
+      n++
+      return { id: "s", dryRun: false }
+    }
+    const rows: DueRow[] = Array.from({ length: 5 }, (_, i) => ({ ...baseRow, termin_id: `t${i}` }))
+    const { supabase } = makeFake({ admins: [{ email: "a@tehpro.com" }], dueRows: rows })
+    const res = await runReminders(supabase, { send, maxPerRun: 2, batchSize: 5, delayMs: 0 })
+    expect(n).toBe(2)
+    expect(res.sent).toHaveLength(2)
+    expect(res.deferred).toBe(3)
+  })
+
+  it("throttling: u grupama pošalje SVE kad je ispod cap-a", async () => {
+    let n = 0
+    const send = async (): Promise<SendResult> => {
+      n++
+      return { id: "s", dryRun: false }
+    }
+    const rows: DueRow[] = Array.from({ length: 4 }, (_, i) => ({ ...baseRow, termin_id: `t${i}` }))
+    const { supabase } = makeFake({ admins: [{ email: "a@tehpro.com" }], dueRows: rows })
+    const res = await runReminders(supabase, { send, maxPerRun: 90, batchSize: 2, delayMs: 0 })
+    expect(n).toBe(4)
+    expect(res.sent).toHaveLength(4)
+    expect(res.deferred).toBe(0)
+  })
 })

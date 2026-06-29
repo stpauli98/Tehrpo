@@ -8,7 +8,7 @@ import { assembleRecipients, parseEmailList } from "@/lib/reminders/recipients"
 export type SentItem = { terminId: string; danaPrije: number; to: string[]; resendId: string; dryRun: boolean }
 export type SkipItem = { terminId: string; danaPrije: number; razlog: string }
 export type ErrItem = { terminId: string; danaPrije: number; message: string }
-export type ReminderRunResult = { sent: SentItem[]; skipped: SkipItem[]; errors: ErrItem[] }
+export type ReminderRunResult = { sent: SentItem[]; skipped: SkipItem[]; errors: ErrItem[]; deferred: number }
 
 type Outcome =
   | ({ kind: "sent" } & SentItem)
@@ -32,9 +32,18 @@ async function internalRecipients(supabase: SupabaseClient<Database>): Promise<s
 
 export async function runReminders(
   supabase: SupabaseClient<Database>,
-  deps: { send?: (a: SendArgs) => Promise<SendResult> } = {},
+  deps: {
+    send?: (a: SendArgs) => Promise<SendResult>
+    maxPerRun?: number
+    batchSize?: number
+    delayMs?: number
+  } = {},
 ): Promise<ReminderRunResult> {
   const send = deps.send ?? sendEmail
+  // Throttling (env-konfigurabilno; defaulti za Resend free: 100/dan, ~2 req/s).
+  const maxPerRun = deps.maxPerRun ?? (Number(env.REMINDER_MAX_PER_RUN) || 90)
+  const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
+  const delayMs = deps.delayMs ?? (Number(env.REMINDER_BATCH_DELAY_MS) || 1100)
 
   const { data: post } = await supabase
     .from("postavke")
@@ -53,9 +62,8 @@ export async function runReminders(
     console.warn("[reminders] nema internih primalaca (admini/REMINDER_TO) — preskačem sva slanja")
   }
 
-  // Sva slanja konkurentno (no-await-in-loop): Promise.all nad async map.
-  const outcomes: Outcome[] = await Promise.all(
-    rows.map(async (r): Promise<Outcome> => {
+  // Per-row obrada izdvojena radi throttlinga (grupe + pauza između njih).
+  const processRow = async (r: (typeof rows)[number]): Promise<Outcome> => {
       if (
         r.termin_id == null ||
         r.dana_prije == null ||
@@ -108,8 +116,25 @@ export async function runReminders(
           message: e instanceof Error ? e.message : String(e),
         }
       }
-    }),
-  )
+  }
+
+  // Throttling: cap po run-u (RPC sortira najhitnije prvo) + slanje u grupama radi Resend rate-limita.
+  const toProcess = rows.slice(0, maxPerRun)
+  const deferred = Math.max(0, rows.length - toProcess.length)
+  if (deferred > 0) {
+    console.warn(`[reminders] cap ${maxPerRun}/run — odgođeno ${deferred} podsjetnika za sljedeći run`)
+  }
+  const outcomes: Outcome[] = []
+  for (let i = 0; i < toProcess.length; i += batchSize) {
+    const batch = toProcess.slice(i, i + batchSize)
+    // eslint-disable-next-line no-await-in-loop -- throttling: namjerno sekvencijalne grupe radi Resend rate-limita
+    const batchOut = await Promise.all(batch.map(processRow))
+    outcomes.push(...batchOut)
+    if (delayMs > 0 && i + batchSize < toProcess.length) {
+      // eslint-disable-next-line no-await-in-loop -- pauza između grupa (rate-limit)
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+  }
 
   const sent: SentItem[] = []
   const skipped: SkipItem[] = []
@@ -119,5 +144,5 @@ export async function runReminders(
     else if (o.kind === "skip") skipped.push({ terminId: o.terminId, danaPrije: o.danaPrije, razlog: o.razlog })
     else errors.push({ terminId: o.terminId, danaPrije: o.danaPrije, message: o.message })
   }
-  return { sent, skipped, errors }
+  return { sent, skipped, errors, deferred }
 }

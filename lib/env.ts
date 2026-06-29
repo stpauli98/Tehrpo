@@ -17,6 +17,10 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: optionalSecret,
   ZAPISNIK_DRY_RUN: z.string().optional(),
   CHAT_DRY_RUN: z.string().optional(),
+  // Podsjetnici — throttling (string-brojevi; default u kodu). Podigni kad nadogradiš Resend.
+  REMINDER_MAX_PER_RUN: z.string().optional(),
+  REMINDER_BATCH_SIZE: z.string().optional(),
+  REMINDER_BATCH_DELAY_MS: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse({
@@ -30,6 +34,9 @@ const parsed = envSchema.safeParse({
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   ZAPISNIK_DRY_RUN: process.env.ZAPISNIK_DRY_RUN,
   CHAT_DRY_RUN: process.env.CHAT_DRY_RUN,
+  REMINDER_MAX_PER_RUN: process.env.REMINDER_MAX_PER_RUN,
+  REMINDER_BATCH_SIZE: process.env.REMINDER_BATCH_SIZE,
+  REMINDER_BATCH_DELAY_MS: process.env.REMINDER_BATCH_DELAY_MS,
 })
 
 if (!parsed.success) {

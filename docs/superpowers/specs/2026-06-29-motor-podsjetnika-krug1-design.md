@@ -70,7 +70,7 @@ as $$
       and t.rok_dospijeca >= current_date
       and d.d >= (t.rok_dospijeca - current_date)
       and not exists (select 1 from podsjetnici p
-                      where p.termin_id = t.id and p.dana_prije = d.d)
+                      where p.termin_id = t.id and p.dana_prije <= d.d)  -- `<=`: tješnji prag gasi labavije
     order by t.id, d.d asc )
   union all
   -- POST-DUE: jedan red dnevno dok status nije izvrseno/otkazano

@@ -415,16 +415,18 @@ returns table (
 language sql
 stable
 as $$
-  -- PRE-DUE: najmanji JOŠ-neposlat prag čiji je prozor ušao, po terminu
+  -- PRE-DUE: najmanji JOŠ-neposlat prag čiji je prozor ušao, po terminu.
+  -- Aliasi su OBAVEZNI: završni `order by ... klijent_naziv` referencira izlazne
+  -- kolone UNION-a (imena iz prvog SELECT-a), pa bez aliasa pukne.
   ( select distinct on (t.id)
-      t.id,
-      d.d,
-      (t.rok_dospijeca - current_date),
-      k.id,
-      k.naziv,
-      vp.naziv,
+      t.id                             as termin_id,
+      d.d                              as dana_prije,
+      (t.rok_dospijeca - current_date) as dana_do_roka,
+      k.id                             as klijent_id,
+      k.naziv                          as klijent_naziv,
+      vp.naziv                         as vrsta_naziv,
       t.rok_dospijeca,
-      l.naziv
+      l.naziv                          as lokacija_naziv
     from termini t
     join klijenti k        on k.id = t.klijent_id
     join vrste_provjera vp on vp.id = t.vrsta_provjere_id
@@ -433,9 +435,11 @@ as $$
     where t.status in ('planirano','zakazano')
       and t.rok_dospijeca >= current_date
       and d.d >= (t.rok_dospijeca - current_date)
+      -- `<=` (ne `=`): poslat tješnji (manji-d) prag gasi sve labavije (veći-d) za taj
+      -- termin → bez spama (inače bi se dan nakon slanja 7-praga poslao i 15-prag).
       and not exists (
         select 1 from podsjetnici p
-        where p.termin_id = t.id and p.dana_prije = d.d
+        where p.termin_id = t.id and p.dana_prije <= d.d
       )
     order by t.id, d.d asc )
   union all

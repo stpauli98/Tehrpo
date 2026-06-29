@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEmailList, assembleRecipients } from "./recipients"
+import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent } from "./recipients"
 
 describe("parseEmailList", () => {
   it("razdvaja po zarezu i trim-uje", () => {
@@ -24,8 +24,6 @@ describe("assembleRecipients", () => {
     expect(assembleRecipients({ base: [], adminEmails: ["x"] })).toEqual([])
   })
 })
-
-import { buildRecipientIndex, recipientsForKlijent } from "./recipients"
 
 const K = (id: string, email: string, uloga: string, extra?: Partial<{ aktivan: boolean; prima_podsjetnike: boolean }>) => ({
   id, email, uloga, aktivan: extra?.aktivan ?? true, prima_podsjetnike: extra?.prima_podsjetnike ?? true,
@@ -56,7 +54,7 @@ describe("buildRecipientIndex + recipientsForKlijent", () => {
 
   it("firma bez dodjele → samo admini; base (REMINDER_TO) se dodaje i dedupira", () => {
     const idx = buildRecipientIndex([K("a", "admin@x.com", "admin")], [])
-    expect(recipientsForKlijent(idx, "FX", ["admin@x.com", "bcc@x.com"])).toEqual(["bcc@x.com", "admin@x.com"])
+    expect(recipientsForKlijent(idx, "FX", ["admin@x.com", "bcc@x.com"])).toEqual(["admin@x.com", "bcc@x.com"])
   })
 
   it("pregled dodijeljen + prima → dobija (flag je kapija, ne uloga)", () => {

@@ -59,23 +59,5 @@ export function buildRecipientIndex(
 /** Primaoci za jednu firmu: dodijeljeni ∪ admini ∪ REMINDER_TO (dedupe/validacija preko assembleRecipients). */
 export function recipientsForKlijent(index: RecipientIndex, klijentId: string, base: string[]): string[] {
   const assigned = index.assignedByKlijent.get(klijentId) ?? []
-  const admins = index.adminEmails
-  const allAssignedAndAdmins = new Set([...assigned, ...admins].map((e) => e.toLowerCase()))
-
-  const seen = new Set<string>()
-  const out: string[] = []
-
-  // Add entries from base that are NOT in assigned/admins
-  for (const email of base) {
-    const e = email.trim()
-    if (!EMAIL_RE.test(e)) continue
-    const key = e.toLowerCase()
-    if (seen.has(key)) continue
-    if (allAssignedAndAdmins.has(key)) continue
-    seen.add(key)
-    out.push(key)
-  }
-
-  // Then add from assigned and admins (deduplicated)
-  return assembleRecipients({ base: out, adminEmails: [...assigned, ...admins] })
+  return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails] })
 }

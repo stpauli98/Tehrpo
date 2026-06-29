@@ -58,6 +58,7 @@ describe.skipIf(!URL)("get_due_podsjetnici (integracija, lokalni DB)", () => {
       const rows = (await due([60, 30, 15, 7])).filter((x) => x.termin_id === t)
       expect(rows).toHaveLength(1)
       expect(rows[0].dana_prije).toBe(60)
+      expect(rows[0].dana_do_roka).toBe(50)
     })
   })
 

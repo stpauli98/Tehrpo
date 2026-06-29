@@ -1,3 +1,4 @@
+Connecting to db 5432
 export type Json =
   | string
   | number
@@ -780,11 +781,11 @@ export type Database = {
       get_due_podsjetnici: {
         Args: { dana_prije_arr: number[] }
         Returns: {
+          dana_do_roka: number
           dana_prije: number
+          klijent_id: string
           klijent_naziv: string
-          lokacija_kontakt_email: string
           lokacija_naziv: string
-          podsjetnik_emails: string[]
           rok_dospijeca: string
           termin_id: string
           vrsta_naziv: string
@@ -956,3 +957,5 @@ export const Constants = {
   },
 } as const
 
+A new version of Supabase CLI is available: v2.108.0 (currently installed v2.90.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

@@ -81,7 +81,11 @@ export async function runReminders(
             lokacija: r.lokacija_naziv,
           }),
         })
-        // Audit se upisuje i za dry-run (idempotencija testabilna); u produkciji nema force-dry.
+        // Dry-run ILI produkcija bez RESEND_API_KEY (sendEmail tad vrati dryRun): NE upisuj audit.
+        // Inače bi „lažno poslat" red kasnije blokirao stvarno slanje (idempotencija) čim se ključ doda.
+        if (res.dryRun) {
+          return { kind: "sent", terminId: r.termin_id, danaPrije: r.dana_prije, to, resendId: res.id, dryRun: true }
+        }
         const { error: insErr } = await supabase.from("podsjetnici").insert({
           termin_id: r.termin_id,
           dana_prije: r.dana_prije,
@@ -95,7 +99,7 @@ export async function runReminders(
           // send je uspio ali audit nije → at-least-once (moguć duplikat u sljedećem run-u).
           return { kind: "err", terminId: r.termin_id, danaPrije: r.dana_prije, message: insErr.message }
         }
-        return { kind: "sent", terminId: r.termin_id, danaPrije: r.dana_prije, to, resendId: res.id, dryRun: res.dryRun }
+        return { kind: "sent", terminId: r.termin_id, danaPrije: r.dana_prije, to, resendId: res.id, dryRun: false }
       } catch (e) {
         return {
           kind: "err",

@@ -65,7 +65,7 @@ describe("runReminders", () => {
     const sends: SendArgs[] = []
     const send = async (a: SendArgs): Promise<SendResult> => {
       sends.push(a)
-      return { id: "r1", dryRun: true }
+      return { id: "r1", dryRun: false }
     }
     const { supabase, inserts } = makeFake({
       admins: [{ email: "admin1@tehpro.com" }, { email: "ADMIN1@tehpro.com" }, { email: "admin2@tehpro.com" }],
@@ -83,7 +83,7 @@ describe("runReminders", () => {
     const sends: SendArgs[] = []
     const send = async (a: SendArgs): Promise<SendResult> => {
       sends.push(a)
-      return { id: "r2", dryRun: true }
+      return { id: "r2", dryRun: false }
     }
     const { supabase, inserts } = makeFake({
       admins: [{ email: "admin@tehpro.com" }],
@@ -92,6 +92,15 @@ describe("runReminders", () => {
     await runReminders(supabase, { send })
     expect(sends[0]!.subject).toContain("kasni 3 dana")
     expect(inserts[0]).toMatchObject({ termin_id: "t2", dana_prije: -3 })
+  })
+
+  it("dry-run (ili bez RESEND ključa): šalje ali NE upisuje audit (bez 'poison' idempotencije)", async () => {
+    const send = async (): Promise<SendResult> => ({ id: "dry", dryRun: true })
+    const { supabase, inserts } = makeFake({ admins: [{ email: "admin@tehpro.com" }], dueRows: [baseRow] })
+    const res = await runReminders(supabase, { send })
+    expect(res.sent).toHaveLength(1)
+    expect(res.sent[0]!.dryRun).toBe(true)
+    expect(inserts).toHaveLength(0) // ništa se ne piše u podsjetnici
   })
 
   it("greška pri čitanju admina → runReminders rejectuje (ne vraća skipped)", async () => {

@@ -15,7 +15,19 @@ type Outcome =
   | ({ kind: "skip" } & SkipItem)
   | ({ kind: "err" } & ErrItem)
 
-const DEFAULT_DANA = [30, 14, 7, 1]
+const DEFAULT_DANA = [60, 30, 15, 7]
+
+/** Interni primaoci (Krug 1): svi aktivni admini + REMINDER_TO. Klijent se nikad ne kontaktira. */
+async function internalRecipients(supabase: SupabaseClient<Database>): Promise<string[]> {
+  const base = parseEmailList(env.REMINDER_TO)
+  const { data: admins } = await supabase
+    .from("korisnici")
+    .select("email")
+    .eq("uloga", "admin")
+    .eq("aktivan", true)
+  const adminEmails = (admins ?? []).map((a) => a.email)
+  return assembleRecipients({ base, adminEmails })
+}
 
 export async function runReminders(
   supabase: SupabaseClient<Database>,
@@ -34,45 +46,41 @@ export async function runReminders(
   if (error) throw new Error(error.message)
   const rows = due ?? []
 
-  const base = parseEmailList(env.REMINDER_TO)
+  // Primaoci se računaju JEDNOM po pokretanju (Krug 1: isti za sve termine).
+  const to = await internalRecipients(supabase)
+  if (to.length === 0 && rows.length > 0) {
+    console.warn("[reminders] nema internih primalaca (admini/REMINDER_TO) — preskačem sva slanja")
+  }
 
   // Sva slanja konkurentno (no-await-in-loop): Promise.all nad async map.
   const outcomes: Outcome[] = await Promise.all(
     rows.map(async (r): Promise<Outcome> => {
-      // RPC kolone su (najvjerovatnije) nullable nakon type-gen → suzi prije upotrebe.
       if (
         r.termin_id == null ||
         r.dana_prije == null ||
+        r.dana_do_roka == null ||
         r.rok_dospijeca == null ||
         r.klijent_naziv == null ||
         r.vrsta_naziv == null
       ) {
-        return { kind: "skip", terminId: r.termin_id ?? "", danaPrije: r.dana_prije ?? -1, razlog: "nepotpun red" }
+        return { kind: "skip", terminId: r.termin_id ?? "", danaPrije: r.dana_prije ?? -9999, razlog: "nepotpun red" }
       }
-      const to = assembleRecipients({
-        base,
-        klijentEmails: r.podsjetnik_emails ?? [],
-        lokacijaEmail: r.lokacija_kontakt_email,
-      })
       if (to.length === 0) {
         return { kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "nema primalaca" }
       }
       try {
         const res = await send({
           to,
-          subject: reminderSubject({ vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, danaPrije: r.dana_prije }),
+          subject: reminderSubject({ vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, danaDoRoka: r.dana_do_roka }),
           html: reminderHtml({
             klijent: r.klijent_naziv,
             vrsta: r.vrsta_naziv,
             rok: r.rok_dospijeca,
-            danaPrije: r.dana_prije,
+            danaDoRoka: r.dana_do_roka,
             lokacija: r.lokacija_naziv,
           }),
         })
-        // Audit se UPISUJE i za dry-run — spec §9.1 ("mock Resend ... audit log") to traži,
-        // i to čini idempotenciju testabilnom. Dry-run se NE koristi u produkciji (tamo je
-        // RESEND_API_KEY postavljen i nema force-dry), pa nema rizika blokiranja stvarnih
-        // slanja. Lokalno: `pnpm db:reset` prije prelaska sa dry-run na stvarno slanje.
+        // Audit se upisuje i za dry-run (idempotencija testabilna); u produkciji nema force-dry.
         const { error: insErr } = await supabase.from("podsjetnici").insert({
           termin_id: r.termin_id,
           dana_prije: r.dana_prije,
@@ -83,8 +91,7 @@ export async function runReminders(
           if (/duplicate|unique/i.test(insErr.message)) {
             return { kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "vec poslat" }
           }
-          // send je uspio ali audit nije → at-least-once (moguć duplikat u sljedećem run-u);
-          // prihvatljivo za MVP (bolje dupli podsjetnik nego propušten rok).
+          // send je uspio ali audit nije → at-least-once (moguć duplikat u sljedećem run-u).
           return { kind: "err", terminId: r.termin_id, danaPrije: r.dana_prije, message: insErr.message }
         }
         return { kind: "sent", terminId: r.termin_id, danaPrije: r.dana_prije, to, resendId: res.id, dryRun: res.dryRun }

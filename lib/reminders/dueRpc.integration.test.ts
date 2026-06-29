@@ -84,6 +84,20 @@ describe.skipIf(!URL)("get_due_podsjetnici (integracija, lokalni DB)", () => {
     })
   })
 
+  it("negativni post-due marker ne blokira pre-due prag za isti termin (reschedule)", async () => {
+    await withSeed(async (ids) => {
+      const t = await addTermin(ids, 30) // rok +30 → pre-due prag 30 treba okidati
+      // Simulacija starog post-due markera (rok bio prošao, termin reschedulan)
+      await db.query(
+        "insert into podsjetnici (termin_id, dana_prije, poslat_na) values ($1, -5, '{a@x.com}')",
+        [t],
+      )
+      const rows = (await due([60, 30, 15, 7])).filter((x) => x.termin_id === t)
+      expect(rows).toHaveLength(1)
+      expect(rows[0]!.dana_prije).toBe(30)
+    })
+  })
+
   it("izvršen termin se ignoriše (ni pre-due ni post-due)", async () => {
     await withSeed(async (ids) => {
       const r = await db.query(

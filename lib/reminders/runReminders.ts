@@ -20,11 +20,12 @@ const DEFAULT_DANA = [60, 30, 15, 7]
 /** Interni primaoci (Krug 1): svi aktivni admini + REMINDER_TO. Klijent se nikad ne kontaktira. */
 async function internalRecipients(supabase: SupabaseClient<Database>): Promise<string[]> {
   const base = parseEmailList(env.REMINDER_TO)
-  const { data: admins } = await supabase
+  const { data: admins, error: adminErr } = await supabase
     .from("korisnici")
     .select("email")
     .eq("uloga", "admin")
     .eq("aktivan", true)
+  if (adminErr) throw new Error(`Greška pri čitanju primalaca (korisnici): ${adminErr.message}`)
   const adminEmails = (admins ?? []).map((a) => a.email)
   return assembleRecipients({ base, adminEmails })
 }

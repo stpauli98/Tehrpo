@@ -50,7 +50,7 @@ as $$
       and d.d >= (t.rok_dospijeca - current_date)
       and not exists (
         select 1 from podsjetnici p
-        where p.termin_id = t.id and p.dana_prije <= d.d
+        where p.termin_id = t.id and p.dana_prije >= 0 and p.dana_prije <= d.d
       )
     order by t.id, d.d asc )
   union all

@@ -15,7 +15,7 @@ type DueRow = {
   lokacija_naziv: string | null
 }
 
-function makeFake(opts: { danaPrije?: number[]; admins?: { email: string }[]; dueRows?: DueRow[] }) {
+function makeFake(opts: { danaPrije?: number[]; admins?: { email: string }[]; dueRows?: DueRow[]; adminError?: string }) {
   const inserts: Array<Record<string, unknown>> = []
   const fake = {
     from(table: string) {
@@ -29,6 +29,9 @@ function makeFake(opts: { danaPrije?: number[]; admins?: { email: string }[]; du
         }
       }
       if (table === "korisnici") {
+        if (opts.adminError) {
+          return { select: () => ({ eq: () => ({ eq: async () => ({ data: null, error: { message: opts.adminError } }) }) }) }
+        }
         return { select: () => ({ eq: () => ({ eq: async () => ({ data: opts.admins ?? [], error: null }) }) }) }
       }
       if (table === "podsjetnici") {
@@ -89,6 +92,13 @@ describe("runReminders", () => {
     await runReminders(supabase, { send })
     expect(sends[0]!.subject).toContain("kasni 3 dana")
     expect(inserts[0]).toMatchObject({ termin_id: "t2", dana_prije: -3 })
+  })
+
+  it("greška pri čitanju admina → runReminders rejectuje (ne vraća skipped)", async () => {
+    const { supabase } = makeFake({ adminError: "connection refused", dueRows: [baseRow] })
+    await expect(runReminders(supabase)).rejects.toThrow(
+      "Greška pri čitanju primalaca (korisnici): connection refused",
+    )
   })
 
   it("nema internih primalaca → preskoči, ništa se ne šalje", async () => {

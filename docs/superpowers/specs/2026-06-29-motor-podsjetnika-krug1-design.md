@@ -69,8 +69,8 @@ as $$
     where t.status in ('planirano','zakazano')
       and t.rok_dospijeca >= current_date
       and d.d >= (t.rok_dospijeca - current_date)
-      and not exists (select 1 from podsjetnici p
-                      where p.termin_id = t.id and p.dana_prije <= d.d)  -- `<=`: tješnji prag gasi labavije
+      and not exists (select 1 from podsjetnici p   -- `<=`: tješnji prag gasi labavije; `>= 0`: negativni
+                      where p.termin_id = t.id and p.dana_prije >= 0 and p.dana_prije <= d.d)  -- post-due markeri ne gase pre-due
     order by t.id, d.d asc )
   union all
   -- POST-DUE: jedan red dnevno dok status nije izvrseno/otkazano

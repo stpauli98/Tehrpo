@@ -437,9 +437,11 @@ as $$
       and d.d >= (t.rok_dospijeca - current_date)
       -- `<=` (ne `=`): poslat tješnji (manji-d) prag gasi sve labavije (veći-d) za taj
       -- termin → bez spama (inače bi se dan nakon slanja 7-praga poslao i 15-prag).
+      -- `>= 0`: negativni post-due markeri NE smiju gasiti pre-due pragove (npr. kad se
+      -- termin u kašnjenju ručno pomjeri na budući rok — inače nijedan 60/30/15/7 ne bi opalio).
       and not exists (
         select 1 from podsjetnici p
-        where p.termin_id = t.id and p.dana_prije <= d.d
+        where p.termin_id = t.id and p.dana_prije >= 0 and p.dana_prije <= d.d
       )
     order by t.id, d.d asc )
   union all
@@ -953,7 +955,11 @@ git add -A && git commit -m "test(reminders): završna verifikacija Krug 1" || e
 
 Nakon merge-a, **korisnik** primjenjuje migraciju na cloud: `pnpm db:apply-cloud supabase/migrations/20260629120000_podsjetnici_catchup_postdue.sql`, postavlja `CRON_SECRET` u Vercel env, i potvrđuje da je `REMINDER_TO` postavljen ili da postoji bar jedan aktivan admin u `korisnici` (inače nema primalaca). Vercel Cron se aktivira deploy-em `vercel.json` rasporeda.
 
-## Van obima (Krug 2 / zasebni nalazi)
+> ⚠️ **NE pokretati `pnpm reminders -- --dry` (niti POST `{dryRun:true}`) protiv cloud-a.** `runReminders` upisuje audit red u `podsjetnici` i u dry-run modu (namjerno, radi testabilnosti idempotencije). Dry-run protiv cloud-a bi te pragove označio kao „poslate" → prvi stvarni cron ih preskoči i ti email-ovi se nikad ne pošalju. Pusti da zakazani cron uradi prvo stvarno slanje. (Finalni review nalaz #2; trajno rješenje — dry-run bez upisa — je follow-up.)
+
+## Van obima (Krug 2 / zasebni nalazi / follow-up iz finalnog reviewa)
 
 - Usmjeravanje po vlasniku: `klijenti.zaduzeni_tehpro_id` → samo svoji termini; admin svi.
-- Nepovezani nalazi reviewa: `createProfilProvjere` swallowed error; RLS na `chat_poruke` i `storage.objects`.
+- **Follow-up #2:** napraviti dry-run koji NE upisuje audit (preskoči insert kad je `res.dryRun`), pa je `--dry` siguran i protiv cloud-a.
+- **Follow-up #4:** vestigijalni UI za klijentske podsjetnike — `klijenti.podsjetnik_emails` (KlijentEditForm, klijenti/actions.ts, [id]/page.tsx) se i dalje unosi/prikazuje ali ga motor više ne čita; sakriti/preimenovati ili ukloniti (uz Krug 2).
+- Nepovezani nalazi prethodnog reviewa: `createProfilProvjere` swallowed error; RLS na `chat_poruke` i `storage.objects`.

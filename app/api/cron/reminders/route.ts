@@ -7,6 +7,8 @@ import { env } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+// Throttlovan run (grupe + pauze) može trajati ~50s pri punom cap-u → podigni limit funkcije.
+export const maxDuration = 60
 
 async function handle(req: Request) {
   if (!isCronAuthorized(req.headers.get("authorization"), env.CRON_SECRET)) {

@@ -19,7 +19,7 @@ Srž TEHPRO aplikacije je „ne propustiti zakonski rok". Adversarijalno-verifik
 **U obimu (Krug 1):** sve gornje funkcionalne greške (1–5), uz **privremeni** model primalaca (interno, nikad klijent).
 
 **Van obima (zaseban spec/krug):**
-- **Krug 2 — elegantno usmjeravanje po ulogama:** vlasnik klijenta (preko `korisnik_klijent`) dobija samo svoje termine; admin sve. Krug 1 koristi prelazno: svi admini + `REMINDER_TO`.
+- **Krug 2 — elegantno usmjeravanje po ulogama:** vlasnik klijenta (preko `klijenti.zaduzeni_tehpro_id`, uz `korisnik_klijent` kao dodatne dodjele) dobija samo svoje termine; admin sve. Krug 1 koristi prelazno: svi admini + `REMINDER_TO`.
 - In-app (app) kanal podsjetnika — ostaje samo email.
 - Nepovezani nalazi iz reviewa: `createProfilProvjere` koji guta grešku upisa u `termini`; RLS rupe na `chat_poruke` i `storage.objects`.
 
@@ -29,7 +29,7 @@ Srž TEHPRO aplikacije je „ne propustiti zakonski rok". Adversarijalno-verifik
 - `podsjetnici(id, termin_id, dana_prije int, poslat_na text[], poslat_at, resend_id)`, unique `uq_podsjetnici_termin_dana (termin_id, dana_prije)`, check `chk_podsjetnici_dana_prije (dana_prije between 0 and 365)`.
 - `postavke(id=1 singleton, dana_prije int[] default '{30,14,7,1}')`.
 - `korisnici(id, ime, email, uloga ('admin'|'operater'|'pregled'), aktivan)`; `korisnik_klijent(korisnik_id, klijent_id)` N:N dodjela.
-- `klijenti` **nema** `zaduzeni_tehpro_id`; `termini.zaduzeni` je slobodan tekst (ne FK) → za usmjeravanje po vlasniku koristi se `korisnik_klijent` (Krug 2).
+- `klijenti.zaduzeni_tehpro_id uuid references korisnici(id) on delete set null` (dodato u `20260627120000_klijenti_idkarta_polja.sql`) = **vlasnik klijenta**; prirodan izvor za usmjeravanje po vlasniku u Krugu 2. `termini.zaduzeni` je slobodan tekst (ne FK) i ne koristi se za primaoce.
 - Klijent (service-role/admin) u `runReminders` smije čitati `korisnici` (potrebno za primaoce).
 
 ## Rješenje po komponentama

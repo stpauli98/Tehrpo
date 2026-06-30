@@ -62,4 +62,43 @@ describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
       expect(next.rows[0].rok_dospijeca > next.rows[0].datum_zadnjeg).toBe(true)
     })
   })
+
+  it("re-fire guard: termin već 'izvrseno' (datum_izvrsenja kasnije popunjen) NE pravi duplikat ciklusa", async () => {
+    await withSeed(async (ids) => {
+      // termin već izvrseno ali bez datuma (status postavljen ranije, datum kasnije)
+      const ins = await db.query(
+        `insert into termini (klijent_id, vrsta_provjere_id, interval_mjeseci, rok_dospijeca, status, datum_izvrsenja)
+         values ($1, $2, 12, current_date + 10, 'izvrseno', null) returning id`,
+        [ids.klijent, ids.vrsta],
+      )
+      const id = ins.rows[0].id as string
+      // naknadno popunjavanje datuma — guard (old.status='izvrseno') mora spriječiti novi ciklus
+      await db.query(`update termini set datum_izvrsenja = current_date where id = $1`, [id])
+      const others = await db.query(
+        `select id from termini where klijent_id = $1 and vrsta_provjere_id = $2 and id <> $3`,
+        [ids.klijent, ids.vrsta, id],
+      )
+      expect(others.rows).toHaveLength(0)
+    })
+  })
+
+  it("interval guard: termin bez intervala (i vrsta bez defaulta) NE pravi sljedeći termin", async () => {
+    await withSeed(async (ids) => {
+      const ins = await db.query(
+        `insert into termini (klijent_id, vrsta_provjere_id, interval_mjeseci, rok_dospijeca, status)
+         values ($1, $2, null, current_date + 10, 'planirano') returning id`,
+        [ids.klijent, ids.vrsta],
+      )
+      const id = ins.rows[0].id as string
+      await db.query(
+        `update termini set status = 'izvrseno', datum_izvrsenja = current_date where id = $1`,
+        [id],
+      )
+      const others = await db.query(
+        `select id from termini where klijent_id = $1 and vrsta_provjere_id = $2 and id <> $3`,
+        [ids.klijent, ids.vrsta, id],
+      )
+      expect(others.rows).toHaveLength(0)
+    })
+  })
 })

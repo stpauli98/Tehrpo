@@ -10,24 +10,36 @@ alter table klijent_provjere
 alter table termini
   add column if not exists nacin_izvrsenja nacin_izvrsenja_tip not null default 'izvrsava';
 
--- auto_cycle mora kopirati nacin_izvrsenja na sljedeći termin u ciklusu.
-create or replace function tg_termini_auto_cycle() returns trigger as $$
+-- auto_cycle: kopira nacin_izvrsenja na sljedeći termin. Bazirano na NAJNOVIJOJ def
+-- (20260621200028) — zadržava idempotency guard (old.status distinct) + interval guard
+-- (ne insertuj ako interval nije razrješiv). Jedini dodatak vs ta def: nacin_izvrsenja.
+create or replace function tg_termini_auto_cycle() returns trigger
+language plpgsql as $$
+declare
+  v_interval int;
 begin
-  if OLD.datum_izvrsenja is null
-     and NEW.datum_izvrsenja is not null
-     and NEW.status = 'izvrseno' then
-    insert into termini (
-      klijent_id, lokacija_id, vrsta_provjere_id, interval_mjeseci,
-      datum_zadnjeg, rok_dospijeca, status, nacin_izvrsenja
-    )
-    values (
-      NEW.klijent_id, NEW.lokacija_id, NEW.vrsta_provjere_id, NEW.interval_mjeseci,
-      NEW.datum_izvrsenja, NEW.datum_izvrsenja, 'planirano', NEW.nacin_izvrsenja
+  if (old.datum_izvrsenja is null
+      and new.datum_izvrsenja is not null
+      and new.status = 'izvrseno'
+      and old.status is distinct from 'izvrseno') then
+    v_interval := coalesce(
+      new.interval_mjeseci,
+      (select podrazumevani_interval_mjeseci from vrste_provjera where id = new.vrsta_provjere_id)
     );
+    if v_interval is not null then
+      insert into termini (
+        klijent_id, lokacija_id, vrsta_provjere_id, interval_mjeseci,
+        datum_zadnjeg, rok_dospijeca, status, nacin_izvrsenja
+      )
+      values (
+        new.klijent_id, new.lokacija_id, new.vrsta_provjere_id, new.interval_mjeseci,
+        new.datum_izvrsenja, new.datum_izvrsenja, 'planirano', new.nacin_izvrsenja
+      );
+    end if;
   end if;
-  return NEW;
+  return new;
 end;
-$$ language plpgsql;
+$$;
 
 -- termini_view: t.* je POZICIJSKI razvijen → nova kolona se ne pojavi bez rekreiranja.
 -- klijenti_view ovisi o termini_view → mora se rekreirati obje.

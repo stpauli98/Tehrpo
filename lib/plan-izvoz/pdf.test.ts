@@ -14,4 +14,9 @@ describe("planToPdf", () => {
     const buf = await planToPdf([], { naslov: "Tehpro", period: "svi mjeseci" })
     expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-")
   })
+  it("ne baca na egzotične znakove (ćirilica/emoji) — zamijeni s '?'", async () => {
+    const r: PlanRed = { ...ROW, klijent: "Фирма 🙂", lokacija: "Бања Лука", usluga: "č test" }
+    const buf = await planToPdf([r], { naslov: "Tehpro", period: "tekući" })
+    expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-")
+  })
 })

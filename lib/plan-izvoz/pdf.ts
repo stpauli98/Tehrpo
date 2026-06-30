@@ -1,7 +1,9 @@
 import { PDFDocument, StandardFonts } from "pdf-lib"
 import type { PlanRed, IzvozMeta } from "./types"
 
-// WinAnsi (standard PDF fonts) cannot encode Bosnian-specific chars — transliterate them
+// WinAnsi (standard PDF fonts) cannot encode Bosnian-specific chars — transliterate them.
+// Sve ostalo van WinAnsi/CP1252 (ćirilica, emoji, CJK…) → "?" da pdf-lib NIKAD ne baci
+// PDFCodingError pri generisanju (npr. ako se u Excel zalijepi egzotičan znak).
 const ascii = (s: string) =>
   s
     .replace(/[ćĆ]/g, (c) => (c === "ć" ? "c" : "C"))
@@ -9,6 +11,7 @@ const ascii = (s: string) =>
     .replace(/[šŠ]/g, (c) => (c === "š" ? "s" : "S"))
     .replace(/[žŽ]/g, (c) => (c === "ž" ? "z" : "Z"))
     .replace(/[đĐ]/g, (c) => (c === "đ" ? "d" : "D"))
+    .replace(/[^\x20-\x7E\xA0-\xFF–—…‚„‘’“”•€™]/g, "?")
 
 const KOLONE = [
   { label: "Klijent", w: 150 },
@@ -29,9 +32,10 @@ export async function planToPdf(rows: PlanRed[], meta: IzvozMeta): Promise<Buffe
   let y = H - margin
 
   const skratiti = (s: string, w: number) => {
-    let t = ascii(s)
+    const a = ascii(s)
+    let t = a
     while (t.length > 1 && font.widthOfTextAtSize(t, size) > w - 6) t = t.slice(0, -1)
-    return t.length < ascii(s).length ? `${t.slice(0, -1)}…` : t
+    return t.length < a.length ? `${t.slice(0, -1)}…` : t
   }
   const zaglavlje = () => {
     page.drawText(ascii(meta.naslov), { x: margin, y: y - 12, size: 14, font: bold })

@@ -435,7 +435,11 @@ Otvori `docs/superpowers/specs/2026-06-29-motor-podsjetnika-krug2-design.md` i r
 
 ## Napomene za cloud rollout (van automatske primjene)
 
-Nakon merge-a: `pnpm db:apply-cloud supabase/migrations/20260629130000_korisnici_prima_podsjetnike.sql`, pa deploy (auto preko merge u `main`). Pošto su svi `prima_podsjetnike` default `true`, dodijeljeni operateri odmah počinju primati svoje firme; admin može isključiti pojedince u Postavke→Korisnici. (Email i dalje ne ide stvarno dok Resend ključ nije postavljen — vidi Krug 1 rollout.)
+⚠️ **REDOSLIJED (I1 iz finalnog reviewa): migracija PRIJE deploy-a.** Novi kod čita `prima_podsjetnike` (motor + `KorisniciTab`); ako se deploya prije nego kolona postoji u cloud-u, cron baca 500 i Postavke→Korisnici puca. Merge u `main` **automatski** pokreće deploy, pa migracija mora ići PRVA:
+1. `pnpm db:apply-cloud supabase/migrations/20260629130000_korisnici_prima_podsjetnike.sql`
+2. tek onda `merge` u `main` (koji auto-deploya).
+
+Pošto su svi `prima_podsjetnike` default `true`, dodijeljeni operateri odmah počinju primati svoje firme; admin može isključiti pojedince u Postavke→Korisnici. (Email i dalje ne ide stvarno dok Resend ključ nije postavljen — vidi Krug 1 rollout.)
 
 ## Van obima
 

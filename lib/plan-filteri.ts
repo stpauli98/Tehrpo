@@ -8,6 +8,7 @@ export type PlanFilteri = {
   vrstaId: string
   mjesec: string // "tn" (default) | "svi" | "1".."12"
   godina: number
+  nacin: "svi" | "izvrsava" | "pracenje"
 }
 
 /** Parsiraj filtere iz query stringa (isto za lista i izvoz rutu). Default mjeseca = "tn". */
@@ -20,6 +21,10 @@ export function parsePlanFilteri(sp: URLSearchParams): PlanFilteri {
     vrstaId: sp.get("vrsta_id") ?? "",
     mjesec: sp.get("mjesec") || "tn",
     godina: Number(sp.get("godina")) || currentYear(),
+    nacin: (() => {
+      const n = sp.get("nacin")
+      return n === "izvrsava" || n === "pracenje" ? n : "svi"
+    })(),
   }
 }
 

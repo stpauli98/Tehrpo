@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
   if (f.klijentId) q = q.eq("klijent_id", f.klijentId)
   if (f.lokacijaId) q = q.eq("lokacija_id", f.lokacijaId)
   if (f.vrstaId) q = q.eq("vrsta_provjere_id", f.vrstaId)
+  if (f.nacin !== "svi") q = q.eq("nacin_izvrsenja", f.nacin)
   const r = mjesecRange(f)
   if (r) q = q.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
 

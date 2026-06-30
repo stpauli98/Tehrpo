@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
   if (f.klijentId) listQuery = listQuery.eq("klijent_id", f.klijentId)
   if (f.lokacijaId) listQuery = listQuery.eq("lokacija_id", f.lokacijaId)
   if (f.vrstaId) listQuery = listQuery.eq("vrsta_provjere_id", f.vrstaId)
+  if (f.nacin !== "svi") listQuery = listQuery.eq("nacin_izvrsenja", f.nacin)
   const r = mjesecRange(f)
   if (r) listQuery = listQuery.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
 

@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { parsePlanFilteri, mjesecRange } from "@/lib/plan-filteri"
+import { planToXlsx } from "@/lib/plan-izvoz/xlsx"
+import { planToPdf } from "@/lib/plan-izvoz/pdf"
+import type { PlanRed } from "@/lib/plan-izvoz/types"
+import { formatDatum, MONTHS_BS } from "@/lib/date"
+import { STATUS_LABEL, toDerivedStatus } from "@/lib/termini"
+import { APP_NAME } from "@/lib/brand"
+
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
+function periodLabel(mjesec: string, godina: number): string {
+  if (mjesec === "tn") return "tekući + naredni mjesec"
+  if (mjesec === "svi") return "svi mjeseci"
+  const mn = Number(mjesec)
+  return mn >= 1 && mn <= 12 ? `${MONTHS_BS[mn - 1]} ${godina}` : "svi mjeseci"
+}
+
+export async function GET(req: NextRequest) {
+  const sp = req.nextUrl.searchParams
+  const format = sp.get("format") === "pdf" ? "pdf" : "xlsx"
+  const f = parsePlanFilteri(sp)
+  const supabase = await createServerSupabaseClient()
+
+  let q = supabase.from("termini_view").select("*").order("rok_dospijeca", { ascending: true })
+  if (f.status && f.status !== "svi") q = q.eq("status_izvedeni", f.status)
+  if (f.q) {
+    const safe = f.q.replace(/[(),]/g, " ")
+    q = q.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
+  }
+  if (f.klijentId) q = q.eq("klijent_id", f.klijentId)
+  if (f.lokacijaId) q = q.eq("lokacija_id", f.lokacijaId)
+  if (f.vrstaId) q = q.eq("vrsta_provjere_id", f.vrstaId)
+  const r = mjesecRange(f)
+  if (r) q = q.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
+
+  const { data, error } = await q
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const rows: PlanRed[] = (data ?? []).map((t) => ({
+    klijent: t.klijent_naziv ?? "—",
+    lokacija: t.lokacija_naziv ?? "—",
+    usluga: t.vrsta_naziv ?? "—",
+    rok: formatDatum(t.rok_dospijeca),
+    status: STATUS_LABEL[toDerivedStatus(t.status_izvedeni)],
+    periodikaMj: t.interval_mjeseci ?? null,
+    odgovorna: t.zaduzeni ?? "—",
+  }))
+
+  const meta = { naslov: APP_NAME, period: periodLabel(f.mjesec, f.godina) }
+  const buf = format === "pdf" ? await planToPdf(rows, meta) : await planToXlsx(rows, meta)
+  const ext = format === "pdf" ? "pdf" : "xlsx"
+  const ct = format === "pdf"
+    ? "application/pdf"
+    : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  return new Response(new Uint8Array(buf), {
+    headers: { "Content-Type": ct, "Content-Disposition": `attachment; filename="plan-aktivnosti.${ext}"` },
+  })
+}

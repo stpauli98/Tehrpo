@@ -43,7 +43,7 @@ async function listajFajlove(sb: Sb, prefix: string): Promise<StorageObjekat[]> 
       } else {
         rezultat.push({
           path: puniPut,
-          updatedAt: s.updated_at ?? s.created_at ?? new Date(0).toISOString(),
+          updatedAt: s.updated_at ?? s.created_at ?? new Date().toISOString(),
         })
       }
     }
@@ -59,10 +59,21 @@ async function main() {
   // 1) svi fajlovi u bucketu (rekurzivno kroz klijenti/ ugovori/ termini/)
   const bucketObjekti = await listajFajlove(sb, "")
 
-  // 2) sve putanje iz baze
-  const { data: dok, error } = await sb.from("dokumenti").select("storage_path")
-  if (error) throw new Error(`select dokumenti: ${error.message}`)
-  const dbPutanje = (dok ?? []).map((d) => d.storage_path as string)
+  // 2) sve putanje iz baze (paginirano — PostgREST cap = 1000 redova po upitu)
+  const dbPutanje: string[] = []
+  const DB_PAGE = 1000
+  let dbOffset = 0
+  for (;;) {
+    const { data: dok, error } = await sb
+      .from("dokumenti")
+      .select("storage_path")
+      .range(dbOffset, dbOffset + DB_PAGE - 1)
+    if (error) throw new Error(`select dokumenti: ${error.message}`)
+    const red = dok ?? []
+    for (const d of red) dbPutanje.push(d.storage_path as string)
+    if (red.length < DB_PAGE) break
+    dbOffset += DB_PAGE
+  }
 
   // 3) analiza
   const r = analizirajOrphan({ bucketObjekti, dbPutanje, sada: Date.now(), graceMs })

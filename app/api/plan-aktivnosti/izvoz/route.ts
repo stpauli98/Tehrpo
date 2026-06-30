@@ -50,7 +50,13 @@ export async function GET(req: NextRequest) {
   }))
 
   const meta = { naslov: APP_NAME, period: periodLabel(f.mjesec, f.godina) }
-  const buf = format === "pdf" ? await planToPdf(rows, meta) : await planToXlsx(rows, meta)
+  let buf: Buffer
+  try {
+    buf = format === "pdf" ? await planToPdf(rows, meta) : await planToXlsx(rows, meta)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Greška"
+    return NextResponse.json({ error: `Greška pri generisanju fajla: ${message}` }, { status: 500 })
+  }
   const ext = format === "pdf" ? "pdf" : "xlsx"
   const ct = format === "pdf"
     ? "application/pdf"

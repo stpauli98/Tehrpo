@@ -188,6 +188,7 @@ export type Database = {
           interval_mjeseci: number | null
           klijent_id: string
           lokacija_id: string | null
+          nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id: string | null
           vrsta_provjere_id: string
           zadnji_datum: string
@@ -199,6 +200,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id: string
           lokacija_id?: string | null
+          nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id: string
           zadnji_datum: string
@@ -210,6 +212,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id?: string
           lokacija_id?: string | null
+          nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id?: string
           zadnji_datum?: string
@@ -547,6 +550,7 @@ export type Database = {
           interval_mjeseci: number | null
           klijent_id: string
           lokacija_id: string | null
+          nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena: string | null
           rok_dospijeca: string
           status: Database["public"]["Enums"]["termini_status"]
@@ -563,6 +567,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id: string
           lokacija_id?: string | null
+          nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
           rok_dospijeca: string
           status?: Database["public"]["Enums"]["termini_status"]
@@ -579,6 +584,7 @@ export type Database = {
           interval_mjeseci?: number | null
           klijent_id?: string
           lokacija_id?: string | null
+          nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
           rok_dospijeca?: string
           status?: Database["public"]["Enums"]["termini_status"]
@@ -738,6 +744,9 @@ export type Database = {
           lokacija_grad: string | null
           lokacija_id: string | null
           lokacija_naziv: string | null
+          nacin_izvrsenja:
+            | Database["public"]["Enums"]["nacin_izvrsenja_tip"]
+            | null
           napomena: string | null
           rok_dospijeca: string | null
           status: Database["public"]["Enums"]["termini_status"] | null
@@ -821,6 +830,7 @@ export type Database = {
     Enums: {
       chat_uloga: "user" | "assistant"
       korisnik_uloga: "admin" | "operater" | "pregled"
+      nacin_izvrsenja_tip: "izvrsava" | "pracenje"
       termini_status: "planirano" | "zakazano" | "izvrseno" | "otkazano"
     }
     CompositeTypes: {
@@ -954,6 +964,7 @@ export const Constants = {
     Enums: {
       chat_uloga: ["user", "assistant"],
       korisnik_uloga: ["admin", "operater", "pregled"],
+      nacin_izvrsenja_tip: ["izvrsava", "pracenje"],
       termini_status: ["planirano", "zakazano", "izvrseno", "otkazano"],
     },
   },

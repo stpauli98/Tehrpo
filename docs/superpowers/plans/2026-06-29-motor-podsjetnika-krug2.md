@@ -108,7 +108,7 @@ describe("buildRecipientIndex + recipientsForKlijent", () => {
 
   it("firma bez dodjele → samo admini; base (REMINDER_TO) se dodaje i dedupira", () => {
     const idx = buildRecipientIndex([K("a", "admin@x.com", "admin")], [])
-    expect(recipientsForKlijent(idx, "FX", ["admin@x.com", "bcc@x.com"])).toEqual(["bcc@x.com", "admin@x.com"])
+    expect(recipientsForKlijent(idx, "FX", ["admin@x.com", "bcc@x.com"])).toEqual(["admin@x.com", "bcc@x.com"])
   })
 
   it("pregled dodijeljen + prima → dobija (flag je kapija, ne uloga)", () => {

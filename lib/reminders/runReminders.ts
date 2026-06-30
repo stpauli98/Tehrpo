@@ -3,7 +3,7 @@ import type { Database } from "@/db/types"
 import { env } from "@/lib/env"
 import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
 import { reminderSubject, reminderHtml } from "@/lib/email/templates"
-import { assembleRecipients, parseEmailList } from "@/lib/reminders/recipients"
+import { recipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
 
 export type SentItem = { terminId: string; danaPrije: number; to: string[]; resendId: string; dryRun: boolean }
 export type SkipItem = { terminId: string; danaPrije: number; razlog: string }
@@ -17,18 +17,6 @@ type Outcome =
 
 const DEFAULT_DANA = [60, 30, 15, 7]
 
-/** Interni primaoci (Krug 1): svi aktivni admini + REMINDER_TO. Klijent se nikad ne kontaktira. */
-async function internalRecipients(supabase: SupabaseClient<Database>): Promise<string[]> {
-  const base = parseEmailList(env.REMINDER_TO)
-  const { data: admins, error: adminErr } = await supabase
-    .from("korisnici")
-    .select("email")
-    .eq("uloga", "admin")
-    .eq("aktivan", true)
-  if (adminErr) throw new Error(`Greška pri čitanju primalaca (korisnici): ${adminErr.message}`)
-  const adminEmails = (admins ?? []).map((a) => a.email)
-  return assembleRecipients({ base, adminEmails })
-}
 
 export async function runReminders(
   supabase: SupabaseClient<Database>,
@@ -56,16 +44,26 @@ export async function runReminders(
   if (error) throw new Error(error.message)
   const rows = due ?? []
 
-  // Primaoci se računaju JEDNOM po pokretanju (Krug 1: isti za sve termine).
-  const to = await internalRecipients(supabase)
-  if (to.length === 0 && rows.length > 0) {
-    console.warn("[reminders] nema internih primalaca (admini/REMINDER_TO) — preskačem sva slanja")
+  // Indeks primalaca (jednom po run-u): admini + mapa klijent_id → dodijeljeni; eligibilnost = aktivan & prima_podsjetnike.
+  const base = parseEmailList(env.REMINDER_TO)
+  const { data: korisnici, error: korErr } = await supabase
+    .from("korisnici")
+    .select("id, email, uloga, aktivan, prima_podsjetnike")
+  if (korErr) throw new Error(`Greška pri čitanju primalaca (korisnici): ${korErr.message}`)
+  const { data: dodjele, error: kkErr } = await supabase
+    .from("korisnik_klijent")
+    .select("korisnik_id, klijent_id")
+  if (kkErr) throw new Error(`Greška pri čitanju dodjela (korisnik_klijent): ${kkErr.message}`)
+  const recipientIndex = buildRecipientIndex(korisnici ?? [], dodjele ?? [])
+  if (recipientIndex.adminEmails.length === 0 && recipientIndex.assignedByKlijent.size === 0 && rows.length > 0) {
+    console.warn("[reminders] nema eligibilnih primalaca (admini/dodjele s prima_podsjetnike) — sve se preskača")
   }
 
   // Per-row obrada izdvojena radi throttlinga (grupe + pauza između njih).
   const processRow = async (r: (typeof rows)[number]): Promise<Outcome> => {
       if (
         r.termin_id == null ||
+        r.klijent_id == null ||
         r.dana_prije == null ||
         r.dana_do_roka == null ||
         r.rok_dospijeca == null ||
@@ -74,6 +72,7 @@ export async function runReminders(
       ) {
         return { kind: "skip", terminId: r.termin_id ?? "", danaPrije: r.dana_prije ?? -9999, razlog: "nepotpun red" }
       }
+      const to = recipientsForKlijent(recipientIndex, r.klijent_id, base)
       if (to.length === 0) {
         return { kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "nema primalaca" }
       }

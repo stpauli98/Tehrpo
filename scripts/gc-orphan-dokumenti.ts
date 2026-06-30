@@ -17,6 +17,11 @@ const graceArg = process.argv.find((a) => a.startsWith("--grace-hours="))
 const graceHours = graceArg ? Number(graceArg.split("=")[1]) : 24
 const graceMs = graceHours * 60 * 60 * 1000
 
+if (!Number.isFinite(graceHours) || graceHours <= 0) {
+  console.error(`Neispravan --grace-hours: "${graceArg?.split("=")[1] ?? ""}". Mora biti pozitivan broj (npr. --grace-hours=24).`)
+  process.exit(1)
+}
+
 type Sb = ReturnType<typeof createAdminSupabaseClient>
 const PAGE = 100
 

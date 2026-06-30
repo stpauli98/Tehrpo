@@ -17,7 +17,6 @@ type Outcome =
 
 const DEFAULT_DANA = [60, 30, 15, 7]
 
-
 export async function runReminders(
   supabase: SupabaseClient<Database>,
   deps: {
@@ -50,13 +49,20 @@ export async function runReminders(
     .from("korisnici")
     .select("id, email, uloga, aktivan, prima_podsjetnike")
   if (korErr) throw new Error(`Greška pri čitanju primalaca (korisnici): ${korErr.message}`)
+  // PostgREST implicitno limitira na ~1000 redova: sigurno na trenutnoj skali, ali ako dodjele narastu
+  // dodaj eksplicitan .range()/count provjeru — tiha trunkacija bi inače ispustila nekog primaoca.
   const { data: dodjele, error: kkErr } = await supabase
     .from("korisnik_klijent")
     .select("korisnik_id, klijent_id")
   if (kkErr) throw new Error(`Greška pri čitanju dodjela (korisnik_klijent): ${kkErr.message}`)
   const recipientIndex = buildRecipientIndex(korisnici ?? [], dodjele ?? [])
-  if (recipientIndex.adminEmails.length === 0 && recipientIndex.assignedByKlijent.size === 0 && rows.length > 0) {
-    console.warn("[reminders] nema eligibilnih primalaca (admini/dodjele s prima_podsjetnike) — sve se preskača")
+  if (
+    recipientIndex.adminEmails.length === 0 &&
+    recipientIndex.assignedByKlijent.size === 0 &&
+    base.length === 0 &&
+    rows.length > 0
+  ) {
+    console.warn("[reminders] nema eligibilnih primalaca (admini/dodjele s prima_podsjetnike) ni REMINDER_TO — sve se preskača")
   }
 
   // Per-row obrada izdvojena radi throttlinga (grupe + pauza između njih).

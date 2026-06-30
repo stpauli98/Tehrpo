@@ -23,6 +23,7 @@ function makeFake(opts: {
   kk?: { korisnik_id: string; klijent_id: string }[]
   dueRows?: DueRow[]
   korisniciError?: string
+  kkError?: string
 }) {
   const inserts: Array<Record<string, unknown>> = []
   const fake = {
@@ -34,7 +35,7 @@ function makeFake(opts: {
         return { select: async () => (opts.korisniciError ? { data: null, error: { message: opts.korisniciError } } : { data: opts.korisnici ?? [], error: null }) }
       }
       if (table === "korisnik_klijent") {
-        return { select: async () => ({ data: opts.kk ?? [], error: null }) }
+        return { select: async () => (opts.kkError ? { data: null, error: { message: opts.kkError } } : { data: opts.kk ?? [], error: null }) }
       }
       if (table === "podsjetnici") {
         return { insert: async (row: Record<string, unknown>) => { inserts.push(row); return { error: null } } }
@@ -104,6 +105,13 @@ describe("runReminders", () => {
     const { supabase } = makeFake({ korisniciError: "connection refused", dueRows: [baseRow] })
     await expect(runReminders(supabase)).rejects.toThrow(
       "Greška pri čitanju primalaca (korisnici): connection refused",
+    )
+  })
+
+  it("greška pri čitanju dodjela (korisnik_klijent) → runReminders rejectuje", async () => {
+    const { supabase } = makeFake({ korisnici: [], kkError: "timeout", dueRows: [baseRow] })
+    await expect(runReminders(supabase)).rejects.toThrow(
+      "Greška pri čitanju dodjela (korisnik_klijent): timeout",
     )
   })
 

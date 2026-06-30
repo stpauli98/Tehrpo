@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PlanViewSwitcher } from "@/components/domain/PlanViewSwitcher"
+import { PlanIzvozDugmad } from "@/components/domain/PlanIzvozDugmad"
 import { jeValidanView, type PlanView } from "@/lib/plan-view"
 import { ListaView } from "./_views/lista"
 import { KalendarView } from "./_views/kalendar"
@@ -37,7 +38,10 @@ export default async function PlanAktivnostiPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Plan aktivnosti</h1>
-        <PlanViewSwitcher current={view} />
+        <div className="flex items-center gap-3">
+          <Suspense fallback={null}><PlanIzvozDugmad /></Suspense>
+          <PlanViewSwitcher current={view} />
+        </div>
       </div>
       {view === "lista" && (
         <Suspense fallback={<ViewSkeleton />}>

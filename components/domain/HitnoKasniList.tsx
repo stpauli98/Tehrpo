@@ -36,7 +36,7 @@ export function HitnoKasniList({
             return (
               <li key={t.id}>
                 <Link
-                  href={`/plan-aktivnosti?view=lista&selected=${t.id}`}
+                  href={`/plan-aktivnosti?view=lista&selected=${t.id}&mjesec=svi`}
                   data-testid="hitno-kasni-row"
                   className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
                 >
@@ -61,7 +61,7 @@ export function HitnoKasniList({
       )}
       {ukupnoKasni > 0 && (
         <Link
-          href="/plan-aktivnosti?view=lista&status=kasni"
+          href="/plan-aktivnosti?view=lista&status=kasni&mjesec=svi"
           data-testid="hitno-kasni-footer"
           className="mt-3 inline-block text-xs text-brand hover:underline"
         >

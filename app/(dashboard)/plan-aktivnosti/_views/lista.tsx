@@ -125,7 +125,7 @@ export function ListaView() {
 
       {/* Klikabilne KPI kartice → postave brzi filter na listu (aktivna je uokvirena) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" data-testid="termini-stats">
-        <Link href="/plan-aktivnosti?view=lista" className="block" aria-label="Ukupno termina">
+        <Link href="/plan-aktivnosti?view=lista&mjesec=svi" className="block" aria-label="Ukupno termina">
           <StatCard
             testId="stat-ukupno"
             label="Ukupno termina"
@@ -133,7 +133,7 @@ export function ListaView() {
             sub="svi termini"
             icon={ClipboardList}
             interactive
-            active={statusFilter === "svi" && mjesecFilter === ""}
+            active={statusFilter === "svi" && mjesecFilter === "svi"}
           />
         </Link>
         <Link href={`/plan-aktivnosti?view=lista&mjesec=${ovajMjesec}`} className="block">
@@ -148,7 +148,7 @@ export function ListaView() {
             active={mjesecFilter === ovajMjesec}
           />
         </Link>
-        <Link href="/plan-aktivnosti?view=lista&status=kasni" className="block">
+        <Link href="/plan-aktivnosti?view=lista&status=kasni&mjesec=svi" className="block">
           <StatCard
             testId="stat-kasni"
             label="Kasni rokovi"

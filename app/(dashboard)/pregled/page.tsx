@@ -51,7 +51,7 @@ export default async function PregledPage() {
             testId="stat-card"
           />
         </Link>
-        <Link href="/plan-aktivnosti?view=lista&status=kasni" className="block" aria-label="Kasni rokovi">
+        <Link href="/plan-aktivnosti?view=lista&status=kasni&mjesec=svi" className="block" aria-label="Kasni rokovi">
           <StatCard
             label="Kasni rokovi"
             value={stats.kasni}

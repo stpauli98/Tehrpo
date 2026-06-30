@@ -83,3 +83,17 @@ describe("addMjeseci", () => {
     expect(addMjeseci("2026-05-10", 12)).toBe("2027-05-10")
   })
 })
+
+import { tekuciNarednomMjesecuRange } from "./date"
+
+describe("tekuciNarednomMjesecuRange", () => {
+  it("jun → [01.06, 31.07]", () => {
+    expect(tekuciNarednomMjesecuRange(new Date(Date.UTC(2026, 5, 15)))).toEqual({ from: "2026-06-01", to: "2026-07-31" })
+  })
+  it("preko granice godine: decembar → [01.12, 31.01 sljedeće]", () => {
+    expect(tekuciNarednomMjesecuRange(new Date(Date.UTC(2026, 11, 3)))).toEqual({ from: "2026-12-01", to: "2027-01-31" })
+  })
+  it("februar (28 dana naredni? ne — naredni je mart) → [01.02, 31.03]", () => {
+    expect(tekuciNarednomMjesecuRange(new Date(Date.UTC(2026, 1, 10)))).toEqual({ from: "2026-02-01", to: "2026-03-31" })
+  })
+})

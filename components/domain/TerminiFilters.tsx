@@ -28,7 +28,7 @@ export function TerminiFilters({
   const q = params.get("q") ?? ""
   const klijentId = params.get("klijent_id") ?? "svi"
   const vrstaId = params.get("vrsta_id") ?? "svi"
-  const mjesec = params.get("mjesec") ?? "svi"
+  const mjesec = params.get("mjesec") ?? "tn"
   const lokacijaId = params.get("lokacija") ?? "svi"
   const godina = params.get("godina") ?? String(currentYear())
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
@@ -47,6 +47,14 @@ export function TerminiFilters({
     else next.set(key, value)
     next.delete("page")       // reset paginaciju
     next.delete("selected")   // zatvori detalje
+    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+  }
+
+  function setMjesec(value: string) {
+    const next = new URLSearchParams(params.toString())
+    next.set("mjesec", value) // uvijek eksplicitno (tn|svi|1..12)
+    next.delete("page")
+    next.delete("selected")
     startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
   }
 
@@ -146,7 +154,7 @@ export function TerminiFilters({
       </Select>
 
       {/* Mjesec dropdown */}
-      <Select value={mjesec} onValueChange={(v) => setParam("mjesec", v)} items={mjesecItems}>
+      <Select value={mjesec} onValueChange={(v) => setMjesec(v ?? "tn")} items={mjesecItems}>
         <SelectTrigger className="w-36" data-testid="filter-mjesec">
           <SelectValue placeholder="Svi mjeseci" />
         </SelectTrigger>
@@ -158,8 +166,8 @@ export function TerminiFilters({
         </SelectContent>
       </Select>
 
-      {/* Godina — relevantna samo uz odabran mjesec */}
-      {mjesec !== "svi" && (
+      {/* Godina — relevantna samo uz odabran numerički mjesec */}
+      {mjesec !== "svi" && mjesec !== "tn" && (
         <Select value={godina} onValueChange={(v) => setParam("godina", v)} items={godinaItems}>
           <SelectTrigger className="w-24" data-testid="filter-godina">
             <SelectValue placeholder="Godina" />

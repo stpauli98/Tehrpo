@@ -74,3 +74,15 @@ export function periodRange(
   const m = mjesec ?? 1
   return { od: `${godina}-${pad(m)}-01`, do: `${godina}-${pad(m)}-${pad(last(godina, m))}` }
 }
+
+/** Raspon [prvi dan tekućeg mjeseca, zadnji dan narednog mjeseca] (ISO, UTC, granica godine OK). */
+export function tekuciNarednomMjesecuRange(danas?: Date): { from: string; to: string } {
+  const base = danas ?? new Date()
+  const y = base.getUTCFullYear()
+  const m = base.getUTCMonth() // 0..11 (tekući)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  const from = `${y}-${pad(m + 1)}-01`
+  const end = new Date(Date.UTC(y, m + 2, 0)) // dan 0 mjeseca (m+2) = zadnji dan narednog (m+1)
+  const to = `${end.getUTCFullYear()}-${pad(end.getUTCMonth() + 1)}-${pad(end.getUTCDate())}`
+  return { from, to }
+}

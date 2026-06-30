@@ -67,5 +67,6 @@ export function buildTerminIcs(args: {
     "END:VEVENT",
     "END:VCALENDAR",
   ]
-  return lines.join("\r\n")
+  // RFC 5545 §3.1: svaka content-linija (uključujući zadnju) završava CRLF.
+  return lines.join("\r\n") + "\r\n"
 }

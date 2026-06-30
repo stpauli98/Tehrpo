@@ -26,6 +26,7 @@ export function DodajProvjeruButton({
   const [open, setOpen] = useState(false)
   const [vrstaId, setVrstaId] = useState("")
   const [lokId, setLokId] = useState("none")
+  const [nacin, setNacin] = useState<"izvrsava" | "pracenje">("izvrsava")
   const [state, action, pending] = useActionState(createProfilProvjere, initial)
   const submitted = useRef(false)
 
@@ -38,6 +39,7 @@ export function DodajProvjeruButton({
       submitted.current = false
       setOpen(false)
       setVrstaId(""); setLokId("none")
+      setNacin("izvrsava")
       router.refresh()
     }
   }, [state, pending, router])
@@ -52,6 +54,7 @@ export function DodajProvjeruButton({
             fd.set("klijent_id", klijentId)
             fd.set("vrsta_provjere_id", vrstaId)
             fd.set("lokacija_id", lokId)
+            fd.set("nacin_izvrsenja", nacin)
             submitted.current = true
             action(fd)
           }}
@@ -87,6 +90,17 @@ export function DodajProvjeruButton({
           <label className="block text-sm">
             <span className="text-slate-600">Zadnji put rađeno *</span>
             <Input name="zadnji_datum" type="date" required data-testid="profil-zadnji-datum" />
+          </label>
+
+          <label className="block text-sm">
+            <span className="text-slate-600">Način izvršenja *</span>
+            <Select value={nacin} onValueChange={(v) => setNacin((v as "izvrsava" | "pracenje") ?? "izvrsava")} items={{ izvrsava: "TEHPRO izvršava", pracenje: "Samo praćenje roka" }}>
+              <SelectTrigger className="w-full" data-testid="profil-nacin"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="izvrsava">TEHPRO izvršava</SelectItem>
+                <SelectItem value="pracenje">Samo praćenje roka</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
 
           {state.ok === false && state.message && (

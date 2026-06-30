@@ -4,7 +4,12 @@ import { APP_NAME } from "@/lib/brand"
 
 export type SendResult = { id: string; dryRun: boolean }
 
-export type SendArgs = { to: string[]; subject: string; html: string }
+export type SendArgs = {
+  to: string[]
+  subject: string
+  html: string
+  attachments?: { filename: string; content: Buffer }[]
+}
 
 const FROM = () => env.EMAIL_FROM ?? `${APP_NAME} <onboarding@resend.dev>`
 
@@ -23,6 +28,7 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
     to: args.to,
     subject: args.subject,
     html: args.html,
+    attachments: args.attachments,
   })
   if (error) throw new Error(error.message)
   return { id: data?.id ?? "unknown", dryRun: false }

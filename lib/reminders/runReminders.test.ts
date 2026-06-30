@@ -171,4 +171,19 @@ describe("runReminders", () => {
     await runReminders(supabase, { send, delayMs: 0 })
     expect(sends[0]!.to).toEqual(["op@tehpro.com", "admin@tehpro.com"])
   })
+
+  it("šalje .ics prilog (termin.ics) uz podsjetnik", async () => {
+    const sends: SendArgs[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sends.push(a); return { id: "r", dryRun: false } }
+    const { supabase } = makeFake({
+      korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
+      dueRows: [baseRow],
+    })
+    await runReminders(supabase, { send })
+    const att = sends[0]!.attachments
+    expect(att).toHaveLength(1)
+    expect(att![0]!.filename).toBe("termin.ics")
+    expect(att![0]!.content.toString("utf-8")).toContain("BEGIN:VCALENDAR")
+    expect(att![0]!.content.toString("utf-8")).toContain("SUMMARY:Hidranti — AS")
+  })
 })

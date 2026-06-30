@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/db/types"
 import { env } from "@/lib/env"
 import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
+import { buildTerminIcs } from "@/lib/email/ics"
 import { reminderSubject, reminderHtml } from "@/lib/email/templates"
 import { recipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
 
@@ -83,6 +84,14 @@ export async function runReminders(
         return { kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "nema primalaca" }
       }
       try {
+        const ics = buildTerminIcs({
+          vrsta: r.vrsta_naziv,
+          klijent: r.klijent_naziv,
+          rok: r.rok_dospijeca,
+          terminId: r.termin_id,
+          lokacija: r.lokacija_naziv,
+          baseUrl: env.NEXT_PUBLIC_APP_URL,
+        })
         const res = await send({
           to,
           subject: reminderSubject({ vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, danaDoRoka: r.dana_do_roka }),
@@ -96,6 +105,7 @@ export async function runReminders(
             klijentId: r.klijent_id,
             baseUrl: env.NEXT_PUBLIC_APP_URL,
           }),
+          attachments: [{ filename: "termin.ics", content: Buffer.from(ics, "utf-8") }],
         })
         // Dry-run ILI produkcija bez RESEND_API_KEY (sendEmail tad vrati dryRun): NE upisuj audit.
         // Inače bi „lažno poslat" red kasnije blokirao stvarno slanje (idempotencija) čim se ključ doda.

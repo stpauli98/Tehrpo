@@ -3,7 +3,7 @@ import ExcelJS from "exceljs"
 import { planToXlsx } from "./xlsx"
 import type { PlanRed } from "./types"
 
-const ROW: PlanRed = { klijent: "AS", lokacija: "BL", usluga: "Hidranti", rok: "15.07.2026.", status: "Kasni", periodikaMj: 12, odgovorna: "Pero" }
+const ROW: PlanRed = { klijent: "AS", lokacija: "BL", usluga: "Hidranti", rok: "15.07.2026.", status: "Kasni", periodikaMj: 12, odgovorna: "Pero", nacin: "Praćenje" }
 
 describe("planToXlsx", () => {
   it("vraća validan .xlsx s headerom i redom", async () => {
@@ -17,5 +17,7 @@ describe("planToXlsx", () => {
     expect(ws.getCell("A4").value).toBe("Klijent")
     expect(ws.getCell("A5").value).toBe("AS")
     expect(ws.getCell("D5").value).toBe("15.07.2026.")
+    expect(ws.getCell("H4").value).toBe("Način")
+    expect(ws.getCell("H5").value).toBe("Praćenje")
   })
 })

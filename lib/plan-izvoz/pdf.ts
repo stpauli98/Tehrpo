@@ -14,13 +14,14 @@ const ascii = (s: string) =>
     .replace(/[^\x20-\x7E\xA0-\xFF–—…‚„‘’“”•€™]/g, "?")
 
 const KOLONE = [
-  { label: "Klijent", w: 150 },
-  { label: "Lokacija", w: 110 },
-  { label: "Usluga", w: 140 },
-  { label: "Rok", w: 70 },
-  { label: "Status", w: 90 },
-  { label: "Periodika", w: 70 },
-  { label: "Odgovorna", w: 152 },
+  { label: "Klijent", w: 138 },
+  { label: "Lokacija", w: 100 },
+  { label: "Usluga", w: 128 },
+  { label: "Rok", w: 66 },
+  { label: "Status", w: 84 },
+  { label: "Periodika", w: 62 },
+  { label: "Odgovorna", w: 130 },
+  { label: "Način", w: 74 },
 ] as const
 
 export async function planToPdf(rows: PlanRed[], meta: IzvozMeta): Promise<Buffer> {
@@ -48,7 +49,7 @@ export async function planToPdf(rows: PlanRed[], meta: IzvozMeta): Promise<Buffe
   zaglavlje()
   for (const r of rows) {
     if (y < margin + rowH) { page = pdf.addPage([W, H]); y = H - margin; zaglavlje() }
-    const vals = [r.klijent, r.lokacija, r.usluga, r.rok, r.status, r.periodikaMj == null ? "-" : String(r.periodikaMj), r.odgovorna]
+    const vals = [r.klijent, r.lokacija, r.usluga, r.rok, r.status, r.periodikaMj == null ? "-" : String(r.periodikaMj), r.odgovorna, r.nacin]
     let x = margin
     vals.forEach((v, i) => { page.drawText(skratiti(String(v ?? "-"), KOLONE[i]!.w), { x: x + 2, y: y - 12, size, font }); x += KOLONE[i]!.w })
     y -= rowH

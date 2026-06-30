@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
     status: STATUS_LABEL[toDerivedStatus(t.status_izvedeni)],
     periodikaMj: t.interval_mjeseci ?? null,
     odgovorna: t.zaduzeni ?? "—",
+    nacin: t.nacin_izvrsenja === "pracenje" ? "Praćenje" : "Izvršava",
   }))
 
   const meta = { naslov: APP_NAME, period: periodLabel(f.mjesec, f.godina) }

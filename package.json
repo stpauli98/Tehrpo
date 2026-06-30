@@ -21,7 +21,8 @@
     "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts",
     "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts",
     "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts",
-    "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts"
+    "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts",
+    "gc:dokumenti": "tsx --env-file=.env.local scripts/gc-orphan-dokumenti.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

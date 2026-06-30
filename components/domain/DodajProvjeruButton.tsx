@@ -12,6 +12,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { createProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { APP_NAME } from "@/lib/brand"
 
 const initial: ActionResult = { ok: true }
 
@@ -94,10 +95,10 @@ export function DodajProvjeruButton({
 
           <label className="block text-sm">
             <span className="text-slate-600">Način izvršenja *</span>
-            <Select value={nacin} onValueChange={(v) => setNacin((v as "izvrsava" | "pracenje") ?? "izvrsava")} items={{ izvrsava: "TEHPRO izvršava", pracenje: "Samo praćenje roka" }}>
+            <Select value={nacin} onValueChange={(v) => setNacin((v as "izvrsava" | "pracenje") ?? "izvrsava")} items={{ izvrsava: `${APP_NAME} izvršava`, pracenje: "Samo praćenje roka" }}>
               <SelectTrigger className="w-full" data-testid="profil-nacin"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="izvrsava">TEHPRO izvršava</SelectItem>
+                <SelectItem value="izvrsava">{APP_NAME} izvršava</SelectItem>
                 <SelectItem value="pracenje">Samo praćenje roka</SelectItem>
               </SelectContent>
             </Select>

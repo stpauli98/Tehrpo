@@ -1,6 +1,7 @@
 import { UgovoriTab } from "@/components/domain/UgovoriTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { formatDatum } from "@/lib/date"
+import { APP_NAME } from "@/lib/brand"
 import type { Database } from "@/db/types"
 
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
@@ -31,7 +32,7 @@ export function IdKartaTab({
     ["PIB", osnovni.pib],
     ["Matični broj", osnovni.maticni_broj],
     ["Šifra djelatnosti", osnovni.sifra_djelatnosti],
-    ["Zadužen (TEHPRO)", zaduzeniIme],
+    [`Zadužen (${APP_NAME})`, zaduzeniIme],
   ]
   return (
     <div className="space-y-6" data-testid="tab-id-karta-content">

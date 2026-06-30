@@ -1,11 +1,12 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { NoviKorisnikButton } from "./NoviKorisnikButton"
 import { DodjelaKlijenata } from "./DodjelaKlijenata"
+import { PrimaPodsjetnikeToggle } from "./PrimaPodsjetnikeToggle"
 
 export async function KorisniciTab() {
   const supabase = await createServerSupabaseClient()
   const [korisniciRes, klijentiRes, dodjeleRes] = await Promise.all([
-    supabase.from("korisnici").select("id, ime, email, uloga, aktivan").order("ime"),
+    supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
     supabase.from("klijenti").select("id, naziv").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
   ])
@@ -26,13 +27,16 @@ export async function KorisniciTab() {
               <div className="text-sm font-medium">{k.ime} {!k.aktivan && <span className="text-xs text-slate-400">(deaktiviran)</span>}</div>
               <div className="text-xs text-slate-500">{k.email} · {k.uloga}</div>
             </div>
-            {k.uloga !== "admin" && (
-              <DodjelaKlijenata
-                korisnikId={k.id}
-                klijenti={klijenti}
-                izabrani={dodjele.filter((d) => d.korisnik_id === k.id).map((d) => d.klijent_id)}
-              />
-            )}
+            <div className="flex flex-col items-end gap-2">
+              <PrimaPodsjetnikeToggle korisnikId={k.id} prima={k.prima_podsjetnike} />
+              {k.uloga !== "admin" && (
+                <DodjelaKlijenata
+                  korisnikId={k.id}
+                  klijenti={klijenti}
+                  izabrani={dodjele.filter((d) => d.korisnik_id === k.id).map((d) => d.klijent_id)}
+                />
+              )}
+            </div>
           </li>
         ))}
       </ul>

@@ -51,12 +51,15 @@ describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
         [id],
       )
       const next = await db.query(
-        `select nacin_izvrsenja from termini
+        `select nacin_izvrsenja, rok_dospijeca::text, datum_zadnjeg::text from termini
          where klijent_id = $1 and vrsta_provjere_id = $2 and id <> $3`,
         [ids.klijent, ids.vrsta, id],
       )
       expect(next.rows).toHaveLength(1)
       expect(next.rows[0].nacin_izvrsenja).toBe("pracenje")
+      // rok_dospijeca = placeholder (datum_izvrsenja) koji tg_termini_compute_rok prepiše
+      // na datum_zadnjeg + interval (12 mj) → mora biti STROGO veći (ISO datumi, leksikografski).
+      expect(next.rows[0].rok_dospijeca > next.rows[0].datum_zadnjeg).toBe(true)
     })
   })
 })

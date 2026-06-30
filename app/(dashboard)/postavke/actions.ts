@@ -196,6 +196,15 @@ export async function postaviAktivan(korisnikId: string, aktivan: boolean): Prom
   return { ok: true }
 }
 
+export async function postaviPrimaPodsjetnike(korisnikId: string, prima: boolean): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const admin = createAdminSupabaseClient()
+  const { error } = await admin.from("korisnici").update({ prima_podsjetnike: prima }).eq("id", korisnikId)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
 /** Postavi tačan skup dodijeljenih klijenata za korisnika (zamijeni postojeće). */
 export async function postaviDodjele(korisnikId: string, klijentIds: string[]): Promise<ActionResult> {
   await zahtijevajAdmina()

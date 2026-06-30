@@ -22,3 +22,42 @@ export function assembleRecipients(args: { base: string[]; adminEmails: string[]
   }
   return out
 }
+
+export type KorisnikRow = {
+  id: string
+  email: string
+  uloga: string
+  aktivan: boolean
+  prima_podsjetnike: boolean
+}
+
+export type RecipientIndex = { adminEmails: string[]; assignedByKlijent: Map<string, string[]> }
+
+/** Indeks primalaca: admini (eligibilni) + mapa klijent_id → email-ovi dodijeljenih (eligibilnih). */
+export function buildRecipientIndex(
+  korisnici: KorisnikRow[],
+  dodjele: { korisnik_id: string; klijent_id: string }[],
+): RecipientIndex {
+  const eligibleEmail = new Map<string, string>() // id → email (aktivan + prima_podsjetnike)
+  const adminEmails: string[] = []
+  for (const k of korisnici) {
+    if (!k.aktivan || !k.prima_podsjetnike) continue
+    eligibleEmail.set(k.id, k.email)
+    if (k.uloga === "admin") adminEmails.push(k.email)
+  }
+  const assignedByKlijent = new Map<string, string[]>()
+  for (const d of dodjele) {
+    const email = eligibleEmail.get(d.korisnik_id)
+    if (!email) continue
+    const arr = assignedByKlijent.get(d.klijent_id) ?? []
+    arr.push(email)
+    assignedByKlijent.set(d.klijent_id, arr)
+  }
+  return { adminEmails, assignedByKlijent }
+}
+
+/** Primaoci za jednu firmu: dodijeljeni ∪ admini ∪ REMINDER_TO (dedupe/validacija preko assembleRecipients). */
+export function recipientsForKlijent(index: RecipientIndex, klijentId: string, base: string[]): string[] {
+  const assigned = index.assignedByKlijent.get(klijentId) ?? []
+  return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails] })
+}

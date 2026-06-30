@@ -363,6 +363,7 @@ export type Database = {
           email: string
           id: string
           ime: string
+          prima_podsjetnike: boolean
           uloga: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Insert: {
@@ -371,6 +372,7 @@ export type Database = {
           email: string
           id: string
           ime: string
+          prima_podsjetnike?: boolean
           uloga?: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Update: {
@@ -379,6 +381,7 @@ export type Database = {
           email?: string
           id?: string
           ime?: string
+          prima_podsjetnike?: boolean
           uloga?: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Relationships: []

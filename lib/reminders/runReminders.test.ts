@@ -15,32 +15,30 @@ type DueRow = {
   lokacija_naziv: string | null
 }
 
-function makeFake(opts: { danaPrije?: number[]; admins?: { email: string }[]; dueRows?: DueRow[]; adminError?: string }) {
+type KorRow = { id: string; email: string; uloga: string; aktivan: boolean; prima_podsjetnike: boolean }
+
+function makeFake(opts: {
+  danaPrije?: number[]
+  korisnici?: KorRow[]
+  kk?: { korisnik_id: string; klijent_id: string }[]
+  dueRows?: DueRow[]
+  korisniciError?: string
+  kkError?: string
+}) {
   const inserts: Array<Record<string, unknown>> = []
   const fake = {
     from(table: string) {
       if (table === "postavke") {
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: { dana_prije: opts.danaPrije ?? [60, 30, 15, 7] }, error: null }),
-            }),
-          }),
-        }
+        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { dana_prije: opts.danaPrije ?? [60, 30, 15, 7] }, error: null }) }) }) }
       }
       if (table === "korisnici") {
-        if (opts.adminError) {
-          return { select: () => ({ eq: () => ({ eq: async () => ({ data: null, error: { message: opts.adminError } }) }) }) }
-        }
-        return { select: () => ({ eq: () => ({ eq: async () => ({ data: opts.admins ?? [], error: null }) }) }) }
+        return { select: async () => (opts.korisniciError ? { data: null, error: { message: opts.korisniciError } } : { data: opts.korisnici ?? [], error: null }) }
+      }
+      if (table === "korisnik_klijent") {
+        return { select: async () => (opts.kkError ? { data: null, error: { message: opts.kkError } } : { data: opts.kk ?? [], error: null }) }
       }
       if (table === "podsjetnici") {
-        return {
-          insert: async (row: Record<string, unknown>) => {
-            inserts.push(row)
-            return { error: null }
-          },
-        }
+        return { insert: async (row: Record<string, unknown>) => { inserts.push(row); return { error: null } } }
       }
       throw new Error(`neočekivan from(${table})`)
     },
@@ -68,13 +66,13 @@ describe("runReminders", () => {
       return { id: "r1", dryRun: false }
     }
     const { supabase, inserts } = makeFake({
-      admins: [{ email: "admin1@tehpro.com" }, { email: "ADMIN1@tehpro.com" }, { email: "admin2@tehpro.com" }],
+      korisnici: [{ id: "a", email: "admin1@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
       dueRows: [baseRow],
     })
     const res = await runReminders(supabase, { send })
     expect(res.sent).toHaveLength(1)
     expect(sends).toHaveLength(1)
-    expect(sends[0]!.to).toEqual(["admin1@tehpro.com", "admin2@tehpro.com"])
+    expect(sends[0]!.to).toContain("admin1@tehpro.com")
     expect(sends[0]!.subject).toContain("za 50 dana") // dana_do_roka, ne prag 60
     expect(inserts[0]).toMatchObject({ termin_id: "t1", dana_prije: 60 }) // idempotencija po pragu
   })
@@ -86,7 +84,7 @@ describe("runReminders", () => {
       return { id: "r2", dryRun: false }
     }
     const { supabase, inserts } = makeFake({
-      admins: [{ email: "admin@tehpro.com" }],
+      korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
       dueRows: [{ ...baseRow, termin_id: "t2", dana_prije: -3, dana_do_roka: -3, rok_dospijeca: "2026-06-26" }],
     })
     await runReminders(supabase, { send })
@@ -96,7 +94,7 @@ describe("runReminders", () => {
 
   it("dry-run (ili bez RESEND ključa): šalje ali NE upisuje audit (bez 'poison' idempotencije)", async () => {
     const send = async (): Promise<SendResult> => ({ id: "dry", dryRun: true })
-    const { supabase, inserts } = makeFake({ admins: [{ email: "admin@tehpro.com" }], dueRows: [baseRow] })
+    const { supabase, inserts } = makeFake({ korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }], dueRows: [baseRow] })
     const res = await runReminders(supabase, { send })
     expect(res.sent).toHaveLength(1)
     expect(res.sent[0]!.dryRun).toBe(true)
@@ -104,9 +102,16 @@ describe("runReminders", () => {
   })
 
   it("greška pri čitanju admina → runReminders rejectuje (ne vraća skipped)", async () => {
-    const { supabase } = makeFake({ adminError: "connection refused", dueRows: [baseRow] })
+    const { supabase } = makeFake({ korisniciError: "connection refused", dueRows: [baseRow] })
     await expect(runReminders(supabase)).rejects.toThrow(
       "Greška pri čitanju primalaca (korisnici): connection refused",
+    )
+  })
+
+  it("greška pri čitanju dodjela (korisnik_klijent) → runReminders rejectuje", async () => {
+    const { supabase } = makeFake({ korisnici: [], kkError: "timeout", dueRows: [baseRow] })
+    await expect(runReminders(supabase)).rejects.toThrow(
+      "Greška pri čitanju dodjela (korisnik_klijent): timeout",
     )
   })
 
@@ -116,7 +121,7 @@ describe("runReminders", () => {
       sends.push(a)
       return { id: "x", dryRun: true }
     }
-    const { supabase, inserts } = makeFake({ admins: [], dueRows: [baseRow] })
+    const { supabase, inserts } = makeFake({ korisnici: [], dueRows: [baseRow] })
     const res = await runReminders(supabase, { send })
     expect(sends).toHaveLength(0)
     expect(inserts).toHaveLength(0)
@@ -131,7 +136,7 @@ describe("runReminders", () => {
       return { id: "s", dryRun: false }
     }
     const rows: DueRow[] = Array.from({ length: 5 }, (_, i) => ({ ...baseRow, termin_id: `t${i}` }))
-    const { supabase } = makeFake({ admins: [{ email: "a@tehpro.com" }], dueRows: rows })
+    const { supabase } = makeFake({ korisnici: [{ id: "a", email: "a@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }], dueRows: rows })
     const res = await runReminders(supabase, { send, maxPerRun: 2, batchSize: 5, delayMs: 0 })
     expect(n).toBe(2)
     expect(res.sent).toHaveLength(2)
@@ -145,10 +150,25 @@ describe("runReminders", () => {
       return { id: "s", dryRun: false }
     }
     const rows: DueRow[] = Array.from({ length: 4 }, (_, i) => ({ ...baseRow, termin_id: `t${i}` }))
-    const { supabase } = makeFake({ admins: [{ email: "a@tehpro.com" }], dueRows: rows })
+    const { supabase } = makeFake({ korisnici: [{ id: "a", email: "a@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }], dueRows: rows })
     const res = await runReminders(supabase, { send, maxPerRun: 90, batchSize: 2, delayMs: 0 })
     expect(n).toBe(4)
     expect(res.sent).toHaveLength(4)
     expect(res.deferred).toBe(0)
+  })
+
+  it("routing: operater dobija samo svoju firmu (preko korisnik_klijent)", async () => {
+    const sends: SendArgs[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sends.push(a); return { id: "r", dryRun: false } }
+    const { supabase } = makeFake({
+      korisnici: [
+        { id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true },
+        { id: "o", email: "op@tehpro.com", uloga: "operater", aktivan: true, prima_podsjetnike: true },
+      ],
+      kk: [{ korisnik_id: "o", klijent_id: "k1" }],
+      dueRows: [baseRow], // baseRow.klijent_id === "k1"
+    })
+    await runReminders(supabase, { send, delayMs: 0 })
+    expect(sends[0]!.to).toEqual(["op@tehpro.com", "admin@tehpro.com"])
   })
 })

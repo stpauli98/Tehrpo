@@ -25,7 +25,11 @@ Statusi §10; generisanje izvještaja §7.1; obuke+polaznici §3.2; nulti izvje�
 
 ### 1. Migracija — `supabase/migrations/20260630120000_nacin_izvrsenja.sql`
 ```sql
-create type nacin_izvrsenja_tip as enum ('izvrsava', 'pracenje');
+-- create type nije idempotentan → guard (cloud single-apply se može ponoviti)
+do $$ begin
+  create type nacin_izvrsenja_tip as enum ('izvrsava', 'pracenje');
+exception when duplicate_object then null;
+end $$;
 
 alter table klijent_provjere
   add column if not exists nacin_izvrsenja nacin_izvrsenja_tip not null default 'izvrsava';

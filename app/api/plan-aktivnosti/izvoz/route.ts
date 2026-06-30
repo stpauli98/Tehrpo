@@ -4,7 +4,7 @@ import { parsePlanFilteri, mjesecRange } from "@/lib/plan-filteri"
 import { planToXlsx } from "@/lib/plan-izvoz/xlsx"
 import { planToPdf } from "@/lib/plan-izvoz/pdf"
 import type { PlanRed } from "@/lib/plan-izvoz/types"
-import { formatDatum, MONTHS_BS } from "@/lib/date"
+import { formatDatum, MONTHS_BS, tekuciNarednomMjesecuRange } from "@/lib/date"
 import { STATUS_LABEL, toDerivedStatus } from "@/lib/termini"
 import { APP_NAME } from "@/lib/brand"
 
@@ -12,7 +12,15 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 function periodLabel(mjesec: string, godina: number): string {
-  if (mjesec === "tn") return "tekući + naredni mjesec"
+  if (mjesec === "tn") {
+    const { from, to } = tekuciNarednomMjesecuRange()
+    const fromY = Number(from.slice(0, 4))
+    const fromM = Number(from.slice(5, 7)) - 1 // 0-indexed → MONTHS_BS
+    const toY = Number(to.slice(0, 4))
+    const toM = Number(to.slice(5, 7)) - 1
+    if (fromY === toY) return `${MONTHS_BS[fromM]}–${MONTHS_BS[toM]} ${fromY}`
+    return `${MONTHS_BS[fromM]} ${fromY} – ${MONTHS_BS[toM]} ${toY}`
+  }
   if (mjesec === "svi") return "svi mjeseci"
   const mn = Number(mjesec)
   return mn >= 1 && mn <= 12 ? `${MONTHS_BS[mn - 1]} ${godina}` : "svi mjeseci"
@@ -61,7 +69,8 @@ export async function GET(req: NextRequest) {
   const ct = format === "pdf"
     ? "application/pdf"
     : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  const slug = meta.period.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")
   return new Response(new Uint8Array(buf), {
-    headers: { "Content-Type": ct, "Content-Disposition": `attachment; filename="plan-aktivnosti.${ext}"` },
+    headers: { "Content-Type": ct, "Content-Disposition": `attachment; filename="plan-aktivnosti-${slug}.${ext}"` },
   })
 }

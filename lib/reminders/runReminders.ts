@@ -92,6 +92,9 @@ export async function runReminders(
             rok: r.rok_dospijeca,
             danaDoRoka: r.dana_do_roka,
             lokacija: r.lokacija_naziv,
+            terminId: r.termin_id,
+            klijentId: r.klijent_id,
+            baseUrl: env.NEXT_PUBLIC_APP_URL,
           }),
         })
         // Dry-run ILI produkcija bez RESEND_API_KEY (sendEmail tad vrati dryRun): NE upisuj audit.

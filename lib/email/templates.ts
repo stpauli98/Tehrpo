@@ -31,29 +31,56 @@ export function reminderHtml(args: {
   rok: string
   danaDoRoka: number
   lokacija?: string | null
+  terminId?: string
+  klijentId?: string
+  baseUrl?: string
 }): string {
   const rok = formatDatum(args.rok)
   const kasni = args.danaDoRoka < 0
-  const naslov = kasni ? "Termin u kašnjenju" : "Podsjetnik o roku"
-  const uvod = kasni
-    ? `Termin <strong>${danaTekst(args.danaDoRoka)}</strong> (rok je bio ${rok}).`
-    : `Termin dospijeva <strong>${danaTekst(args.danaDoRoka)}</strong> (${rok}).`
   const boja = kasni ? "#dc2626" : "#2563eb"
+  const badge = `${kasni ? "KASNI" : "USKORO"} · ${danaTekst(args.danaDoRoka)}`
   const lokRed = args.lokacija
-    ? `<p style="margin:4px 0"><strong>Lokacija:</strong> ${escapeHtml(args.lokacija)}</p>`
+    ? `<tr><td style="padding:4px 0;color:#64748b">Lokacija</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.lokacija)}</td></tr>`
     : ""
+
+  // Dugmad: samo s baseUrl + odgovarajući id. Table-based ("bulletproof") za Outlook.
+  const base = args.baseUrl ? args.baseUrl.replace(/\/$/, "") : ""
+  const terminUrl = base && args.terminId ? `${base}/plan-aktivnosti?selected=${encodeURIComponent(args.terminId)}` : ""
+  const klijentUrl = base && args.klijentId ? `${base}/klijenti/${encodeURIComponent(args.klijentId)}` : ""
+  const dugme = (url: string, tekst: string, filled: boolean) =>
+    `<td style="padding:0 6px"><table role="presentation" cellspacing="0" cellpadding="0"><tr><td style="border-radius:6px;background:${filled ? boja : "#ffffff"};border:1px solid ${boja}"><a href="${url}" style="display:inline-block;padding:10px 18px;font-size:14px;color:${filled ? "#ffffff" : boja};text-decoration:none">${tekst}</a></td></tr></table></td>`
+  const dugmici = [
+    terminUrl ? dugme(terminUrl, "Otvori termin", true) : "",
+    klijentUrl ? dugme(klijentUrl, "Otvori klijenta", false) : "",
+  ].join("")
+  const dugmadBlok = dugmici
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:20px auto 0"><tr>${dugmici}</tr></table>`
+    : ""
+
   return `<!doctype html>
-<html lang="bs"><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a">
-  <div style="max-width:560px;margin:0 auto;padding:24px">
-    <h2 style="color:${boja};margin:0 0 12px">${naslov}</h2>
-    <p style="margin:0 0 12px">${uvod}</p>
-    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px">
-      <p style="margin:4px 0"><strong>Klijent:</strong> ${escapeHtml(args.klijent)}</p>
-      <p style="margin:4px 0"><strong>Vrsta:</strong> ${escapeHtml(args.vrsta)}</p>
-      ${lokRed}
-      <p style="margin:4px 0"><strong>Rok dospijeća:</strong> ${rok}</p>
-    </div>
-    <p style="margin:16px 0 0;color:#64748b;font-size:12px">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</p>
-  </div>
+<html lang="bs"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
+        <tr><td style="background:${boja};padding:16px 24px">
+          <table role="presentation" width="100%"><tr>
+            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(APP_NAME)}</td>
+            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">Podsjetnik</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:24px">
+          <span style="display:inline-block;background:${boja};color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">${badge}</span>
+          <p style="margin:12px 0 0;font-size:15px"><strong>Rok dospijeća:</strong> ${rok}</p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
+            <tr><td style="padding:8px 0;color:#64748b">Vrsta</td><td style="padding:8px 0;text-align:right">${escapeHtml(args.vrsta)}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b">Klijent</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.klijent)}</td></tr>
+            ${lokRed}
+          </table>
+          ${dugmadBlok}
+        </td></tr>
+        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body></html>`
 }

@@ -30,6 +30,7 @@ export function TerminiFilters({
   const vrstaId = params.get("vrsta_id") ?? "svi"
   const mjesec = params.get("mjesec") ?? "tn"
   const lokacijaId = params.get("lokacija") ?? "svi"
+  const nacin = params.get("nacin") ?? "svi"
   const godina = params.get("godina") ?? String(currentYear())
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
   const godinaItems: Record<string, string> = Object.fromEntries(godine.map((g) => [String(g), String(g)]))
@@ -40,6 +41,7 @@ export function TerminiFilters({
   const lokacijaItems: Record<string, string> = { svi: "Sve lokacije", ...Object.fromEntries(firmaLokacije.map((l) => [l.id, l.naziv])) }
   const vrstaItems: Record<string, string> = { svi: "Sve vrste", ...Object.fromEntries(vrste.map((v) => [v.id, v.naziv])) }
   const mjesecItems: Record<string, string> = { svi: "Svi mjeseci", ...Object.fromEntries(MONTHS_BS_OPTION.map((m) => [m.value, m.label])) }
+  const nacinItems: Record<string, string> = { svi: "Svi načini", izvrsava: "Izvršava", pracenje: "Samo praćenje" }
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(params.toString())
@@ -163,6 +165,18 @@ export function TerminiFilters({
           {MONTHS_BS_OPTION.map((m) => (
             <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      {/* Način izvršenja dropdown */}
+      <Select value={nacin} onValueChange={(v) => setParam("nacin", v)} items={nacinItems}>
+        <SelectTrigger className="w-40" data-testid="filter-nacin">
+          <SelectValue placeholder="Svi načini" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="svi">Svi načini</SelectItem>
+          <SelectItem value="izvrsava">Izvršava</SelectItem>
+          <SelectItem value="pracenje">Samo praćenje</SelectItem>
         </SelectContent>
       </Select>
 

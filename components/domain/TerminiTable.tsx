@@ -68,7 +68,14 @@ export function TerminiTable({
               <td className="px-3 py-2 whitespace-nowrap tabular-nums">{formatDatum(r.rok_dospijeca)}</td>
               <td className="px-3 py-2 font-medium text-slate-900">{r.klijent_naziv ?? "—"}</td>
               <td className="px-3 py-2 text-slate-600">{r.lokacija_naziv ?? "—"}</td>
-              <td className="px-3 py-2 text-slate-600">{r.vrsta_naziv ?? "—"}</td>
+              <td className="px-3 py-2 text-slate-600">
+                {r.vrsta_naziv ?? "—"}
+                {r.nacin_izvrsenja === "pracenje" && (
+                  <span className="ml-2 rounded border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 align-middle">
+                    Samo praćenje
+                  </span>
+                )}
+              </td>
               <td className="px-3 py-2"><StatusBadge status={r.status_izvedeni} /></td>
               <td className="px-3 py-2 text-slate-600">{r.zaduzeni ?? "—"}</td>
               <td className="px-3 py-2">

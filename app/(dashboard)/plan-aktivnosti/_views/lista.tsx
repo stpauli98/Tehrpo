@@ -29,6 +29,7 @@ export function ListaView() {
   const vrstaFilter = searchParams.get("vrsta_id") ?? ""
   const mjesecFilter = searchParams.get("mjesec") ?? ""
   const godinaFilter = Number(searchParams.get("godina")) || currentYear()
+  const nacinFilter = searchParams.get("nacin") ?? "svi"
   const selectedId = searchParams.get("selected")
 
   const ovajMjesec = String(Number(todayIso().slice(5, 7)))
@@ -42,6 +43,7 @@ export function ListaView() {
     vrsta_id: vrstaFilter,
     mjesec: mjesecFilter,
     godina: godinaFilter,
+    nacin: nacinFilter,
   }
 
   const { data, isPending } = useQuery({

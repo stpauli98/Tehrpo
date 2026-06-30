@@ -14,10 +14,16 @@ describe("parsePlanFilteri", () => {
     const f = parsePlanFilteri(new URLSearchParams("status=kasni&q=as&klijent_id=k1&lokacija=l1&vrsta_id=v1&mjesec=7&godina=2027"))
     expect(f).toMatchObject({ status: "kasni", q: "as", klijentId: "k1", lokacijaId: "l1", vrstaId: "v1", mjesec: "7", godina: 2027 })
   })
+  it("nacin: default 'svi'; čita 'pracenje'; nepoznato → 'svi'", () => {
+    expect(parsePlanFilteri(new URLSearchParams()).nacin).toBe("svi")
+    expect(parsePlanFilteri(new URLSearchParams("nacin=pracenje")).nacin).toBe("pracenje")
+    expect(parsePlanFilteri(new URLSearchParams("nacin=izvrsava")).nacin).toBe("izvrsava")
+    expect(parsePlanFilteri(new URLSearchParams("nacin=xyz")).nacin).toBe("svi")
+  })
 })
 
 describe("mjesecRange", () => {
-  const base = (mjesec: string, godina = 2026) => ({ status: "svi", q: "", klijentId: "", lokacijaId: "", vrstaId: "", mjesec, godina })
+  const base = (mjesec: string, godina = 2026) => ({ status: "svi", q: "", klijentId: "", lokacijaId: "", vrstaId: "", mjesec, godina, nacin: "svi" as const })
   it("'tn' → raspon tekući+naredni (ne null)", () => {
     const r = mjesecRange(base("tn"))
     expect(r).not.toBeNull()

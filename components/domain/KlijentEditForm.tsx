@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
+import { APP_NAME } from "@/lib/brand"
 import {
   Sheet,
   SheetTrigger,
@@ -114,7 +115,7 @@ export function KlijentEditForm({
           ))}
 
           <div className="space-y-1">
-            <span className="block text-sm text-slate-600">Zadužena osoba (TEHPRO)</span>
+            <span className="block text-sm text-slate-600">Zadužena osoba ({APP_NAME})</span>
             <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"}>
               <SelectTrigger data-testid="edit-klijent-zaduzeni" className="w-full">
                 <SelectValue placeholder="— (nije postavljeno)" />

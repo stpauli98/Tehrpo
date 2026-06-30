@@ -6,8 +6,9 @@ export type PlanRed = {
   status: string
   periodikaMj: number | null
   odgovorna: string
+  nacin: string
 }
 
 export type IzvozMeta = { naslov: string; period: string }
 
-export const PLAN_KOLONE = ["Klijent", "Lokacija", "Usluga", "Rok", "Status", "Periodika (mj)", "Odgovorna osoba"] as const
+export const PLAN_KOLONE = ["Klijent", "Lokacija", "Usluga", "Rok", "Status", "Periodika (mj)", "Odgovorna osoba", "Način"] as const

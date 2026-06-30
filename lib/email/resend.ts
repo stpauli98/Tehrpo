@@ -1,11 +1,12 @@
 import { Resend } from "resend"
 import { env } from "@/lib/env"
+import { APP_NAME } from "@/lib/brand"
 
 export type SendResult = { id: string; dryRun: boolean }
 
 export type SendArgs = { to: string[]; subject: string; html: string }
 
-const FROM = () => env.EMAIL_FROM ?? "Tehpro <onboarding@resend.dev>"
+const FROM = () => env.EMAIL_FROM ?? `${APP_NAME} <onboarding@resend.dev>`
 
 /** Dry-run: bez mreže; koristi se u testu i kad nema ključa. */
 export async function drySend(_args: SendArgs): Promise<SendResult> {

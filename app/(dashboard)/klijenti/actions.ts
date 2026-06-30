@@ -220,6 +220,8 @@ export async function createProfilProvjere(
   const intRaw = String(formData.get("interval_mjeseci") ?? "").trim()
   const interval_override = intRaw ? Number(intRaw) : null
   const zadnji_datum = String(formData.get("zadnji_datum") ?? "")
+  const nacinRaw = String(formData.get("nacin_izvrsenja") ?? "izvrsava")
+  const nacin_izvrsenja = nacinRaw === "pracenje" ? "pracenje" : "izvrsava"
 
   if (!klijent_id || !vrsta_provjere_id || !zadnji_datum) {
     return { ok: false, message: "Vrsta i zadnji datum su obavezni." }
@@ -244,7 +246,7 @@ export async function createProfilProvjere(
   // upiši profil-stavku
   const { error: insErr } = await supabase.from("klijent_provjere").insert({
     klijent_id, vrsta_provjere_id, lokacija_id,
-    interval_mjeseci: interval_override, zadnji_datum,
+    interval_mjeseci: interval_override, zadnji_datum, nacin_izvrsenja,
   })
   if (insErr) {
     return insErr.code === "23505"
@@ -260,7 +262,7 @@ export async function createProfilProvjere(
   if (!postoji || postoji.length === 0) {
     await supabase.from("termini").insert({
       klijent_id, vrsta_provjere_id, lokacija_id,
-      rok_dospijeca: rok, status: "planirano", interval_mjeseci: interval,
+      rok_dospijeca: rok, status: "planirano", interval_mjeseci: interval, nacin_izvrsenja,
     })
   }
 

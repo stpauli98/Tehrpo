@@ -1,4 +1,5 @@
 import { formatDatum } from "../date"
+import { APP_NAME, APP_TAGLINE } from "../brand"
 
 export function escapeHtml(s: string): string {
   return s
@@ -52,7 +53,7 @@ export function reminderHtml(args: {
       ${lokRed}
       <p style="margin:4px 0"><strong>Rok dospijeća:</strong> ${rok}</p>
     </div>
-    <p style="margin:16px 0 0;color:#64748b;font-size:12px">Tehpro — Sistem za termine i provjere</p>
+    <p style="margin:16px 0 0;color:#64748b;font-size:12px">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</p>
   </div>
 </body></html>`
 }

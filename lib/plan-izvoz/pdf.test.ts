@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { planToPdf } from "./pdf"
 import type { PlanRed } from "./types"
 
-const ROW: PlanRed = { klijent: "AS", lokacija: "BL", usluga: "Hidranti", rok: "15.07.2026.", status: "Kasni", periodikaMj: 12, odgovorna: "Pero" }
+const ROW: PlanRed = { klijent: "AS", lokacija: "BL", usluga: "Hidranti", rok: "15.07.2026.", status: "Kasni", periodikaMj: 12, odgovorna: "Pero", nacin: "Izvršava" }
 
 describe("planToPdf", () => {
   it("vraća ne-prazan PDF buffer (%PDF magic)", async () => {

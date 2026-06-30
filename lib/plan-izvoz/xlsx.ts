@@ -12,9 +12,9 @@ export async function planToXlsx(rows: PlanRed[], meta: IzvozMeta): Promise<Buff
   const header = ws.addRow([...PLAN_KOLONE])
   header.font = { bold: true }
   for (const r of rows) {
-    ws.addRow([r.klijent, r.lokacija, r.usluga, r.rok, r.status, r.periodikaMj ?? "", r.odgovorna])
+    ws.addRow([r.klijent, r.lokacija, r.usluga, r.rok, r.status, r.periodikaMj ?? "", r.odgovorna, r.nacin])
   }
-  const sirine = [28, 20, 24, 14, 16, 14, 22]
+  const sirine = [28, 20, 24, 14, 16, 14, 22, 14]
   sirine.forEach((w, i) => { ws.getColumn(i + 1).width = w })
   const raw = await wb.xlsx.writeBuffer()
   return Buffer.from(raw as ArrayBuffer)

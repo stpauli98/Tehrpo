@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentCard, type KlijentRow } from "@/components/domain/KlijentCard"
 import { KlijentiSearch } from "@/components/domain/KlijentiSearch"
@@ -74,15 +76,25 @@ export default async function KlijentiPage({
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
             {pageNum <= 1 ? (
-              <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>Prethodna</span>
+              <span aria-label="Prethodna" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "pointer-events-none opacity-50")}>
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+              </span>
             ) : (
-              <Link href={pageHref(pageNum - 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>Prethodna</Link>
+              <Link href={pageHref(pageNum - 1)} aria-label="Prethodna" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")}>
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+                <Tooltip>Prethodna</Tooltip>
+              </Link>
             )}
             <span data-testid="klijenti-page">Strana {pageNum} / {totalPages}</span>
             {pageNum >= totalPages ? (
-              <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>Sljedeća</span>
+              <span aria-label="Sljedeća" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "pointer-events-none opacity-50")}>
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </span>
             ) : (
-              <Link href={pageHref(pageNum + 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>Sljedeća</Link>
+              <Link href={pageHref(pageNum + 1)} aria-label="Sljedeća" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")}>
+                <ChevronRight className="h-4 w-4" aria-hidden />
+                <Tooltip>Sljedeća</Tooltip>
+              </Link>
             )}
           </div>
         )}

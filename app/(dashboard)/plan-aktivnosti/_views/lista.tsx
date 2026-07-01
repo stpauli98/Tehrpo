@@ -3,6 +3,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
@@ -123,40 +125,26 @@ export function ListaView() {
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
           {pageNum <= 1 ? (
-            <span
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "pointer-events-none opacity-50",
-              )}
-            >
-              Prethodna
+            <span aria-label="Prethodna" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "pointer-events-none opacity-50")}>
+              <ChevronLeft className="h-4 w-4" aria-hidden />
             </span>
           ) : (
-            <Link
-              href={pageHref(pageNum - 1)}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Prethodna
+            <Link href={pageHref(pageNum - 1)} aria-label="Prethodna" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")}>
+              <ChevronLeft className="h-4 w-4" aria-hidden />
+              <Tooltip>Prethodna</Tooltip>
             </Link>
           )}
           <span data-testid="termini-page">
             Strana {pageNum} / {totalPages}
           </span>
           {pageNum >= totalPages ? (
-            <span
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "pointer-events-none opacity-50",
-              )}
-            >
-              Sljedeća
+            <span aria-label="Sljedeća" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "pointer-events-none opacity-50")}>
+              <ChevronRight className="h-4 w-4" aria-hidden />
             </span>
           ) : (
-            <Link
-              href={pageHref(pageNum + 1)}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Sljedeća
+            <Link href={pageHref(pageNum + 1)} aria-label="Sljedeća" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")}>
+              <ChevronRight className="h-4 w-4" aria-hidden />
+              <Tooltip>Sljedeća</Tooltip>
             </Link>
           )}
           </div>

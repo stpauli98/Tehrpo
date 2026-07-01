@@ -1,6 +1,8 @@
+import { LogOut } from "lucide-react"
 import { odjaviSe } from "@/app/(dashboard)/odjava/actions"
 import type { TrenutniKorisnik } from "@/lib/auth/current-user"
 import { APP_NAME, APP_TAGLINE, APP_INITIAL } from "@/lib/brand"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 
 export function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }) {
   return (
@@ -17,8 +19,13 @@ export function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }) {
           </span>
         )}
         <form action={odjaviSe}>
-          <button type="submit" className="text-xs text-slate-500 hover:text-slate-900 hover:underline">
-            Odjava
+          <button
+            type="submit"
+            aria-label="Odjava"
+            className="group/tt relative inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <LogOut className="h-[18px] w-[18px]" aria-hidden />
+            <Tooltip>Odjava</Tooltip>
           </button>
         </form>
       </div>

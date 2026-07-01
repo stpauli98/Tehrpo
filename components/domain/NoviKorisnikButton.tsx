@@ -1,6 +1,7 @@
 "use client"
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Plus } from "lucide-react"
 import { kreirajKorisnika, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -24,7 +25,7 @@ export function NoviKorisnikButton() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm">+ Novi korisnik</Button>} />
+      <DialogTrigger render={<Button size="sm"><Plus className="w-4 h-4" aria-hidden /> Novi korisnik</Button>} />
       <DialogContent>
         <DialogHeader><DialogTitle>Novi korisnik</DialogTitle></DialogHeader>
         <form

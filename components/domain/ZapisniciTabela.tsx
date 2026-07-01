@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, Download } from "lucide-react"
+import { Search, Download, Eye } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { formatDatum } from "@/lib/date"
@@ -64,8 +64,9 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
                 <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
-                    <Link href={`/zapisnici?preview=${d.id}`} className="text-brand hover:underline" data-testid="pregled-preview">
-                      Pregled
+                    <Link href={`/zapisnici?preview=${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label="Pregled">
+                      <Eye className="h-4 w-4" aria-hidden />
+                      <Tooltip>Pregled</Tooltip>
                     </Link>
                     <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-download" aria-label="Preuzmi">
                       <Download className="h-4 w-4" aria-hidden />

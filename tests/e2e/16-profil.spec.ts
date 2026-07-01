@@ -38,7 +38,7 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       // sljedeći rok = 2027-01-10
       await expect(page.getByTestId("profil-row")).toContainText("2027")
       // termin generisan → vidljiv na /termini filtriran po klijentu
-      await page.goto(`/termini?klijent_id=${kid}`)
+      await page.goto(`/termini?klijent_id=${kid}&mjesec=svi`)
       await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
       // duplikat profila odbijen
       await page.goto(`/klijenti/${kid}?tab=profil`)
@@ -77,7 +77,7 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       await page.getByTestId("obrisi-profil-potvrdi").click()
       await expect(page.getByTestId("profil-row")).toHaveCount(0)
       // termin i dalje postoji
-      await page.goto(`/termini?klijent_id=${kid}`)
+      await page.goto(`/termini?klijent_id=${kid}&mjesec=svi`)
       await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)

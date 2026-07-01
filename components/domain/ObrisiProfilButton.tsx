@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation"
 import {
   Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from "@/components/ui/dialog"
+import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { deleteProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 
 const initial: ActionResult = { ok: true }
@@ -25,7 +27,7 @@ export function ObrisiProfilButton({ id }: { id: string }) {
     <Dialog>
       <DialogTrigger
         render={
-          <Button variant="outline" size="sm" data-testid="obrisi-profil-btn">Obriši</Button>
+          <Button variant="outline" size="icon-sm" data-testid="obrisi-profil-btn" aria-label="Obriši" className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" aria-hidden /><Tooltip>Ukloni iz profila</Tooltip></Button>
         }
       />
       <DialogContent data-testid="obrisi-profil-dialog">

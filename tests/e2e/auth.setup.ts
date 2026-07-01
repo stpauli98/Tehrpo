@@ -19,11 +19,10 @@
 import { readFileSync } from "node:fs"
 import { test as setup, expect } from "@playwright/test"
 
-function envVar(key: string): string {
-  if (process.env[key]) return process.env[key] as string
+function fromFile(file: string, key: string): string {
   let content = ""
   try {
-    content = readFileSync(".env.local", "utf8")
+    content = readFileSync(file, "utf8")
   } catch {
     return ""
   }
@@ -31,6 +30,19 @@ function envVar(key: string): string {
     .split("\n")
     .find((l) => l.trimStart().startsWith(`${key}=`))
   return line ? line.slice(line.indexOf("=") + 1).trim() : ""
+}
+
+// Ogledaj Next.js dev precedence: process.env > .env.development.local > .env.local.
+// Dev server radi protiv baze iz .env.development.local (DEMO), pa auth.setup MORA
+// da se prijavi na ISTI projekt — inače cookie (sb-<ref>-auth-token) ne odgovara
+// projektu servera i proxy vraća getUser=null → redirect /prijava.
+function envVar(key: string): string {
+  return (
+    process.env[key] ||
+    fromFile(".env.development.local", key) ||
+    fromFile(".env.local", key) ||
+    ""
+  )
 }
 
 const SUPABASE_URL = envVar("NEXT_PUBLIC_SUPABASE_URL")

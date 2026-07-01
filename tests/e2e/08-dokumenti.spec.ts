@@ -4,7 +4,7 @@ test.describe.configure({ mode: "serial" })
 
 // Otvara prvi IZVRŠEN termin (AI zapisnik je dostupan samo za izvršene).
 async function otvoriPrviTermin(page: import("@playwright/test").Page) {
-  await page.goto("/termini?status=izvrseno")
+  await page.goto("/termini?status=izvrseno&mjesec=svi")
   const prviDetalji = page.getByTestId("termin-detalji").first()
   await expect(prviDetalji).toBeVisible()
   await prviDetalji.click()
@@ -20,7 +20,7 @@ test.describe("Faza Dokumenti — termin sheet", () => {
   })
 
   test("neizvršen termin: nema 'Generiši zapisnik (AI)', stoji napomena", async ({ page }) => {
-    await page.goto("/termini?status=kasni")
+    await page.goto("/termini?status=kasni&mjesec=svi")
     await page.getByTestId("termin-detalji").first().click()
     await expect(page.getByTestId("termin-sheet")).toBeVisible()
     await expect(page.getByTestId("generisi-zapisnik")).toHaveCount(0)

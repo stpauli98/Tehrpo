@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Sparkles, Trash2, Download } from "lucide-react"
+import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
 import {
   uploadDokumentAction,
@@ -120,10 +121,12 @@ export function DokumentiSekcija({
               <span className="flex shrink-0 items-center gap-1">
                 <a
                   href={`/api/dokumenti/${d.id}`}
-                  className="inline-flex items-center gap-1 text-brand hover:underline"
+                  className={IKONA_INLINE_KLASA}
                   data-testid="dokument-download"
+                  aria-label="Preuzmi"
                 >
-                  <Download className="w-4 h-4" aria-hidden /> Preuzmi
+                  <Download className="h-4 w-4" aria-hidden />
+                  <Tooltip>Preuzmi</Tooltip>
                 </a>
                 <form action={delAction}>
                   <input type="hidden" name="dokument_id" value={d.id} />

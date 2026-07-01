@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search } from "lucide-react"
+import { Search, Download } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { formatDatum } from "@/lib/date"
 import { ObrisiDokumentButton } from "./ObrisiDokumentButton"
 
@@ -66,8 +67,9 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
                     <Link href={`/zapisnici?preview=${d.id}`} className="text-brand hover:underline" data-testid="pregled-preview">
                       Pregled
                     </Link>
-                    <a href={`/api/dokumenti/${d.id}`} className="text-brand hover:underline" data-testid="pregled-download">
-                      Preuzmi
+                    <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-download" aria-label="Preuzmi">
+                      <Download className="h-4 w-4" aria-hidden />
+                      <Tooltip>Preuzmi</Tooltip>
                     </a>
                     <ObrisiDokumentButton dokumentId={d.id} />
                   </div>

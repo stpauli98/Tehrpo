@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ChevronLeft, MapPin } from "lucide-react"
+import { ChevronLeft, MapPin, Download } from "lucide-react"
+import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -276,8 +277,9 @@ export default async function KlijentDetailPage({
                       <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? "AI zapisnik" : "Upload"}</td>
                       <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
                       <td className="px-3 py-2 text-right">
-                        <a href={`/api/dokumenti/${d.id}`} className="text-brand hover:underline" data-testid="klijent-dokument-download">
-                          Preuzmi
+                        <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label="Preuzmi">
+                          <Download className="h-4 w-4" aria-hidden />
+                          <Tooltip>Preuzmi</Tooltip>
                         </a>
                       </td>
                     </tr>

@@ -6,10 +6,18 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { revalidateVrste } from "@/lib/cache"
+import { sendEmail } from "@/lib/email/resend"
+import { testEmailSubject, testEmailHtml } from "@/lib/email/templates"
 
 export type ActionResult =
   | { ok: true; danaPrije?: number[] }
   | { ok: false; errors?: Record<string, string[] | undefined>; message?: string }
+
+// Rezultat slanja testnog emaila — UI razlikuje stvarno slanje od dry-run-a
+// (kad RESEND_API_KEY nije postavljen) i upozorava ako korisnik ne prima podsjetnike.
+export type TestEmailResult =
+  | { ok: true; dryRun: boolean; email: string; primaPodsjetnike: boolean }
+  | { ok: false; message: string }
 
 const schema = z.object({
   // "30, 14, 7, 1" → niz brojeva
@@ -141,9 +149,20 @@ export async function createVrsta(
 
 // ─── Admin: upravljanje korisnicima ──────────────────────────────────────────
 
-async function zahtijevajAdmina(): Promise<void> {
+async function zahtijevajAdmina() {
   const k = await getTrenutniKorisnik()
   if (!k || k.uloga !== "admin") throw new Error("Samo administrator.")
+  return k
+}
+
+// Vrati broj aktivnih administratora (za zaštitu od zaključavanja sistema).
+async function brojAktivnihAdmina(admin: ReturnType<typeof createAdminSupabaseClient>): Promise<number> {
+  const { count } = await admin
+    .from("korisnici")
+    .select("id", { count: "exact", head: true })
+    .eq("uloga", "admin")
+    .eq("aktivan", true)
+  return count ?? 0
 }
 
 const noviKorisnikSchema = z.object({
@@ -179,8 +198,18 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
 }
 
 export async function postaviUlogu(korisnikId: string, uloga: "admin"|"operater"|"pregled"): Promise<ActionResult> {
-  await zahtijevajAdmina()
+  const ja = await zahtijevajAdmina()
+  if (korisnikId === ja.id && uloga !== "admin") {
+    return { ok: false, message: "Ne možeš sebi oduzeti administratorsku ulogu." }
+  }
   const admin = createAdminSupabaseClient()
+  // Zaštita: ne dozvoli da skidanjem admin uloge ostane bez ijednog aktivnog admina.
+  if (uloga !== "admin") {
+    const { data: cilj } = await admin.from("korisnici").select("uloga, aktivan").eq("id", korisnikId).maybeSingle()
+    if (cilj?.uloga === "admin" && cilj.aktivan && (await brojAktivnihAdmina(admin)) <= 1) {
+      return { ok: false, message: "Mora postojati barem jedan aktivan administrator." }
+    }
+  }
   const { error } = await admin.from("korisnici").update({ uloga }).eq("id", korisnikId)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/postavke")
@@ -188,12 +217,55 @@ export async function postaviUlogu(korisnikId: string, uloga: "admin"|"operater"
 }
 
 export async function postaviAktivan(korisnikId: string, aktivan: boolean): Promise<ActionResult> {
-  await zahtijevajAdmina()
+  const ja = await zahtijevajAdmina()
+  if (!aktivan && korisnikId === ja.id) {
+    return { ok: false, message: "Ne možeš deaktivirati vlastiti nalog." }
+  }
   const admin = createAdminSupabaseClient()
+  // Zaštita: ne dozvoli deaktivaciju zadnjeg aktivnog administratora.
+  if (!aktivan) {
+    const { data: cilj } = await admin.from("korisnici").select("uloga").eq("id", korisnikId).maybeSingle()
+    if (cilj?.uloga === "admin" && (await brojAktivnihAdmina(admin)) <= 1) {
+      return { ok: false, message: "Mora postojati barem jedan aktivan administrator." }
+    }
+  }
   const { error } = await admin.from("korisnici").update({ aktivan }).eq("id", korisnikId)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/postavke")
   return { ok: true }
+}
+
+// Pošalji testni email korisniku da se provjeri stiže li dostava na njegovu adresu.
+export async function posaljiTestniEmail(korisnikId: string): Promise<TestEmailResult> {
+  await zahtijevajAdmina()
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("korisnici")
+    .select("ime, email, prima_podsjetnike")
+    .eq("id", korisnikId)
+    .maybeSingle()
+  if (error) return { ok: false, message: error.message }
+  if (!data?.email) return { ok: false, message: "Korisnik nema email adresu." }
+
+  try {
+    const res = await sendEmail({
+      to: [data.email],
+      subject: testEmailSubject(),
+      html: testEmailHtml({ ime: data.ime }),
+    })
+    return { ok: true, dryRun: res.dryRun, email: data.email, primaPodsjetnike: data.prima_podsjetnike }
+  } catch (e) {
+    const raw = e instanceof Error ? e.message : "Greška pri slanju emaila."
+    return { ok: false, message: objasniEmailGresku(raw) }
+  }
+}
+
+// Prevod čestih Resend grešaka u jasnu poruku na domaćem jeziku.
+function objasniEmailGresku(msg: string): string {
+  if (/only send testing emails|verify a domain|resend\.com\/domains/i.test(msg)) {
+    return "Resend je u testnom režimu: dok domena nije verifikovana, mejlovi se mogu slati samo na email vlasnika Resend naloga. Verifikuj domenu na resend.com/domains i postavi EMAIL_FROM na adresu te domene."
+  }
+  return msg
 }
 
 export async function postaviPrimaPodsjetnike(korisnikId: string, prima: boolean): Promise<ActionResult> {
@@ -272,6 +344,25 @@ export async function postaviVrstaAktivna(vrstaId: string, aktivna: boolean): Pr
   await zahtijevajAdmina()
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("vrste_provjera").update({ aktivna }).eq("id", vrstaId)
+  if (error) return { ok: false, message: error.message }
+  revalidateVrste()
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+// Snimanje intervala za JEDNU vrstu (inline autosave u tabeli Vrste pregleda).
+// interval = null → bez auto-zakazivanja; inače cijeli broj 1–120.
+export async function postaviVrstaInterval(vrstaId: string, interval: number | null): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  if (!UUID_RE.test(vrstaId)) return { ok: false, message: "Neispravan ID vrste." }
+  if (interval !== null && (!Number.isInteger(interval) || interval < 1 || interval > 120)) {
+    return { ok: false, message: "Interval mora biti cijeli broj 1–120 ili prazno." }
+  }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("vrste_provjera")
+    .update({ podrazumevani_interval_mjeseci: interval })
+    .eq("id", vrstaId)
   if (error) return { ok: false, message: error.message }
   revalidateVrste()
   revalidatePath("/postavke")

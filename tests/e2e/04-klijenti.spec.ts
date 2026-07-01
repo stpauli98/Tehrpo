@@ -40,9 +40,10 @@ test.describe("Faza 4 — Klijenti lista", () => {
 
   test("paginacija Sljedeća mijenja stranu", async ({ page }) => {
     await page.goto("/klijenti")
-    await expect(page.getByTestId("klijenti-page")).toContainText("Strana 1")
+    // Paginacija se prikazuje samo kad ima > 1 strane; sa ≤ 1 strane nema šta provjeriti.
     const next = page.getByRole("link", { name: "Sljedeća" })
     if (await next.count()) {
+      await expect(page.getByTestId("klijenti-page")).toContainText("Strana 1")
       await next.click()
       await expect(page.getByTestId("klijenti-page")).toContainText("Strana 2")
     }
@@ -205,7 +206,7 @@ test.describe("Faza 4 — Vizuelni smoke", () => {
     await page.screenshot({ path: "test-results/klijenti-faza4.png", fullPage: true })
   })
 
-  test("Kontakti tab prikazuje kontakt iz lokacije", async ({ page }) => {
+  test("Lokacija prikazuje unesenu kontakt osobu", async ({ page }) => {
     const naziv = "E2E-TMP " + Date.now()
     try {
       await kreirajKlijent(page, naziv)
@@ -217,9 +218,8 @@ test.describe("Faza 4 — Vizuelni smoke", () => {
       await page.getByTestId("lokacija-kontakt_osoba").fill("Ana A.")
       await page.getByTestId("lokacija-submit").click()
       await expect(page.getByTestId("lokacija-sheet")).toBeHidden({ timeout: 5000 })
-      await page.getByRole("tab", { name: "Kontakti" }).click()
-      await page.waitForURL(/tab=kontakti/)
-      await expect(page.getByTestId("tab-kontakti-content")).toContainText("Ana A.")
+      // Lokacijski kontakt se prikazuje u Lokacije tabu (tab Kontakti je sad za kontakte FIRME).
+      await expect(page.getByTestId("lokacije-table")).toContainText("Ana A.")
     } finally {
       await deleteKlijentByNaziv(naziv) // cascade briše lokaciju "Centrala"
     }

@@ -2,9 +2,10 @@
 
 import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
+import { Trash2, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UgovorSheet } from "@/components/domain/UgovorSheet"
+import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
 import { deleteUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { formatDatum } from "@/lib/date"
 import type { Database } from "@/db/types"
@@ -23,19 +24,28 @@ export function UgovoriTab({ klijentId, ugovori }: { klijentId: string; ugovori:
   return (
     <div className="space-y-3" data-testid="ugovori-sekcija">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-slate-700">Ugovori</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <FileText className="h-4 w-4 text-slate-400" aria-hidden /> Ugovori
+        </h3>
         <UgovorSheet klijentId={klijentId} />
       </div>
       {ugovori.length === 0 ? (
         <p className="text-sm text-slate-500">Nema ugovora. Dodajte prvi ugovor.</p>
       ) : (
-        <ul className="space-y-2">
-          {ugovori.map((u) => (
-            <li key={u.id} data-testid="ugovor-red" className="rounded-lg border border-slate-200 p-3 text-sm">
+        <PrikaziJosLista
+          ulClassName="space-y-2"
+          imenicaGenitiv="ugovora"
+          testId="ugovori-prikazi-jos"
+          items={ugovori.map((u) => (
+            <li key={u.id} data-testid="ugovor-red" className="rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50/60">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {u.zavodni_broj || "Bez broja"}
-                  {u.aktivan && <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">aktivan</span>}
+                  {u.aktivan ? (
+                    <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">aktivan</span>
+                  ) : (
+                    <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">neaktivan</span>
+                  )}
                 </span>
                 <span className="flex items-center gap-2">
                   <UgovorSheet klijentId={klijentId} ugovor={u} />
@@ -54,7 +64,7 @@ export function UgovoriTab({ klijentId, ugovori }: { klijentId: string; ugovori:
               </div>
             </li>
           ))}
-        </ul>
+        />
       )}
       {delState.ok === false && delState.message && (
         <p className="text-sm text-red-600" role="alert">{delState.message}</p>

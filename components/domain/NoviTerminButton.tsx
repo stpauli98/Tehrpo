@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -81,22 +81,21 @@ export function NoviTerminButton({
   }, [state, pending, router, queryClient])
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
         render={
           <Button data-testid="novi-termin-btn">
             <Plus className="w-4 h-4" aria-hidden /> Novi termin
           </Button>
         }
       />
-      <SheetContent
-        side="right"
-        className="w-full lg:max-w-xl flex flex-col"
+      <DialogContent
+        className="max-w-lg max-h-[85vh] overflow-y-auto"
         data-testid="novi-termin-sheet"
       >
-        <SheetHeader>
-          <SheetTitle>Novi termin</SheetTitle>
-        </SheetHeader>
+        <DialogHeader>
+          <DialogTitle>Novi termin</DialogTitle>
+        </DialogHeader>
 
         <form
           action={(fd) => {
@@ -106,7 +105,7 @@ export function NoviTerminButton({
             submitted.current = true
             action(fd)
           }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="novi-termin-form"
         >
           <label className="block text-sm">
@@ -192,16 +191,16 @@ export function NoviTerminButton({
           </Button>
         </form>
 
-        <SheetFooter>
-          <SheetClose
+        <DialogFooter>
+          <DialogClose
             render={
               <Button variant="outline" data-testid="novi-cancel">
                 Otkaži
               </Button>
             }
           />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

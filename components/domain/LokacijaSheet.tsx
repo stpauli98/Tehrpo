@@ -4,14 +4,14 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createLokacija, updateLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -66,16 +66,15 @@ export function LokacijaSheet({
   )
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={trigger} />
-      <SheetContent
-        side="right"
-        className="w-full lg:max-w-md flex flex-col"
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={trigger} />
+      <DialogContent
+        className="max-w-lg max-h-[85vh] overflow-y-auto"
         data-testid="lokacija-sheet"
       >
-        <SheetHeader>
-          <SheetTitle>{isEdit ? "Uredi lokaciju" : "Nova lokacija"}</SheetTitle>
-        </SheetHeader>
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Uredi lokaciju" : "Nova lokacija"}</DialogTitle>
+        </DialogHeader>
 
         <form
           key={lokacija?.id ?? "new"}
@@ -83,7 +82,7 @@ export function LokacijaSheet({
             submitted.current = true
             action(fd)
           }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="lokacija-form"
         >
           {isEdit ? (
@@ -119,10 +118,10 @@ export function LokacijaSheet({
           </Button>
         </form>
 
-        <SheetFooter>
-          <SheetClose render={<Button variant="outline">Otkaži</Button>} />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

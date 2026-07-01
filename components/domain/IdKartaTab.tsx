@@ -1,11 +1,15 @@
 import { UgovoriTab } from "@/components/domain/UgovoriTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
+import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
 import { formatDatum } from "@/lib/date"
 import { APP_NAME } from "@/lib/brand"
+import { Building2, ClipboardCheck } from "lucide-react"
 import type { Database } from "@/db/types"
 
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
+
+const CARD = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
 
 export function IdKartaTab({
   klijentId,
@@ -35,40 +39,61 @@ export function IdKartaTab({
     [`Zadužen (${APP_NAME})`, zaduzeniIme],
   ]
   return (
-    <div className="space-y-6" data-testid="tab-id-karta-content">
-      <section className="rounded-xl border border-slate-200 p-4">
-        <h3 className="mb-3 text-sm font-medium text-slate-700">Osnovni podaci</h3>
-        <dl className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+    <div className="space-y-5" data-testid="tab-id-karta-content">
+      <section className={CARD}>
+        <div className="mb-4 flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-slate-400" aria-hidden />
+          <h3 className="text-sm font-semibold text-slate-700">Osnovni podaci</h3>
+        </div>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-3">
           {redovi.map(([label, val]) => (
-            <div key={label} className="flex justify-between gap-2 text-sm">
-              <dt className="text-slate-500">{label}</dt>
-              <dd className="font-medium text-slate-800">{val || "—"}</dd>
+            <div key={label} className="min-w-0">
+              <dt className="text-xs text-slate-400">{label}</dt>
+              <dd className="mt-0.5 truncate text-sm font-medium text-slate-800" title={val || undefined}>
+                {val || "—"}
+              </dd>
             </div>
           ))}
         </dl>
       </section>
 
-      <section className="rounded-xl border border-slate-200 p-4">
+      <section className={CARD}>
         <UgovoriTab klijentId={klijentId} ugovori={ugovori} />
       </section>
 
-      <section className="rounded-xl border border-slate-200 p-4">
-        <KontaktiKlijentList klijentId={klijentId} kontakti={kontakti} />
+      <section className={CARD}>
+        <KontaktiKlijentList
+          klijentId={klijentId}
+          kontakti={kontakti}
+          previewLimit={4}
+          seeAllHref={`/klijenti/${klijentId}?tab=kontakti`}
+        />
       </section>
 
-      <section className="rounded-xl border border-slate-200 p-4">
-        <h3 className="mb-3 text-sm font-medium text-slate-700">Ugovorene usluge</h3>
+      <section className={CARD}>
+        <div className="mb-4 flex items-center gap-2">
+          <ClipboardCheck className="h-4 w-4 text-slate-400" aria-hidden />
+          <h3 className="text-sm font-semibold text-slate-700">Ugovorene usluge</h3>
+        </div>
         {usluge.length === 0 ? (
           <p className="text-sm text-slate-500">Nema definisanih usluga. Dodajte ih kroz tab Profil.</p>
         ) : (
-          <ul className="space-y-1 text-sm">
-            {usluge.map((u, i) => (
-              <li key={i} className="flex justify-between gap-2">
-                <span className="text-slate-700">{u.vrsta_naziv}{u.lokacija_naziv ? ` · ${u.lokacija_naziv}` : ""}</span>
-                <span className="tabular-nums text-slate-500">sljedeći: {formatDatum(u.sljedeci_rok)}</span>
+          <PrikaziJosLista
+            ulClassName="divide-y divide-slate-100 text-sm"
+            imenicaGenitiv="usluga"
+            testId="usluge-prikazi-jos"
+            items={usluge.map((u, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                <span className="text-slate-700">
+                  {u.vrsta_naziv}
+                  {u.lokacija_naziv && <span className="text-slate-400"> · {u.lokacija_naziv}</span>}
+                </span>
+                <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs tabular-nums text-slate-500">
+                  sljedeći: {formatDatum(u.sljedeci_rok)}
+                </span>
               </li>
             ))}
-          </ul>
+          />
         )}
       </section>
     </div>

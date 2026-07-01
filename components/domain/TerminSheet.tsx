@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -94,25 +94,24 @@ export function TerminSheet({
   }
 
   return (
-    <Sheet open onOpenChange={(o) => { if (!o) close() }}>
-      <SheetContent
-        side="right"
-        className="data-[side=right]:max-w-3xl flex flex-col"
+    <Dialog open onOpenChange={(o) => { if (!o) close() }}>
+      <DialogContent
+        className="max-w-lg max-h-[85vh] overflow-y-auto"
         data-testid="termin-sheet"
       >
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <span>{termin.klijent_naziv ?? "Termin"}</span>
             <StatusBadge status={termin.status_izvedeni} />
-          </SheetTitle>
+          </DialogTitle>
           <p className="text-sm text-slate-500">
             {termin.vrsta_naziv ?? "—"}
             {termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
           </p>
           <p className="text-xs text-slate-400">Rok: {formatDatum(termin.rok_dospijeca)}</p>
-        </SheetHeader>
+        </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-6">
+        <div className="space-y-6">
           {/* Edit forma — key={termin.id} remountuje uncontrolled Input-e kad se promijeni
               odabrani termin, pa base-ui FieldControl re-inicijalizuje defaultValue
               (inače: dev warning "changing the default value state of an uncontrolled
@@ -277,12 +276,12 @@ export function TerminSheet({
           </section>
         </div>
 
-        <SheetFooter>
+        <DialogFooter>
           <Button variant="outline" onClick={close} data-testid="sheet-close">
             Zatvori
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

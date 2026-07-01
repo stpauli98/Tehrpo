@@ -4,8 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import {
-  Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
-} from "@/components/ui/sheet"
+  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createKontakt, updateKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -37,14 +37,14 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
     : <Button data-testid="novi-kontakt-btn"><Plus className="w-4 h-4" aria-hidden /> Novi kontakt</Button>
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={trigger} />
-      <SheetContent side="right" className="w-full lg:max-w-md flex flex-col" data-testid="kontakt-sheet">
-        <SheetHeader><SheetTitle>{isEdit ? "Uredi kontakt" : "Novi kontakt"}</SheetTitle></SheetHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={trigger} />
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="kontakt-sheet">
+        <DialogHeader><DialogTitle>{isEdit ? "Uredi kontakt" : "Novi kontakt"}</DialogTitle></DialogHeader>
         <form
           key={kontakt?.id ?? "new"}
           action={(fd) => { submitted.current = true; action(fd) }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="kontakt-form"
         >
           {isEdit && <input type="hidden" name="id" value={kontakt.id} />}
@@ -67,8 +67,8 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
             {pending ? "Spremam…" : isEdit ? "Spremi izmjene" : "Kreiraj kontakt"}
           </Button>
         </form>
-        <SheetFooter><SheetClose render={<Button variant="outline">Otkaži</Button>} /></SheetFooter>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter><DialogClose render={<Button variant="outline">Otkaži</Button>} /></DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

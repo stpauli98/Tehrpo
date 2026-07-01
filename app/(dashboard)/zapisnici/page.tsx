@@ -2,8 +2,7 @@ import Link from "next/link"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { downloadDokument } from "@/lib/supabase/storage"
 import { DocxPreview } from "@/components/domain/DocxPreview"
-import { ObrisiDokumentButton } from "@/components/domain/ObrisiDokumentButton"
-import { formatDatum } from "@/lib/date"
+import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
 import mammoth from "mammoth"
 
 export default async function PregledPage({
@@ -62,39 +61,14 @@ export default async function PregledPage({
           Još nema AI-generisanih zapisnika. Generiši ih iz detalja termina.
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm" data-testid="pregled-tabela">
-            <thead className="bg-slate-50">
-              <tr>
-                {["Klijent", "Vrsta provjere", "Datum", "Akcije"].map((c) => (
-                  <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dokumenti.map((d) => (
-                <tr key={d.id} data-testid="pregled-red" className="border-t border-slate-100">
-                  <td className="px-3 py-2">{d.klijent_naziv ?? "—"}</td>
-                  <td className="px-3 py-2 text-slate-600">{d.vrsta_naziv ?? "—"}</td>
-                  <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-3">
-                      <Link href={`/zapisnici?preview=${d.id}`} className="text-brand hover:underline" data-testid="pregled-preview">
-                        Pregled
-                      </Link>
-                      <a href={`/api/dokumenti/${d.id}`} className="text-brand hover:underline" data-testid="pregled-download">
-                        Preuzmi
-                      </a>
-                      <ObrisiDokumentButton dokumentId={d.id} />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ZapisniciTabela
+          dokumenti={dokumenti.map((d) => ({
+            id: d.id,
+            klijent_naziv: d.klijent_naziv,
+            vrsta_naziv: d.vrsta_naziv,
+            uploaded_at: d.uploaded_at,
+          }))}
+        />
       )}
 
       {previewHtml !== null && (

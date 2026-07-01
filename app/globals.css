@@ -147,3 +147,16 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* Kratki "glow" za istaknutu kontakt karticu (klik iz Lokacija → Kontakti). */
+@keyframes kontakt-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); border-color: rgba(37, 99, 235, 0); }
+  15%  { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.35); border-color: rgba(37, 99, 235, 0.8); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); border-color: rgba(37, 99, 235, 0); }
+}
+.kontakt-glow {
+  animation: kontakt-glow 2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kontakt-glow { animation: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35); }
+}

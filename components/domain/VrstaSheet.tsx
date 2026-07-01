@@ -4,8 +4,8 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import {
-  Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
-} from "@/components/ui/sheet"
+  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { updateVrsta, postaviVrstaAktivna, type ActionResult } from "@/app/(dashboard)/postavke/actions"
@@ -28,28 +28,27 @@ export function VrstaSheet({
   }, [state, pending, router])
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={
         <Button variant="outline" size="sm" data-testid={`uredi-vrstu-${vrsta.id}`}>
           <Pencil className="w-3.5 h-3.5" aria-hidden /> Uredi
         </Button>
       } />
-      <SheetContent side="right" className="w-full lg:max-w-md flex flex-col" data-testid="vrsta-sheet">
-        <SheetHeader><SheetTitle>Uredi vrstu pregleda</SheetTitle></SheetHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="vrsta-sheet">
+        <DialogHeader><DialogTitle>Uredi vrstu pregleda</DialogTitle></DialogHeader>
         <form
           key={vrsta.id}
           action={(fd) => { submitted.current = true; action(fd) }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="vrsta-form"
         >
           <input type="hidden" name="id" value={vrsta.id} />
+          {/* Interval se uređuje inline u tabeli "Vrste pregleda"; ovdje skriveno
+              polje samo čuva trenutnu vrijednost da je updateVrsta ne prebriše na NULL. */}
+          <input type="hidden" name="interval" value={vrsta.interval ?? ""} />
           <label className="block text-sm">
             <span className="text-slate-600">Naziv *</span>
             <Input name="naziv" required defaultValue={vrsta.naziv} data-testid="vrsta-naziv" />
-          </label>
-          <label className="block text-sm">
-            <span className="text-slate-600">Interval (mjeseci)</span>
-            <Input name="interval" type="number" min={1} max={120} defaultValue={vrsta.interval ?? ""} placeholder="prazno = bez auto-zakazivanja" data-testid="vrsta-interval" />
           </label>
           <label className="block text-sm">
             <span className="text-slate-600">Zakonski osnov</span>
@@ -66,7 +65,7 @@ export function VrstaSheet({
             {pending ? "Spremam…" : "Spremi izmjene"}
           </Button>
         </form>
-        <SheetFooter className="flex-row justify-between gap-2">
+        <DialogFooter className="justify-between">
           <Button
             type="button"
             variant="outline"
@@ -77,9 +76,9 @@ export function VrstaSheet({
           >
             {vrsta.aktivna ? "Deaktiviraj" : "Aktiviraj"}
           </Button>
-          <SheetClose render={<Button variant="outline">Zatvori</Button>} />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          <DialogClose render={<Button variant="outline">Zatvori</Button>} />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

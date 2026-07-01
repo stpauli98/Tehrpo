@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, MapPin } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -11,6 +11,8 @@ import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { ProfilTab } from "@/components/domain/ProfilTab"
 import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload"
 import { IdKartaTab } from "@/components/domain/IdKartaTab"
+import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
+import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
 import { formatDatum, addMjeseci } from "@/lib/date"
 import type { Database } from "@/db/types"
 
@@ -30,6 +32,7 @@ export default async function KlijentDetailPage({
   const { id } = await params
   const sp = await searchParams
   const tab = typeof sp.tab === "string" && VALID_TABS.includes(sp.tab) ? sp.tab : "termini"
+  const highlight = typeof sp.highlight === "string" ? sp.highlight : null
 
   const supabase = await createServerSupabaseClient()
   // Čitamo iz klijenti_view OD POČETKA (daje naziv/napomena + broj_termina za T6 delete guard).
@@ -79,12 +82,13 @@ export default async function KlijentDetailPage({
   const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
   const { data: korisniciData } = await supabase.from("korisnici").select("id, ime").eq("aktivan", true).order("ime")
   const korisnici = (korisniciData ?? []).map((k) => ({ id: k.id, ime: k.ime }))
-  // Ugovori/kontakti trebaju samo na "id-karta" tabu → ne dohvaćaj ih bez potrebe.
+  // Ugovori trebaju samo na "id-karta" tabu → ne dohvaćaj ih bez potrebe.
   const ugovori = tab === "id-karta"
     ? ((await supabase.from("ugovori").select("*").eq("klijent_id", id)
         .order("aktivan", { ascending: false }).order("created_at", { ascending: false })).data ?? [])
     : []
-  const kontakti = tab === "id-karta"
+  // Kontakti firme trebaju i na "id-karta" (pregled) i na "kontakti" (pun spisak).
+  const kontakti = tab === "id-karta" || tab === "kontakti"
     ? ((await supabase.from("kontakt_osobe").select("*").eq("klijent_id", id).order("ime")).data ?? [])
     : []
   const zaduzeniIme = primaociRes.data?.zaduzeni_tehpro_id
@@ -102,14 +106,22 @@ export default async function KlijentDetailPage({
       </Link>
 
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold" data-testid="klijent-naziv">
-              {klijent.naziv}
-            </h1>
-            <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
+        <div className="flex items-center gap-4">
+          <span
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand/10 text-lg font-semibold text-brand"
+            aria-hidden
+          >
+            {klijent.naziv.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?"}
+          </span>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold" data-testid="klijent-naziv">
+                {klijent.naziv}
+              </h1>
+              <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
+            </div>
+            {klijent.napomena && <p className="mt-1 text-sm text-slate-500">{klijent.napomena}</p>}
           </div>
-          {klijent.napomena && <p className="mt-1 text-sm text-slate-500">{klijent.napomena}</p>}
         </div>
         <div className="flex items-center gap-2">
           <KlijentEditForm
@@ -190,26 +202,51 @@ export default async function KlijentDetailPage({
       )}
 
       {tab === "kontakti" && (
-        <div data-testid="tab-kontakti-content" className="space-y-3">
-          {lokacije.filter((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon).length === 0 ? (
-            <p className="text-sm text-slate-500">Nema kontakata. Dodajte ih kroz lokacije.</p>
-          ) : (
-            lokacije.map(
-              (l) =>
-                (l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
-                  <div key={l.id} className="rounded-lg border border-slate-200 p-3 text-sm">
-                    <p className="font-medium">
-                      {l.naziv}
-                      {l.grad ? ` · ${l.grad}` : ""}
-                    </p>
-                    <div className="mt-1 text-slate-600 space-y-0.5">
-                      {l.kontakt_osoba && <p>{l.kontakt_osoba}</p>}
-                      {l.kontakt_email && <p>{l.kontakt_email}</p>}
-                      {l.kontakt_telefon && <p>{l.kontakt_telefon}</p>}
-                    </div>
-                  </div>
-                )
-            )
+        <div data-testid="tab-kontakti-content" className="space-y-5">
+          <KontaktHighlighter targetId={highlight} />
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <KontaktiKlijentList klijentId={id} kontakti={kontakti} searchable />
+          </section>
+
+          {lokacije.some((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-3 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-slate-400" aria-hidden />
+                <h3 className="text-sm font-semibold text-slate-700">Kontakti lokacija</h3>
+              </div>
+              <ul className="space-y-2">
+                {lokacije.map(
+                  (l) =>
+                    (l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
+                      <li
+                        key={l.id}
+                        id={`kontakt-${l.id}`}
+                        data-testid="kontakt-lokacija-card"
+                        className="scroll-mt-24 rounded-xl border border-slate-200 p-3 text-sm"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">
+                            {l.kontakt_osoba ?? "—"}
+                            <span className="font-normal text-slate-400"> · {l.naziv}</span>
+                          </span>
+                          <Link
+                            href={`/klijenti/${id}?tab=lokacije`}
+                            className="shrink-0 text-xs text-brand hover:underline"
+                          >
+                            Uredi u Lokacijama
+                          </Link>
+                        </div>
+                        {(l.kontakt_telefon || l.kontakt_email) && (
+                          <div className="mt-1 text-slate-500">
+                            {[l.kontakt_telefon, l.kontakt_email].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </li>
+                    )
+                )}
+              </ul>
+            </section>
           )}
         </div>
       )}

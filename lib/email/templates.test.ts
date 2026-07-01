@@ -1,9 +1,23 @@
 import { describe, it, expect } from "vitest"
-import { reminderSubject, reminderHtml, escapeHtml } from "./templates"
+import { reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml } from "./templates"
 
 describe("escapeHtml", () => {
   it("escape-uje HTML meta znakove", () => {
     expect(escapeHtml('<b>"&\'')).toBe("&lt;b&gt;&quot;&amp;&#39;")
+  })
+})
+
+describe("testEmail", () => {
+  it("subject sadrži naziv aplikacije", () => {
+    expect(testEmailSubject()).toContain("Testni email")
+  })
+  it("html ima pozdrav s imenom i escape-uje ga", () => {
+    const html = testEmailHtml({ ime: "Marko <i>" })
+    expect(html).toContain("Zdravo Marko &lt;i&gt;,")
+    expect(html).toContain("TESTNI EMAIL")
+  })
+  it("html bez imena koristi generički pozdrav", () => {
+    expect(testEmailHtml({ ime: null })).toContain("Zdravo,")
   })
 })
 

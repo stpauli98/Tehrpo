@@ -4,14 +4,14 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -24,7 +24,7 @@ export function NoviKlijentButton() {
   const [state, action, pending] = useActionState(createKlijent, initial)
   const submitted = useRef(false)
 
-  // Zatvori sheet TEK nakon stvarnog submita koji je uspio (submitted ref
+  // Zatvori dialog TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
@@ -35,29 +35,28 @@ export function NoviKlijentButton() {
   }, [state, pending, router])
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
         render={
           <Button data-testid="novi-klijent-btn">
             <Plus className="w-4 h-4" aria-hidden /> Novi klijent
           </Button>
         }
       />
-      <SheetContent
-        side="right"
-        className="w-full lg:max-w-md flex flex-col"
+      <DialogContent
+        className="max-w-lg max-h-[85vh] overflow-y-auto"
         data-testid="novi-klijent-sheet"
       >
-        <SheetHeader>
-          <SheetTitle>Novi klijent</SheetTitle>
-        </SheetHeader>
+        <DialogHeader>
+          <DialogTitle>Novi klijent</DialogTitle>
+        </DialogHeader>
 
         <form
           action={(fd) => {
             submitted.current = true
             action(fd)
           }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="novi-klijent-form"
         >
           <label className="block text-sm">
@@ -86,16 +85,16 @@ export function NoviKlijentButton() {
           </Button>
         </form>
 
-        <SheetFooter>
-          <SheetClose
+        <DialogFooter>
+          <DialogClose
             render={
               <Button variant="outline" data-testid="novi-klijent-cancel">
                 Otkaži
               </Button>
             }
           />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

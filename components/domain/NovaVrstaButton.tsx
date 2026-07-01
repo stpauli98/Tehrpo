@@ -4,14 +4,14 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createVrsta, type ActionResult } from "@/app/(dashboard)/postavke/actions"
@@ -33,29 +33,25 @@ export function NovaVrstaButton() {
   }, [state, pending, router])
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid="nova-vrsta-btn">
             <Plus className="w-4 h-4" aria-hidden /> Nova vrsta
           </Button>
         }
       />
-      <SheetContent
-        side="right"
-        className="w-full lg:max-w-md flex flex-col"
-        data-testid="nova-vrsta-sheet"
-      >
-        <SheetHeader>
-          <SheetTitle>Nova vrsta pregleda</SheetTitle>
-        </SheetHeader>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="nova-vrsta-sheet">
+        <DialogHeader>
+          <DialogTitle>Nova vrsta pregleda</DialogTitle>
+        </DialogHeader>
 
         <form
           action={(fd) => {
             submitted.current = true
             action(fd)
           }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="nova-vrsta-form"
         >
           <label className="block text-sm">
@@ -95,21 +91,20 @@ export function NovaVrstaButton() {
             </p>
           )}
 
-          <Button type="submit" disabled={pending} data-testid="nova-vrsta-submit">
-            {pending ? "Kreiram…" : "Kreiraj vrstu"}
-          </Button>
+          <DialogFooter className="flex-row justify-end gap-2">
+            <DialogClose
+              render={
+                <Button type="button" variant="outline" data-testid="nova-vrsta-cancel">
+                  Otkaži
+                </Button>
+              }
+            />
+            <Button type="submit" disabled={pending} data-testid="nova-vrsta-submit">
+              {pending ? "Kreiram…" : "Kreiraj vrstu"}
+            </Button>
+          </DialogFooter>
         </form>
-
-        <SheetFooter>
-          <SheetClose
-            render={
-              <Button variant="outline" data-testid="nova-vrsta-cancel">
-                Otkaži
-              </Button>
-            }
-          />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

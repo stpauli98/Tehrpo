@@ -88,47 +88,47 @@ test.describe("Temelj — Klijenti (firme) pregled", () => {
   })
 })
 
-test.describe("Temelj — Postavke intervali", () => {
-  test("intervali-form je vidljiv na /postavke", async ({ page }) => {
+test.describe("Temelj — Postavke vrste pregleda (interval autosave)", () => {
+  // Sekcija "Vrste pregleda" je collapsible (zatvorena po defaultu).
+  const otvoriVrste = (page: import("@playwright/test").Page) =>
+    page.getByRole("button", { name: "Vrste pregleda" }).click()
+
+  test("tabela vrsta je vidljiva na /postavke", async ({ page }) => {
     await page.goto("/postavke")
-    await expect(page.getByTestId("intervali-form")).toBeVisible()
+    await otvoriVrste(page)
+    await expect(page.getByTestId("vrste-tabela")).toBeVisible()
   })
 
-  test("promijeni interval za prvu vrstu → spremi → provjeri perzistenciju → vrati na original", async ({ page }) => {
+  test("promijeni interval prve vrste (autosave na Enter) → perzistira → vrati na original", async ({ page }) => {
     await page.goto("/postavke")
-    await expect(page.getByTestId("intervali-form")).toBeVisible()
+    await otvoriVrste(page)
+    const tabela = page.getByTestId("vrste-tabela")
+    await expect(tabela).toBeVisible()
 
-    // Uzmi prvu input u intervali-form
-    const form = page.getByTestId("intervali-form")
-    // interval-<uuid> inputi su u formi — uzimamo prvi number input
-    const firstInput = form.locator("input[type='number']").first()
+    // Prvi interval input u tabeli (interval-<uuid>)
+    const firstInput = tabela.locator("input[type='number']").first()
     await expect(firstInput).toBeVisible()
 
     // Sačuvaj originalnu vrijednost
     const originalValue = (await firstInput.inputValue()) ?? ""
 
-    // Postavi novu vrijednost
+    // Postavi novu vrijednost → Enter blur-uje polje i autosave-uje red
     const newValue = originalValue === "12" ? "24" : "12"
     await firstInput.fill(newValue)
-    await page.getByTestId("intervali-submit").click()
-    // Sačekaj da server action završi prije reload-a (cloud DB latencija)
+    await firstInput.press("Enter")
+    // Sačekaj da server action + router.refresh završe (cloud DB latencija)
     await page.waitForLoadState("networkidle")
 
     // Reload — provjeri da je vrijednost sačuvana
     await page.reload()
-    await expect(page.getByTestId("intervali-form")).toBeVisible()
-    const afterReload = form.locator("input[type='number']").first()
-    const savedValue = await afterReload.inputValue()
-    expect(savedValue).toBe(newValue)
+    await otvoriVrste(page)
+    await expect(tabela).toBeVisible()
+    const afterReload = tabela.locator("input[type='number']").first()
+    await expect(afterReload).toHaveValue(newValue)
 
     // Vrati na originalnu vrijednost (cleanup)
-    if (originalValue !== "") {
-      await afterReload.fill(originalValue)
-    } else {
-      await afterReload.fill("")
-    }
-    await page.getByTestId("intervali-submit").click()
-    // Sačekaj da se forma submita
+    await afterReload.fill(originalValue)
+    await afterReload.press("Enter")
     await page.waitForLoadState("networkidle")
   })
 })

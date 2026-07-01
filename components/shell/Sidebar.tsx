@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   LayoutDashboard,
   Calendar,
@@ -10,47 +11,172 @@ import {
   Bot,
   FileText,
   Settings,
+  ChevronsLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
-  { href: "/pregled",        label: "Pregled",        icon: LayoutDashboard },
+  { href: "/pregled",         label: "Pregled",         icon: LayoutDashboard },
   { href: "/plan-aktivnosti", label: "Plan aktivnosti", icon: Calendar },
-  { href: "/obilasci",  label: "Obilasci",  icon: Map },
-  { href: "/klijenti",  label: "Klijenti",  icon: Users },
-  { href: "/asistent",  label: "Asistent",  icon: Bot },
-  { href: "/zapisnici", label: "Zapisnici", icon: FileText },
-  { href: "/postavke",  label: "Postavke",  icon: Settings },
+  { href: "/obilasci",        label: "Obilasci",        icon: Map },
+  { href: "/klijenti",        label: "Klijenti",        icon: Users },
+  { href: "/asistent",        label: "Asistent",        icon: Bot },
+  { href: "/zapisnici",       label: "Zapisnici",       icon: FileText },
 ] as const
+
+// Postavke se prikvačuje na dno (kao zadnji li:last-child u originalu).
+const FOOTER_ITEM = { href: "/postavke", label: "Postavke", icon: Settings } as const
+
+const MIN_WIDTH = 64          // skupljeno — samo ikonice
+const MAX_WIDTH = 264
+const DEFAULT_WIDTH = 224
+const COLLAPSE_THRESHOLD = 140 // ispod ove širine se ponaša kao skupljeno i snapuje na MIN
+const STORAGE_KEY = "tehpro:sidebar-width"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const navRef = useRef<HTMLElement>(null)
+  const resizingRef = useRef(false)
+  const lastExpandedRef = useRef(DEFAULT_WIDTH)
+
+  const [width, setWidth] = useState(DEFAULT_WIDTH)
+  const [animating, setAnimating] = useState(false)
+
+  const collapsed = width < COLLAPSE_THRESHOLD
+
+  // Učitaj zapamćenu širinu nakon mounta. Početni render (server i klijent) koristi
+  // DEFAULT_WIDTH pa nema hydration mismatch-a; perzistirana širina se primjenjuje tek
+  // nakon hidracije, što je namjeran jednokratni read iz localStorage-a.
+  useEffect(() => {
+    const saved = Number(localStorage.getItem(STORAGE_KEY))
+    if (saved >= MIN_WIDTH && saved <= MAX_WIDTH) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- jednokratna inicijalizacija iz localStorage nakon mounta
+      setWidth(saved)
+      if (saved >= COLLAPSE_THRESHOLD) lastExpandedRef.current = saved
+    }
+  }, [])
+
+  // Perzistuj širinu + zapamti zadnju "razvučenu" širinu za toggle.
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, String(width))
+    if (width >= COLLAPSE_THRESHOLD) lastExpandedRef.current = width
+  }, [width])
+
+  // Povlačenje ručice → mijenja širinu.
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!resizingRef.current) return
+      const left = navRef.current?.getBoundingClientRect().left ?? 0
+      const next = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, e.clientX - left))
+      setWidth(next)
+    }
+    function onUp() {
+      if (!resizingRef.current) return
+      resizingRef.current = false
+      document.body.style.cursor = ""
+      document.body.style.userSelect = ""
+      // Snap: ako je povučeno ispod praga, skupi do kraja.
+      setAnimating(true)
+      setWidth((w) => (w < COLLAPSE_THRESHOLD ? MIN_WIDTH : w))
+    }
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup", onUp)
+    return () => {
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup", onUp)
+    }
+  }, [])
+
+  const startResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    resizingRef.current = true
+    setAnimating(false) // tokom povlačenja bez tranzicije → odzivno
+    document.body.style.cursor = "ew-resize"
+    document.body.style.userSelect = "none"
+  }, [])
+
+  const toggle = useCallback(() => {
+    setAnimating(true)
+    setWidth((w) => (w < COLLAPSE_THRESHOLD ? lastExpandedRef.current || DEFAULT_WIDTH : MIN_WIDTH))
+  }, [])
+
+  const renderItem = ({ href, label, icon: Icon }: { href: string; label: string; icon: typeof Settings }) => {
+    const active = pathname.startsWith(href)
+    return (
+      <Link
+        key={href}
+        href={href}
+        prefetch
+        aria-label={label}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "group/item relative flex h-10 items-center rounded-lg text-sm transition-colors",
+          collapsed ? "justify-center px-0" : "gap-3 px-3",
+          active
+            ? "bg-brand text-white"
+            : "text-slate-700 hover:bg-slate-100",
+        )}
+      >
+        <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
+        {!collapsed && <span className="min-w-0 truncate">{label}</span>}
+        {collapsed && (
+          <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-md group-hover/item:block">
+            {label}
+          </span>
+        )}
+      </Link>
+    )
+  }
 
   return (
     <nav
+      ref={navRef}
       aria-label="Glavna navigacija"
-      className="w-56 shrink-0 border-r border-slate-200 bg-slate-50 p-3 flex flex-col gap-1"
+      style={{ width }}
+      onTransitionEnd={() => setAnimating(false)}
+      className={cn(
+        "relative my-3 ml-3 shrink-0",
+        animating && "transition-[width] duration-300 ease-out",
+      )}
     >
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-        const active = pathname.startsWith(href)
-        return (
-          <Link
-            key={href}
-            href={href}
-            prefetch
+      <div className="flex h-full flex-col gap-1 rounded-2xl border border-slate-200 bg-white/70 p-2 shadow-sm backdrop-blur">
+        <ul className="flex flex-1 flex-col gap-1">
+          {NAV_ITEMS.map((item) => (
+            <li key={item.href}>{renderItem(item)}</li>
+          ))}
+        </ul>
+
+        <div className="mt-auto flex flex-col gap-1 pt-1">
+          {renderItem(FOOTER_ITEM)}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={collapsed ? "Proširi navigaciju" : "Skupi navigaciju"}
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition",
-              active
-                ? "bg-brand text-white"
-                : "text-slate-700 hover:bg-slate-100"
+              "group/item relative flex h-9 items-center rounded-lg text-xs text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600",
+              collapsed ? "justify-center px-0" : "gap-3 px-3",
             )}
-            aria-current={active ? "page" : undefined}
           >
-            <Icon className="w-4 h-4" aria-hidden />
-            {label}
-          </Link>
-        )
-      })}
+            <ChevronsLeft
+              className={cn("h-[18px] w-[18px] shrink-0 transition-transform", collapsed && "rotate-180")}
+              aria-hidden
+            />
+            {!collapsed && <span className="truncate">Skupi</span>}
+          </button>
+        </div>
+      </div>
+
+      {/* Ručica za promjenu širine: povuci da resize-uješ, dvoklik da skupiš/proširiš. */}
+      <div
+        onMouseDown={startResize}
+        onDoubleClick={toggle}
+        role="separator"
+        aria-orientation="vertical"
+        title="Povuci za promjenu širine · dvoklik za skupljanje"
+        className="group/handle absolute -right-1.5 top-0 z-10 flex h-full w-3 cursor-ew-resize items-center justify-center"
+      >
+        <span className="h-12 w-1 rounded-full bg-slate-200 transition-colors group-hover/handle:bg-brand" />
+      </div>
     </nav>
   )
 }

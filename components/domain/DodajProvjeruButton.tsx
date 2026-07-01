@@ -4,8 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import {
-  Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
-} from "@/components/ui/sheet"
+  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -46,10 +46,10 @@ export function DodajProvjeruButton({
   }, [state, pending, router])
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={<Button data-testid="dodaj-provjeru-btn"><Plus className="w-4 h-4" aria-hidden /> Dodaj provjeru</Button>} />
-      <SheetContent side="right" className="w-full lg:max-w-md flex flex-col" data-testid="dodaj-provjeru-sheet">
-        <SheetHeader><SheetTitle>Dodaj provjeru u profil</SheetTitle></SheetHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button data-testid="dodaj-provjeru-btn"><Plus className="w-4 h-4" aria-hidden /> Dodaj provjeru</Button>} />
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="dodaj-provjeru-sheet">
+        <DialogHeader><DialogTitle>Dodaj provjeru u profil</DialogTitle></DialogHeader>
         <form
           action={(fd) => {
             fd.set("klijent_id", klijentId)
@@ -59,7 +59,7 @@ export function DodajProvjeruButton({
             submitted.current = true
             action(fd)
           }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="dodaj-provjeru-form"
         >
           <label className="block text-sm">
@@ -112,10 +112,10 @@ export function DodajProvjeruButton({
             {pending ? "Dodajem…" : "Dodaj i generiši termin"}
           </Button>
         </form>
-        <SheetFooter>
-          <SheetClose render={<Button variant="outline">Otkaži</Button>} />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

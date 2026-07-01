@@ -25,6 +25,37 @@ export function reminderSubject(args: { vrsta: string; klijent: string; danaDoRo
   return `Podsjetnik: ${args.vrsta} — ${args.klijent} (${stanje})`
 }
 
+export function testEmailSubject(): string {
+  return `Testni email — ${APP_NAME}`
+}
+
+/** Jednostavan brendiran test-email: potvrđuje da primalac dobija mejlove iz sistema. */
+export function testEmailHtml(args: { ime?: string | null }): string {
+  const pozdrav = args.ime ? `Zdravo ${escapeHtml(args.ime)},` : "Zdravo,"
+  return `<!doctype html>
+<html lang="bs"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
+        <tr><td style="background:#2563eb;padding:16px 24px">
+          <table role="presentation" width="100%"><tr>
+            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(APP_NAME)}</td>
+            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">Test</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:24px">
+          <span style="display:inline-block;background:#16a34a;color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">TESTNI EMAIL</span>
+          <p style="margin:14px 0 0;font-size:15px">${pozdrav}</p>
+          <p style="margin:8px 0 0;font-size:14px;color:#334155">Ako vidiš ovu poruku, dostava emaila na tvoju adresu radi ispravno. Na ovu adresu ćeš primati automatske podsjetnike o rokovima dospijeća.</p>
+          <p style="margin:16px 0 0;font-size:13px;color:#64748b">Ovo je test poslan iz postavki — nije potrebno ništa raditi.</p>
+        </td></tr>
+        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`
+}
+
 export function reminderHtml(args: {
   klijent: string
   vrsta: string

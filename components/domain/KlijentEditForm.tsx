@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import { APP_NAME } from "@/lib/brand"
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { updateKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -40,6 +40,13 @@ export function KlijentEditForm({
   const [state, action, pending] = useActionState(updateKlijent, initial)
   const submitted = useRef(false)
 
+  // items mapa (value→label) za base-ui SelectValue — prikaz IMENA radnika kad je
+  // select zatvoren (bez nje base-ui prikaže sirovu vrijednost = UUID).
+  const zaduzeniItems: Record<string, string> = {
+    none: "— (nije postavljeno)",
+    ...Object.fromEntries(korisnici.map((k) => [k.id, k.ime])),
+  }
+
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
       submitted.current = false
@@ -49,30 +56,32 @@ export function KlijentEditForm({
   }, [state, pending, router])
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid="uredi-klijent-btn">
             <Pencil className="w-3.5 h-3.5" aria-hidden /> Uredi
           </Button>
         }
       />
-      <SheetContent
-        side="right"
-        className="w-full lg:max-w-md flex flex-col"
+      <DialogContent
+        className="max-w-lg max-h-[85vh] overflow-y-auto"
         data-testid="klijent-edit-sheet"
       >
-        <SheetHeader>
-          <SheetTitle>Uredi klijenta</SheetTitle>
-        </SheetHeader>
+        <DialogHeader>
+          <DialogTitle>Uredi klijenta</DialogTitle>
+        </DialogHeader>
 
         <form
-          key={klijent.id}
+          // Potpis svih vrijednosti: kad se podaci promijene nakon router.refresh(),
+          // forma se remountuje umjesto da mijenja defaultValue uncontrolled polja
+          // (inače base-ui javlja "changing default value of uncontrolled ...").
+          key={JSON.stringify(klijent)}
           action={(fd) => {
             submitted.current = true
             action(fd)
           }}
-          className="flex-1 overflow-auto px-4 space-y-3"
+          className="space-y-3"
           data-testid="klijent-edit-form"
         >
           <input type="hidden" name="id" value={klijent.id} />
@@ -116,7 +125,7 @@ export function KlijentEditForm({
 
           <div className="space-y-1">
             <span className="block text-sm text-slate-600">Zadužena osoba ({APP_NAME})</span>
-            <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"}>
+            <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"} items={zaduzeniItems}>
               <SelectTrigger data-testid="edit-klijent-zaduzeni" className="w-full">
                 <SelectValue placeholder="— (nije postavljeno)" />
               </SelectTrigger>
@@ -167,10 +176,10 @@ export function KlijentEditForm({
           </Button>
         </form>
 
-        <SheetFooter>
-          <SheetClose render={<Button variant="outline">Otkaži</Button>} />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

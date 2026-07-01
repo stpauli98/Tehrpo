@@ -57,8 +57,13 @@ test.describe("Faza 6 — Cron endpoint", () => {
 })
 
 test.describe("Faza 6 — Postavke UI", () => {
+  // Sekcije su collapsible (zatvorene po defaultu) → otvori prije interakcije.
+  const otvoriPodsjetnike = (page: import("@playwright/test").Page) =>
+    page.getByRole("button", { name: "Email podsjetnici" }).click()
+
   test("dodavanje/uklanjanje praga se perzistira", async ({ page }) => {
     await page.goto("/postavke")
+    await otvoriPodsjetnike(page)
     await expect(page.getByTestId("reminder-form")).toBeVisible()
     // Dodaj custom prag 45 (nije u presetima → ide kroz custom unos)
     await page.getByTestId("reminder-custom-input").fill("45")
@@ -69,6 +74,7 @@ test.describe("Faza 6 — Postavke UI", () => {
     await expect(page.getByTestId("reminder-submit")).toHaveText("Spremi")
     // Reload — server se ponovo učitava iz DB → potvrdi perzistenciju.
     await page.reload()
+    await otvoriPodsjetnike(page)
     await expect(page.getByTestId("reminder-chip-45")).toBeVisible()
     // Ukloni 45 (cleanup) i potvrdi da nestaje i ostaje uklonjen
     await page.getByTestId("reminder-chip-remove-45").click()
@@ -76,6 +82,7 @@ test.describe("Faza 6 — Postavke UI", () => {
     await page.getByTestId("reminder-submit").click()
     await expect(page.getByTestId("reminder-submit")).toHaveText("Spremi")
     await page.reload()
+    await otvoriPodsjetnike(page)
     await expect(page.getByTestId("reminder-chip-45")).toHaveCount(0)
   })
 
@@ -84,6 +91,7 @@ test.describe("Faza 6 — Postavke UI", () => {
     page.on("pageerror", (e) => errors.push(String(e)))
     page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()) })
     await page.goto("/postavke")
+    await otvoriPodsjetnike(page)
     await expect(page.getByTestId("reminder-form")).toBeVisible()
     expect(errors).toHaveLength(0)
   })

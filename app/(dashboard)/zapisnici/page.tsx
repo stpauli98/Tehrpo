@@ -1,5 +1,7 @@
 import Link from "next/link"
+import { X } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { downloadDokument } from "@/lib/supabase/storage"
 import { DocxPreview } from "@/components/domain/DocxPreview"
 import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
@@ -75,8 +77,9 @@ export default async function PregledPage({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">{previewNaziv}</h2>
-            <Link href="/zapisnici" className="text-sm text-slate-500 hover:text-slate-700" data-testid="pregled-zatvori">
-              Zatvori pregled
+            <Link href="/zapisnici" className={IKONA_INLINE_KLASA} data-testid="pregled-zatvori" aria-label="Zatvori pregled">
+              <X className="h-4 w-4" aria-hidden />
+              <Tooltip>Zatvori pregled</Tooltip>
             </Link>
           </div>
           <DocxPreview html={previewHtml} />

@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus } from "lucide-react"
+import { Plus, Pencil } from "lucide-react"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import {
   Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from "@/components/ui/dialog"
@@ -33,7 +34,7 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
   }, [state, pending, router])
 
   const trigger = isEdit
-    ? <Button variant="outline" size="sm" data-testid={`uredi-kontakt-${kontakt.id}`}>Uredi</Button>
+    ? <Button variant="outline" size="icon-sm" data-testid={`uredi-kontakt-${kontakt.id}`} aria-label="Uredi" className="group/tt relative"><Pencil className="h-4 w-4" aria-hidden /><Tooltip>Uredi</Tooltip></Button>
     : <Button data-testid="novi-kontakt-btn"><Plus className="w-4 h-4" aria-hidden /> Novi kontakt</Button>
 
   return (

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import {
   Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from "@/components/ui/dialog"
@@ -30,8 +31,9 @@ export function VrstaSheet({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={
-        <Button variant="outline" size="sm" data-testid={`uredi-vrstu-${vrsta.id}`}>
-          <Pencil className="w-3.5 h-3.5" aria-hidden /> Uredi
+        <Button variant="outline" size="icon-sm" data-testid={`uredi-vrstu-${vrsta.id}`} aria-label="Uredi" className="group/tt relative">
+          <Pencil className="h-4 w-4" aria-hidden />
+          <Tooltip>Uredi</Tooltip>
         </Button>
       } />
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="vrsta-sheet">

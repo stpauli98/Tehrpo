@@ -41,7 +41,7 @@ export function MonthCalendar({
 
   return (
     <div
-      className="rounded-xl border border-slate-200 overflow-hidden"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-slate-200"
       data-testid="plan-grid"
     >
       {/* Day-of-week header */}
@@ -53,8 +53,8 @@ export function MonthCalendar({
         ))}
       </div>
 
-      {/* Calendar cells */}
-      <div className="grid grid-cols-7">
+      {/* Calendar cells — grid-rows-6 + flex-1 da 6 sedmica ispuni visinu prozora */}
+      <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-6">
         {grid.map((c) => {
           const termini = terminiByDan.get(c.date) ?? []
           const isToday = c.date === today

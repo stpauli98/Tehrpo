@@ -8,11 +8,10 @@
 import { readFileSync } from "node:fs"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
-function envVar(key: string): string {
-  if (process.env[key]) return process.env[key] as string
+function fromFile(file: string, key: string): string {
   let content = ""
   try {
-    content = readFileSync(".env.local", "utf8")
+    content = readFileSync(file, "utf8")
   } catch {
     return ""
   }
@@ -20,6 +19,19 @@ function envVar(key: string): string {
     .split("\n")
     .find((l) => l.trimStart().startsWith(`${key}=`))
   return line ? line.slice(line.indexOf("=") + 1).trim() : ""
+}
+
+// Ista precedenca kao Next dev i auth.setup: process.env > .env.development.local > .env.local.
+// KRITIČNO: dev server (app pod testom) radi protiv .env.development.local (DEMO projekt). Ovaj
+// helper MORA pisati u ISTI projekt — inače test podaci odu u drugi projekt (PROD) i app ih ne
+// vidi (sheet se ne otvori, brojači krivi) + zagađuje PROD bazu.
+function envVar(key: string): string {
+  return (
+    process.env[key] ||
+    fromFile(".env.development.local", key) ||
+    fromFile(".env.local", key) ||
+    ""
+  )
 }
 
 export const db: SupabaseClient = createClient(
@@ -85,7 +97,7 @@ export async function insertTermin(input: {
   vrstaId: string
   rok: string
 }): Promise<string> {
-  const { data } = await db
+  const { data, error } = await db
     .from("termini")
     .insert({
       klijent_id: input.klijentId,
@@ -95,7 +107,8 @@ export async function insertTermin(input: {
     })
     .select("id")
     .single()
-  return (data?.id as string) ?? ""
+  if (error) throw new Error(`insertTermin: ${error.message}`)
+  return data.id as string
 }
 
 /** Obriši termin po id-u (čišćenje nakon testa). */

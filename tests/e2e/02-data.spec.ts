@@ -2,12 +2,12 @@ import { test, expect } from "@playwright/test"
 
 test.describe("Faza 2 data layer", () => {
   test("Termini stranica prikazuje broj termina > 0 (seed primijenjen)", async ({ page }) => {
-    await page.goto("/termini")
-    const ukupnoEl = page.getByTestId("stat-ukupno-value")
-    await expect(ukupnoEl).toBeVisible()
+    await page.goto("/termini?mjesec=svi")
+    const totalEl = page.getByTestId("termini-total")
+    await expect(totalEl).toBeVisible()
 
-    const text = await ukupnoEl.textContent()
-    const count = Number(text ?? "0")
+    const text = await totalEl.textContent()
+    const count = Number((text ?? "").replace(/\D+/g, ""))
     expect(count).toBeGreaterThan(0)
   })
 

@@ -112,11 +112,17 @@ export function TerminSheet({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Edit forma — key={termin.id} remountuje uncontrolled Input-e kad se promijeni
-              odabrani termin, pa base-ui FieldControl re-inicijalizuje defaultValue
-              (inače: dev warning "changing the default value state of an uncontrolled
-              FieldControl" + zastarjele vrijednosti u poljima pri prebacivanju termina) */}
-          <form key={termin.id} action={updateAction} className="space-y-3" data-testid="termin-edit-form">
+          {/* Edit forma — key ovisi o SVIM vrijednostima koje pune defaultValue (ne samo id),
+              pa se uncontrolled Input-i remountuju i kad se isti termin osvježi (npr. nakon
+              save-a → revalidate → react-query refetch vrati nove vrijednosti). Inače base-ui
+              FieldControl javlja dev warning "changing the default value state of an uncontrolled
+              FieldControl" i polja pokazuju zastarjele vrijednosti. */}
+          <form
+            key={`${termin.id}|${termin.status}|${termin.datum_zakazan ?? ""}|${termin.datum_izvrsenja ?? ""}|${termin.zaduzeni ?? ""}|${termin.napomena ?? ""}`}
+            action={updateAction}
+            className="space-y-3"
+            data-testid="termin-edit-form"
+          >
             <input type="hidden" name="id" value={termin.id ?? ""} />
             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Detalji</p>
             <div className="grid grid-cols-2 gap-3">

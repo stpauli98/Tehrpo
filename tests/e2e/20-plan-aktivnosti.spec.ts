@@ -1,15 +1,16 @@
 import { test, expect } from "@playwright/test"
 
 test.describe("Plan aktivnosti — konsolidacija", () => {
-  test("default view = lista; switcher mijenja prikaz", async ({ page }) => {
+  test("default view = kalendar; switcher mijenja prikaz", async ({ page }) => {
     await page.goto("/plan-aktivnosti")
     await expect(page.getByTestId("plan-view-switcher")).toBeVisible()
+    await expect(page.getByTestId("view-kalendar")).toHaveAttribute("data-active", "true")
+    await expect(page.getByTestId("plan-grid")).toBeVisible()
+
+    await page.getByTestId("view-lista").click()
+    await page.waitForURL(/view=lista/)
     await expect(page.getByTestId("view-lista")).toHaveAttribute("data-active", "true")
     await expect(page.getByTestId("termini-filters")).toBeVisible()
-
-    await page.getByTestId("view-kalendar").click()
-    await page.waitForURL(/view=kalendar/)
-    await expect(page.getByTestId("view-kalendar")).toHaveAttribute("data-active", "true")
 
     await page.getByTestId("view-matrica").click()
     await page.waitForURL(/view=matrica/)

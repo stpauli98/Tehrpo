@@ -32,10 +32,10 @@ export default async function PlanAktivnostiPage({
 }) {
   const sp = await searchParams
   const raw = typeof sp.view === "string" ? sp.view : undefined
-  const view: PlanView = jeValidanView(raw) ? raw : "lista"
+  const view: PlanView = jeValidanView(raw) ? raw : "kalendar"
 
   return (
-    <div className="space-y-6">
+    <div className="flex min-h-full flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Plan aktivnosti</h1>
         <div className="flex items-center gap-3">

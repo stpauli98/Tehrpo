@@ -1,4 +1,5 @@
-export const PLAN_VIEWS = ["lista", "kalendar", "matrica"] as const
+// Redoslijed tabova u switcher-u: Kalendar prvi, Lista druga, Matrica treća.
+export const PLAN_VIEWS = ["kalendar", "lista", "matrica"] as const
 export type PlanView = (typeof PLAN_VIEWS)[number]
 
 export function jeValidanView(v: string | undefined): v is PlanView {

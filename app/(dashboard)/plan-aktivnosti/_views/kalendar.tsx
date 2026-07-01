@@ -104,11 +104,17 @@ export function KalendarView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-1 flex-col gap-6">
       <div className="flex items-center justify-end gap-4">
         <PlanNav godina={godina} mjesec={mjesec} godine={godine} danas={danas} />
       </div>
-      <div className={selectedDan ? "grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4" : ""}>
+      <div
+        className={
+          selectedDan
+            ? "grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]"
+            : "flex min-h-0 flex-1"
+        }
+      >
         <MonthCalendar
           grid={grid}
           terminiByDan={terminiByDan}

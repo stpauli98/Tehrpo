@@ -52,6 +52,18 @@ export function TerminiFilters({
     startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
   }
 
+  function setStatus(value: string) {
+    const next = new URLSearchParams(params.toString())
+    if (!value || value === "svi") next.delete("status")
+    else next.set("status", value)
+    // Kasni rokovi su po prirodi u prošlosti → prikaži sve mjesece (ne samo tekući),
+    // inače tekući mjesečni filter sakrije prošle kasne termine.
+    if (value === "kasni") next.set("mjesec", "svi")
+    next.delete("page")
+    next.delete("selected")
+    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+  }
+
   function setMjesec(value: string) {
     const next = new URLSearchParams(params.toString())
     next.set("mjesec", value) // uvijek eksplicitno (tn|svi|1..12)
@@ -101,7 +113,7 @@ export function TerminiFilters({
             type="button"
             data-testid={`status-pill-${o.value}`}
             data-active={status === o.value}
-            onClick={() => setParam("status", o.value)}
+            onClick={() => setStatus(o.value)}
             className={cn(
               "px-3 py-1 rounded-full text-sm border transition",
               status === o.value

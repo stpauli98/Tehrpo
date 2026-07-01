@@ -133,11 +133,14 @@ export function DokumentiSekcija({
                   <Button
                     type="submit"
                     variant="ghost"
+                    size="icon"
                     disabled={delPending}
                     data-testid="dokument-delete"
                     aria-label="Obriši dokument"
+                    className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" aria-hidden />
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <Tooltip>Obriši dokument</Tooltip>
                   </Button>
                 </form>
               </span>

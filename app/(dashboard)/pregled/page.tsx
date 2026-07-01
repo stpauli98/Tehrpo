@@ -82,18 +82,21 @@ export default async function PregledPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-xl border border-slate-200 p-4" data-testid="dashboard-chart">
-          <OpterecenjeChart
-            data={opterecenje}
-            currentMonth={mjesec}
-            godina={godina}
-          />
-        </div>
-        <HitnoKasniList
-          items={hitnoKasni}
-          ukupnoKasni={stats.kasni}
-          today={todayIso()}
+      <HitnoKasniList
+        items={hitnoKasni}
+        ukupnoKasni={stats.kasni}
+        today={todayIso()}
+      />
+
+      {/* Grafik na dnu, pune širine — pregledniji uvid u godišnje opterećenje */}
+      <div
+        className="rounded-xl border border-slate-200 bg-white p-5"
+        data-testid="dashboard-chart"
+      >
+        <OpterecenjeChart
+          data={opterecenje}
+          currentMonth={mjesec}
+          godina={godina}
         />
       </div>
     </div>

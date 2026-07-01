@@ -4,8 +4,10 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { Database } from "@/db/types"
 import { StatusBadge } from "@/components/domain/StatusBadge"
+import { Eye } from "lucide-react"
 import { formatDatum } from "@/lib/date"
 import { cn } from "@/lib/utils"
+import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 
 export type TerminRow = Database["public"]["Views"]["termini_view"]["Row"]
 
@@ -83,10 +85,12 @@ export function TerminiTable({
                   <Link
                     href={detailHref(r.id, currentSearch)}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-brand hover:underline font-medium"
+                    className={IKONA_INLINE_KLASA}
                     data-testid="termin-detalji"
+                    aria-label="Detalji"
                   >
-                    Detalji
+                    <Eye className="h-4 w-4" aria-hidden />
+                    <Tooltip>Detalji</Tooltip>
                   </Link>
                 )}
               </td>

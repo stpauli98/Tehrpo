@@ -47,7 +47,7 @@ export async function uploadDokumentAction(
     return { ok: false, message: "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp)." }
   }
   if (file.size > MAX_BYTES) {
-    return { ok: false, message: "Fajl je veći od 50 MB." }
+    return { ok: false, message: "Fajl je veći od 10 MB." }
   }
 
   const supabase = await createServerSupabaseClient()
@@ -221,7 +221,7 @@ export async function uploadKlijentDokumentAction(
   if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
     return { ok: false, message: "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp)." }
   }
-  if (file.size > MAX_BYTES) return { ok: false, message: "Fajl je veći od 50 MB." }
+  if (file.size > MAX_BYTES) return { ok: false, message: "Fajl je veći od 10 MB." }
 
   const supabase = await createServerSupabaseClient()
   // Pristup PRIJE upload-a u storage: RLS vraća null ako korisnik nema pristup klijentu

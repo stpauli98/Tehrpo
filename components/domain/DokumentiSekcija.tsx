@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Sparkles, Trash2, Download } from "lucide-react"
+import { toast } from "sonner"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +33,7 @@ export function DokumentiSekcija({
   const [genState, genAction, genPending] = useActionState(generateZapisnikAction, initial)
   const [delState, delAction, delPending] = useActionState(deleteDokumentAction, initial)
   const fileRef = useRef<HTMLInputElement>(null)
+  const MAX_MB = 10
 
   // Refresh liste kad SE PROMIJENI ishod bilo koje akcije i taj (promijenjeni) ishod je uspjeh.
   // NE uslovljavati sa "sve tri ok" — zaglavljena greška iz jedne akcije bi blokirala
@@ -88,6 +90,13 @@ export function DokumentiSekcija({
             accept=".docx,.pdf,image/png,image/jpeg,image/webp"
             data-testid="dokument-file"
             className="min-w-0 max-w-full text-sm"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file && file.size > MAX_MB * 1024 * 1024) {
+                toast.error(`Fajl je veći od ${MAX_MB} MB.`)
+                e.target.value = ""
+              }
+            }}
           />
           <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
             {uploadPending ? "Šaljem…" : "Upload"}

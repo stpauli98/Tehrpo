@@ -2,16 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import { NoviTerminButton } from "@/components/domain/NoviTerminButton"
-import { buttonVariants } from "@/components/ui/button"
+import { Pagination } from "@/components/domain/Pagination"
 import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
 import { currentYear } from "@/lib/date"
 import { getTerminiLista, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
 import { TERMINI_PER_PAGE } from "@/lib/plan-filteri"
@@ -120,34 +116,7 @@ export function ListaView() {
         data-testid="termini-pagination"
       >
         <span data-testid="termini-total">Ukupno rezultata: {total}</span>
-        {/* Paginacija se prikazuje samo kad ima > 1 strane (isto kao kod klijenata) */}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-          {pageNum <= 1 ? (
-            <span aria-label="Prethodna" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "pointer-events-none opacity-50")}>
-              <ChevronLeft className="h-4 w-4" aria-hidden />
-            </span>
-          ) : (
-            <Link href={pageHref(pageNum - 1)} aria-label="Prethodna" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")}>
-              <ChevronLeft className="h-4 w-4" aria-hidden />
-              <Tooltip>Prethodna</Tooltip>
-            </Link>
-          )}
-          <span data-testid="termini-page">
-            Strana {pageNum} / {totalPages}
-          </span>
-          {pageNum >= totalPages ? (
-            <span aria-label="Sljedeća" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "pointer-events-none opacity-50")}>
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </span>
-          ) : (
-            <Link href={pageHref(pageNum + 1)} aria-label="Sljedeća" className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")}>
-              <ChevronRight className="h-4 w-4" aria-hidden />
-              <Tooltip>Sljedeća</Tooltip>
-            </Link>
-          )}
-          </div>
-        )}
+        <Pagination pageNum={pageNum} totalPages={totalPages} hrefFor={pageHref} pageTestId="termini-page" />
       </div>
 
       {selectedTermin && (

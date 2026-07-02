@@ -1,7 +1,6 @@
 'use server'
 
 import { z } from "zod"
-import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import type { Database } from "@/db/types"
 
@@ -62,7 +61,6 @@ export async function updateTermin(
 
   if (error) return { ok: false, message: error.message }
 
-  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }
 
@@ -79,7 +77,6 @@ export async function otkaziTermin(
   const { error } = await supabase
     .from("termini").update({ status: "otkazano" }).eq("id", parsed.data.id)
   if (error) return { ok: false, message: error.message }
-  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }
 
@@ -142,7 +139,6 @@ export async function createTermin(
 
   if (error) return { ok: false, message: error.message }
 
-  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }
 
@@ -170,6 +166,5 @@ export async function markIzvrseno(
 
   if (error) return { ok: false, message: error.message }
 
-  revalidatePath("/plan-aktivnosti")
   return { ok: true }
 }

@@ -24,7 +24,6 @@ function safeName(name: string): string {
 }
 
 function revalidateDokumenti(klijentId?: string | null): void {
-  revalidatePath("/plan-aktivnosti")
   revalidatePath("/zapisnici")
   if (klijentId) revalidatePath(`/klijenti/${klijentId}`)
 }

@@ -41,8 +41,11 @@ export async function GET(req: NextRequest) {
     supabase.from("lokacije").select("id, naziv, klijent_id").order("naziv"),
   ])
 
-  if (listRes.error) {
-    return NextResponse.json({ error: listRes.error }, { status: 400 })
+  const meta = { statsRes, klijentiRes, vrsteRes, lokacijeRes }
+  const prviErr = listRes.error
+    ?? Object.values(meta).map((r) => r.error).find(Boolean)
+  if (prviErr) {
+    return NextResponse.json({ error: prviErr.message ?? "Greška pri učitavanju" }, { status: 400 })
   }
 
   return NextResponse.json({

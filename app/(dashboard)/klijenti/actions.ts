@@ -258,12 +258,14 @@ export async function createProfilProvjere(
   const rok = addMjeseci(zadnji_datum, interval)
   let q = supabase.from("termini").select("id").eq("klijent_id", klijent_id).eq("vrsta_provjere_id", vrsta_provjere_id).not("status", "in", "(izvrseno,otkazano)")
   q = lokacija_id ? q.eq("lokacija_id", lokacija_id) : q.is("lokacija_id", null)
-  const { data: postoji } = await q.limit(1)
+  const { data: postoji, error: selErr } = await q.limit(1)
+  if (selErr) return { ok: false, message: "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu." }
   if (!postoji || postoji.length === 0) {
-    await supabase.from("termini").insert({
+    const { error: terminErr } = await supabase.from("termini").insert({
       klijent_id, vrsta_provjere_id, lokacija_id,
       rok_dospijeca: rok, status: "planirano", interval_mjeseci: interval, nacin_izvrsenja,
     })
+    if (terminErr) return { ok: false, message: "Provjera je sačuvana, ali termin nije generisan: " + terminErr.message }
   }
 
   revalidatePath(`/klijenti/${klijent_id}`)

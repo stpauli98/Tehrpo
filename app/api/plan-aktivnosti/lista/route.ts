@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { parsePlanFilteri, applyPlanFilteri } from "@/lib/plan-filteri"
-
-const PER_PAGE = 50
+import { parsePlanFilteri, applyPlanFilteri, TERMINI_PER_PAGE } from "@/lib/plan-filteri"
 
 export async function GET(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
   const sp = req.nextUrl.searchParams
 
   const pageNum = Math.max(1, Number(sp.get("page") ?? "1") || 1)
-  const from = (pageNum - 1) * PER_PAGE
-  const to = from + PER_PAGE - 1
+  const from = (pageNum - 1) * TERMINI_PER_PAGE
+  const to = from + TERMINI_PER_PAGE - 1
 
   const f = parsePlanFilteri(sp)
 

@@ -14,9 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { currentYear } from "@/lib/date"
 import { getTerminiLista, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { TERMINI_PER_PAGE } from "@/lib/plan-filteri"
 import type { Database } from "@/db/types"
-
-const PER_PAGE = 50
 
 export function ListaView() {
   const searchParams = useSearchParams()
@@ -72,7 +71,7 @@ export function ListaView() {
     ;(lokacijeByFirma[l.klijent_id] ??= []).push({ id: l.id, naziv: l.naziv })
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
+  const totalPages = Math.max(1, Math.ceil(total / TERMINI_PER_PAGE))
   const currentSearch = searchParams.toString()
 
   const selectedTermin = selectedId

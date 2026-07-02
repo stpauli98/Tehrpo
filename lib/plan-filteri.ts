@@ -1,6 +1,9 @@
 import { monthRange, currentYear, tekuciNarednomMjesecuRange } from "@/lib/date"
 import type { PostgrestFilterBuilder } from "@supabase/supabase-js"
 
+/** Broj termina po strani — DIJELJENO klijent (lista.tsx) i server (lista route). */
+export const TERMINI_PER_PAGE = 50
+
 export type PlanFilteri = {
   status: string
   q: string

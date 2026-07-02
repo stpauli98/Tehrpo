@@ -74,6 +74,9 @@ export const STATUS_DOT_CLASS: Record<DerivedStatus, string> = {
   otkazano: "bg-slate-400",
 }
 
+/** Redoslijed statusa za legendu/prikaz. */
+export const STATUS_ORDER = ["izvrseno", "planirano", "zakazano", "kasni", "otkazano"] as const
+
 export const STATUS_FILTER_OPTIONS = [
   { value: "svi", label: "Svi" },
   { value: "kasni", label: "Kasni" },

@@ -1,13 +1,26 @@
 import { test, expect } from "@playwright/test"
-import { firstKlijentId, firstActiveVrstaId, insertTermin, deleteTermin } from "./db"
+import {
+  firstKlijentId, firstActiveVrstaId, insertTermin, deleteTermin,
+  insertKlijent, deleteTerminiByKlijent, deleteKlijentByNaziv,
+} from "./db"
 
 test.describe("Prikaz — dorada", () => {
   test("legenda je vidljiva kad je matrica (po mjesecu)", async ({ page }) => {
-    await page.goto("/prikaz?mode=mjesec&godina=2026&mjesec=2")
-    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
-    await expect(page.getByTestId("matrix-legenda")).toBeVisible()
-    await expect(page.getByTestId("matrix-legenda")).toContainText("izvršeno")
-    await expect(page.getByTestId("matrix-legenda")).toContainText("Kasni")
+    // Osiguraj podatke u Feb 2026 (matrica u mjesec-modu renderuje se samo kad ima redova).
+    const naziv = "E2E-LEG " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      const vrsta = await firstActiveVrstaId()
+      await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2026-02-15" })
+      await page.goto("/prikaz?mode=mjesec&godina=2026&mjesec=2")
+      await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+      await expect(page.getByTestId("matrix-legenda")).toBeVisible()
+      await expect(page.getByTestId("matrix-legenda")).toContainText("izvršeno")
+      await expect(page.getByTestId("matrix-legenda")).toContainText("Kasni")
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 
   test("legenda NIJE vidljiva u praznom stanju (po klijentu bez izbora)", async ({ page }) => {

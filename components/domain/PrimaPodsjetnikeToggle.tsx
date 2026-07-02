@@ -14,9 +14,11 @@ export function PrimaPodsjetnikeToggle({ korisnikId, prima }: { korisnikId: stri
       title="Prima email podsjetnike"
       className="h-4 w-4 cursor-pointer accent-brand disabled:opacity-50"
       onChange={(e) => {
-        const next = e.target.checked
+        const el = e.currentTarget
+        const next = el.checked
         start(async () => {
           const r = await postaviPrimaPodsjetnike(korisnikId, next)
+          if (!r.ok) el.checked = !next // brana odbila → vrati na stvarno stanje
           toast[r.ok ? "success" : "error"](r.ok ? "Sačuvano." : (r.message ?? "Greška."))
         })
       }}

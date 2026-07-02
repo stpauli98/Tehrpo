@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { parsePlanFilteri, mjesecRange } from "@/lib/plan-filteri"
+import { parsePlanFilteri, applyPlanFilteri } from "@/lib/plan-filteri"
 
 const PER_PAGE = 50
 
@@ -19,17 +19,7 @@ export async function GET(req: NextRequest) {
     .select("*", { count: "exact" })
     .order("rok_dospijeca", { ascending: true })
 
-  if (f.status && f.status !== "svi") listQuery = listQuery.eq("status_izvedeni", f.status)
-  if (f.q) {
-    const safe = f.q.replace(/[(),]/g, " ")
-    listQuery = listQuery.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
-  }
-  if (f.klijentId) listQuery = listQuery.eq("klijent_id", f.klijentId)
-  if (f.lokacijaId) listQuery = listQuery.eq("lokacija_id", f.lokacijaId)
-  if (f.vrstaId) listQuery = listQuery.eq("vrsta_provjere_id", f.vrstaId)
-  if (f.nacin !== "svi") listQuery = listQuery.eq("nacin_izvrsenja", f.nacin)
-  const r = mjesecRange(f)
-  if (r) listQuery = listQuery.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
+  listQuery = applyPlanFilteri(listQuery, f)
 
   listQuery = listQuery.range(from, to)
 

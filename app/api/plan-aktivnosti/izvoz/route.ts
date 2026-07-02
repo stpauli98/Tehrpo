@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { parsePlanFilteri, mjesecRange } from "@/lib/plan-filteri"
+import { parsePlanFilteri, applyPlanFilteri } from "@/lib/plan-filteri"
 import { planToXlsx } from "@/lib/plan-izvoz/xlsx"
 import { planToPdf } from "@/lib/plan-izvoz/pdf"
 import type { PlanRed } from "@/lib/plan-izvoz/types"
@@ -33,17 +33,7 @@ export async function GET(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
 
   let q = supabase.from("termini_view").select("*").order("rok_dospijeca", { ascending: true })
-  if (f.status && f.status !== "svi") q = q.eq("status_izvedeni", f.status)
-  if (f.q) {
-    const safe = f.q.replace(/[(),]/g, " ")
-    q = q.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
-  }
-  if (f.klijentId) q = q.eq("klijent_id", f.klijentId)
-  if (f.lokacijaId) q = q.eq("lokacija_id", f.lokacijaId)
-  if (f.vrstaId) q = q.eq("vrsta_provjere_id", f.vrstaId)
-  if (f.nacin !== "svi") q = q.eq("nacin_izvrsenja", f.nacin)
-  const r = mjesecRange(f)
-  if (r) q = q.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
+  q = applyPlanFilteri(q, f)
 
   const { data, error } = await q
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

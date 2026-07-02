@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { parseEmailList } from "@/lib/reminders/recipients"
 import { addMjeseci } from "@/lib/date"
+import { friendlyDbError } from "@/lib/db-errors"
 import { validUgovorDatumi } from "@/lib/ugovori"
 import type { Database } from "@/db/types"
 
@@ -40,7 +41,7 @@ export async function createKlijent(
     // UNIQUE constraint na naziv → prijateljska poruka
     const msg = /duplicate|unique/i.test(error.message)
       ? "Klijent sa tim nazivom već postoji."
-      : error.message
+      : friendlyDbError(error)
     return { ok: false, message: msg }
   }
   revalidatePath("/klijenti")
@@ -104,7 +105,7 @@ export async function updateKlijent(
   if (error) {
     const msg = /duplicate|unique/i.test(error.message)
       ? "Klijent sa tim nazivom već postoji."
-      : error.message
+      : friendlyDbError(error)
     return { ok: false, message: msg }
   }
   revalidatePath("/klijenti", "layout")
@@ -124,7 +125,7 @@ export async function deleteKlijent(
   if (error) {
     const msg = /foreign key|violates|restrict/i.test(error.message)
       ? "Ne možete obrisati klijenta koji ima termine."
-      : error.message
+      : friendlyDbError(error)
     return { ok: false, message: msg }
   }
   revalidatePath("/klijenti")
@@ -165,7 +166,7 @@ export async function createLokacija(
     kontakt_email: f.kontakt_email ?? null,
     kontakt_telefon: f.kontakt_telefon ?? null,
   })
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   // 'layout' revalidira i /klijenti listu (broj_lokacija count) i /klijenti/[id] detalje
   revalidatePath("/klijenti", "layout")
   return { ok: true }
@@ -189,7 +190,7 @@ export async function updateLokacija(
   if (Object.keys(patch).length === 0) return { ok: true }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("lokacije").update(patch).eq("id", id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
@@ -202,7 +203,7 @@ export async function deleteLokacija(
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("lokacije").delete().eq("id", parsed.data.id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
@@ -251,7 +252,7 @@ export async function createProfilProvjere(
   if (insErr) {
     return insErr.code === "23505"
       ? { ok: false, message: "Ova provjera već postoji u profilu." }
-      : { ok: false, message: insErr.message }
+      : { ok: false, message: friendlyDbError(insErr) }
   }
 
   // generiši jedan termin ako ne postoji aktivan za (klijent+vrsta+lokacija)
@@ -280,7 +281,7 @@ export async function deleteProfilProvjere(
   if (!id) return { ok: false, message: "Nedostaje id." }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijent_provjere").delete().eq("id", id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
@@ -323,7 +324,7 @@ export async function createUgovor(_prev: ActionResult, formData: FormData): Pro
   }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("ugovori").insert({ klijent_id, aktivan, ...f })
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }
@@ -337,7 +338,7 @@ export async function updateUgovor(_prev: ActionResult, formData: FormData): Pro
   }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("ugovori").update({ aktivan, ...f }).eq("id", id).eq("klijent_id", klijent_id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }
@@ -349,7 +350,7 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("ugovori").delete().eq("id", id).eq("klijent_id", klijent_id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }
@@ -374,7 +375,7 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   const { error } = await supabase.from("kontakt_osobe").insert({
     klijent_id, ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
   })
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }
@@ -387,7 +388,7 @@ export async function updateKontakt(_prev: ActionResult, formData: FormData): Pr
   const { error } = await supabase.from("kontakt_osobe").update({
     ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
   }).eq("id", id).eq("klijent_id", klijent_id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }
@@ -398,7 +399,7 @@ export async function deleteKontakt(_prev: ActionResult, formData: FormData): Pr
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("kontakt_osobe").delete().eq("id", id).eq("klijent_id", klijent_id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }

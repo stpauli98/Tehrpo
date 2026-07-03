@@ -11,6 +11,7 @@ import { ObrisiKlijentButton } from "@/components/domain/ObrisiKlijentButton"
 import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { ProfilTab } from "@/components/domain/ProfilTab"
 import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload"
+import { ObrisiDokumentButton } from "@/components/domain/ObrisiDokumentButton"
 import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
@@ -276,11 +277,15 @@ export default async function KlijentDetailPage({
                       <td className="px-3 py-2 text-slate-500">{d.tip}</td>
                       <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? "AI zapisnik" : "Upload"}</td>
                       <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
-                      <td className="px-3 py-2 text-right">
-                        <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label="Preuzmi">
-                          <Download className="h-4 w-4" aria-hidden />
-                          <Tooltip>Preuzmi</Tooltip>
-                        </a>
+                      <td className="px-3 py-2">
+                        <span className="flex items-center justify-end gap-1">
+                          <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label="Preuzmi">
+                            <Download className="h-4 w-4" aria-hidden />
+                            <Tooltip>Preuzmi</Tooltip>
+                          </a>
+                          {/* Renderuje se samo adminu (samogating u komponenti; server akcija nameće isto pravilo) */}
+                          <ObrisiDokumentButton dokumentId={d.id} testId="klijent-dokument-delete" />
+                        </span>
                       </td>
                     </tr>
                   ))}

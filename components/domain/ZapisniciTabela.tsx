@@ -72,7 +72,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
                       <Download className="h-4 w-4" aria-hidden />
                       <Tooltip>Preuzmi</Tooltip>
                     </a>
-                    <ObrisiDokumentButton dokumentId={d.id} />
+                    <ObrisiDokumentButton dokumentId={d.id} label="Obriši zapisnik" testId="pregled-delete" />
                   </div>
                 </td>
               </tr>

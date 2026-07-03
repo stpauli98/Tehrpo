@@ -13,6 +13,8 @@ import {
   deleteDokumentAction,
   type ActionResult,
 } from "@/app/(dashboard)/dokumenti/actions"
+import { useUloga } from "@/providers/korisnik-provider"
+import { jeAdmin } from "@/lib/auth/roles"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -29,6 +31,9 @@ export function DokumentiSekcija({
 }) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const uloga = useUloga()
+  // Brisanje dokumenata je admin-only (server akcija to i nameće).
+  const mozeBrisati = uloga !== null && jeAdmin(uloga)
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)
   const [genState, genAction, genPending] = useActionState(generateZapisnikAction, initial)
   const [delState, delAction, delPending] = useActionState(deleteDokumentAction, initial)
@@ -137,21 +142,23 @@ export function DokumentiSekcija({
                   <Download className="h-4 w-4" aria-hidden />
                   <Tooltip>Preuzmi</Tooltip>
                 </a>
-                <form action={delAction}>
-                  <input type="hidden" name="dokument_id" value={d.id} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="icon"
-                    disabled={delPending}
-                    data-testid="dokument-delete"
-                    aria-label="Obriši dokument"
-                    className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
-                    <Tooltip>Obriši dokument</Tooltip>
-                  </Button>
-                </form>
+                {mozeBrisati && (
+                  <form action={delAction}>
+                    <input type="hidden" name="dokument_id" value={d.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      disabled={delPending}
+                      data-testid="dokument-delete"
+                      aria-label="Obriši dokument"
+                      className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                      <Tooltip>Obriši dokument</Tooltip>
+                    </Button>
+                  </form>
+                )}
               </span>
             </li>
           ))}

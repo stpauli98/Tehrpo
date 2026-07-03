@@ -123,9 +123,37 @@ export async function deleteKlijentByNaziv(naziv: string): Promise<void> {
 }
 
 export async function insertKlijent(naziv: string): Promise<string> {
-  const { data, error } = await db.from("klijenti").insert({ naziv }).select("id").single()
+  // adresa/telefon/email su obavezni na formama (odluka 2026-07-03) — throwaway
+  // klijent ih dobija odmah da edit forma (HTML required) može submitovati.
+  const { data, error } = await db.from("klijenti").insert({
+    naziv,
+    adresa: "Testna ulica 1, Banja Luka",
+    telefon: "+387 51 000 000",
+    email: "e2e-klijent@example.com",
+  }).select("id").single()
   if (error) throw new Error(`insertKlijent(${naziv}): ${error.message}`)
   return data.id as string
+}
+
+/** Ubaci lokaciju za klijenta; vrati id. (Profil provjere zahtijevaju lokaciju.) */
+export async function insertLokacija(klijentId: string, naziv = "E2E Lokacija"): Promise<string> {
+  const { data, error } = await db.from("lokacije").insert({ klijent_id: klijentId, naziv }).select("id").single()
+  if (error) throw new Error(`insertLokacija(${klijentId}): ${error.message}`)
+  return data.id as string
+}
+
+/** Prva aktivna vrsta koja IMA podrazumijevani interval (profil forma je zaključana na njega). */
+export async function firstVrstaSaIntervalom(): Promise<{ id: string; naziv: string; interval: number }> {
+  const { data } = await db
+    .from("vrste_provjera")
+    .select("id, naziv, podrazumevani_interval_mjeseci")
+    .eq("aktivna", true)
+    .not("podrazumevani_interval_mjeseci", "is", null)
+    .order("naziv")
+    .limit(1)
+  const row = data?.[0]
+  if (!row) throw new Error("firstVrstaSaIntervalom: nema aktivne vrste s intervalom")
+  return { id: row.id as string, naziv: row.naziv as string, interval: row.podrazumevani_interval_mjeseci as number }
 }
 
 export async function deleteTerminiByKlijent(klijentId: string): Promise<void> {

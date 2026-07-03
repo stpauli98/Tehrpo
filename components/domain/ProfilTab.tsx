@@ -1,14 +1,20 @@
 import { DodajProvjeruButton } from "@/components/domain/DodajProvjeruButton"
 import { ObrisiProfilButton } from "@/components/domain/ObrisiProfilButton"
+import { StatusBadge } from "@/components/domain/StatusBadge"
 import { formatDatum } from "@/lib/date"
 
 export type ProfilStavka = {
   id: string
   vrsta_naziv: string
   lokacija_naziv: string | null
+  /** Efektivni interval (override stavke ili podrazumijevani vrste). */
   interval_mjeseci: number | null
-  zadnji_datum: string
-  sljedeci_rok: string
+  /** Zadnje stvarno izvršenje iz termina (fallback: statični datum unesen pri kreiranju). */
+  zadnji_datum: string | null
+  /** Rok aktivnog termina iz baze (fallback: izračun zadnji + interval). */
+  sljedeci_rok: string | null
+  /** status_izvedeni aktivnog termina, null kad aktivnog termina nema. */
+  termin_status: string | null
 }
 
 export function ProfilTab({
@@ -47,8 +53,15 @@ export function ProfilTab({
                   <td className="px-3 py-2 text-slate-700">{s.vrsta_naziv}</td>
                   <td className="px-3 py-2 text-slate-600">{s.lokacija_naziv ?? "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{s.interval_mjeseci ?? "—"}</td>
-                  <td className="px-3 py-2 tabular-nums">{formatDatum(s.zadnji_datum)}</td>
-                  <td className="px-3 py-2 tabular-nums font-medium">{formatDatum(s.sljedeci_rok)}</td>
+                  <td className="px-3 py-2 tabular-nums">
+                    {s.zadnji_datum ? formatDatum(s.zadnji_datum) : "— (prvi put)"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className="flex items-center gap-2">
+                      <span className="tabular-nums font-medium">{formatDatum(s.sljedeci_rok)}</span>
+                      {s.termin_status && <StatusBadge status={s.termin_status} />}
+                    </span>
+                  </td>
                   <td className="px-3 py-2 text-right"><ObrisiProfilButton id={s.id} /></td>
                 </tr>
               ))}

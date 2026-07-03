@@ -64,20 +64,36 @@ export default async function KlijentDetailPage({
   const [profilRes, vrsteRes] = await Promise.all([
     supabase
       .from("klijent_provjere")
-      .select("id, interval_mjeseci, zadnji_datum, vrsta_provjere:vrste_provjera(naziv, podrazumevani_interval_mjeseci), lokacija:lokacije(naziv)")
+      .select("id, vrsta_provjere_id, lokacija_id, interval_mjeseci, zadnji_datum, vrsta_provjere:vrste_provjera(naziv, podrazumevani_interval_mjeseci), lokacija:lokacije(naziv)")
       .eq("klijent_id", id)
       .order("created_at", { ascending: true }),
     supabase.from("vrste_provjera").select("id, naziv, podrazumevani_interval_mjeseci").eq("aktivna", true).order("naziv"),
   ])
+  // Profil se obogaćuje STVARNIM terminima iz baze (već dohvaćeni, sortirani po roku ASC):
+  // "Sljedeći rok" = rok aktivnog termina (planirano/zakazano/kasni), "Zadnji put" = zadnje
+  // stvarno izvršenje. Statični klijent_provjere.zadnji_datum je samo fallback — ne ažurira
+  // se pri izvršenju termina, pa bi bez ovoga profil pokazivao zastarjele datume.
+  const AKTIVNI_STATUSI = ["planirano", "zakazano", "kasni"]
   const profilStavke = (profilRes.data ?? []).map((p) => {
     const interval = p.interval_mjeseci ?? (p.vrsta_provjere as { podrazumevani_interval_mjeseci: number | null } | null)?.podrazumevani_interval_mjeseci ?? null
+    // NULL lokacija se poklapa samo sa NULL lokacijom (?? null normalizuje undefined iz view-a)
+    const istiPar = termini.filter(
+      (t) => t.vrsta_provjere_id === p.vrsta_provjere_id && (t.lokacija_id ?? null) === (p.lokacija_id ?? null),
+    )
+    const aktivni = istiPar.find((t) => AKTIVNI_STATUSI.includes(t.status_izvedeni ?? ""))
+    const zadnjeIzvrsenje = istiPar.reduce<string | null>(
+      (max, t) => (t.status === "izvrseno" && t.datum_izvrsenja && (!max || t.datum_izvrsenja > max) ? t.datum_izvrsenja : max),
+      null,
+    )
+    const zadnji = zadnjeIzvrsenje ?? (p.zadnji_datum as string | null)
     return {
       id: p.id as string,
       vrsta_naziv: (p.vrsta_provjere as { naziv: string } | null)?.naziv ?? "—",
       lokacija_naziv: (p.lokacija as { naziv: string } | null)?.naziv ?? null,
-      interval_mjeseci: p.interval_mjeseci as number | null,
-      zadnji_datum: p.zadnji_datum as string,
-      sljedeci_rok: interval ? addMjeseci(p.zadnji_datum as string, interval) : (p.zadnji_datum as string),
+      interval_mjeseci: interval,
+      zadnji_datum: zadnji,
+      sljedeci_rok: aktivni?.rok_dospijeca ?? (interval && zadnji ? addMjeseci(zadnji, interval) : zadnji),
+      termin_status: aktivni?.status_izvedeni ?? null,
     }
   })
   const vrsteOpcije = (vrsteRes.data ?? []).map((v) => ({ id: v.id as string, naziv: v.naziv as string, interval: v.podrazumevani_interval_mjeseci as number | null }))

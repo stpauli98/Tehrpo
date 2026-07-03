@@ -27,7 +27,7 @@ export function IdKartaTab({
   zaduzeniIme: string | null
   ugovori: UgovorRow[]
   kontakti: KontaktRow[]
-  usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string }[]
+  usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string | null }[]
 }) {
   const redovi: [string, string | null][] = [
     ["Adresa", osnovni.adresa],

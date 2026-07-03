@@ -210,6 +210,8 @@ export async function deleteLokacija(
 
 // ─── Profil provjere ───────────────────────────────────────────────────────
 
+const ISO_DATUM_RE = /^\d{4}-\d{2}-\d{2}$/
+
 export async function createProfilProvjere(
   _prev: ActionResult,
   formData: FormData,
@@ -218,36 +220,46 @@ export async function createProfilProvjere(
   const vrsta_provjere_id = String(formData.get("vrsta_provjere_id") ?? "")
   const lokRaw = String(formData.get("lokacija_id") ?? "")
   const lokacija_id = lokRaw && lokRaw !== "none" ? lokRaw : null
-  const intRaw = String(formData.get("interval_mjeseci") ?? "").trim()
-  const interval_override = intRaw ? Number(intRaw) : null
+  // "vec_radeno" (unosi se zadnji datum) ili "prvi_put" (provjera nikad nije
+  // rađena — unosi se prvi rok direktno, zadnji_datum ostaje NULL)
+  const rezim = String(formData.get("rezim") ?? "vec_radeno") === "prvi_put" ? "prvi_put" : "vec_radeno"
   const zadnji_datum = String(formData.get("zadnji_datum") ?? "")
+  const prvi_rok = String(formData.get("prvi_rok") ?? "")
   const nacinRaw = String(formData.get("nacin_izvrsenja") ?? "izvrsava")
   const nacin_izvrsenja = nacinRaw === "pracenje" ? "pracenje" : "izvrsava"
 
-  if (!klijent_id || !vrsta_provjere_id || !zadnji_datum) {
-    return { ok: false, message: "Vrsta i zadnji datum su obavezni." }
+  if (!klijent_id || !vrsta_provjere_id) {
+    return { ok: false, message: "Vrsta je obavezna." }
   }
-  if (interval_override !== null && (!Number.isInteger(interval_override) || interval_override < 1 || interval_override > 120)) {
-    return { ok: false, message: "Interval mora biti 1–120 mjeseci." }
+  // Poslovno pravilo: svaka provjera u profilu mora imati konkretnu lokaciju.
+  if (!lokacija_id) {
+    return { ok: false, message: "Lokacija je obavezna." }
+  }
+  if (rezim === "vec_radeno" && !ISO_DATUM_RE.test(zadnji_datum)) {
+    return { ok: false, message: "Zadnji datum je obavezan." }
+  }
+  if (rezim === "prvi_put" && !ISO_DATUM_RE.test(prvi_rok)) {
+    return { ok: false, message: "Prvi rok je obavezan." }
   }
 
   const supabase = await createServerSupabaseClient()
 
   // lokacija mora pripadati klijentu
-  if (lokacija_id) {
-    const { data: lok } = await supabase.from("lokacije").select("id").eq("id", lokacija_id).eq("klijent_id", klijent_id).maybeSingle()
-    if (!lok) return { ok: false, message: "Lokacija ne pripada klijentu." }
-  }
+  const { data: lok } = await supabase.from("lokacije").select("id").eq("id", lokacija_id).eq("klijent_id", klijent_id).maybeSingle()
+  if (!lok) return { ok: false, message: "Lokacija ne pripada klijentu." }
 
-  // interval: override → vrsta default
+  // Periodika je ISKLJUČIVO podrazumijevani interval vrste (uređuje se u Postavkama);
+  // ručni unos po stavci je ukinut — eventualna vrijednost iz forme se ignoriše.
   const { data: vrsta } = await supabase.from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", vrsta_provjere_id).maybeSingle()
-  const interval = interval_override ?? (vrsta?.podrazumevani_interval_mjeseci ?? null)
-  if (!interval) return { ok: false, message: "Interval je obavezan (vrsta nema podrazumevani)." }
+  const interval = vrsta?.podrazumevani_interval_mjeseci ?? null
+  if (!interval) return { ok: false, message: "Vrsta nema podrazumijevani interval — postavite ga u Postavkama." }
 
-  // upiši profil-stavku
+  // upiši profil-stavku (interval_mjeseci: null = prati default vrste)
   const { error: insErr } = await supabase.from("klijent_provjere").insert({
     klijent_id, vrsta_provjere_id, lokacija_id,
-    interval_mjeseci: interval_override, zadnji_datum, nacin_izvrsenja,
+    interval_mjeseci: null,
+    zadnji_datum: rezim === "vec_radeno" ? zadnji_datum : null,
+    nacin_izvrsenja,
   })
   if (insErr) {
     return insErr.code === "23505"
@@ -255,11 +267,14 @@ export async function createProfilProvjere(
       : { ok: false, message: friendlyDbError(insErr) }
   }
 
-  // generiši jedan termin ako ne postoji aktivan za (klijent+vrsta+lokacija)
-  const rok = addMjeseci(zadnji_datum, interval)
-  let q = supabase.from("termini").select("id").eq("klijent_id", klijent_id).eq("vrsta_provjere_id", vrsta_provjere_id).not("status", "in", "(izvrseno,otkazano)")
-  q = lokacija_id ? q.eq("lokacija_id", lokacija_id) : q.is("lokacija_id", null)
-  const { data: postoji, error: selErr } = await q.limit(1)
+  // generiši jedan termin ako ne postoji aktivan za (klijent+vrsta+lokacija);
+  // rok: iz zadnjeg datuma + interval, ili direktno zadani prvi rok
+  const rok = rezim === "vec_radeno" ? addMjeseci(zadnji_datum, interval) : prvi_rok
+  const { data: postoji, error: selErr } = await supabase
+    .from("termini").select("id")
+    .eq("klijent_id", klijent_id).eq("vrsta_provjere_id", vrsta_provjere_id).eq("lokacija_id", lokacija_id)
+    .not("status", "in", "(izvrseno,otkazano)")
+    .limit(1)
   if (selErr) return { ok: false, message: "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu." }
   if (!postoji || postoji.length === 0) {
     const { error: terminErr } = await supabase.from("termini").insert({

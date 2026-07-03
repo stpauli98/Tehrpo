@@ -12,6 +12,7 @@ import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { ProfilTab } from "@/components/domain/ProfilTab"
 import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload"
 import { ObrisiDokumentButton } from "@/components/domain/ObrisiDokumentButton"
+import { DodajProvjeruButton } from "@/components/domain/DodajProvjeruButton"
 import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
@@ -184,9 +185,15 @@ export default async function KlijentDetailPage({
       )}
 
       {tab === "termini" && (
-        <div data-testid="tab-termini-content" className="rounded-xl border border-slate-200 overflow-hidden">
+        <div data-testid="tab-termini-content" className="space-y-4">
+          <div className="flex justify-end">
+            <DodajProvjeruButton klijentId={id} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />
+          </div>
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
           {termini.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Nema termina za ovog klijenta.</div>
+            <div className="p-8 text-center text-sm text-slate-500">
+              Nema termina za ovog klijenta. Dodajte provjeru da se generiše prvi termin.
+            </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
@@ -216,6 +223,7 @@ export default async function KlijentDetailPage({
               </tbody>
             </table>
           )}
+          </div>
         </div>
       )}
 

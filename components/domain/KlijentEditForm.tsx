@@ -94,6 +94,9 @@ export function KlijentEditForm({
               defaultValue={klijent.naziv}
               data-testid="edit-klijent-naziv"
             />
+            {state.ok === false && state.errors?.naziv && (
+              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.naziv[0]}</p>
+            )}
           </label>
 
           <label className="block text-sm">
@@ -106,20 +109,25 @@ export function KlijentEditForm({
           </label>
 
           {([
-            ["adresa", "Adresa"],
-            ["telefon", "Telefon"],
-            ["email", "Email"],
-            ["pib", "PIB"],
-            ["maticni_broj", "Matični broj"],
-            ["sifra_djelatnosti", "Šifra djelatnosti"],
-          ] as const).map(([name, label]) => (
+            ["adresa", "Adresa *", true],
+            ["telefon", "Telefon *", true],
+            ["email", "Email *", true],
+            ["pib", "PIB", false],
+            ["maticni_broj", "Matični broj", false],
+            ["sifra_djelatnosti", "Šifra djelatnosti", false],
+          ] as const).map(([name, label, obavezno]) => (
             <label key={name} className="block text-sm">
               <span className="text-slate-600">{label}</span>
               <Input
                 name={name}
+                type={name === "email" ? "email" : "text"}
+                required={obavezno}
                 defaultValue={(klijent[name] as string | null | undefined) ?? ""}
                 data-testid={`edit-klijent-${name}`}
               />
+              {state.ok === false && state.errors?.[name] && (
+                <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors[name]![0]}</p>
+              )}
             </label>
           ))}
 
@@ -146,6 +154,9 @@ export function KlijentEditForm({
               placeholder="npr. sef@firma.com, tehnicar@firma.com"
               data-testid="edit-klijent-primaoci"
             />
+            {state.ok === false && state.errors?.podsjetnik_emails && (
+              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.podsjetnik_emails[0]}</p>
+            )}
           </label>
 
           <div className="space-y-1">

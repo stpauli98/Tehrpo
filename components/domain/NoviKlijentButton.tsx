@@ -67,6 +67,33 @@ export function NoviKlijentButton() {
               placeholder="npr. WAIKIKI Banja Luka"
               data-testid="novi-klijent-naziv"
             />
+            {state.ok === false && state.errors?.naziv && (
+              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.naziv[0]}</p>
+            )}
+          </label>
+
+          <label className="block text-sm">
+            <span className="text-slate-600">Adresa *</span>
+            <Input name="adresa" required data-testid="novi-klijent-adresa" />
+            {state.ok === false && state.errors?.adresa && (
+              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.adresa[0]}</p>
+            )}
+          </label>
+
+          <label className="block text-sm">
+            <span className="text-slate-600">Telefon *</span>
+            <Input name="telefon" required data-testid="novi-klijent-telefon" />
+            {state.ok === false && state.errors?.telefon && (
+              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.telefon[0]}</p>
+            )}
+          </label>
+
+          <label className="block text-sm">
+            <span className="text-slate-600">Email *</span>
+            <Input name="email" type="email" required data-testid="novi-klijent-email" />
+            {state.ok === false && state.errors?.email && (
+              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.email[0]}</p>
+            )}
           </label>
 
           <label className="block text-sm">

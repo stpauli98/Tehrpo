@@ -1,4 +1,4 @@
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function parseEmailList(raw: string | null | undefined): string[] {
   if (!raw) return []

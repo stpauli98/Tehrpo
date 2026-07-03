@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { parseEmailList } from "@/lib/reminders/recipients"
+import { parseEmailList, EMAIL_RE } from "@/lib/reminders/recipients"
 import { addMjeseci } from "@/lib/date"
 import { friendlyDbError } from "@/lib/db-errors"
 import { validUgovorDatumi } from "@/lib/ugovori"
@@ -19,8 +19,20 @@ export type ActionResult =
 const optionalText = (max: number) =>
   z.string().max(max).optional().or(z.literal("").transform(() => undefined))
 
+const requiredText = (max: number, msg: string) =>
+  z.string({ error: msg }).trim().min(1, msg).max(max)
+
+// Obavezna polja klijenta (odluka 2026-07-03): adresa, telefon, email — uz naziv.
+// Ista pravila važe za kreiranje i uređivanje, da podaci ostanu potpuni.
+const klijentObavezniFields = {
+  naziv: requiredText(200, "Naziv je obavezan"),
+  adresa: requiredText(300, "Adresa je obavezna"),
+  telefon: requiredText(60, "Telefon je obavezan"),
+  email: requiredText(200, "Email je obavezan").pipe(z.string().email("Neispravan email")),
+}
+
 const createKlijentSchema = z.object({
-  naziv: z.string().min(1, "Naziv je obavezan").max(200),
+  ...klijentObavezniFields,
   napomena: optionalText(2000),
 })
 
@@ -35,6 +47,9 @@ export async function createKlijent(
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijenti").insert({
     naziv: parsed.data.naziv,
+    adresa: parsed.data.adresa,
+    telefon: parsed.data.telefon,
+    email: parsed.data.email,
     napomena: parsed.data.napomena ?? null,
   })
   if (error) {
@@ -61,19 +76,16 @@ const UUID_OR_EMPTY = z
 
 const updateKlijentSchema = z.object({
   id: z.string().uuid(),
-  naziv: z.string().min(1, "Naziv je obavezan").max(200).optional(),
+  ...klijentObavezniFields,
   napomena: optionalText(2000),
   podsjetnik_emails: z.string().max(2000).optional(),
   tip_odnosa: z
     .union([z.enum(["ugovor", "ponuda"]), z.literal("none"), z.literal(""), z.null()])
     .transform((v) => (v === "none" || v === "" ? null : v))
     .optional(),
-  adresa: optionalText(300),
   pib: optionalText(40),
   maticni_broj: optionalText(40),
   sifra_djelatnosti: optionalText(40),
-  telefon: optionalText(60),
-  email: optionalText(200),
   zaduzeni_tehpro_id: UUID_OR_EMPTY,
 })
 
@@ -88,7 +100,14 @@ export async function updateKlijent(
   if (formData.has("naziv") && f.naziv) patch.naziv = f.naziv
   if (formData.has("napomena")) patch.napomena = f.napomena ?? null
   if (formData.has("podsjetnik_emails")) {
-    patch.podsjetnik_emails = parseEmailList(f.podsjetnik_emails ?? "")
+    // Neispravne stavke se odbijaju odmah (ranije su se tiho spremale u bazu,
+    // a filtrirale tek pri slanju podsjetnika).
+    const lista = parseEmailList(f.podsjetnik_emails ?? "")
+    const losi = lista.filter((e) => !EMAIL_RE.test(e))
+    if (losi.length > 0) {
+      return { ok: false, errors: { podsjetnik_emails: [`Neispravan email: ${losi.join(", ")}`] } }
+    }
+    patch.podsjetnik_emails = lista
   }
   if (formData.has("tip_odnosa")) {
     patch.tip_odnosa = f.tip_odnosa ?? null

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { InfoIkona } from "@/components/ui/info-ikona"
 import { UgovorSheet } from "@/components/domain/UgovorSheet"
 import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
 import { deleteUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -13,7 +14,7 @@ import type { Database } from "@/db/types"
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
 const initial: ActionResult = { ok: true }
 
-export function UgovoriTab({ klijentId, ugovori }: { klijentId: string; ugovori: UgovorRow[] }) {
+export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ugovori: UgovorRow[]; info?: string }) {
   const router = useRouter()
   const [delState, delAction, delPending] = useActionState(deleteUgovor, initial)
   const prev = useRef(delState)
@@ -26,6 +27,7 @@ export function UgovoriTab({ klijentId, ugovori }: { klijentId: string; ugovori:
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <FileText className="h-4 w-4 text-slate-400" aria-hidden /> Ugovori
+          {info && <InfoIkona tekst={info} testId="info-sekcija-ugovori" />}
         </h3>
         <UgovorSheet klijentId={klijentId} />
       </div>

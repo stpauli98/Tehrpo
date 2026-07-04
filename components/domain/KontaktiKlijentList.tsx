@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Trash2, Users, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { InfoIkona } from "@/components/ui/info-ikona"
 import { KontaktSheet } from "@/components/domain/KontaktSheet"
 import { deleteKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
@@ -19,12 +20,14 @@ export function KontaktiKlijentList({
   searchable = false,
   previewLimit,
   seeAllHref,
+  info,
 }: {
   klijentId: string
   kontakti: KontaktRow[]
   searchable?: boolean
   previewLimit?: number
   seeAllHref?: string
+  info?: string
 }) {
   const router = useRouter()
   const [delState, delAction, delPending] = useActionState(deleteKontakt, initial)
@@ -47,6 +50,7 @@ export function KontaktiKlijentList({
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <Users className="h-4 w-4 text-slate-400" aria-hidden /> Kontakt osobe (firma)
+          {info && <InfoIkona tekst={info} testId="info-sekcija-kontakti-firma" />}
         </h3>
         <KontaktSheet klijentId={klijentId} />
       </div>

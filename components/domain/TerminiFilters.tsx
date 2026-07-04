@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useRef, useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import { Input } from "@/components/ui/input"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -86,6 +86,9 @@ export function TerminiFilters({
   // Live search: kontrolisani input + debounce (filtrira čim se kuca, bez Entera).
   const [term, setTerm] = useState(q)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Otkaži pending debounce pri unmount-u — inače zaostali timer okine router.push
+  // (bez view=kalendar) i poništi prebacivanje prikaza / navigaciju.
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current) }, [])
   // Sinhronizuj kad se q promijeni izvana (reset filtera / nazad dugme) —
   // adjust-state-during-render obrazac (bez useEffect-a, bez kaskadnih rendera)
   const [prevQ, setPrevQ] = useState(q)

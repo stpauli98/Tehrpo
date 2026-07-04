@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { parsePlanFilteri, mjesecRange } from "@/lib/plan-filteri"
-
-const PER_PAGE = 50
+import { parsePlanFilteri, applyPlanFilteri, TERMINI_PER_PAGE } from "@/lib/plan-filteri"
 
 export async function GET(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
   const sp = req.nextUrl.searchParams
 
   const pageNum = Math.max(1, Number(sp.get("page") ?? "1") || 1)
-  const from = (pageNum - 1) * PER_PAGE
-  const to = from + PER_PAGE - 1
+  const from = (pageNum - 1) * TERMINI_PER_PAGE
+  const to = from + TERMINI_PER_PAGE - 1
 
   const f = parsePlanFilteri(sp)
 
@@ -19,17 +17,7 @@ export async function GET(req: NextRequest) {
     .select("*", { count: "exact" })
     .order("rok_dospijeca", { ascending: true })
 
-  if (f.status && f.status !== "svi") listQuery = listQuery.eq("status_izvedeni", f.status)
-  if (f.q) {
-    const safe = f.q.replace(/[(),]/g, " ")
-    listQuery = listQuery.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
-  }
-  if (f.klijentId) listQuery = listQuery.eq("klijent_id", f.klijentId)
-  if (f.lokacijaId) listQuery = listQuery.eq("lokacija_id", f.lokacijaId)
-  if (f.vrstaId) listQuery = listQuery.eq("vrsta_provjere_id", f.vrstaId)
-  if (f.nacin !== "svi") listQuery = listQuery.eq("nacin_izvrsenja", f.nacin)
-  const r = mjesecRange(f)
-  if (r) listQuery = listQuery.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
+  listQuery = applyPlanFilteri(listQuery, f)
 
   listQuery = listQuery.range(from, to)
 
@@ -41,8 +29,11 @@ export async function GET(req: NextRequest) {
     supabase.from("lokacije").select("id, naziv, klijent_id").order("naziv"),
   ])
 
-  if (listRes.error) {
-    return NextResponse.json({ error: listRes.error }, { status: 400 })
+  const meta = { statsRes, klijentiRes, vrsteRes, lokacijeRes }
+  const prviErr = listRes.error
+    ?? Object.values(meta).map((r) => r.error).find(Boolean)
+  if (prviErr) {
+    return NextResponse.json({ error: prviErr.message ?? "Greška pri učitavanju" }, { status: 400 })
   }
 
   return NextResponse.json({

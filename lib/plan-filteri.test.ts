@@ -1,6 +1,37 @@
 import { describe, it, expect } from "vitest"
-import { parsePlanFilteri, mjesecRange } from "./plan-filteri"
+import { parsePlanFilteri, mjesecRange, applyPlanFilteri, type PlanFilteri } from "./plan-filteri"
 import { currentYear } from "./date"
+
+function mockQ() {
+  const calls: [string, unknown][] = []
+  const q: Record<string, (...a: unknown[]) => unknown> = {}
+  for (const m of ["eq", "or", "gte", "lte"]) q[m] = (...a: unknown[]) => { calls.push([m, a]); return q }
+  return { q, calls }
+}
+const base: PlanFilteri = { status: "svi", q: "", klijentId: "", lokacijaId: "", vrstaId: "", mjesec: "svi", godina: 2026, nacin: "svi" }
+
+describe("applyPlanFilteri", () => {
+  it("bez filtera ne poziva ništa (mjesec=svi → nema range)", () => {
+    const { q, calls } = mockQ()
+    applyPlanFilteri(q as never, base)
+    expect(calls).toEqual([])
+  })
+  it("status+klijent+nacin primjenjuje eq redom", () => {
+    const { q, calls } = mockQ()
+    applyPlanFilteri(q as never, { ...base, status: "kasni", klijentId: "K1", nacin: "izvrsava" })
+    expect(calls).toContainEqual(["eq", ["status_izvedeni", "kasni"]])
+    expect(calls).toContainEqual(["eq", ["klijent_id", "K1"]])
+    expect(calls).toContainEqual(["eq", ["nacin_izvrsenja", "izvrsava"]])
+  })
+  it("q sanitizuje zagrade/zareze i pravi .or ilike", () => {
+    const { q, calls } = mockQ()
+    applyPlanFilteri(q as never, { ...base, q: "a,(b)" })
+    const firstCall = calls[0]!
+    expect(firstCall[0]).toBe("or")
+    // Comma is legitimately present as PostgREST OR separator; check only parens are sanitized
+    expect(String(firstCall[1])).not.toMatch(/[()]/)
+  })
+})
 
 describe("parsePlanFilteri", () => {
   it("prazni params → default mjesec 'tn', status 'svi', godina = tekuća", () => {

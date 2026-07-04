@@ -1,6 +1,7 @@
 import { UgovoriTab } from "@/components/domain/UgovoriTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
+import { InfoIkona } from "@/components/ui/info-ikona"
 import { formatDatum } from "@/lib/date"
 import { APP_NAME } from "@/lib/brand"
 import { Building2, ClipboardCheck } from "lucide-react"
@@ -27,7 +28,7 @@ export function IdKartaTab({
   zaduzeniIme: string | null
   ugovori: UgovorRow[]
   kontakti: KontaktRow[]
-  usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string }[]
+  usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string | null }[]
 }) {
   const redovi: [string, string | null][] = [
     ["Adresa", osnovni.adresa],
@@ -43,7 +44,13 @@ export function IdKartaTab({
       <section className={CARD}>
         <div className="mb-4 flex items-center gap-2">
           <Building2 className="h-4 w-4 text-slate-400" aria-hidden />
-          <h3 className="text-sm font-semibold text-slate-700">Osnovni podaci</h3>
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            Osnovni podaci
+            <InfoIkona
+              tekst="Registracioni i kontakt podaci firme (adresa, PIB, matični broj…) i osoba zadužena za klijenta. Uređuje se preko dugmeta Uredi u zaglavlju."
+              testId="info-sekcija-osnovni"
+            />
+          </h3>
         </div>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-3">
           {redovi.map(([label, val]) => (
@@ -58,7 +65,11 @@ export function IdKartaTab({
       </section>
 
       <section className={CARD}>
-        <UgovoriTab klijentId={klijentId} ugovori={ugovori} />
+        <UgovoriTab
+          klijentId={klijentId}
+          ugovori={ugovori}
+          info="Ugovori sklopljeni sa klijentom. Samo jedan ugovor može biti aktivan; stariji ostaju kao istorija."
+        />
       </section>
 
       <section className={CARD}>
@@ -67,13 +78,20 @@ export function IdKartaTab({
           kontakti={kontakti}
           previewLimit={4}
           seeAllHref={`/klijenti/${klijentId}?tab=kontakti`}
+          info="Skraćeni pregled kontakata firme (prvih nekoliko). Puni spisak i pretraga su u tabu Kontakti."
         />
       </section>
 
       <section className={CARD}>
         <div className="mb-4 flex items-center gap-2">
           <ClipboardCheck className="h-4 w-4 text-slate-400" aria-hidden />
-          <h3 className="text-sm font-semibold text-slate-700">Ugovorene usluge</h3>
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            Ugovorene usluge
+            <InfoIkona
+              tekst="Sažetak provjera iz Profila sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red."
+              testId="info-sekcija-usluge"
+            />
+          </h3>
         </div>
         {usluge.length === 0 ? (
           <p className="text-sm text-slate-500">Nema definisanih usluga. Dodajte ih kroz tab Profil.</p>

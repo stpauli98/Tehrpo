@@ -1,4 +1,8 @@
 import { monthRange, currentYear, tekuciNarednomMjesecuRange } from "@/lib/date"
+import type { PostgrestFilterBuilder } from "@supabase/supabase-js"
+
+/** Broj termina po strani — DIJELJENO klijent (lista.tsx) i server (lista route). */
+export const TERMINI_PER_PAGE = 50
 
 export type PlanFilteri = {
   status: string
@@ -34,4 +38,24 @@ export function mjesecRange(f: PlanFilteri): { from: string; to: string } | null
   const mn = Number(f.mjesec)
   if (mn >= 1 && mn <= 12) return monthRange(f.godina, mn)
   return null
+}
+
+/** Primjenjuje sve plan-filtere na termini_view upit (DRY: isto za lista i izvoz rutu). */
+export function applyPlanFilteri<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Q extends PostgrestFilterBuilder<any, any, any, any, any>,
+>(q: Q, f: PlanFilteri): Q {
+  let out = q
+  if (f.status && f.status !== "svi") out = out.eq("status_izvedeni", f.status)
+  if (f.q) {
+    const safe = f.q.replace(/[(),]/g, " ")
+    out = out.or(`klijent_naziv.ilike.%${safe}%,lokacija_naziv.ilike.%${safe}%`)
+  }
+  if (f.klijentId) out = out.eq("klijent_id", f.klijentId)
+  if (f.lokacijaId) out = out.eq("lokacija_id", f.lokacijaId)
+  if (f.vrstaId) out = out.eq("vrsta_provjere_id", f.vrstaId)
+  if (f.nacin !== "svi") out = out.eq("nacin_izvrsenja", f.nacin)
+  const r = mjesecRange(f)
+  if (r) out = out.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
+  return out
 }

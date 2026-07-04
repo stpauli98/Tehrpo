@@ -187,11 +187,11 @@ export type Database = {
           id: string
           interval_mjeseci: number | null
           klijent_id: string
-          lokacija_id: string | null
+          lokacija_id: string
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id: string | null
           vrsta_provjere_id: string
-          zadnji_datum: string
+          zadnji_datum: string | null
         }
         Insert: {
           aktivan?: boolean
@@ -199,11 +199,11 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id: string
-          lokacija_id?: string | null
+          lokacija_id: string
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id: string
-          zadnji_datum: string
+          zadnji_datum?: string | null
         }
         Update: {
           aktivan?: boolean
@@ -211,11 +211,11 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id?: string
-          lokacija_id?: string | null
+          lokacija_id?: string
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id?: string
-          zadnji_datum?: string
+          zadnji_datum?: string | null
         }
         Relationships: [
           {
@@ -821,6 +821,7 @@ export type Database = {
           ukupno: number
         }[]
       }
+      ima_pristup_dokumentu: { Args: { p_path: string }; Returns: boolean }
       ima_pristup_klijentu: { Args: { p_klijent_id: string }; Returns: boolean }
       je_admin: { Args: never; Returns: boolean }
       je_pregled: { Args: never; Returns: boolean }

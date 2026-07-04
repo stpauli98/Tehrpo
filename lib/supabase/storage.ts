@@ -11,7 +11,7 @@ export const ALLOWED_MIME = [
   "image/webp",
 ] as const
 
-export const MAX_BYTES = 52_428_800 // 50 MiB
+export const MAX_BYTES = 10_485_760 // 10 MiB (ispod serverActions.bodySizeLimit=12mb u next.config.ts)
 
 /** Upload (upsert) u privatni bucket. */
 export async function uploadDokument(

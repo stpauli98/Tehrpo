@@ -12,6 +12,8 @@ import {
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { buildZapisnikDocx } from "@/lib/zapisnik/template"
 import { dokumentStoragePath, jeValidanTip } from "@/lib/dokumenti"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { jeAdmin } from "@/lib/auth/roles"
 
 export type ActionResult =
   | { ok: true }
@@ -24,7 +26,6 @@ function safeName(name: string): string {
 }
 
 function revalidateDokumenti(klijentId?: string | null): void {
-  revalidatePath("/plan-aktivnosti")
   revalidatePath("/zapisnici")
   if (klijentId) revalidatePath(`/klijenti/${klijentId}`)
 }
@@ -47,7 +48,7 @@ export async function uploadDokumentAction(
     return { ok: false, message: "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp)." }
   }
   if (file.size > MAX_BYTES) {
-    return { ok: false, message: "Fajl je veći od 50 MB." }
+    return { ok: false, message: "Fajl je veći od 10 MB." }
   }
 
   const supabase = await createServerSupabaseClient()
@@ -175,6 +176,13 @@ export async function deleteDokumentAction(
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { dokument_id } = parsed.data
 
+  // Poslovno pravilo: dokumente briše ISKLJUČIVO administrator. Provjera mora biti
+  // ovdje (ne samo u RLS-u) jer removeDokument ide service-role klijentom koji RLS zaobilazi.
+  const korisnik = await getTrenutniKorisnik()
+  if (!korisnik || !jeAdmin(korisnik.uloga)) {
+    return { ok: false, message: "Samo administrator može brisati dokumente." }
+  }
+
   const supabase = await createServerSupabaseClient()
   const { data: dok } = await supabase
     .from("dokumenti")
@@ -183,14 +191,25 @@ export async function deleteDokumentAction(
     .maybeSingle()
   if (!dok) return { ok: false, message: "Dokument ne postoji." }
 
-  // App-level cleanup: prvo fajl, pa red (orphan red gori od orphan fajla).
+  // Prvo DB red pod RLS-om uz potvrdu da je stvarno obrisan, pa tek onda fajl —
+  // inače bi korisnik kojem RLS blokira delete (0 pogođenih redova, bez greške)
+  // mogao uništiti fajl kroz service-role klijent. Rezidualni rizik je orphan
+  // fajl ako storage remove padne poslije DB delete-a (isti toleransni obrazac
+  // kao rollback grane upload akcija).
+  const { data: deleted, error } = await supabase
+    .from("dokumenti")
+    .delete()
+    .eq("id", dokument_id)
+    .select("id")
+  if (error) return { ok: false, message: error.message }
+  if (!deleted || deleted.length === 0) {
+    return { ok: false, message: "Dokument ne postoji ili nemate pristup." }
+  }
   try {
     await removeDokument(dok.storage_path)
   } catch (cleanupErr) {
-    console.error("Brisanje fajla iz Storage-a nije uspjelo (orphan):", cleanupErr)
+    console.error("Brisanje fajla iz Storage-a nije uspjelo (orphan fajl):", cleanupErr)
   }
-  const { error } = await supabase.from("dokumenti").delete().eq("id", dokument_id)
-  if (error) return { ok: false, message: error.message }
 
   revalidateDokumenti(dok.klijent_id)
   return { ok: true }
@@ -221,7 +240,7 @@ export async function uploadKlijentDokumentAction(
   if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
     return { ok: false, message: "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp)." }
   }
-  if (file.size > MAX_BYTES) return { ok: false, message: "Fajl je veći od 50 MB." }
+  if (file.size > MAX_BYTES) return { ok: false, message: "Fajl je veći od 10 MB." }
 
   const supabase = await createServerSupabaseClient()
   // Pristup PRIJE upload-a u storage: RLS vraća null ako korisnik nema pristup klijentu

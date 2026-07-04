@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ChevronLeft, MapPin, Download } from "lucide-react"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { InfoIkona } from "@/components/ui/info-ikona"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -11,6 +12,8 @@ import { ObrisiKlijentButton } from "@/components/domain/ObrisiKlijentButton"
 import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { ProfilTab } from "@/components/domain/ProfilTab"
 import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload"
+import { ObrisiDokumentButton } from "@/components/domain/ObrisiDokumentButton"
+import { DodajProvjeruButton } from "@/components/domain/DodajProvjeruButton"
 import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
@@ -63,20 +66,36 @@ export default async function KlijentDetailPage({
   const [profilRes, vrsteRes] = await Promise.all([
     supabase
       .from("klijent_provjere")
-      .select("id, interval_mjeseci, zadnji_datum, vrsta_provjere:vrste_provjera(naziv, podrazumevani_interval_mjeseci), lokacija:lokacije(naziv)")
+      .select("id, vrsta_provjere_id, lokacija_id, interval_mjeseci, zadnji_datum, vrsta_provjere:vrste_provjera(naziv, podrazumevani_interval_mjeseci), lokacija:lokacije(naziv)")
       .eq("klijent_id", id)
       .order("created_at", { ascending: true }),
     supabase.from("vrste_provjera").select("id, naziv, podrazumevani_interval_mjeseci").eq("aktivna", true).order("naziv"),
   ])
+  // Profil se obogaćuje STVARNIM terminima iz baze (već dohvaćeni, sortirani po roku ASC):
+  // "Sljedeći rok" = rok aktivnog termina (planirano/zakazano/kasni), "Zadnji put" = zadnje
+  // stvarno izvršenje. Statični klijent_provjere.zadnji_datum je samo fallback — ne ažurira
+  // se pri izvršenju termina, pa bi bez ovoga profil pokazivao zastarjele datume.
+  const AKTIVNI_STATUSI = ["planirano", "zakazano", "kasni"]
   const profilStavke = (profilRes.data ?? []).map((p) => {
     const interval = p.interval_mjeseci ?? (p.vrsta_provjere as { podrazumevani_interval_mjeseci: number | null } | null)?.podrazumevani_interval_mjeseci ?? null
+    // NULL lokacija se poklapa samo sa NULL lokacijom (?? null normalizuje undefined iz view-a)
+    const istiPar = termini.filter(
+      (t) => t.vrsta_provjere_id === p.vrsta_provjere_id && (t.lokacija_id ?? null) === (p.lokacija_id ?? null),
+    )
+    const aktivni = istiPar.find((t) => AKTIVNI_STATUSI.includes(t.status_izvedeni ?? ""))
+    const zadnjeIzvrsenje = istiPar.reduce<string | null>(
+      (max, t) => (t.status === "izvrseno" && t.datum_izvrsenja && (!max || t.datum_izvrsenja > max) ? t.datum_izvrsenja : max),
+      null,
+    )
+    const zadnji = zadnjeIzvrsenje ?? (p.zadnji_datum as string | null)
     return {
       id: p.id as string,
       vrsta_naziv: (p.vrsta_provjere as { naziv: string } | null)?.naziv ?? "—",
       lokacija_naziv: (p.lokacija as { naziv: string } | null)?.naziv ?? null,
-      interval_mjeseci: p.interval_mjeseci as number | null,
-      zadnji_datum: p.zadnji_datum as string,
-      sljedeci_rok: interval ? addMjeseci(p.zadnji_datum as string, interval) : (p.zadnji_datum as string),
+      interval_mjeseci: interval,
+      zadnji_datum: zadnji,
+      sljedeci_rok: aktivni?.rok_dospijeca ?? (interval && zadnji ? addMjeseci(zadnji, interval) : zadnji),
+      termin_status: aktivni?.status_izvedeni ?? null,
     }
   })
   const vrsteOpcije = (vrsteRes.data ?? []).map((v) => ({ id: v.id as string, naziv: v.naziv as string, interval: v.podrazumevani_interval_mjeseci as number | null }))
@@ -167,9 +186,15 @@ export default async function KlijentDetailPage({
       )}
 
       {tab === "termini" && (
-        <div data-testid="tab-termini-content" className="rounded-xl border border-slate-200 overflow-hidden">
+        <div data-testid="tab-termini-content" className="space-y-4">
+          <div className="flex justify-end">
+            <DodajProvjeruButton klijentId={id} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />
+          </div>
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
           {termini.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">Nema termina za ovog klijenta.</div>
+            <div className="p-8 text-center text-sm text-slate-500">
+              Nema termina za ovog klijenta. Dodajte provjeru da se generiše prvi termin.
+            </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
@@ -191,7 +216,7 @@ export default async function KlijentDetailPage({
                     <td className="px-3 py-2 text-slate-600">{t.vrsta_naziv ?? "—"}</td>
                     <td className="px-3 py-2 text-slate-600">{t.lokacija_naziv ?? "—"}</td>
                     <td className="px-3 py-2">
-                      <StatusBadge status={t.status_izvedeni} />
+                      <StatusBadge status={t.status_izvedeni} stvarniStatus={t.status} datumZakazan={t.datum_zakazan} />
                     </td>
                     <td className="px-3 py-2 text-slate-600">{t.zaduzeni ?? "—"}</td>
                   </tr>
@@ -199,6 +224,7 @@ export default async function KlijentDetailPage({
               </tbody>
             </table>
           )}
+          </div>
         </div>
       )}
 
@@ -207,7 +233,12 @@ export default async function KlijentDetailPage({
           <KontaktHighlighter targetId={highlight} />
 
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <KontaktiKlijentList klijentId={id} kontakti={kontakti} searchable />
+            <KontaktiKlijentList
+              klijentId={id}
+              kontakti={kontakti}
+              searchable
+              info="Puni spisak kontakata firme sa pretragom po imenu i funkciji."
+            />
           </section>
 
           {lokacije.some((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
@@ -215,6 +246,10 @@ export default async function KlijentDetailPage({
               <div className="mb-3 flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-slate-400" aria-hidden />
                 <h3 className="text-sm font-semibold text-slate-700">Kontakti lokacija</h3>
+                <InfoIkona
+                  tekst="Kontakt osobe pojedinačnih lokacija, izvedene iz podataka lokacije. Uređuju se u tabu Lokacije."
+                  testId="info-sekcija-kontakti-lokacija"
+                />
               </div>
               <ul className="space-y-2">
                 {lokacije.map(
@@ -276,11 +311,15 @@ export default async function KlijentDetailPage({
                       <td className="px-3 py-2 text-slate-500">{d.tip}</td>
                       <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? "AI zapisnik" : "Upload"}</td>
                       <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
-                      <td className="px-3 py-2 text-right">
-                        <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label="Preuzmi">
-                          <Download className="h-4 w-4" aria-hidden />
-                          <Tooltip>Preuzmi</Tooltip>
-                        </a>
+                      <td className="px-3 py-2">
+                        <span className="flex items-center justify-end gap-1">
+                          <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label="Preuzmi">
+                            <Download className="h-4 w-4" aria-hidden />
+                            <Tooltip>Preuzmi</Tooltip>
+                          </a>
+                          {/* Renderuje se samo adminu (samogating u komponenti; server akcija nameće isto pravilo) */}
+                          <ObrisiDokumentButton dokumentId={d.id} testId="klijent-dokument-delete" />
+                        </span>
                       </td>
                     </tr>
                   ))}

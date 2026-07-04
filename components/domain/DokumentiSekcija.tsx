@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Sparkles, Trash2, Download } from "lucide-react"
+import { toast } from "sonner"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +13,8 @@ import {
   deleteDokumentAction,
   type ActionResult,
 } from "@/app/(dashboard)/dokumenti/actions"
+import { useUloga } from "@/providers/korisnik-provider"
+import { jeAdmin } from "@/lib/auth/roles"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -28,10 +31,14 @@ export function DokumentiSekcija({
 }) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const uloga = useUloga()
+  // Brisanje dokumenata je admin-only (server akcija to i nameće).
+  const mozeBrisati = uloga !== null && jeAdmin(uloga)
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)
   const [genState, genAction, genPending] = useActionState(generateZapisnikAction, initial)
   const [delState, delAction, delPending] = useActionState(deleteDokumentAction, initial)
   const fileRef = useRef<HTMLInputElement>(null)
+  const MAX_MB = 10
 
   // Refresh liste kad SE PROMIJENI ishod bilo koje akcije i taj (promijenjeni) ishod je uspjeh.
   // NE uslovljavati sa "sve tri ok" — zaglavljena greška iz jedne akcije bi blokirala
@@ -88,6 +95,13 @@ export function DokumentiSekcija({
             accept=".docx,.pdf,image/png,image/jpeg,image/webp"
             data-testid="dokument-file"
             className="min-w-0 max-w-full text-sm"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file && file.size > MAX_MB * 1024 * 1024) {
+                toast.error(`Fajl je veći od ${MAX_MB} MB.`)
+                e.target.value = ""
+              }
+            }}
           />
           <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
             {uploadPending ? "Šaljem…" : "Upload"}
@@ -128,21 +142,23 @@ export function DokumentiSekcija({
                   <Download className="h-4 w-4" aria-hidden />
                   <Tooltip>Preuzmi</Tooltip>
                 </a>
-                <form action={delAction}>
-                  <input type="hidden" name="dokument_id" value={d.id} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="icon"
-                    disabled={delPending}
-                    data-testid="dokument-delete"
-                    aria-label="Obriši dokument"
-                    className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
-                    <Tooltip>Obriši dokument</Tooltip>
-                  </Button>
-                </form>
+                {mozeBrisati && (
+                  <form action={delAction}>
+                    <input type="hidden" name="dokument_id" value={d.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      disabled={delPending}
+                      data-testid="dokument-delete"
+                      aria-label="Obriši dokument"
+                      className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                      <Tooltip>Obriši dokument</Tooltip>
+                    </Button>
+                  </form>
+                )}
               </span>
             </li>
           ))}

@@ -1,6 +1,20 @@
 import { test, expect } from "@playwright/test"
+import {
+  insertKlijent, insertTermin, firstActiveVrstaId,
+  deleteTerminiByKlijent, deleteKlijentByNaziv,
+} from "./db"
 
 test.describe.configure({ mode: "serial" })
+
+// Throwaway klijent sa JEDNIM terminom u 2026 → deterministična matrica (jedna
+// popunjena single-ćelija), bez zavisnosti od konkretnih seed naziva (WAIKIKI/CARMEUSE).
+async function seedKlijentSaTerminom(): Promise<{ naziv: string; kid: string }> {
+  const naziv = "E2E-MTX " + Date.now()
+  const kid = await insertKlijent(naziv)
+  const vrsta = await firstActiveVrstaId()
+  await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2026-05-15" })
+  return { naziv, kid }
+}
 
 test.describe("Faza 5 — Prikaz chart i toolbar", () => {
   test("opterećenje chart se renderuje sa 12 barova", async ({ page }) => {
@@ -37,56 +51,76 @@ test.describe("Faza 5 — Prikaz chart i toolbar", () => {
 
 test.describe("Faza 5 — Matrix grid", () => {
   test("matrica prikazuje vrste (redove) i 12 mjeseci (kolone)", async ({ page }) => {
-    await page.goto("/prikaz")
-    await page.getByTestId("prikaz-klijent").click()
-    // izaberi WAIKIKI (firma, najviše podataka — agregira sve lokacije)
-    const opt = page.getByRole("option", { name: /^WAIKIKI$/ })
-    await expect(opt).toBeVisible()
-    await opt.click()
-    await page.waitForURL(/klijent=/)
-    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
-    await expect(page.getByRole("columnheader", { name: "Vrsta pregleda / ispitivanja" })).toBeVisible()
-    expect(await page.getByTestId("matrix-row").count()).toBeGreaterThan(0)
-    // bar jedna popunjena ćelija sa statusom
-    await expect(page.getByTestId("matrix-cell-filled").first()).toBeVisible()
+    const { naziv, kid } = await seedKlijentSaTerminom()
+    try {
+      await page.goto("/prikaz?godina=2026")
+      await page.getByTestId("prikaz-klijent").click()
+      const opt = page.getByRole("option", { name: naziv })
+      await expect(opt).toBeVisible()
+      await opt.click()
+      await page.waitForURL(/klijent=/)
+      await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+      await expect(page.getByRole("columnheader", { name: "Vrsta pregleda / ispitivanja" })).toBeVisible()
+      expect(await page.getByTestId("matrix-row").count()).toBeGreaterThan(0)
+      // bar jedna popunjena ćelija sa statusom
+      await expect(page.getByTestId("matrix-cell-filled").first()).toBeVisible()
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 })
 
 test.describe("Faza 5 — Matrix cell click", () => {
   test("klik popunjene ćelije otvara TerminSheet", async ({ page }) => {
-    await page.goto("/prikaz?godina=2026") // pin godine — CARMEUSE ima single-ćelije u 2026
-    await page.getByTestId("prikaz-klijent").click()
-    // CARMEUSE ima single-termin ćelije u 2026 → TerminSheet test
-    const opt = page.getByRole("option", { name: /^CARMEUSE$/ })
-    await expect(opt).toBeVisible()
-    await opt.click()
-    await page.waitForURL(/klijent=/)
-    // Klikni prvu single-ćeliju (href sadrži selected=, ne /termini)
-    const singleCell = page.locator('a[data-testid="matrix-cell-filled"][href*="selected="]').first()
-    await expect(singleCell).toBeVisible()
-    await singleCell.click()
-    await page.waitForURL(/selected=/)
-    await expect(page.getByTestId("termin-sheet")).toBeVisible()
-    // zatvori
-    await page.getByTestId("sheet-close").click()
-    await page.waitForURL((u) => !u.search.includes("selected="))
-    await expect(page.getByTestId("termin-sheet")).toBeHidden()
+    // throwaway klijent ima JEDAN termin → single-ćelija (href sadrži selected=)
+    const { naziv, kid } = await seedKlijentSaTerminom()
+    try {
+      await page.goto("/prikaz?godina=2026")
+      await page.getByTestId("prikaz-klijent").click()
+      const opt = page.getByRole("option", { name: naziv })
+      await expect(opt).toBeVisible()
+      await opt.click()
+      await page.waitForURL(/klijent=/)
+      // Klikni prvu single-ćeliju (href sadrži selected=, ne /termini)
+      const singleCell = page.locator('a[data-testid="matrix-cell-filled"][href*="selected="]').first()
+      await expect(singleCell).toBeVisible()
+      await singleCell.click()
+      await page.waitForURL(/selected=/)
+      await expect(page.getByTestId("termin-sheet")).toBeVisible()
+      // zatvori
+      await page.getByTestId("sheet-close").click()
+      await page.waitForURL((u) => !u.search.includes("selected="))
+      await expect(page.getByTestId("termin-sheet")).toBeHidden()
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 })
 
 test.describe("Faza 5 — Plan dan sidebar", () => {
   test("klik dana sa terminima → sidebar → Detalji → sheet", async ({ page }) => {
-    // jul 2026, dan 28 ima dosta termina (data-driven: poznat gust dan)
-    await page.goto("/plan?godina=2026&mjesec=7")
-    const dayLink = page.locator('[data-testid="plan-day-cell"][data-date="2026-07-28"]')
-    await expect(dayLink).toBeVisible()
-    await dayLink.click({ position: { x: 10, y: 6 } })
-    await page.waitForURL(/dan=2026-07-28/)
-    await expect(page.getByTestId("plan-sidebar")).toBeVisible()
-    await expect(page.getByTestId("sidebar-termin").first()).toBeVisible()
-    await page.getByTestId("sidebar-detalji").first().click()
-    await page.waitForURL(/selected=/)
-    await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    // Ubaci termin na poznati dan → deterministički gust dan (bez zavisnosti od seeda).
+    const naziv = "E2E-DAN " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      const vrsta = await firstActiveVrstaId()
+      await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2026-07-15" })
+      await page.goto("/plan?godina=2026&mjesec=7")
+      const dayLink = page.locator('[data-testid="plan-day-cell"][data-date="2026-07-15"]')
+      await expect(dayLink).toBeVisible()
+      await dayLink.click({ position: { x: 10, y: 6 } })
+      await page.waitForURL(/dan=2026-07-15/)
+      await expect(page.getByTestId("plan-sidebar")).toBeVisible()
+      await expect(page.getByTestId("sidebar-termin").first()).toBeVisible()
+      await page.getByTestId("sidebar-detalji").first().click()
+      await page.waitForURL(/selected=/)
+      await expect(page.getByTestId("termin-sheet")).toBeVisible()
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 })
 
@@ -121,15 +155,21 @@ test.describe("Faza 5 — Mjesečni plan", () => {
 
 test.describe("Faza 5 — Vizuelni smoke", () => {
   test("prikaz screenshot", async ({ page }) => {
-    await page.goto("/prikaz")
-    await page.getByTestId("prikaz-klijent").click()
-    const opt = page.getByRole("option", { name: /^WAIKIKI$/ })
-    await expect(opt).toBeVisible()
-    await opt.click()
-    await page.waitForURL(/klijent=/)
-    await page.waitForLoadState("networkidle")
-    await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
-    await page.screenshot({ path: "test-results/prikaz-faza5.png", fullPage: true })
+    const { naziv, kid } = await seedKlijentSaTerminom()
+    try {
+      await page.goto("/prikaz?godina=2026")
+      await page.getByTestId("prikaz-klijent").click()
+      const opt = page.getByRole("option", { name: naziv })
+      await expect(opt).toBeVisible()
+      await opt.click()
+      await page.waitForURL(/klijent=/)
+      await page.waitForLoadState("networkidle")
+      await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
+      await page.screenshot({ path: "test-results/prikaz-faza5.png", fullPage: true })
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
   test("plan screenshot", async ({ page }) => {
     await page.goto("/plan?godina=2026&mjesec=7")

@@ -7,14 +7,17 @@
  * Idempotentno — pokretanje 2× ne pravi duplikate (upsert onConflict).
  *
  * Redoslijed (FK-safe):
- * 1. delete termini        (CASCADE: podsjetnici/dokumenti)
- * 2. delete lokacije       (SET NULL na termini.lokacija_id — ali termini su već obrisani)
- * 3. upsert klijenti       from ParseResult.firme, onConflict naziv
- * 4. upsert vrste_provjera from ParseResult.vrste (includes "Obilazak"),
+ * 1. delete termini          (CASCADE: podsjetnici/dokumenti)
+ * 2. delete klijent_provjere (lokacija_id je NOT NULL + ON DELETE RESTRICT od
+ *    migracije 20260703102000 — bez ovoga brisanje lokacija pada; preživjeli
+ *    redovi bi ionako pokazivali na obrisane lokacije)
+ * 3. delete lokacije         (termini.lokacija_id je SET NULL — ali termini su već obrisani)
+ * 4. upsert klijenti       from ParseResult.firme, onConflict naziv
+ * 5. upsert vrste_provjera from ParseResult.vrste (includes "Obilazak"),
  *    onConflict naziv; NE postavljati podrazumevani_interval_mjeseci (ostaje NULL)
- * 5. upsert lokacije       from ParseResult.lokacije: {klijent_id, naziv},
+ * 6. upsert lokacije       from ParseResult.lokacije: {klijent_id, naziv},
  *    onConflict (klijent_id, naziv) [uq_lokacije_klijent_naziv]
- * 6. insert termini        batch ~500:
+ * 7. insert termini        batch ~500:
  *    - klijent_id  = firmaId(firma_naziv)
  *    - lokacija_id = lokId(firmaId + "|" + lokacija_naziv) | null
  *    - izvrseno: datum_zadnjeg + datum_izvrsenja + rok_dospijeca = datum
@@ -65,7 +68,17 @@ async function main() {
   if (delTErr) throw new Error(`termini delete failed: ${delTErr.message}`)
   console.log("   ✅ termini obrisani")
 
-  // ── 2) Delete lokacije ─────────────────────────────────────────────────────
+  // ── 2) Delete klijent_provjere ─────────────────────────────────────────────
+  // lokacija_id je NOT NULL + ON DELETE RESTRICT (20260703102000) → mora prije lokacija.
+  console.log("\n🗑️  Brisanje klijent_provjere...")
+  const { error: delKPErr } = await supabase
+    .from("klijent_provjere")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000")
+  if (delKPErr) throw new Error(`klijent_provjere delete failed: ${delKPErr.message}`)
+  console.log("   ✅ klijent_provjere obrisane")
+
+  // ── 3) Delete lokacije ─────────────────────────────────────────────────────
   console.log("\n🗑️  Brisanje lokacije...")
   const { error: delLErr } = await supabase
     .from("lokacije")
@@ -74,7 +87,7 @@ async function main() {
   if (delLErr) throw new Error(`lokacije delete failed: ${delLErr.message}`)
   console.log("   ✅ lokacije obrisane")
 
-  // ── 3) Upsert klijenti ─────────────────────────────────────────────────────
+  // ── 4) Upsert klijenti ─────────────────────────────────────────────────────
   console.log("\n💾 Upsert klijenti...")
   const klijentiRows = parsed.firme.map((naziv: string) => ({ naziv }))
   const { data: klijenti, error: kErr } = await supabase
@@ -85,7 +98,7 @@ async function main() {
   const firmaMap = new Map<string, string>((klijenti ?? []).map(k => [k.naziv, k.id]))
   console.log(`   ✅ ${firmaMap.size} klijenata (firmi) u bazi`)
 
-  // ── 4) Upsert vrste_provjera ───────────────────────────────────────────────
+  // ── 5) Upsert vrste_provjera ───────────────────────────────────────────────
   console.log("\n💾 Upsert vrste_provjera...")
   // NOTE: podrazumevani_interval_mjeseci se NE postavlja — ostaje NULL.
   // Korisnik ga unosi u /postavke.
@@ -98,7 +111,7 @@ async function main() {
   const vrstaMap = new Map<string, string>((vrste ?? []).map(v => [v.naziv, v.id]))
   console.log(`   ✅ ${vrstaMap.size} vrsta provjera u bazi`)
 
-  // ── 5) Upsert lokacije ─────────────────────────────────────────────────────
+  // ── 6) Upsert lokacije ─────────────────────────────────────────────────────
   console.log("\n💾 Upsert lokacije...")
   type LokacijaRow = { klijent_id: string; naziv: string; grad: string | null }
   const lokacijeRows: LokacijaRow[] = []
@@ -133,7 +146,7 @@ async function main() {
   }
   console.log(`   ✅ ${lokMap.size} lokacija u bazi`)
 
-  // ── 6) Insert termini ──────────────────────────────────────────────────────
+  // ── 7) Insert termini ──────────────────────────────────────────────────────
   console.log("\n💾 Inserting termini...")
 
   type TerminIzvrseno = {

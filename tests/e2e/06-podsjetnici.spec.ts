@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test"
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { clearPodsjetnici } from "./db"
+import { clearPodsjetnici, insertKlijent, deleteKlijentByNaziv } from "./db"
 
 // Pročitaj CRON_SECRET iz .env.local apsolutnom putanjom (nezavisno od cwd).
 // Dev server (pnpm dev) već koristi istu vrijednost.
@@ -98,25 +98,33 @@ test.describe("Faza 6 — Postavke UI", () => {
 })
 
 test.describe("Faza 6 — Per-klijent primaoci", () => {
+  // Throwaway klijent (insertKlijent puni obavezna polja adresa/telefon/email) —
+  // edit forma ima HTML required na tim poljima, pa se ne oslanjamo na podatke
+  // zatečenog (seedovanog) klijenta.
   test("uređivanje primalaca klijenta se perzistira", async ({ page }) => {
-    await page.goto("/klijenti")
-    await page.getByTestId("klijent-card").first().click()
-    await expect(page).toHaveURL(/\/klijenti\//)
+    const naziv = "E2E-TMP PRIMAOCI " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      await page.goto(`/klijenti/${kid}`)
+      await expect(page).toHaveURL(/\/klijenti\//)
 
-    await page.getByTestId("uredi-klijent-btn").click()
-    await expect(page.getByTestId("klijent-edit-sheet")).toBeVisible()
-    await page.getByTestId("edit-klijent-primaoci").fill("qa-primalac@example.com")
-    await page.getByTestId("edit-klijent-submit").click()
-    // Sačekaj da se sheet ZATVORI prije ponovnog otvaranja (base-ui timing + router.refresh).
-    await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden({ timeout: 5000 })
+      await page.getByTestId("uredi-klijent-btn").click()
+      await expect(page.getByTestId("klijent-edit-sheet")).toBeVisible()
+      await page.getByTestId("edit-klijent-primaoci").fill("qa-primalac@example.com")
+      await page.getByTestId("edit-klijent-submit").click()
+      // Sačekaj da se sheet ZATVORI prije ponovnog otvaranja (base-ui timing + router.refresh).
+      await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden({ timeout: 5000 })
 
-    await page.getByTestId("uredi-klijent-btn").click()
-    await expect(page.getByTestId("klijent-edit-sheet")).toBeVisible()
-    await expect(page.getByTestId("edit-klijent-primaoci")).toHaveValue(/qa-primalac@example.com/)
+      await page.getByTestId("uredi-klijent-btn").click()
+      await expect(page.getByTestId("klijent-edit-sheet")).toBeVisible()
+      await expect(page.getByTestId("edit-klijent-primaoci")).toHaveValue(/qa-primalac@example.com/)
 
-    // očisti
-    await page.getByTestId("edit-klijent-primaoci").fill("")
-    await page.getByTestId("edit-klijent-submit").click()
-    await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden({ timeout: 5000 })
+      // očisti
+      await page.getByTestId("edit-klijent-primaoci").fill("")
+      await page.getByTestId("edit-klijent-submit").click()
+      await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden({ timeout: 5000 })
+    } finally {
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 })

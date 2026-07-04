@@ -1,4 +1,4 @@
-import { STATUS_LABEL, type DerivedStatus } from "@/lib/termini"
+import { STATUS_LABEL, STATUS_ORDER, type DerivedStatus } from "@/lib/termini"
 
 const BOJE: Record<DerivedStatus, string> = {
   izvrseno: "bg-green-100",
@@ -7,7 +7,6 @@ const BOJE: Record<DerivedStatus, string> = {
   kasni: "bg-red-100",
   otkazano: "bg-slate-100",
 }
-const REDOSLIJED: DerivedStatus[] = ["izvrseno", "planirano", "zakazano", "kasni", "otkazano"]
 
 export function MatrixLegenda() {
   return (
@@ -21,7 +20,7 @@ export function MatrixLegenda() {
       <span>(+N) još termina</span>
       <span>· nema termina</span>
       <span className="mx-1 inline-block h-3 w-px bg-slate-200" />
-      {REDOSLIJED.map((s) => (
+      {STATUS_ORDER.map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
           <span className={`inline-block h-3 w-3 rounded ${BOJE[s]} ring-1 ring-inset ring-black/5`} />
           {STATUS_LABEL[s]}

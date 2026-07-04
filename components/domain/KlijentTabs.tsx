@@ -48,6 +48,7 @@ export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klije
         {TABS.map((t, i) => (
           <TabsTrigger key={t.value} value={t.value} data-testid={`tab-${t.value}`}>
             {t.label}
+            {/* Zadnji (najdesniji) tab: desno poravnanje — na 1024px bi mu bubble prešao desnu ivicu main-a */}
             <InfoIkona
               tekst={t.info}
               testId={`info-tab-${t.value}`}

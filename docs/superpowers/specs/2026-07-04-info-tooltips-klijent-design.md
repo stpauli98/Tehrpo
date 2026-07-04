@@ -23,7 +23,7 @@ sekcija i šta u njoj vidi. Pokriva svih 6 tabova klijent stranice
 ## Nova komponenta: `components/ui/info-ikona.tsx`
 
 - Server-safe (bez `"use client"`), čisti markup.
-- Renderuje lucide `Info` ikonu (`h-3.5 w-3.5 text-slate-400`) unutar spana sa
+- Renderuje lucide `Info` ikonu (`size-3.5 text-slate-400`) unutar spana sa
   `group/tt relative`, plus tooltip sa `max-w-72 whitespace-normal text-left
   leading-relaxed` (postojeći `Tooltip` je `whitespace-nowrap`, neupotrebljiv
   za rečenice).

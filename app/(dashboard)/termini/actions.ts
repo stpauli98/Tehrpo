@@ -2,6 +2,8 @@
 
 import { z } from "zod"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { friendlyDbError } from "@/lib/db-errors"
+import { todayIso } from "@/lib/date"
 import type { Database } from "@/db/types"
 
 export type ActionResult =
@@ -16,10 +18,12 @@ const optionalDate = z
   .optional()
   .or(z.literal("").transform(() => undefined))
 
+const NE_U_BUDUCNOSTI = "Datum izvršenja ne može biti u budućnosti"
+
 const updateSchema = z.object({
   id: z.string().uuid(),
   datum_zakazan: optionalDate,
-  datum_izvrsenja: optionalDate,
+  datum_izvrsenja: optionalDate.refine((d) => !d || d <= todayIso(), NE_U_BUDUCNOSTI),
   zaduzeni: z.string().max(200).optional().or(z.literal("").transform(() => undefined)),
   napomena: z.string().max(2000).optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(["planirano", "zakazano", "izvrseno", "otkazano"]).optional(),
@@ -31,7 +35,7 @@ export async function updateTermin(
 ): Promise<ActionResult> {
   const parsed = updateSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
-    return { ok: false, errors: parsed.error.flatten().fieldErrors }
+    return { ok: false, errors: parsed.error.flatten().fieldErrors, message: parsed.error.issues[0]?.message }
   }
   const { id, ...fields } = parsed.data
 
@@ -59,7 +63,7 @@ export async function updateTermin(
 
   const { error } = await supabase.from("termini").update(patch).eq("id", id)
 
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
 
   return { ok: true }
 }
@@ -76,7 +80,7 @@ export async function otkaziTermin(
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase
     .from("termini").update({ status: "otkazano" }).eq("id", parsed.data.id)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   return { ok: true }
 }
 
@@ -137,14 +141,17 @@ export async function createTermin(
     status: datum_zakazan ? "zakazano" : "planirano",
   })
 
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
 
   return { ok: true }
 }
 
 const markSchema = z.object({
   id: z.string().uuid(),
-  datum_izvrsenja: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Datum je obavezan"),
+  datum_izvrsenja: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum je obavezan")
+    .refine((d) => d <= todayIso(), NE_U_BUDUCNOSTI),
 })
 
 export async function markIzvrseno(
@@ -153,7 +160,7 @@ export async function markIzvrseno(
 ): Promise<ActionResult> {
   const parsed = markSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
-    return { ok: false, errors: parsed.error.flatten().fieldErrors }
+    return { ok: false, errors: parsed.error.flatten().fieldErrors, message: parsed.error.issues[0]?.message }
   }
   const { id, datum_izvrsenja } = parsed.data
 
@@ -164,7 +171,7 @@ export async function markIzvrseno(
     .update({ datum_izvrsenja, status: "izvrseno" })
     .eq("id", id)
 
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
 
   return { ok: true }
 }

@@ -27,10 +27,14 @@ sekcija i šta u njoj vidi. Pokriva svih 6 tabova klijent stranice
   `group/tt relative`, plus tooltip sa `max-w-72 whitespace-normal text-left
   leading-relaxed` (postojeći `Tooltip` je `whitespace-nowrap`, neupotrebljiv
   za rečenice).
-- Props: `tekst: string`, opciono `className`, opciono `testId`. Wrapper je
+- Props: `tekst: string`, opciono `className`, opciono `testId`, opciono
+  `strana?: "lijevo" | "desno"` (default „lijevo”). Wrapper je
   `aria-hidden` — `aria-label` bi zagadio accessible name TabsTrigger dugmeta
   na koji se oslanjaju e2e selektori (`getByRole("tab", { name })`).
-- Tooltip se otvara ispod ikone (`top-full`) — ok jer je tab traka na vrhu.
+- Tooltip se otvara ispod ikone (`top-full`), poravnat sa lijevom ivicom ikone
+  (`left-0`; centriranje bi klipovalo uz lijevu ivicu `<main>` koji ima
+  `overflow-auto`). Zadnji tab koristi `strana="desno"` (`right-0`) jer bi na
+  minimalnoj desktop širini od 1024px njegov tooltip prešao desnu ivicu.
 
 ## Izmjene po fajlu
 

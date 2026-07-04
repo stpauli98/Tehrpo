@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ChevronLeft, MapPin, Download } from "lucide-react"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { InfoIkona } from "@/components/ui/info-ikona"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -232,7 +233,12 @@ export default async function KlijentDetailPage({
           <KontaktHighlighter targetId={highlight} />
 
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <KontaktiKlijentList klijentId={id} kontakti={kontakti} searchable />
+            <KontaktiKlijentList
+              klijentId={id}
+              kontakti={kontakti}
+              searchable
+              info="Puni spisak kontakata firme sa pretragom po imenu i funkciji."
+            />
           </section>
 
           {lokacije.some((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
@@ -240,6 +246,10 @@ export default async function KlijentDetailPage({
               <div className="mb-3 flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-slate-400" aria-hidden />
                 <h3 className="text-sm font-semibold text-slate-700">Kontakti lokacija</h3>
+                <InfoIkona
+                  tekst="Kontakt osobe pojedinačnih lokacija, izvedene iz podataka lokacije. Uređuju se u tabu Lokacije."
+                  testId="info-sekcija-kontakti-lokacija"
+                />
               </div>
               <ul className="space-y-2">
                 {lokacije.map(

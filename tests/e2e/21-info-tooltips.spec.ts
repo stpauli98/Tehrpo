@@ -44,3 +44,21 @@ test.describe("Info tooltipovi — sekcije ID karte", () => {
     }
   })
 })
+
+test.describe("Info tooltipovi — Kontakti tab", () => {
+  test("hover na ⓘ sekcije Kontakt osobe (firma) prikazuje objašnjenje", async ({ page }) => {
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      await page.goto(`/klijenti/${kid}?tab=kontakti`)
+      await expect(page.getByTestId("tab-kontakti-content")).toBeVisible()
+
+      const ikona = page.getByTestId("info-sekcija-kontakti-firma")
+      await expect(ikona).toBeVisible()
+      await ikona.hover()
+      await expect(page.getByText("Puni spisak kontakata firme sa pretragom")).toBeVisible()
+    } finally {
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+})

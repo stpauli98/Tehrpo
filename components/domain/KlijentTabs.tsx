@@ -45,10 +45,14 @@ export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klije
       onValueChange={(v) => router.push(`/klijenti/${klijentId}?tab=${v ?? "termini"}`)}
     >
       <TabsList variant="line">
-        {TABS.map((t) => (
+        {TABS.map((t, i) => (
           <TabsTrigger key={t.value} value={t.value} data-testid={`tab-${t.value}`}>
             {t.label}
-            <InfoIkona tekst={t.info} testId={`info-tab-${t.value}`} />
+            <InfoIkona
+              tekst={t.info}
+              testId={`info-tab-${t.value}`}
+              strana={i === TABS.length - 1 ? "desno" : undefined}
+            />
           </TabsTrigger>
         ))}
       </TabsList>

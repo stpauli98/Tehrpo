@@ -27,7 +27,9 @@ sekcija i šta u njoj vidi. Pokriva svih 6 tabova klijent stranice
   `group/tt relative`, plus tooltip sa `max-w-72 whitespace-normal text-left
   leading-relaxed` (postojeći `Tooltip` je `whitespace-nowrap`, neupotrebljiv
   za rečenice).
-- Props: `tekst: string`, opciono `className`. `aria-label={tekst}` na spanu.
+- Props: `tekst: string`, opciono `className`, opciono `testId`. Wrapper je
+  `aria-hidden` — `aria-label` bi zagadio accessible name TabsTrigger dugmeta
+  na koji se oslanjaju e2e selektori (`getByRole("tab", { name })`).
 - Tooltip se otvara ispod ikone (`top-full`) — ok jer je tab traka na vrhu.
 
 ## Izmjene po fajlu

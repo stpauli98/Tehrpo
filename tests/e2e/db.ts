@@ -111,6 +111,12 @@ export async function insertTermin(input: {
   return data.id as string
 }
 
+/** Zakaži termin direktno u bazi (status=zakazano + datum_zakazan). */
+export async function zakaziTermin(id: string, datumZakazan: string): Promise<void> {
+  const { error } = await db.from("termini").update({ status: "zakazano", datum_zakazan: datumZakazan }).eq("id", id)
+  if (error) throw new Error(`zakaziTermin(${id}): ${error.message}`)
+}
+
 /** Obriši termin po id-u (čišćenje nakon testa). */
 export async function deleteTermin(id: string): Promise<void> {
   if (id) await db.from("termini").delete().eq("id", id)

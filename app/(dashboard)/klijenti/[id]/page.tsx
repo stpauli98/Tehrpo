@@ -216,7 +216,7 @@ export default async function KlijentDetailPage({
                     <td className="px-3 py-2 text-slate-600">{t.vrsta_naziv ?? "—"}</td>
                     <td className="px-3 py-2 text-slate-600">{t.lokacija_naziv ?? "—"}</td>
                     <td className="px-3 py-2">
-                      <StatusBadge status={t.status_izvedeni} />
+                      <StatusBadge status={t.status_izvedeni} stvarniStatus={t.status} datumZakazan={t.datum_zakazan} />
                     </td>
                     <td className="px-3 py-2 text-slate-600">{t.zaduzeni ?? "—"}</td>
                   </tr>

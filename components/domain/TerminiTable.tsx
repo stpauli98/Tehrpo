@@ -78,7 +78,7 @@ export function TerminiTable({
                   </span>
                 )}
               </td>
-              <td className="px-3 py-2"><StatusBadge status={r.status_izvedeni} /></td>
+              <td className="px-3 py-2"><StatusBadge status={r.status_izvedeni} stvarniStatus={r.status} datumZakazan={r.datum_zakazan} /></td>
               <td className="px-3 py-2 text-slate-600">{r.zaduzeni ?? "—"}</td>
               <td className="px-3 py-2">
                 {r.id && (

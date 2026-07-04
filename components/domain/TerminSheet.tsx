@@ -102,7 +102,7 @@ export function TerminSheet({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span>{termin.klijent_naziv ?? "Termin"}</span>
-            <StatusBadge status={termin.status_izvedeni} />
+            <StatusBadge status={termin.status_izvedeni} stvarniStatus={termin.status} datumZakazan={termin.datum_zakazan} />
           </DialogTitle>
           <p className="text-sm text-slate-500">
             {termin.vrsta_naziv ?? "—"}

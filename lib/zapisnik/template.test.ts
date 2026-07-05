@@ -49,7 +49,12 @@ describe("buildZapisnikDocx", () => {
     expect(html).toContain("Client")
     expect(html).toContain("Findings")
     expect(html).toContain("Conclusion")
-    // domenski sadržaj (AI/DB) se ne prevodi — ostaje na bosanskom bez obzira na lokal
+    // Ovdje su nalaz/zaključak direktno proslijeđeni pozivu (literal test string), ne
+    // generisani preko content.ts — buildZapisnikDocx prevodi samo šablon (naslov/
+    // labele), sadržaj proslijeđen pozivaocu ostavlja netaknut, bez obzira na lokal.
+    // Napomena: kad sadržaj generiše AI/mock (content.ts buildPrompt/dryGenerateZapisnik),
+    // on OD commit-a 838d893 JESTE lokalizovan (en/de dobijaju jezičku instrukciju) —
+    // ovaj test ne pokriva taj slučaj, vidi content.test.ts.
     expect(html).toContain("Provjera izvršena")
   })
 })

@@ -7,10 +7,12 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { MONTHS_BS, todayIso } from "@/lib/date"
+import { monthName, todayIso } from "@/lib/date"
 import { href } from "@/i18n/routes"
 
 type Opt = { id: string; naziv: string }
+
+const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
 
 export function PrikazToolbar({
   klijenti,
@@ -36,7 +38,7 @@ export function PrikazToolbar({
     ...Object.fromEntries(klijenti.map((k) => [k.id, k.naziv])),
   }
   const mjesecItems: Record<string, string> = Object.fromEntries(
-    MONTHS_BS.map((label, i) => [String(i + 1), label])
+    MJESEC_NAZIVI.map((label, i) => [String(i + 1), label])
   )
 
   function setMode(m: "klijent" | "mjesec") {
@@ -103,7 +105,7 @@ export function PrikazToolbar({
           <Select value={mjesec} onValueChange={(v) => setParam("mjesec", v ?? "")} items={mjesecItems}>
             <SelectTrigger className="w-40" data-testid="prikaz-mjesec"><SelectValue placeholder={t("izaberiMjesec")} /></SelectTrigger>
             <SelectContent>
-              {MONTHS_BS.map((label, i) => (
+              {MJESEC_NAZIVI.map((label, i) => (
                 <SelectItem key={i + 1} value={String(i + 1)}>{label}</SelectItem>
               ))}
             </SelectContent>

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { MONTHS_BS } from "@/lib/date"
+import { monthName } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 
@@ -77,7 +77,7 @@ export async function OpterecenjeChart({
         {/* Barovi */}
         <div className="relative flex h-full items-end gap-2">
           {months.map((m) => {
-            const naziv = MONTHS_BS[m.mjesec - 1] ?? ""
+            const naziv = monthName(m.mjesec)
             const pct = (seg(m) / max) * 100
             const jeTekuci = currentMonth === m.mjesec
             const bar = (
@@ -127,7 +127,7 @@ export async function OpterecenjeChart({
       {/* Oznake mjeseci, poravnate sa barovima */}
       <div className="mt-2 flex gap-2">
         {months.map((m) => {
-          const naziv = MONTHS_BS[m.mjesec - 1] ?? ""
+          const naziv = monthName(m.mjesec)
           return (
             <span
               key={m.mjesec}

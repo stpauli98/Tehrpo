@@ -6,7 +6,9 @@ import { useTranslations } from "next-intl"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
-import { MONTHS_BS, currentYear } from "@/lib/date"
+import { monthName, currentYear } from "@/lib/date"
+
+const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
 
 export function ObilasciToolbar({
   period: initialPeriod,
@@ -49,7 +51,7 @@ export function ObilasciToolbar({
     ...Object.fromEntries((gradovi ?? []).map((g) => [g, g])),
   }
   const mjesecItems: Record<string, string> = Object.fromEntries(
-    MONTHS_BS.map((label, i) => [String(i + 1), label])
+    MJESEC_NAZIVI.map((label, i) => [String(i + 1), label])
   )
   const kvartalItems: Record<string, string> = { "1": "Q1", "2": "Q2", "3": "Q3", "4": "Q4" }
 
@@ -108,7 +110,7 @@ export function ObilasciToolbar({
             <SelectValue placeholder={t("placeholderMjesec")} />
           </SelectTrigger>
           <SelectContent>
-            {MONTHS_BS.map((m, i) => (
+            {MJESEC_NAZIVI.map((m, i) => (
               <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
             ))}
           </SelectContent>

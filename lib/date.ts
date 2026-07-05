@@ -9,9 +9,14 @@ export const MONTHS_BS = [
 
 /**
  * ISO (ili Date-string) → lokalizovan prikaz datuma. Null/nevažeće → "—".
- * sr: zadržan postojeći hardkodirani "DD.MM.YYYY." oblik (early-return) — CLDR
- * "sr-Latn" preko Intl.DateTimeFormat ne dodaje tačku na kraju i ne nulira dane/
- * mjesece < 10, što bi promijenilo postojeći, testovima provjeravan tekst.
+ * sr: zadržan postojeći hardkodirani "DD.MM.YYYY." oblik (early-return). Napomena:
+ * provjereno empirijski (Node 24) da Intl.DateTimeFormat("sr"/"sr-Latn",
+ * {day:"2-digit",month:"2-digit",year:"numeric"}) daje BAJT-IDENTIČAN tekst
+ * ("28.07.2026.", uključujući tačku na kraju) — dakle ovdje razlika u formatu
+ * NIJE razlog za hardkod. Zadržano zbog: (1) simetrije sa monthName() ispod, gdje
+ * Intl za sr STVARNO daje drugačiji tekst, i (2) izbjegavanja runtime zavisnosti o
+ * ICU podacima za "sr" (npr. small-icu Node build) za default lokal koji, po
+ * §procedura-i18n Global Constraints, mora raditi bez ijedne env promjene.
  * en/de: Intl.DateTimeFormat(locale, ...) (§procedura-i18n Step 1).
  */
 export function formatDatum(iso: string | null | undefined, locale: Locale = APP_LOCALE): string {

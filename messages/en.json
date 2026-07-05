@@ -599,7 +599,7 @@
     "kasni": "Overdue"
   },
   "obilasci": {
-    "naslov": "Site visits",
+    "naslov": "Visits",
     "podnaslov": "Grouped by city for more efficient scheduling of visits.",
     "prazno": "No appointments in the selected period.",
     "toolbar": {

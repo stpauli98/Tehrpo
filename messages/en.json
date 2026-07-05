@@ -6,5 +6,37 @@
     "obrisi": "Delete",
     "zatvori": "Close",
     "pretraga": "Search"
+  },
+  "shell": {
+    "nav": {
+      "pregled": "Overview",
+      "planAktivnosti": "Activity plan",
+      "obilasci": "Visits",
+      "klijenti": "Clients",
+      "asistent": "Assistant",
+      "zapisnici": "Records",
+      "postavke": "Settings"
+    },
+    "sidebar": {
+      "glavnaNavigacija": "Main navigation",
+      "prosiriNavigaciju": "Expand navigation",
+      "skupiNavigaciju": "Collapse navigation",
+      "skupi": "Collapse",
+      "resizeHint": "Drag to resize · double-click to collapse"
+    },
+    "topBar": {
+      "odjava": "Sign out"
+    },
+    "comingSoon": {
+      "naslovUskoro": "{naslov} — coming soon"
+    },
+    "desktopOnlyGate": {
+      "naslov": "{appName} is optimized for desktop",
+      "opis": "To work with the system, open the application on a laptop or desktop computer (screen at least 1024px wide).",
+      "napomena": "A mobile version is not part of this project's scope."
+    },
+    "layout": {
+      "description": "Track periodic inspections, tests and checks for the {appName} team."
+    }
   }
 }

@@ -6,5 +6,37 @@
     "obrisi": "Löschen",
     "zatvori": "Schließen",
     "pretraga": "Suche"
+  },
+  "shell": {
+    "nav": {
+      "pregled": "Übersicht",
+      "planAktivnosti": "Aktivitätsplan",
+      "obilasci": "Begehungen",
+      "klijenti": "Kunden",
+      "asistent": "Assistent",
+      "zapisnici": "Protokolle",
+      "postavke": "Einstellungen"
+    },
+    "sidebar": {
+      "glavnaNavigacija": "Hauptnavigation",
+      "prosiriNavigaciju": "Navigation erweitern",
+      "skupiNavigaciju": "Navigation einklappen",
+      "skupi": "Einklappen",
+      "resizeHint": "Ziehen zum Anpassen der Breite · Doppelklick zum Einklappen"
+    },
+    "topBar": {
+      "odjava": "Abmelden"
+    },
+    "comingSoon": {
+      "naslovUskoro": "{naslov} — demnächst"
+    },
+    "desktopOnlyGate": {
+      "naslov": "{appName} ist für Desktop optimiert",
+      "opis": "Öffnen Sie die Anwendung für die Arbeit mit dem System auf einem Laptop oder Desktop-Computer (Bildschirmbreite mindestens 1024px).",
+      "napomena": "Eine mobile Version ist nicht Teil dieses Projekts."
+    },
+    "layout": {
+      "description": "Verfolgung periodischer Prüfungen, Tests und Kontrollen für das Team von {appName}."
+    }
   }
 }

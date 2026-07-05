@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { NextIntlClientProvider } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import { cn } from "@/lib/utils";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { APP_LOCALE } from "@/lib/locale"
@@ -14,9 +15,12 @@ const inter = Inter({
   display: "swap",
 })
 
-export const metadata: Metadata = {
-  title: `${APP_NAME} — ${APP_TAGLINE}`,
-  description: `Praćenje periodičnih pregleda, ispitivanja i provjera za ${APP_NAME} tim.`,
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("shell.layout")
+  return {
+    title: `${APP_NAME} — ${APP_TAGLINE}`,
+    description: t("description", { appName: APP_NAME }),
+  }
 }
 
 export default function RootLayout({

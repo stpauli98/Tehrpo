@@ -6,5 +6,37 @@
     "obrisi": "Obriši",
     "zatvori": "Zatvori",
     "pretraga": "Pretraga"
+  },
+  "shell": {
+    "nav": {
+      "pregled": "Pregled",
+      "planAktivnosti": "Plan aktivnosti",
+      "obilasci": "Obilasci",
+      "klijenti": "Klijenti",
+      "asistent": "Asistent",
+      "zapisnici": "Zapisnici",
+      "postavke": "Postavke"
+    },
+    "sidebar": {
+      "glavnaNavigacija": "Glavna navigacija",
+      "prosiriNavigaciju": "Proširi navigaciju",
+      "skupiNavigaciju": "Skupi navigaciju",
+      "skupi": "Skupi",
+      "resizeHint": "Povuci za promjenu širine · dvoklik za skupljanje"
+    },
+    "topBar": {
+      "odjava": "Odjava"
+    },
+    "comingSoon": {
+      "naslovUskoro": "{naslov} — uskoro"
+    },
+    "desktopOnlyGate": {
+      "naslov": "{appName} je optimizovan za desktop",
+      "opis": "Za rad sa sistemom otvorite aplikaciju na laptopu ili desktop računaru (ekran minimalno 1024px širine).",
+      "napomena": "Mobilna verzija nije u obimu ovog projekta."
+    },
+    "layout": {
+      "description": "Praćenje periodičnih pregleda, ispitivanja i provjera za {appName} tim."
+    }
   }
 }

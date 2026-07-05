@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -35,12 +36,13 @@ export function KorisniciTabela({
   klijenti: { id: string; naziv: string }[]
   jaId?: string
 }) {
+  const t = useTranslations("postavke.korisniciTabela")
   const [q, setQ] = useState("")
-  const t = q.trim().toLowerCase()
+  const upit = q.trim().toLowerCase()
   const vidljivi =
-    t === ""
+    upit === ""
       ? korisnici
-      : korisnici.filter((k) => k.ime.toLowerCase().includes(t) || k.email.toLowerCase().includes(t))
+      : korisnici.filter((k) => k.ime.toLowerCase().includes(upit) || k.email.toLowerCase().includes(upit))
 
   return (
     <div className="space-y-3">
@@ -50,13 +52,13 @@ export function KorisniciTabela({
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Pretraži korisnike…"
+            placeholder={t("pretragaPlaceholder")}
             className="pl-8"
             data-testid="korisnici-pretraga"
           />
         </div>
         <span className="shrink-0 text-xs text-slate-400">
-          {t === "" ? `${korisnici.length} korisnika` : `${vidljivi.length} / ${korisnici.length}`}
+          {upit === "" ? t("brojUkupno", { count: korisnici.length }) : t("brojFiltrirano", { prikazano: vidljivi.length, ukupno: korisnici.length })}
         </span>
       </div>
 
@@ -64,11 +66,11 @@ export function KorisniciTabela({
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-xs text-slate-500">
             <tr>
-              <th className="px-4 py-2 font-medium">Korisnik</th>
-              <th className="px-4 py-2 font-medium">Uloga</th>
-              <th className="px-4 py-2 text-center font-medium">Podsjetnici</th>
-              <th className="px-4 py-2 font-medium">Firme</th>
-              <th className="w-12 px-4 py-2" aria-label="Akcije" />
+              <th className="px-4 py-2 font-medium">{t("kolone.korisnik")}</th>
+              <th className="px-4 py-2 font-medium">{t("kolone.uloga")}</th>
+              <th className="px-4 py-2 text-center font-medium">{t("kolone.podsjetnici")}</th>
+              <th className="px-4 py-2 font-medium">{t("kolone.firme")}</th>
+              <th className="w-12 px-4 py-2" aria-label={t("kolone.akcije")} />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -91,10 +93,10 @@ export function KorisniciTabela({
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={cn("truncate font-medium", !k.aktivan && "text-slate-400")}>{k.ime}</span>
-                          {jeJa && <span className="text-[10px] text-slate-400">(ti)</span>}
+                          {jeJa && <span className="text-[10px] text-slate-400">{t("ti")}</span>}
                           {!k.aktivan && (
                             <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
-                              deaktiviran
+                              {t("deaktiviran")}
                             </span>
                           )}
                         </div>
@@ -110,14 +112,14 @@ export function KorisniciTabela({
                   </td>
                   <td className="px-4 py-2.5">
                     {k.uloga === "admin" ? (
-                      <span className="text-xs text-slate-400" title="Administrator vidi sve firme">
-                        sve firme
+                      <span className="text-xs text-slate-400" title={t("sveFirmeTitle")}>
+                        {t("sveFirme")}
                       </span>
                     ) : (
                       <DodjelaKlijenata korisnikId={k.id} klijenti={klijenti} izabrani={k.izabrani} />
                     )}
                     {k.uloga !== "admin" && brFirmi === 0 && (
-                      <span className="ml-2 text-[10px] text-amber-600">nema dodijeljenih</span>
+                      <span className="ml-2 text-[10px] text-amber-600">{t("nemaDodijeljenih")}</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
@@ -129,7 +131,7 @@ export function KorisniciTabela({
             {vidljivi.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
-                  Nema korisnika za „{q}”.
+                  {t("prazno", { upit: q })}
                 </td>
               </tr>
             )}

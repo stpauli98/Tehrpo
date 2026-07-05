@@ -413,6 +413,24 @@
       "submitPending": "Snimam…",
       "toastSuccess": "Firme dodijeljene.",
       "toastErrorFallback": "Greška."
+    },
+    "profil": {
+      "prazno": "Nema provjera u profilu. Dodajte provjeru da generišete termine.",
+      "kolone": {
+        "vrsta": "Vrsta",
+        "lokacija": "Lokacija",
+        "interval": "Interval (mj)",
+        "zadnjiPut": "Zadnji put",
+        "sljedeciRok": "Sljedeći rok"
+      },
+      "prviPut": "— (prvi put)"
+    },
+    "obrisiProfil": {
+      "tooltip": "Ukloni iz profila",
+      "dialogNaslov": "Ukloniti provjeru iz profila?",
+      "dialogOpis": "Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).",
+      "potvrdi": "Ukloni",
+      "confirmPending": "Brišem…"
     }
   },
   "termini": {
@@ -681,5 +699,159 @@
     "preuzmi": "Preuzmi",
     "obrisiDokument": "Obriši dokument",
     "aiOznaka": "AI"
+  },
+  "postavke": {
+    "naslov": "Postavke",
+    "reminders": {
+      "naslov": "Email podsjetnici",
+      "opis": "Koliko dana prije roka dospijeća se šalje podsjetnik. Sistem dnevno provjerava termine."
+    },
+    "vrste": {
+      "naslov": "Vrste pregleda",
+      "opis": "Usluge koje sistem prati i automatski zakazuje. Interval (mjeseci) određuje kada se po izvršenju zakazuje sljedeći termin. Prazno = bez auto-zakazivanja."
+    },
+    "korisnici": {
+      "naslov": "Korisnici"
+    },
+    "uloge": {
+      "admin": "Administrator",
+      "operater": "Operater",
+      "pregled": "Pregled"
+    },
+    "korisniciTabela": {
+      "pretragaPlaceholder": "Pretraži korisnike…",
+      "brojUkupno": "{count} korisnika",
+      "brojFiltrirano": "{prikazano} / {ukupno}",
+      "kolone": {
+        "korisnik": "Korisnik",
+        "uloga": "Uloga",
+        "podsjetnici": "Podsjetnici",
+        "firme": "Firme",
+        "akcije": "Akcije"
+      },
+      "ti": "(ti)",
+      "deaktiviran": "deaktiviran",
+      "sveFirme": "sve firme",
+      "sveFirmeTitle": "Administrator vidi sve firme",
+      "nemaDodijeljenih": "nema dodijeljenih",
+      "prazno": "Nema korisnika za „{upit}”."
+    },
+    "korisnikAkcije": {
+      "aria": "Akcije",
+      "testEmail": "Pošalji test email",
+      "deaktivirajKorisnika": "Deaktiviraj korisnika",
+      "aktivirajKorisnika": "Aktiviraj korisnika",
+      "greskaSlanja": "Greška pri slanju.",
+      "dryRunNaslov": "Email nije stvarno poslan (dry-run).",
+      "dryRunOpis": "Resend nije konfigurisan. Test je simuliran za {email}.",
+      "testniPoslat": "Testni email poslan na {email}.",
+      "napomenaIskljuceniPodsjetnici": "Napomena: korisnik ima isključene podsjetnike.",
+      "korisnikDeaktiviran": "Korisnik deaktiviran.",
+      "korisnikAktiviran": "Korisnik aktiviran.",
+      "greska": "Greška."
+    },
+    "noviKorisnik": {
+      "dugme": "Novi korisnik",
+      "naslov": "Novi korisnik",
+      "placeholderIme": "Ime i prezime",
+      "placeholderEmail": "Email",
+      "placeholderLozinka": "Početna lozinka (min 8)",
+      "submitPending": "Kreiranje…",
+      "submit": "Kreiraj"
+    },
+    "ulogaSelect": {
+      "vlastitaUlogaTitle": "Ne možeš mijenjati vlastitu ulogu",
+      "promijeniUlogu": "Promijeni ulogu",
+      "sacuvano": "Uloga promijenjena.",
+      "greska": "Greška."
+    },
+    "primaPodsjetnike": {
+      "aria": "Prima email podsjetnike",
+      "sacuvano": "Sačuvano.",
+      "greska": "Greška."
+    },
+    "reminderForm": {
+      "naDan": "na dan",
+      "dana": "{count, plural, =1 {# dan} other {# dana}}",
+      "ukloniAria": "Ukloni {labela}",
+      "uputstvo": "Klikni prag da uključiš/isključiš slanje.",
+      "uputstvoUklanjanje": "× uklanja opciju.",
+      "customPlaceholder": "npr. 21",
+      "danaPrije": "dana prije",
+      "dodaj": "Dodaj",
+      "customGreska": "Unesite cijeli broj dana 0–365",
+      "prazno": "Nijedan prag nije uključen — emailovi se neće slati.",
+      "submitPending": "Spremam…",
+      "submit": "Spremi"
+    },
+    "actions": {
+      "pragObavezan": "Unesite barem jedan prag",
+      "pragoviNeispravni": "Pragovi moraju biti cijeli brojevi 0–365, odvojeni zarezom",
+      "samoAdministrator": "Samo administrator.",
+      "intervalGreskaVrijednost": "Interval mora biti cijeli broj 1–120 ili prazno (greška: \"{vrijednost}\")",
+      "nazivObavezan": "Naziv je obavezan",
+      "intervalNeispravan": "Interval mora biti cijeli broj 1–120 ili prazno",
+      "vrstaPregledaNazivPostoji": "Vrsta pregleda sa tim nazivom već postoji.",
+      "imeObavezno": "Ime je obavezno",
+      "emailNeispravan": "Neispravan email",
+      "lozinkaMin": "Lozinka min 8 znakova",
+      "korisnikEmailPostoji": "Korisnik sa tim emailom već postoji.",
+      "greskaFallback": "Greška.",
+      "sebiOduzetiUlogu": "Ne možeš sebi oduzeti administratorsku ulogu.",
+      "barJedanAdmin": "Mora postojati barem jedan aktivan administrator.",
+      "deaktivirajVlastitiNalog": "Ne možeš deaktivirati vlastiti nalog.",
+      "korisnikNemaEmail": "Korisnik nema email adresu.",
+      "greskaSlanjaEmailaFallback": "Greška pri slanju emaila.",
+      "resendTestniRezim": "Resend je u testnom režimu: dok domena nije verifikovana, mejlovi se mogu slati samo na email vlasnika Resend naloga. Verifikuj domenu na resend.com/domains i postavi EMAIL_FROM na adresu te domene.",
+      "klijentNepostojeciUDodjeli": "Nepostojeći klijent u dodjeli.",
+      "intervalNeispravanKratko": "Interval mora biti 1–120 ili prazno",
+      "vrstaNazivPostoji": "Vrsta sa tim nazivom već postoji.",
+      "vrstaIdNeispravan": "Neispravan ID vrste.",
+      "intervalNeispravanTacka": "Interval mora biti cijeli broj 1–120 ili prazno."
+    }
+  },
+  "asistent": {
+    "naslov": "Asistent",
+    "sidebar": {
+      "naslov": "Razgovori",
+      "prazno": "Nema razgovora.",
+      "bezNaslova": "Razgovor"
+    },
+    "prazanRazgovor": "Klikni „+ Novi razgovor” za početak, ili izaberi postojeći razgovor lijevo.",
+    "chat": {
+      "prazno": "Postavi pitanje o terminima, firmama ili zatraži prijedlog zapisnika.",
+      "nemaStream": "Nema stream-a",
+      "greskaEvent": "\n[Greška: {poruka}]",
+      "greskaVeze": "\n[Greška veze: {poruka}]",
+      "nepoznatoGreska": "nepoznato"
+    },
+    "chatInput": {
+      "placeholder": "Napiši pitanje…",
+      "posalji": "Pošalji"
+    },
+    "chatMessage": {
+      "alati": "Alati: {lista}",
+      "proposal": {
+        "naslov": "Prijedlog zapisnika · {klijent} · {vrsta}",
+        "nalaz": "Nalaz:",
+        "zakljucak": "Zaključak:",
+        "snimi": "Snimi zapisnik",
+        "snimam": "Snimam…",
+        "snimljeno": "Snimljeno ✓"
+      }
+    },
+    "noviRazgovor": {
+      "dugme": "Novi razgovor"
+    },
+    "suggestedPills": {
+      "pitanje1": "Koji termini kasne?",
+      "pitanje2": "Koje firme imamo i koliko kasne?",
+      "pitanje3": "Grupiši aktivne termine po klijentu"
+    },
+    "actions": {
+      "neispravanTermin": "Neispravan termin",
+      "terminNePostoji": "Termin ne postoji.",
+      "snimanjeNijeUspjelo": "Snimanje nije uspjelo."
+    }
   }
 }

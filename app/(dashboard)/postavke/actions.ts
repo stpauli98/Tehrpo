@@ -2,12 +2,17 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { revalidateVrste } from "@/lib/cache"
 import { sendEmail } from "@/lib/email/resend"
 import { testEmailSubject, testEmailHtml } from "@/lib/email/templates"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "postavke.actions" })
 
 export type ActionResult =
   | { ok: true; danaPrije?: number[] }
@@ -23,7 +28,7 @@ const schema = z.object({
   // "30, 14, 7, 1" → niz brojeva
   dana_prije: z
     .string()
-    .min(1, "Unesite barem jedan prag")
+    .min(1, t("pragObavezan"))
     .transform((s) =>
       s
         .split(",")
@@ -32,7 +37,7 @@ const schema = z.object({
         .map((x) => Number(x)),
     )
     .refine((arr) => arr.length > 0 && arr.every((n) => Number.isInteger(n) && n >= 0 && n <= 365), {
-      message: "Pragovi moraju biti cijeli brojevi 0–365, odvojeni zarezom",
+      message: t("pragoviNeispravni"),
     }),
 })
 
@@ -77,7 +82,7 @@ export async function updateIntervali(
     }
     const n = Number(s)
     if (!Number.isInteger(n) || n < 1 || n > 120) {
-      return { ok: false, message: `Interval mora biti cijeli broj 1–120 ili prazno (greška: "${s}")` }
+      return { ok: false, message: t("intervalGreskaVrijednost", { vrijednost: s }) }
     }
     updates.push({ id, val: n })
   }
@@ -100,7 +105,7 @@ export async function updateIntervali(
 // ─── Nova vrsta pregleda ─────────────────────────────────────────────────────
 
 const createVrstaSchema = z.object({
-  naziv: z.string().trim().min(1, "Naziv je obavezan").max(200),
+  naziv: z.string().trim().min(1, t("nazivObavezan")).max(200),
   // prazno = bez auto-zakazivanja (NULL); inače cijeli broj 1–120
   interval: z
     .string()
@@ -109,7 +114,7 @@ const createVrstaSchema = z.object({
     .transform((s) => (s && s.length > 0 ? s : undefined))
     .refine(
       (s) => s === undefined || (Number.isInteger(Number(s)) && Number(s) >= 1 && Number(s) <= 120),
-      { message: "Interval mora biti cijeli broj 1–120 ili prazno" },
+      { message: t("intervalNeispravan") },
     )
     .transform((s) => (s === undefined ? null : Number(s))),
   zakonski_osnov: z
@@ -138,7 +143,7 @@ export async function createVrsta(
   })
   if (error) {
     const msg = /duplicate|unique/i.test(error.message)
-      ? "Vrsta pregleda sa tim nazivom već postoji."
+      ? t("vrstaPregledaNazivPostoji")
       : error.message
     return { ok: false, message: msg }
   }
@@ -151,7 +156,7 @@ export async function createVrsta(
 
 async function zahtijevajAdmina() {
   const k = await getTrenutniKorisnik()
-  if (!k || k.uloga !== "admin") throw new Error("Samo administrator.")
+  if (!k || k.uloga !== "admin") throw new Error(t("samoAdministrator"))
   return k
 }
 
@@ -166,9 +171,9 @@ async function brojAktivnihAdmina(admin: ReturnType<typeof createAdminSupabaseCl
 }
 
 const noviKorisnikSchema = z.object({
-  ime: z.string().trim().min(1, "Ime je obavezno").max(120),
-  email: z.string().email("Neispravan email"),
-  lozinka: z.string().min(8, "Lozinka min 8 znakova"),
+  ime: z.string().trim().min(1, t("imeObavezno")).max(120),
+  email: z.string().email(t("emailNeispravan")),
+  lozinka: z.string().min(8, t("lozinkaMin")),
   uloga: z.enum(["admin", "operater", "pregled"]),
 })
 
@@ -182,7 +187,7 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
   })
   if (error || !data.user) {
     return { ok: false, message: /already|registered|exists/i.test(error?.message ?? "")
-      ? "Korisnik sa tim emailom već postoji." : (error?.message ?? "Greška.") }
+      ? t("korisnikEmailPostoji") : (error?.message ?? t("greskaFallback")) }
   }
   const { error: pErr } = await admin.from("korisnici").insert({
     id: data.user.id, ime: parsed.data.ime, email: parsed.data.email, uloga: parsed.data.uloga, aktivan: true,
@@ -200,14 +205,14 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
 export async function postaviUlogu(korisnikId: string, uloga: "admin"|"operater"|"pregled"): Promise<ActionResult> {
   const ja = await zahtijevajAdmina()
   if (korisnikId === ja.id && uloga !== "admin") {
-    return { ok: false, message: "Ne možeš sebi oduzeti administratorsku ulogu." }
+    return { ok: false, message: t("sebiOduzetiUlogu") }
   }
   const admin = createAdminSupabaseClient()
   // Zaštita: ne dozvoli da skidanjem admin uloge ostane bez ijednog aktivnog admina.
   if (uloga !== "admin") {
     const { data: cilj } = await admin.from("korisnici").select("uloga, aktivan").eq("id", korisnikId).maybeSingle()
     if (cilj?.uloga === "admin" && cilj.aktivan && (await brojAktivnihAdmina(admin)) <= 1) {
-      return { ok: false, message: "Mora postojati barem jedan aktivan administrator." }
+      return { ok: false, message: t("barJedanAdmin") }
     }
   }
   const { error } = await admin.from("korisnici").update({ uloga }).eq("id", korisnikId)
@@ -219,14 +224,14 @@ export async function postaviUlogu(korisnikId: string, uloga: "admin"|"operater"
 export async function postaviAktivan(korisnikId: string, aktivan: boolean): Promise<ActionResult> {
   const ja = await zahtijevajAdmina()
   if (!aktivan && korisnikId === ja.id) {
-    return { ok: false, message: "Ne možeš deaktivirati vlastiti nalog." }
+    return { ok: false, message: t("deaktivirajVlastitiNalog") }
   }
   const admin = createAdminSupabaseClient()
   // Zaštita: ne dozvoli deaktivaciju zadnjeg aktivnog administratora.
   if (!aktivan) {
     const { data: cilj } = await admin.from("korisnici").select("uloga").eq("id", korisnikId).maybeSingle()
     if (cilj?.uloga === "admin" && (await brojAktivnihAdmina(admin)) <= 1) {
-      return { ok: false, message: "Mora postojati barem jedan aktivan administrator." }
+      return { ok: false, message: t("barJedanAdmin") }
     }
   }
   const { error } = await admin.from("korisnici").update({ aktivan }).eq("id", korisnikId)
@@ -245,7 +250,7 @@ export async function posaljiTestniEmail(korisnikId: string): Promise<TestEmailR
     .eq("id", korisnikId)
     .maybeSingle()
   if (error) return { ok: false, message: error.message }
-  if (!data?.email) return { ok: false, message: "Korisnik nema email adresu." }
+  if (!data?.email) return { ok: false, message: t("korisnikNemaEmail") }
 
   try {
     const res = await sendEmail({
@@ -255,7 +260,7 @@ export async function posaljiTestniEmail(korisnikId: string): Promise<TestEmailR
     })
     return { ok: true, dryRun: res.dryRun, email: data.email, primaPodsjetnike: data.prima_podsjetnike }
   } catch (e) {
-    const raw = e instanceof Error ? e.message : "Greška pri slanju emaila."
+    const raw = e instanceof Error ? e.message : t("greskaSlanjaEmailaFallback")
     return { ok: false, message: objasniEmailGresku(raw) }
   }
 }
@@ -263,7 +268,7 @@ export async function posaljiTestniEmail(korisnikId: string): Promise<TestEmailR
 // Prevod čestih Resend grešaka u jasnu poruku na domaćem jeziku.
 function objasniEmailGresku(msg: string): string {
   if (/only send testing emails|verify a domain|resend\.com\/domains/i.test(msg)) {
-    return "Resend je u testnom režimu: dok domena nije verifikovana, mejlovi se mogu slati samo na email vlasnika Resend naloga. Verifikuj domenu na resend.com/domains i postavi EMAIL_FROM na adresu te domene."
+    return t("resendTestniRezim")
   }
   return msg
 }
@@ -286,7 +291,7 @@ export async function postaviDodjele(korisnikId: string, klijentIds: string[]): 
     const { data: valid, error: chkErr } = await admin.from("klijenti").select("id").in("id", klijentIds)
     if (chkErr) return { ok: false, message: chkErr.message }
     if (!valid || valid.length !== klijentIds.length) {
-      return { ok: false, message: "Nepostojeći klijent u dodjeli." }
+      return { ok: false, message: t("klijentNepostojeciUDodjeli") }
     }
   }
   const { error: delErr } = await admin.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
@@ -304,7 +309,7 @@ export async function postaviDodjele(korisnikId: string, klijentIds: string[]): 
 
 const updateVrstaSchema = z.object({
   id: z.string().uuid(),
-  naziv: z.string().trim().min(1, "Naziv je obavezan").max(200),
+  naziv: z.string().trim().min(1, t("nazivObavezan")).max(200),
   interval: z
     .string()
     .trim()
@@ -312,7 +317,7 @@ const updateVrstaSchema = z.object({
     .transform((s) => (s && s.length > 0 ? s : undefined))
     .refine(
       (s) => s === undefined || (Number.isInteger(Number(s)) && Number(s) >= 1 && Number(s) <= 120),
-      { message: "Interval mora biti 1–120 ili prazno" },
+      { message: t("intervalNeispravanKratko") },
     )
     .transform((s) => (s === undefined ? null : Number(s))),
   zakonski_osnov: z.string().trim().max(500).optional().or(z.literal("").transform(() => undefined)),
@@ -332,7 +337,7 @@ export async function updateVrsta(_prev: ActionResult, formData: FormData): Prom
     vodi_dokumentaciju,
   }).eq("id", id)
   if (error) {
-    const msg = /duplicate|unique/i.test(error.message) ? "Vrsta sa tim nazivom već postoji." : error.message
+    const msg = /duplicate|unique/i.test(error.message) ? t("vrstaNazivPostoji") : error.message
     return { ok: false, message: msg }
   }
   revalidateVrste()
@@ -354,9 +359,9 @@ export async function postaviVrstaAktivna(vrstaId: string, aktivna: boolean): Pr
 // interval = null → bez auto-zakazivanja; inače cijeli broj 1–120.
 export async function postaviVrstaInterval(vrstaId: string, interval: number | null): Promise<ActionResult> {
   await zahtijevajAdmina()
-  if (!UUID_RE.test(vrstaId)) return { ok: false, message: "Neispravan ID vrste." }
+  if (!UUID_RE.test(vrstaId)) return { ok: false, message: t("vrstaIdNeispravan") }
   if (interval !== null && (!Number.isInteger(interval) || interval < 1 || interval > 120)) {
-    return { ok: false, message: "Interval mora biti cijeli broj 1–120 ili prazno." }
+    return { ok: false, message: t("intervalNeispravanTacka") }
   }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase

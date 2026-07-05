@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { NoviKorisnikButton } from "./NoviKorisnikButton"
@@ -5,6 +6,7 @@ import { KorisniciTabela } from "./KorisniciTabela"
 import { CollapsibleSection } from "./CollapsibleSection"
 
 export async function KorisniciTab() {
+  const t = await getTranslations("postavke.korisnici")
   const supabase = await createServerSupabaseClient()
   const [ja, korisniciRes, klijentiRes, dodjeleRes] = await Promise.all([
     getTrenutniKorisnik(),
@@ -24,7 +26,7 @@ export async function KorisniciTab() {
   }))
 
   return (
-    <CollapsibleSection title="Korisnici" action={<NoviKorisnikButton />}>
+    <CollapsibleSection title={t("naslov")} action={<NoviKorisnikButton />}>
       <KorisniciTabela korisnici={korisnici} klijenti={klijentiRes.data ?? []} jaId={ja?.id} />
     </CollapsibleSection>
   )

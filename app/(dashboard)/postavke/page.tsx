@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { getCachedVrste } from "@/lib/cache"
@@ -8,6 +9,7 @@ import { KorisniciTab } from "@/components/domain/KorisniciTab"
 import { CollapsibleSection } from "@/components/domain/CollapsibleSection"
 
 export default async function PostavkePage() {
+  const t = await getTranslations("postavke")
   const korisnik = await getTrenutniKorisnik()
   const jeAdminKor = korisnik?.uloga === "admin"
   const supabase = await createServerSupabaseClient()
@@ -27,12 +29,12 @@ export default async function PostavkePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Postavke</h1>
+      <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
 
       {jeAdminKor && (
         <CollapsibleSection
-          title="Email podsjetnici"
-          description="Koliko dana prije roka dospijeća se šalje podsjetnik. Sistem dnevno provjerava termine."
+          title={t("reminders.naslov")}
+          description={t("reminders.opis")}
         >
           <ReminderForm danaPrije={danaPrije} />
         </CollapsibleSection>
@@ -40,8 +42,8 @@ export default async function PostavkePage() {
 
       {jeAdminKor && (
         <CollapsibleSection
-          title="Vrste pregleda"
-          description="Usluge koje sistem prati i automatski zakazuje. Interval (mjeseci) određuje kada se po izvršenju zakazuje sljedeći termin. Prazno = bez auto-zakazivanja."
+          title={t("vrste.naslov")}
+          description={t("vrste.opis")}
           action={<NovaVrstaButton />}
         >
           <VrstePregledaTabela vrste={vrste} />

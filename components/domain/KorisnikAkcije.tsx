@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { MoreHorizontal, Send, UserX, UserCheck } from "lucide-react"
 import {
@@ -22,6 +23,7 @@ export function KorisnikAkcije({
   aktivan: boolean
   jeJa: boolean
 }) {
+  const t = useTranslations("postavke.korisnikAkcije")
   const router = useRouter()
   const [pending, start] = useTransition()
 
@@ -29,19 +31,19 @@ export function KorisnikAkcije({
     start(async () => {
       const r = await posaljiTestniEmail(korisnikId)
       if (!r.ok) {
-        toast.error(r.message ?? "Greška pri slanju.")
+        toast.error(r.message ?? t("greskaSlanja"))
         return
       }
       if (r.dryRun) {
-        toast.warning("Email nije stvarno poslan (dry-run).", {
-          description: `Resend nije konfigurisan. Test je simuliran za ${r.email}.`,
+        toast.warning(t("dryRunNaslov"), {
+          description: t("dryRunOpis", { email: r.email }),
         })
       } else if (!r.primaPodsjetnike) {
-        toast.success(`Testni email poslan na ${r.email}.`, {
-          description: "Napomena: korisnik ima isključene podsjetnike.",
+        toast.success(t("testniPoslat", { email: r.email }), {
+          description: t("napomenaIskljuceniPodsjetnici"),
         })
       } else {
-        toast.success(`Testni email poslan na ${r.email}.`)
+        toast.success(t("testniPoslat", { email: r.email }))
       }
     })
   }
@@ -50,10 +52,10 @@ export function KorisnikAkcije({
     start(async () => {
       const r = await postaviAktivan(korisnikId, !aktivan)
       if (r.ok) {
-        toast.success(aktivan ? "Korisnik deaktiviran." : "Korisnik aktiviran.")
+        toast.success(aktivan ? t("korisnikDeaktiviran") : t("korisnikAktiviran"))
         router.refresh()
       } else {
-        toast.error(r.message ?? "Greška.")
+        toast.error(r.message ?? t("greska"))
       }
     })
   }
@@ -62,14 +64,14 @@ export function KorisnikAkcije({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="icon-sm" aria-label="Akcije" disabled={pending} data-testid={`akcije-${korisnikId}`}>
+          <Button variant="ghost" size="icon-sm" aria-label={t("aria")} disabled={pending} data-testid={`akcije-${korisnikId}`}>
             <MoreHorizontal className="h-4 w-4" aria-hidden />
           </Button>
         }
       />
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem onClick={testEmail} data-testid={`test-email-${korisnikId}`}>
-          <Send /> Pošalji test email
+          <Send /> {t("testEmail")}
         </DropdownMenuItem>
         <DropdownMenuItem
           variant={aktivan ? "destructive" : "default"}
@@ -78,7 +80,7 @@ export function KorisnikAkcije({
           data-testid={`deaktiviraj-${korisnikId}`}
         >
           {aktivan ? <UserX /> : <UserCheck />}
-          {aktivan ? "Deaktiviraj korisnika" : "Aktiviraj korisnika"}
+          {aktivan ? t("deaktivirajKorisnika") : t("aktivirajKorisnika")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

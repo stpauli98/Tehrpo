@@ -413,6 +413,24 @@
       "submitPending": "Saving…",
       "toastSuccess": "Companies assigned.",
       "toastErrorFallback": "Error."
+    },
+    "profil": {
+      "prazno": "No checks in the profile. Add a check to generate appointments.",
+      "kolone": {
+        "vrsta": "Type",
+        "lokacija": "Location",
+        "interval": "Interval (mo)",
+        "zadnjiPut": "Last time",
+        "sljedeciRok": "Next due date"
+      },
+      "prviPut": "— (first time)"
+    },
+    "obrisiProfil": {
+      "tooltip": "Remove from profile",
+      "dialogNaslov": "Remove check from profile?",
+      "dialogOpis": "Removes the item from the profile. Existing appointments remain (tracked under Appointments).",
+      "potvrdi": "Remove",
+      "confirmPending": "Deleting…"
     }
   },
   "termini": {
@@ -681,5 +699,159 @@
     "preuzmi": "Download",
     "obrisiDokument": "Delete document",
     "aiOznaka": "AI"
+  },
+  "postavke": {
+    "naslov": "Settings",
+    "reminders": {
+      "naslov": "Email reminders",
+      "opis": "How many days before the due date a reminder is sent. The system checks appointments daily."
+    },
+    "vrste": {
+      "naslov": "Check types",
+      "opis": "Services the system tracks and automatically schedules. The interval (months) determines when the next appointment is scheduled after completion. Empty = no auto-scheduling."
+    },
+    "korisnici": {
+      "naslov": "Users"
+    },
+    "uloge": {
+      "admin": "Administrator",
+      "operater": "Operator",
+      "pregled": "Viewer"
+    },
+    "korisniciTabela": {
+      "pretragaPlaceholder": "Search users…",
+      "brojUkupno": "{count} users",
+      "brojFiltrirano": "{prikazano} / {ukupno}",
+      "kolone": {
+        "korisnik": "User",
+        "uloga": "Role",
+        "podsjetnici": "Reminders",
+        "firme": "Companies",
+        "akcije": "Actions"
+      },
+      "ti": "(you)",
+      "deaktiviran": "deactivated",
+      "sveFirme": "all companies",
+      "sveFirmeTitle": "Administrator sees all companies",
+      "nemaDodijeljenih": "none assigned",
+      "prazno": "No users for \"{upit}\"."
+    },
+    "korisnikAkcije": {
+      "aria": "Actions",
+      "testEmail": "Send test email",
+      "deaktivirajKorisnika": "Deactivate user",
+      "aktivirajKorisnika": "Activate user",
+      "greskaSlanja": "Error sending.",
+      "dryRunNaslov": "Email was not actually sent (dry run).",
+      "dryRunOpis": "Resend is not configured. The test was simulated for {email}.",
+      "testniPoslat": "Test email sent to {email}.",
+      "napomenaIskljuceniPodsjetnici": "Note: the user has reminders turned off.",
+      "korisnikDeaktiviran": "User deactivated.",
+      "korisnikAktiviran": "User activated.",
+      "greska": "Error."
+    },
+    "noviKorisnik": {
+      "dugme": "New user",
+      "naslov": "New user",
+      "placeholderIme": "Full name",
+      "placeholderEmail": "Email",
+      "placeholderLozinka": "Initial password (min 8)",
+      "submitPending": "Creating…",
+      "submit": "Create"
+    },
+    "ulogaSelect": {
+      "vlastitaUlogaTitle": "You cannot change your own role",
+      "promijeniUlogu": "Change role",
+      "sacuvano": "Role changed.",
+      "greska": "Error."
+    },
+    "primaPodsjetnike": {
+      "aria": "Receives email reminders",
+      "sacuvano": "Saved.",
+      "greska": "Error."
+    },
+    "reminderForm": {
+      "naDan": "on the day",
+      "dana": "{count, plural, =1 {# day} other {# days}}",
+      "ukloniAria": "Remove {labela}",
+      "uputstvo": "Click a threshold to turn sending on/off.",
+      "uputstvoUklanjanje": "× removes the option.",
+      "customPlaceholder": "e.g. 21",
+      "danaPrije": "days before",
+      "dodaj": "Add",
+      "customGreska": "Enter a whole number of days 0–365",
+      "prazno": "No threshold is enabled — no emails will be sent.",
+      "submitPending": "Saving…",
+      "submit": "Save"
+    },
+    "actions": {
+      "pragObavezan": "Enter at least one threshold",
+      "pragoviNeispravni": "Thresholds must be whole numbers 0–365, separated by commas",
+      "samoAdministrator": "Administrator only.",
+      "intervalGreskaVrijednost": "Interval must be a whole number 1–120 or empty (error: \"{vrijednost}\")",
+      "nazivObavezan": "Name is required",
+      "intervalNeispravan": "Interval must be a whole number 1–120 or empty",
+      "vrstaPregledaNazivPostoji": "A check type with that name already exists.",
+      "imeObavezno": "Name is required",
+      "emailNeispravan": "Invalid email",
+      "lozinkaMin": "Password min 8 characters",
+      "korisnikEmailPostoji": "A user with that email already exists.",
+      "greskaFallback": "Error.",
+      "sebiOduzetiUlogu": "You cannot remove your own administrator role.",
+      "barJedanAdmin": "There must be at least one active administrator.",
+      "deaktivirajVlastitiNalog": "You cannot deactivate your own account.",
+      "korisnikNemaEmail": "The user has no email address.",
+      "greskaSlanjaEmailaFallback": "Error sending the email.",
+      "resendTestniRezim": "Resend is in test mode: until a domain is verified, emails can only be sent to the Resend account owner's email. Verify a domain at resend.com/domains and set EMAIL_FROM to an address on that domain.",
+      "klijentNepostojeciUDodjeli": "Nonexistent client in the assignment.",
+      "intervalNeispravanKratko": "Interval must be 1–120 or empty",
+      "vrstaNazivPostoji": "A type with that name already exists.",
+      "vrstaIdNeispravan": "Invalid type ID.",
+      "intervalNeispravanTacka": "Interval must be a whole number 1–120 or empty."
+    }
+  },
+  "asistent": {
+    "naslov": "Assistant",
+    "sidebar": {
+      "naslov": "Conversations",
+      "prazno": "No conversations.",
+      "bezNaslova": "Conversation"
+    },
+    "prazanRazgovor": "Click \"+ New conversation\" to start, or select an existing conversation on the left.",
+    "chat": {
+      "prazno": "Ask a question about appointments, companies, or request a record draft.",
+      "nemaStream": "No stream",
+      "greskaEvent": "\n[Error: {poruka}]",
+      "greskaVeze": "\n[Connection error: {poruka}]",
+      "nepoznatoGreska": "unknown"
+    },
+    "chatInput": {
+      "placeholder": "Type a question…",
+      "posalji": "Send"
+    },
+    "chatMessage": {
+      "alati": "Tools: {lista}",
+      "proposal": {
+        "naslov": "Record draft · {klijent} · {vrsta}",
+        "nalaz": "Findings:",
+        "zakljucak": "Conclusion:",
+        "snimi": "Save record",
+        "snimam": "Saving…",
+        "snimljeno": "Saved ✓"
+      }
+    },
+    "noviRazgovor": {
+      "dugme": "New conversation"
+    },
+    "suggestedPills": {
+      "pitanje1": "Which appointments are overdue?",
+      "pitanje2": "What companies do we have and how much are they overdue?",
+      "pitanje3": "Group active appointments by client"
+    },
+    "actions": {
+      "neispravanTermin": "Invalid appointment",
+      "terminNePostoji": "Appointment does not exist.",
+      "snimanjeNijeUspjelo": "Save failed."
+    }
   }
 }

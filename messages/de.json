@@ -413,6 +413,24 @@
       "submitPending": "Wird gespeichert…",
       "toastSuccess": "Firmen zugewiesen.",
       "toastErrorFallback": "Fehler."
+    },
+    "profil": {
+      "prazno": "Keine Prüfungen im Profil. Fügen Sie eine Prüfung hinzu, um Termine zu erstellen.",
+      "kolone": {
+        "vrsta": "Art",
+        "lokacija": "Standort",
+        "interval": "Intervall (Mon.)",
+        "zadnjiPut": "Letztes Mal",
+        "sljedeciRok": "Nächste Fälligkeit"
+      },
+      "prviPut": "— (erstes Mal)"
+    },
+    "obrisiProfil": {
+      "tooltip": "Aus Profil entfernen",
+      "dialogNaslov": "Prüfung aus Profil entfernen?",
+      "dialogOpis": "Entfernt den Eintrag aus dem Profil. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
+      "potvrdi": "Entfernen",
+      "confirmPending": "Wird gelöscht…"
     }
   },
   "termini": {
@@ -681,5 +699,159 @@
     "preuzmi": "Herunterladen",
     "obrisiDokument": "Dokument löschen",
     "aiOznaka": "KI"
+  },
+  "postavke": {
+    "naslov": "Einstellungen",
+    "reminders": {
+      "naslov": "E-Mail-Erinnerungen",
+      "opis": "Wie viele Tage vor dem Fälligkeitstermin eine Erinnerung gesendet wird. Das System prüft die Termine täglich."
+    },
+    "vrste": {
+      "naslov": "Prüfungsarten",
+      "opis": "Leistungen, die das System verfolgt und automatisch terminiert. Das Intervall (Monate) bestimmt, wann nach der Durchführung der nächste Termin geplant wird. Leer = keine automatische Terminierung."
+    },
+    "korisnici": {
+      "naslov": "Benutzer"
+    },
+    "uloge": {
+      "admin": "Administrator",
+      "operater": "Sachbearbeiter",
+      "pregled": "Betrachter"
+    },
+    "korisniciTabela": {
+      "pretragaPlaceholder": "Benutzer durchsuchen…",
+      "brojUkupno": "{count} Benutzer",
+      "brojFiltrirano": "{prikazano} / {ukupno}",
+      "kolone": {
+        "korisnik": "Benutzer",
+        "uloga": "Rolle",
+        "podsjetnici": "Erinnerungen",
+        "firme": "Firmen",
+        "akcije": "Aktionen"
+      },
+      "ti": "(Du)",
+      "deaktiviran": "deaktiviert",
+      "sveFirme": "alle Firmen",
+      "sveFirmeTitle": "Administrator sieht alle Firmen",
+      "nemaDodijeljenih": "keine zugewiesen",
+      "prazno": "Keine Benutzer für „{upit}“."
+    },
+    "korisnikAkcije": {
+      "aria": "Aktionen",
+      "testEmail": "Test-E-Mail senden",
+      "deaktivirajKorisnika": "Benutzer deaktivieren",
+      "aktivirajKorisnika": "Benutzer aktivieren",
+      "greskaSlanja": "Fehler beim Senden.",
+      "dryRunNaslov": "E-Mail wurde nicht tatsächlich gesendet (Testlauf).",
+      "dryRunOpis": "Resend ist nicht konfiguriert. Der Test wurde für {email} simuliert.",
+      "testniPoslat": "Test-E-Mail an {email} gesendet.",
+      "napomenaIskljuceniPodsjetnici": "Hinweis: Der Benutzer hat Erinnerungen deaktiviert.",
+      "korisnikDeaktiviran": "Benutzer deaktiviert.",
+      "korisnikAktiviran": "Benutzer aktiviert.",
+      "greska": "Fehler."
+    },
+    "noviKorisnik": {
+      "dugme": "Neuer Benutzer",
+      "naslov": "Neuer Benutzer",
+      "placeholderIme": "Vor- und Nachname",
+      "placeholderEmail": "E-Mail",
+      "placeholderLozinka": "Anfangspasswort (mind. 8)",
+      "submitPending": "Wird erstellt…",
+      "submit": "Erstellen"
+    },
+    "ulogaSelect": {
+      "vlastitaUlogaTitle": "Sie können Ihre eigene Rolle nicht ändern",
+      "promijeniUlogu": "Rolle ändern",
+      "sacuvano": "Rolle geändert.",
+      "greska": "Fehler."
+    },
+    "primaPodsjetnike": {
+      "aria": "Erhält E-Mail-Erinnerungen",
+      "sacuvano": "Gespeichert.",
+      "greska": "Fehler."
+    },
+    "reminderForm": {
+      "naDan": "am Tag",
+      "dana": "{count, plural, =1 {# Tag} other {# Tage}}",
+      "ukloniAria": "{labela} entfernen",
+      "uputstvo": "Klicken Sie auf eine Schwelle, um den Versand ein-/auszuschalten.",
+      "uputstvoUklanjanje": "× entfernt die Option.",
+      "customPlaceholder": "z. B. 21",
+      "danaPrije": "Tage vorher",
+      "dodaj": "Hinzufügen",
+      "customGreska": "Geben Sie eine ganze Zahl von Tagen 0–365 ein",
+      "prazno": "Keine Schwelle ist aktiviert — es werden keine E-Mails gesendet.",
+      "submitPending": "Wird gespeichert…",
+      "submit": "Speichern"
+    },
+    "actions": {
+      "pragObavezan": "Geben Sie mindestens eine Schwelle ein",
+      "pragoviNeispravni": "Schwellenwerte müssen ganze Zahlen 0–365 sein, durch Komma getrennt",
+      "samoAdministrator": "Nur Administrator.",
+      "intervalGreskaVrijednost": "Intervall muss eine ganze Zahl 1–120 oder leer sein (Fehler: \"{vrijednost}\")",
+      "nazivObavezan": "Name ist erforderlich",
+      "intervalNeispravan": "Intervall muss eine ganze Zahl 1–120 oder leer sein",
+      "vrstaPregledaNazivPostoji": "Ein Prüfungstyp mit diesem Namen existiert bereits.",
+      "imeObavezno": "Name ist erforderlich",
+      "emailNeispravan": "Ungültige E-Mail",
+      "lozinkaMin": "Passwort min. 8 Zeichen",
+      "korisnikEmailPostoji": "Ein Benutzer mit dieser E-Mail-Adresse existiert bereits.",
+      "greskaFallback": "Fehler.",
+      "sebiOduzetiUlogu": "Sie können sich nicht selbst die Administratorrolle entziehen.",
+      "barJedanAdmin": "Es muss mindestens ein aktiver Administrator vorhanden sein.",
+      "deaktivirajVlastitiNalog": "Sie können Ihr eigenes Konto nicht deaktivieren.",
+      "korisnikNemaEmail": "Der Benutzer hat keine E-Mail-Adresse.",
+      "greskaSlanjaEmailaFallback": "Fehler beim Senden der E-Mail.",
+      "resendTestniRezim": "Resend befindet sich im Testmodus: Solange keine Domain verifiziert ist, können E-Mails nur an die E-Mail-Adresse des Resend-Kontoinhabers gesendet werden. Verifizieren Sie eine Domain unter resend.com/domains und setzen Sie EMAIL_FROM auf eine Adresse dieser Domain.",
+      "klijentNepostojeciUDodjeli": "Nicht existierender Kunde in der Zuweisung.",
+      "intervalNeispravanKratko": "Intervall muss 1–120 oder leer sein",
+      "vrstaNazivPostoji": "Eine Art mit diesem Namen existiert bereits.",
+      "vrstaIdNeispravan": "Ungültige Art-ID.",
+      "intervalNeispravanTacka": "Intervall muss eine ganze Zahl 1–120 oder leer sein."
+    }
+  },
+  "asistent": {
+    "naslov": "Assistent",
+    "sidebar": {
+      "naslov": "Unterhaltungen",
+      "prazno": "Keine Unterhaltungen.",
+      "bezNaslova": "Unterhaltung"
+    },
+    "prazanRazgovor": "Klicken Sie auf „+ Neue Unterhaltung“, um zu beginnen, oder wählen Sie links eine bestehende Unterhaltung aus.",
+    "chat": {
+      "prazno": "Stellen Sie eine Frage zu Terminen, Firmen, oder fordern Sie einen Protokollentwurf an.",
+      "nemaStream": "Kein Stream",
+      "greskaEvent": "\n[Fehler: {poruka}]",
+      "greskaVeze": "\n[Verbindungsfehler: {poruka}]",
+      "nepoznatoGreska": "unbekannt"
+    },
+    "chatInput": {
+      "placeholder": "Frage eingeben…",
+      "posalji": "Senden"
+    },
+    "chatMessage": {
+      "alati": "Werkzeuge: {lista}",
+      "proposal": {
+        "naslov": "Protokollentwurf · {klijent} · {vrsta}",
+        "nalaz": "Befund:",
+        "zakljucak": "Schlussfolgerung:",
+        "snimi": "Protokoll speichern",
+        "snimam": "Wird gespeichert…",
+        "snimljeno": "Gespeichert ✓"
+      }
+    },
+    "noviRazgovor": {
+      "dugme": "Neue Unterhaltung"
+    },
+    "suggestedPills": {
+      "pitanje1": "Welche Termine sind überfällig?",
+      "pitanje2": "Welche Firmen haben wir und wie stark sind sie im Verzug?",
+      "pitanje3": "Aktive Termine nach Kunde gruppieren"
+    },
+    "actions": {
+      "neispravanTermin": "Ungültiger Termin",
+      "terminNePostoji": "Der Termin existiert nicht.",
+      "snimanjeNijeUspjelo": "Speichern fehlgeschlagen."
+    }
   }
 }

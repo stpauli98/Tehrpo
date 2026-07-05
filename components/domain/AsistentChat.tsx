@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { ChatMessage, type UiPoruka, type ProposalData } from "@/components/domain/ChatMessage"
 import { ChatInput } from "@/components/domain/ChatInput"
 import { SuggestedPills } from "@/components/domain/SuggestedPills"
@@ -19,6 +20,7 @@ export function AsistentChat({
   konverzacijaId: string
   pocetnePoruke: UiPoruka[]
 }) {
+  const t = useTranslations("asistent.chat")
   const [poruke, setPoruke] = useState<UiPoruka[]>(pocetnePoruke)
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -40,7 +42,7 @@ export function AsistentChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ konverzacija_id: konverzacijaId, userText, history }),
       })
-      if (!res.body) throw new Error("Nema stream-a")
+      if (!res.body) throw new Error(t("nemaStream"))
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let buf = ""
@@ -60,7 +62,7 @@ export function AsistentChat({
             if (ev.type === "text") last.text += ev.text
             else if (ev.type === "tool") last.tools = [...last.tools, ev.tool]
             else if (ev.type === "proposal") last.proposal = ev.data
-            else if (ev.type === "error") last.text += `\n[Greška: ${ev.message}]`
+            else if (ev.type === "error") last.text += t("greskaEvent", { poruka: ev.message })
             const next = [...prev]
             next[next.length - 1] = last
             return next
@@ -72,7 +74,7 @@ export function AsistentChat({
       setPoruke((prev) => {
         const next = [...prev]
         const last = next[next.length - 1]
-        if (last && last.role === "assistant") last.text += `\n[Greška veze: ${e instanceof Error ? e.message : "nepoznato"}]`
+        if (last && last.role === "assistant") last.text += t("greskaVeze", { poruka: e instanceof Error ? e.message : t("nepoznatoGreska") })
         return next
       })
     } finally {
@@ -85,7 +87,7 @@ export function AsistentChat({
     <div className="flex h-[calc(100vh-10rem)] flex-col">
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-2" data-testid="chat-poruke">
         {poruke.length === 0 && (
-          <p className="text-sm text-slate-500">Postavi pitanje o terminima, firmama ili zatraži prijedlog zapisnika.</p>
+          <p className="text-sm text-slate-500">{t("prazno")}</p>
         )}
         {poruke.map((p, i) => <ChatMessage key={i} poruka={p} />)}
       </div>

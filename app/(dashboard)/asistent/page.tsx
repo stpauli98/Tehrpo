@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { AsistentChat } from "@/components/domain/AsistentChat"
 import { NoviRazgovorButton } from "@/components/domain/NoviRazgovorButton"
@@ -12,6 +13,7 @@ export default async function AsistentPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const t = await getTranslations("asistent")
   const sp = await searchParams
   const aktivni = typeof sp.k === "string" ? sp.k : null
 
@@ -48,11 +50,11 @@ export default async function AsistentPage({
     <div className="grid grid-cols-[260px_1fr] gap-4">
       <aside className="space-y-3 border-r border-slate-200 pr-4" data-testid="razgovori-sidebar">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-slate-600">Razgovori</h2>
+          <h2 className="text-sm font-medium text-slate-600">{t("sidebar.naslov")}</h2>
           <NoviRazgovorButton />
         </div>
         <ul className="space-y-1">
-          {razgovori.length === 0 && <li className="text-xs text-slate-400">Nema razgovora.</li>}
+          {razgovori.length === 0 && <li className="text-xs text-slate-400">{t("sidebar.prazno")}</li>}
           {razgovori.map((r) => (
             <li key={r.id}>
               <Link
@@ -60,7 +62,7 @@ export default async function AsistentPage({
                 data-testid="razgovor-link"
                 className={`block truncate rounded-md px-2 py-1 text-sm hover:bg-slate-50 ${r.id === aktivni ? "bg-slate-100 font-medium" : "text-slate-600"}`}
               >
-                {r.naslov || "Razgovor"}
+                {r.naslov || t("sidebar.bezNaslova")}
               </Link>
             </li>
           ))}
@@ -68,21 +70,21 @@ export default async function AsistentPage({
       </aside>
 
       <section>
-        <h1 className="mb-3 text-2xl font-semibold">Asistent</h1>
+        <h1 className="mb-3 text-2xl font-semibold">{t("naslov")}</h1>
         {aktivni ? (
           <AsistentChat key={aktivni} konverzacijaId={aktivni} pocetnePoruke={pocetnePoruke} />
         ) : (
-          <NoviRazgovorChat />
+          <NoviRazgovorChat prazanRazgovor={t("prazanRazgovor")} />
         )}
       </section>
     </div>
   )
 }
 
-function NoviRazgovorChat() {
+function NoviRazgovorChat({ prazanRazgovor }: { prazanRazgovor: string }) {
   return (
     <div data-testid="prazan-asistent" className="rounded-xl border border-slate-200 p-6 text-sm text-slate-500">
-      Klikni &bdquo;+ Novi razgovor&rdquo; za početak, ili izaberi postojeći razgovor lijevo.
+      {prazanRazgovor}
     </div>
   )
 }

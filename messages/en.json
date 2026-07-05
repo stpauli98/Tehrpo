@@ -5,7 +5,11 @@
     "otkazi": "Cancel",
     "obrisi": "Delete",
     "zatvori": "Close",
-    "pretraga": "Search"
+    "pretraga": "Search",
+    "prikaziJosLista": {
+      "prikaziManje": "Show less",
+      "prikaziJos": "Show {count} more"
+    }
   },
   "shell": {
     "nav": {
@@ -78,6 +82,52 @@
         "validacija": "Validation error.",
         "linkIstekao": "The link has expired or is invalid. Request a new one."
       }
+    }
+  },
+  "pregled": {
+    "naslov": "Overview",
+    "podnaslov": "Deadlines and workload",
+    "statCard": {
+      "terminiOvogMjeseca": {
+        "label": "Appointments this month",
+        "sub": "due date this month"
+      },
+      "kasniRokovi": {
+        "label": "Overdue deadlines",
+        "sub": "require action"
+      },
+      "izvrseniOvogMjeseca": {
+        "label": "Completed this month",
+        "sub": "finished this month"
+      },
+      "predstojeci": {
+        "label": "Upcoming (30 days)",
+        "sub": "not yet completed"
+      }
+    },
+    "hitnoKasni": {
+      "naslov": "Urgent / overdue",
+      "prazno": "No urgent or overdue appointments.",
+      "footer": "All overdue deadlines ({count}) →"
+    },
+    "opterecenje": {
+      "naslov": "Workload by month",
+      "podnaslov": "Number of appointments by status",
+      "legenda": {
+        "izvrseno": "Completed",
+        "kasni": "Overdue",
+        "uPlanu": "Planned"
+      },
+      "barTitle": "{naziv}: {count} appointments",
+      "barAriaLabel": "{naziv}: {count} appointments — open month in matrix"
+    },
+    "prikaz": {
+      "modKlijent": "By client",
+      "modMjesec": "By month",
+      "sviKlijenti": "— all clients —",
+      "izaberiKlijenta": "Select a client",
+      "izaberiMjesec": "Select a month",
+      "godina": "Year"
     }
   }
 }

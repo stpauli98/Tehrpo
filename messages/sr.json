@@ -5,7 +5,11 @@
     "otkazi": "Otkaži",
     "obrisi": "Obriši",
     "zatvori": "Zatvori",
-    "pretraga": "Pretraga"
+    "pretraga": "Pretraga",
+    "prikaziJosLista": {
+      "prikaziManje": "Prikaži manje",
+      "prikaziJos": "Prikaži još {count}"
+    }
   },
   "shell": {
     "nav": {
@@ -78,6 +82,52 @@
         "validacija": "Greška pri validaciji.",
         "linkIstekao": "Link je istekao ili je nevažeći. Zatražite novi."
       }
+    }
+  },
+  "pregled": {
+    "naslov": "Pregled",
+    "podnaslov": "Rokovi i opterećenje",
+    "statCard": {
+      "terminiOvogMjeseca": {
+        "label": "Termini ovog mjeseca",
+        "sub": "rok dospijeća ovaj mjesec"
+      },
+      "kasniRokovi": {
+        "label": "Kasni rokovi",
+        "sub": "zahtijevaju akciju"
+      },
+      "izvrseniOvogMjeseca": {
+        "label": "Izvršeni ovog mjeseca",
+        "sub": "završeno ovaj mjesec"
+      },
+      "predstojeci": {
+        "label": "Predstojeći (30 dana)",
+        "sub": "još neizvršeni"
+      }
+    },
+    "hitnoKasni": {
+      "naslov": "Hitno / kasni",
+      "prazno": "Nema hitnih ni kasnih termina.",
+      "footer": "Svi kasni rokovi ({count}) →"
+    },
+    "opterecenje": {
+      "naslov": "Opterećenje po mjesecima",
+      "podnaslov": "Broj termina po statusu",
+      "legenda": {
+        "izvrseno": "Izvršeno",
+        "kasni": "Kasni",
+        "uPlanu": "U planu"
+      },
+      "barTitle": "{naziv}: {count} termina",
+      "barAriaLabel": "{naziv}: {count} termina — otvori mjesec u matrici"
+    },
+    "prikaz": {
+      "modKlijent": "Po klijentu",
+      "modMjesec": "Po mjesecu",
+      "sviKlijenti": "— svi klijenti —",
+      "izaberiKlijenta": "Izaberi klijenta",
+      "izaberiMjesec": "Izaberi mjesec",
+      "godina": "Godina"
     }
   }
 }

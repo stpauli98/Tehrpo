@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { AlertTriangle } from "lucide-react"
 import { formatDatum } from "@/lib/date"
 import { rokRelativnaOznaka } from "@/lib/hitno"
@@ -10,7 +11,7 @@ const TONE: Record<"danger" | "warning", string> = {
   warning: "text-amber-600",
 }
 
-export function HitnoKasniList({
+export async function HitnoKasniList({
   items,
   ukupnoKasni,
   today,
@@ -19,37 +20,38 @@ export function HitnoKasniList({
   ukupnoKasni: number
   today: string
 }) {
+  const t = await getTranslations("pregled.hitnoKasni")
   return (
     <div className="rounded-xl border border-slate-200 p-4" data-testid="hitno-kasni-list">
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle className="w-4 h-4 text-red-600" aria-hidden />
-        <h2 className="font-semibold">Hitno / kasni</h2>
+        <h2 className="font-semibold">{t("naslov")}</h2>
       </div>
       {items.length === 0 ? (
         <p data-testid="hitno-kasni-empty" className="text-sm text-slate-500">
-          Nema hitnih ni kasnih termina.
+          {t("prazno")}
         </p>
       ) : (
         <ul className="divide-y divide-slate-100">
-          {items.map((t) => {
-            const oznaka = rokRelativnaOznaka(t.rok_dospijeca, today)
+          {items.map((item) => {
+            const oznaka = rokRelativnaOznaka(item.rok_dospijeca, today)
             return (
-              <li key={t.id}>
+              <li key={item.id}>
                 <Link
-                  href={`/plan-aktivnosti?view=lista&selected=${t.id}&mjesec=svi`}
+                  href={`/plan-aktivnosti?view=lista&selected=${item.id}&mjesec=svi`}
                   data-testid="hitno-kasni-row"
                   className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate font-medium">{t.klijent_naziv}</span>
+                    <span className="block truncate font-medium">{item.klijent_naziv}</span>
                     <span className="block truncate text-xs text-slate-500">
-                      {t.vrsta_naziv}
-                      {t.lokacija_naziv ? ` · ${t.lokacija_naziv}` : ""}
+                      {item.vrsta_naziv}
+                      {item.lokacija_naziv ? ` · ${item.lokacija_naziv}` : ""}
                     </span>
                   </span>
                   <span
                     className={cn("shrink-0 text-sm font-medium", TONE[oznaka.tone])}
-                    title={formatDatum(t.rok_dospijeca)}
+                    title={formatDatum(item.rok_dospijeca)}
                   >
                     {oznaka.text}
                   </span>
@@ -65,7 +67,7 @@ export function HitnoKasniList({
           data-testid="hitno-kasni-footer"
           className="mt-3 inline-block text-xs text-brand hover:underline"
         >
-          Svi kasni rokovi ({ukupnoKasni}) →
+          {t("footer", { count: ukupnoKasni })}
         </Link>
       )}
     </div>

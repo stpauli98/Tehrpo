@@ -5,7 +5,11 @@
     "otkazi": "Abbrechen",
     "obrisi": "Löschen",
     "zatvori": "Schließen",
-    "pretraga": "Suche"
+    "pretraga": "Suche",
+    "prikaziJosLista": {
+      "prikaziManje": "Weniger anzeigen",
+      "prikaziJos": "{count} weitere anzeigen"
+    }
   },
   "shell": {
     "nav": {
@@ -78,6 +82,52 @@
         "validacija": "Validierungsfehler.",
         "linkIstekao": "Der Link ist abgelaufen oder ungültig. Fordern Sie einen neuen an."
       }
+    }
+  },
+  "pregled": {
+    "naslov": "Übersicht",
+    "podnaslov": "Termine und Auslastung",
+    "statCard": {
+      "terminiOvogMjeseca": {
+        "label": "Termine diesen Monat",
+        "sub": "Fälligkeitsdatum diesen Monat"
+      },
+      "kasniRokovi": {
+        "label": "Überfällige Termine",
+        "sub": "erfordern Handlung"
+      },
+      "izvrseniOvogMjeseca": {
+        "label": "Durchgeführt diesen Monat",
+        "sub": "diesen Monat abgeschlossen"
+      },
+      "predstojeci": {
+        "label": "Bevorstehend (30 Tage)",
+        "sub": "noch nicht durchgeführt"
+      }
+    },
+    "hitnoKasni": {
+      "naslov": "Dringend / überfällig",
+      "prazno": "Keine dringenden oder überfälligen Termine.",
+      "footer": "Alle überfälligen Termine ({count}) →"
+    },
+    "opterecenje": {
+      "naslov": "Auslastung nach Monat",
+      "podnaslov": "Anzahl der Termine nach Status",
+      "legenda": {
+        "izvrseno": "Durchgeführt",
+        "kasni": "Überfällig",
+        "uPlanu": "Geplant"
+      },
+      "barTitle": "{naziv}: {count} Termine",
+      "barAriaLabel": "{naziv}: {count} Termine — Monat in der Matrix öffnen"
+    },
+    "prikaz": {
+      "modKlijent": "Nach Kunde",
+      "modMjesec": "Nach Monat",
+      "sviKlijenti": "— alle Kunden —",
+      "izaberiKlijenta": "Kunden auswählen",
+      "izaberiMjesec": "Monat auswählen",
+      "godina": "Jahr"
     }
   }
 }

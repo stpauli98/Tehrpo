@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { env } from "@/lib/env"
 import { SISTEM_PROMPT } from "./prompts"
-import { CHAT_TOOLS, TOOL_LABELS, executeTool, type ToolName, type ProposalData } from "./tools"
+import { CHAT_TOOLS, toolLabel, executeTool, type ProposalData } from "./tools"
 import { mockChatEvents } from "./mock"
 
 export type ChatEvent =
@@ -67,7 +67,7 @@ export async function runChat(
     // Indikatori (batch) + izvrši sve tool-ove paralelno
     for (const tu of toolUses) {
       toolsUsed.push(tu.name)
-      onEvent({ type: "tool", tool: tu.name, label: TOOL_LABELS[tu.name as ToolName] ?? "Radim…" })
+      onEvent({ type: "tool", tool: tu.name, label: toolLabel(tu.name) })
     }
     // eslint-disable-next-line no-await-in-loop -- tool-ovi za OVAJ korak; sljedeći korak zavisi od ovih rezultata
     const results = await Promise.all(toolUses.map((tu) => executeTool(tu.name, tu.input)))

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Users, MapPin, AlertTriangle } from "lucide-react"
 import type { Database } from "@/db/types"
 import { Card, CardContent } from "@/components/ui/card"
@@ -7,7 +8,8 @@ import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 
 export type KlijentRow = Database["public"]["Views"]["klijenti_view"]["Row"]
 
-export function KlijentCard({ klijent }: { klijent: KlijentRow }) {
+export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
+  const t = await getTranslations("klijenti.karta")
   const kasni = klijent.broj_kasni ?? 0
   return (
     <Link
@@ -34,20 +36,20 @@ export function KlijentCard({ klijent }: { klijent: KlijentRow }) {
               )}
             >
               <AlertTriangle className="w-3 h-3" aria-hidden />
-              {kasni} kasni
+              {t("kasniBadge", { count: kasni })}
             </span>
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" aria-hidden />
-              {klijent.broj_lokacija ?? 0} lok.
+              {t("lokacija", { count: klijent.broj_lokacija ?? 0 })}
             </span>
             <span className="inline-flex items-center gap-1">
               <Users className="w-3.5 h-3.5" aria-hidden />
-              {klijent.broj_aktivnih ?? 0} aktivnih
+              {t("aktivnih", { count: klijent.broj_aktivnih ?? 0 })}
             </span>
             <span className={cn("ml-auto tabular-nums", "text-slate-400")}>
-              {klijent.broj_termina ?? 0} ukupno
+              {t("ukupno", { count: klijent.broj_termina ?? 0 })}
             </span>
           </div>
         </CardContent>

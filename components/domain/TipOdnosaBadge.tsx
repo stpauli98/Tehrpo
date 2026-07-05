@@ -1,7 +1,9 @@
+import { getTranslations } from "next-intl/server"
 import { cn } from "@/lib/utils"
 
-export function TipOdnosaBadge({ tip }: { tip: "ugovor" | "ponuda" | null | undefined }) {
+export async function TipOdnosaBadge({ tip }: { tip: "ugovor" | "ponuda" | null | undefined }) {
   if (!tip) return null
+  const t = await getTranslations("klijenti.tipOdnosa")
   const isUgovor = tip === "ugovor"
   return (
     <span
@@ -13,7 +15,7 @@ export function TipOdnosaBadge({ tip }: { tip: "ugovor" | "ponuda" | null | unde
           : "bg-slate-100 text-slate-600"
       )}
     >
-      {isUgovor ? "po ugovoru" : "po ponudi"}
+      {isUgovor ? t("ugovor") : t("ponuda")}
     </span>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Plus } from "lucide-react"
 import {
   Dialog,
@@ -19,6 +20,8 @@ import { createKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/act
 const initial: ActionResult = { ok: true }
 
 export function NoviKlijentButton() {
+  const t = useTranslations("klijenti.noviKlijent")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(createKlijent, initial)
@@ -39,7 +42,7 @@ export function NoviKlijentButton() {
       <DialogTrigger
         render={
           <Button data-testid="novi-klijent-btn">
-            <Plus className="w-4 h-4" aria-hidden /> Novi klijent
+            <Plus className="w-4 h-4" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
@@ -48,7 +51,7 @@ export function NoviKlijentButton() {
         data-testid="novi-klijent-sheet"
       >
         <DialogHeader>
-          <DialogTitle>Novi klijent</DialogTitle>
+          <DialogTitle>{t("naslov")}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -60,11 +63,11 @@ export function NoviKlijentButton() {
           data-testid="novi-klijent-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">Naziv *</span>
+            <span className="text-slate-600">{t("poljeNaziv")}</span>
             <Input
               name="naziv"
               required
-              placeholder="npr. WAIKIKI Banja Luka"
+              placeholder={t("placeholderNaziv")}
               data-testid="novi-klijent-naziv"
             />
             {state.ok === false && state.errors?.naziv && (
@@ -73,7 +76,7 @@ export function NoviKlijentButton() {
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Adresa *</span>
+            <span className="text-slate-600">{t("poljeAdresa")}</span>
             <Input name="adresa" required data-testid="novi-klijent-adresa" />
             {state.ok === false && state.errors?.adresa && (
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.adresa[0]}</p>
@@ -81,7 +84,7 @@ export function NoviKlijentButton() {
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Telefon *</span>
+            <span className="text-slate-600">{t("poljeTelefon")}</span>
             <Input name="telefon" required data-testid="novi-klijent-telefon" />
             {state.ok === false && state.errors?.telefon && (
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.telefon[0]}</p>
@@ -89,7 +92,7 @@ export function NoviKlijentButton() {
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Email *</span>
+            <span className="text-slate-600">{t("poljeEmail")}</span>
             <Input name="email" type="email" required data-testid="novi-klijent-email" />
             {state.ok === false && state.errors?.email && (
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.email[0]}</p>
@@ -97,7 +100,7 @@ export function NoviKlijentButton() {
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Napomena</span>
+            <span className="text-slate-600">{t("poljeNapomena")}</span>
             <Input name="napomena" data-testid="novi-klijent-napomena" />
           </label>
 
@@ -108,7 +111,7 @@ export function NoviKlijentButton() {
           )}
 
           <Button type="submit" disabled={pending} data-testid="novi-klijent-submit">
-            {pending ? "Kreiram…" : "Kreiraj klijenta"}
+            {pending ? t("submitPending") : t("submit")}
           </Button>
         </form>
 
@@ -116,7 +119,7 @@ export function NoviKlijentButton() {
           <DialogClose
             render={
               <Button variant="outline" data-testid="novi-klijent-cancel">
-                Otkaži
+                {tc("otkazi")}
               </Button>
             }
           />

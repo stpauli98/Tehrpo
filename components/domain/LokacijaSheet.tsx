@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Plus, Pencil } from "lucide-react"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import {
@@ -22,16 +23,6 @@ type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 
 const initial: ActionResult = { ok: true }
 
-const FIELDS: readonly [string, string, boolean][] = [
-  ["naziv", "Naziv *", true],
-  ["grad", "Grad", false],
-  ["regija", "Regija", false],
-  ["adresa", "Adresa", false],
-  ["kontakt_osoba", "Kontakt osoba", false],
-  ["kontakt_email", "Email", false],
-  ["kontakt_telefon", "Telefon", false],
-]
-
 export function LokacijaSheet({
   klijentId,
   lokacija,
@@ -39,8 +30,20 @@ export function LokacijaSheet({
   klijentId: string
   lokacija?: LokacijaRow
 }) {
+  const t = useTranslations("klijenti.lokacijaSheet")
+  const tc = useTranslations("common")
   const router = useRouter()
   const isEdit = !!lokacija
+
+  const FIELDS: readonly [string, string, boolean][] = [
+    ["naziv", t("poljeNaziv"), true],
+    ["grad", t("poljeGrad"), false],
+    ["regija", t("poljeRegija"), false],
+    ["adresa", t("poljeAdresa"), false],
+    ["kontakt_osoba", t("poljeKontaktOsoba"), false],
+    ["kontakt_email", t("poljeEmail"), false],
+    ["kontakt_telefon", t("poljeTelefon"), false],
+  ]
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(
     isEdit ? updateLokacija : createLokacija,
@@ -57,13 +60,13 @@ export function LokacijaSheet({
   }, [state, pending, router])
 
   const trigger = isEdit ? (
-    <Button variant="outline" size="icon-sm" data-testid={`uredi-lokaciju-${lokacija.id}`} aria-label="Uredi" className="group/tt relative">
+    <Button variant="outline" size="icon-sm" data-testid={`uredi-lokaciju-${lokacija.id}`} aria-label={t("uredi")} className="group/tt relative">
       <Pencil className="h-4 w-4" aria-hidden />
-      <Tooltip>Uredi</Tooltip>
+      <Tooltip>{t("uredi")}</Tooltip>
     </Button>
   ) : (
     <Button data-testid="nova-lokacija-btn">
-      <Plus className="w-4 h-4" aria-hidden /> Nova lokacija
+      <Plus className="w-4 h-4" aria-hidden /> {t("novi")}
     </Button>
   )
 
@@ -75,7 +78,7 @@ export function LokacijaSheet({
         data-testid="lokacija-sheet"
       >
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Uredi lokaciju" : "Nova lokacija"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("naslovUredi") : t("naslovNovi")}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -116,12 +119,12 @@ export function LokacijaSheet({
           )}
 
           <Button type="submit" disabled={pending} data-testid="lokacija-submit">
-            {pending ? "Spremam…" : isEdit ? "Spremi izmjene" : "Kreiraj lokaciju"}
+            {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}
           </Button>
         </form>
 
         <DialogFooter>
-          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

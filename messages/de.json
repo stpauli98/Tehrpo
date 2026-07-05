@@ -9,6 +9,11 @@
     "prikaziJosLista": {
       "prikaziManje": "Weniger anzeigen",
       "prikaziJos": "{count} weitere anzeigen"
+    },
+    "pagination": {
+      "prethodna": "Zurück",
+      "sljedeca": "Weiter",
+      "strana": "Seite {pageNum} / {totalPages}"
     }
   },
   "shell": {
@@ -128,6 +133,286 @@
       "izaberiKlijenta": "Kunden auswählen",
       "izaberiMjesec": "Monat auswählen",
       "godina": "Jahr"
+    }
+  },
+  "klijenti": {
+    "lista": {
+      "naslov": "Kunden",
+      "prazno": "Keine Kunden für diese Suche gefunden.",
+      "ukupno": "Kunden gesamt: {count}"
+    },
+    "actions": {
+      "nazivObavezan": "Name ist erforderlich",
+      "adresaObavezna": "Adresse ist erforderlich",
+      "telefonObavezan": "Telefon ist erforderlich",
+      "emailObavezan": "E-Mail ist erforderlich",
+      "emailNeispravan": "Ungültige E-Mail-Adresse",
+      "korisnikNeispravan": "Ungültiger Benutzer",
+      "klijentNazivPostoji": "Ein Kunde mit diesem Namen existiert bereits.",
+      "klijentImaTermine": "Ein Kunde mit Terminen kann nicht gelöscht werden.",
+      "primaociNeispravanEmail": "Ungültige E-Mail-Adresse: {lista}",
+      "brojOpseg": "Zahl muss {min}–{max} sein",
+      "datumNeispravan": "Ungültiges Datum",
+      "datumIstekaNakonPotpisivanja": "Das Ablaufdatum muss nach dem Unterzeichnungsdatum liegen.",
+      "neispravanZahtjev": "Ungültige Anfrage.",
+      "vrstaObavezna": "Art ist erforderlich.",
+      "lokacijaObavezna": "Standort ist erforderlich.",
+      "zadnjiDatumObavezan": "Letztes Datum ist erforderlich.",
+      "prviRokObavezan": "Erste Frist ist erforderlich.",
+      "lokacijaNePripada": "Der Standort gehört nicht zum Kunden.",
+      "vrstaNemaInterval": "Diese Art hat kein Standardintervall — legen Sie eines in den Einstellungen fest.",
+      "provjeraVecPostoji": "Diese Prüfung existiert bereits im Profil.",
+      "terminProvjeraOsvjezi": "Die Prüfung wurde gespeichert, aber die Terminprüfung ist fehlgeschlagen — Seite aktualisieren.",
+      "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
+      "nedostajeId": "ID fehlt.",
+      "imeObavezno": "Name ist erforderlich"
+    },
+    "detalj": {
+      "nazad": "Kunden",
+      "terminiTab": {
+        "prazno": "Keine Termine für diesen Kunden. Fügen Sie eine Prüfung hinzu, um den ersten Termin zu erstellen.",
+        "kolone": {
+          "datumRoka": "Fälligkeitsdatum",
+          "vrsta": "Art",
+          "lokacija": "Standort",
+          "status": "Status",
+          "zaduzeni": "Zuständig"
+        }
+      },
+      "kontaktiTab": {
+        "infoPuniSpisak": "Vollständige Liste der Unternehmenskontakte, durchsuchbar nach Name und Funktion.",
+        "naslovLokacije": "Standortkontakte",
+        "infoLokacije": "Kontaktpersonen der einzelnen Standorte, abgeleitet aus den Standortdaten. Bearbeitung im Tab Standorte.",
+        "urediULokacijama": "In Standorten bearbeiten"
+      },
+      "dokumentiTab": {
+        "prazno": "Keine Dokumente für diesen Kunden.",
+        "kolone": {
+          "naziv": "Name",
+          "tip": "Typ",
+          "izvor": "Quelle",
+          "datum": "Datum"
+        },
+        "izvorAi": "KI-Protokoll",
+        "izvorUpload": "Upload",
+        "preuzmi": "Herunterladen"
+      }
+    },
+    "karta": {
+      "kasniBadge": "{count} überfällig",
+      "lokacija": "{count} Standorte",
+      "aktivnih": "{count} aktiv",
+      "ukupno": "{count} gesamt"
+    },
+    "uredi": {
+      "dugme": "Bearbeiten",
+      "naslov": "Kunde bearbeiten",
+      "poljeNaziv": "Name *",
+      "poljeNapomena": "Notiz",
+      "polja": {
+        "adresa": "Adresse *",
+        "telefon": "Telefon *",
+        "email": "E-Mail *",
+        "pib": "Steuernummer",
+        "maticniBroj": "Registernummer",
+        "sifraDjelatnosti": "Tätigkeitscode"
+      },
+      "zaduzenaOsoba": "Zuständige Person ({appName})",
+      "nijePostavljeno": "— (nicht festgelegt)",
+      "primaociLabel": "Empfänger der Erinnerungen (E-Mails, durch Komma getrennt)",
+      "primaociPlaceholder": "z. B. chef@firma.com, technik@firma.com",
+      "tipOdnosaLabel": "Beziehungsart",
+      "tipOdnosaOpcije": {
+        "ugovor": "Per Vertrag",
+        "ponuda": "Per Angebot"
+      },
+      "submitPending": "Wird gespeichert…",
+      "submit": "Änderungen speichern"
+    },
+    "tabs": {
+      "idKarta": {
+        "label": "Kundenkarte",
+        "info": "Das Kundenprofil an einem Ort: grundlegende Unternehmensdaten, Verträge, wichtige Kontakte und eine Übersicht der vereinbarten Leistungen mit den nächsten Fristen."
+      },
+      "termini": {
+        "label": "Termine",
+        "info": "Alle konkreten Fristen für diesen Kunden — vergangene und zukünftige. Jede Zeile ist ein Termin mit Fälligkeitsdatum, Status (geplant, terminiert, überfällig, durchgeführt) und zuständiger Person. Termine werden aus den im Profil definierten Prüfungen erzeugt."
+      },
+      "lokacije": {
+        "label": "Standorte",
+        "info": "Die Objekte und Geschäftseinheiten des Kunden, an denen Prüfungen und Begehungen stattfinden. Jeder Standort kann eine eigene Adresse und Kontaktperson haben, und Termine können mit einem bestimmten Standort verknüpft werden."
+      },
+      "kontakti": {
+        "label": "Kontakte",
+        "info": "Alle Kontaktpersonen des Kunden: Unternehmenskontakte (Geschäftsführer, verantwortliche Personen…) und Kontakte einzelner Standorte. Standortkontakte werden im Tab Standorte bearbeitet."
+      },
+      "dokumenti": {
+        "label": "Dokumente",
+        "info": "Alle mit dem Kunden verknüpften Dokumente — manuell hinzugefügte Dateien und KI-generierte Protokolle. Die Spalte Quelle zeigt, ob ein Dokument hochgeladen oder von der KI erstellt wurde."
+      },
+      "profil": {
+        "label": "Profil",
+        "info": "Die Definition wiederkehrender Prüfungen für den Kunden: welche Art von Prüfung, an welchem Standort und in welchem Intervall durchgeführt wird. Aus diesen Einträgen werden automatisch Termine erzeugt. „Letztes Mal” ist die letzte tatsächliche Durchführung, „Nächste Frist” ist das Fälligkeitsdatum des aktiven Termins."
+      }
+    },
+    "pretraga": {
+      "placeholder": "Firmensuche..."
+    },
+    "noviKlijent": {
+      "dugme": "Neuer Kunde",
+      "naslov": "Neuer Kunde",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "z. B. WAIKIKI Banja Luka",
+      "poljeAdresa": "Adresse *",
+      "poljeTelefon": "Telefon *",
+      "poljeEmail": "E-Mail *",
+      "poljeNapomena": "Notiz",
+      "submitPending": "Wird erstellt…",
+      "submit": "Kunde erstellen"
+    },
+    "obrisi": {
+      "disabledTitle": "Der Kunde hat Termine und kann nicht gelöscht werden",
+      "dialogNaslov": "Kunde löschen?",
+      "dialogOpis": "Diese Aktion ist endgültig. Die Standorte des Kunden werden ebenfalls gelöscht.",
+      "confirmPending": "Wird gelöscht…",
+      "greskaFallback": "Fehler beim Löschen."
+    },
+    "idKarta": {
+      "osnovniPodaci": {
+        "naslov": "Grunddaten",
+        "info": "Registrierungs- und Kontaktdaten des Unternehmens (Adresse, Steuernummer, Registernummer…) und die dem Kunden zugewiesene Person. Bearbeitung über die Schaltfläche Bearbeiten in der Kopfzeile."
+      },
+      "polja": {
+        "adresa": "Adresse",
+        "telefon": "Telefon",
+        "email": "E-Mail",
+        "pib": "Steuernummer",
+        "maticniBroj": "Registernummer",
+        "sifraDjelatnosti": "Tätigkeitscode",
+        "zaduzen": "Zuständig ({appName})"
+      },
+      "ugovoriInfo": "Mit dem Kunden abgeschlossene Verträge. Nur ein Vertrag kann aktiv sein; ältere bleiben als Verlauf erhalten.",
+      "kontaktiInfo": "Kurze Vorschau der Unternehmenskontakte (die ersten paar). Die vollständige Liste und Suche befinden sich im Tab Kontakte.",
+      "usluge": {
+        "naslov": "Vereinbarte Leistungen",
+        "info": "Eine Zusammenfassung der Prüfungen aus dem Profil mit der jeweils nächsten Frist — ein schneller Überblick darüber, was vereinbart ist und was als Nächstes ansteht.",
+        "prazno": "Keine Leistungen definiert. Fügen Sie sie über den Tab Profil hinzu.",
+        "sljedeci": "nächste: {datum}",
+        "imenica": "Leistungen"
+      }
+    },
+    "ugovorSheet": {
+      "uredi": "Bearbeiten",
+      "novi": "Neuer Vertrag",
+      "naslovUredi": "Vertrag bearbeiten",
+      "naslovNovi": "Neuer Vertrag",
+      "poljeZavodniBroj": "Aktenzeichen (Vertragsnummer)",
+      "poljeDatumPotpisivanja": "Unterzeichnungsdatum",
+      "poljeDatumIsteka": "Ablaufdatum",
+      "poljeVazenje": "Laufzeit (Monate)",
+      "poljeObilasci": "Begehungen / Monat",
+      "poljeAutoObnavljanje": "Automatische Verlängerung",
+      "poljeAktivan": "Aktiver Vertrag (deaktiviert andere)",
+      "poljeNapomena": "Notiz",
+      "submitPending": "Wird gespeichert…",
+      "submitEdit": "Änderungen speichern",
+      "submitNovi": "Vertrag erstellen"
+    },
+    "ugovori": {
+      "naslov": "Verträge",
+      "prazno": "Keine Verträge. Fügen Sie den ersten Vertrag hinzu.",
+      "imenica": "Verträge",
+      "bezBroja": "Ohne Nummer",
+      "aktivan": "aktiv",
+      "neaktivan": "inaktiv",
+      "obrisiAriaLabel": "Vertrag löschen",
+      "obilazMjesecno": " · {count} Begehungen/Mon."
+    },
+    "tipOdnosa": {
+      "ugovor": "per Vertrag",
+      "ponuda": "per Angebot"
+    },
+    "kontaktSheet": {
+      "uredi": "Bearbeiten",
+      "novi": "Neuer Kontakt",
+      "naslovUredi": "Kontakt bearbeiten",
+      "naslovNovi": "Neuer Kontakt",
+      "poljeIme": "Vor- und Nachname *",
+      "poljeFunkcija": "Funktion",
+      "poljeTelefon": "Telefon",
+      "poljeEmail": "E-Mail",
+      "submitPending": "Wird gespeichert…",
+      "submitEdit": "Änderungen speichern",
+      "submitNovi": "Kontakt erstellen"
+    },
+    "kontaktiFirme": {
+      "naslov": "Kontaktpersonen (Unternehmen)",
+      "pretragaPlaceholder": "Nach Name oder Funktion suchen…",
+      "prazno": "Keine Unternehmenskontakte.",
+      "praznoPretraga": "Keine Kontakte für „{q}” gefunden.",
+      "obrisiAriaLabel": "Kontakt löschen",
+      "vidiSve": "Alle anzeigen ({count}) →"
+    },
+    "lokacijaSheet": {
+      "uredi": "Bearbeiten",
+      "novi": "Neuer Standort",
+      "naslovUredi": "Standort bearbeiten",
+      "naslovNovi": "Neuer Standort",
+      "poljeNaziv": "Name *",
+      "poljeGrad": "Stadt",
+      "poljeRegija": "Region",
+      "poljeAdresa": "Adresse",
+      "poljeKontaktOsoba": "Kontaktperson",
+      "poljeEmail": "E-Mail",
+      "poljeTelefon": "Telefon",
+      "submitPending": "Wird gespeichert…",
+      "submitEdit": "Änderungen speichern",
+      "submitNovi": "Standort erstellen"
+    },
+    "lokacije": {
+      "prazno": "Keine Standorte. Fügen Sie den ersten Standort für diesen Kunden hinzu.",
+      "kolone": {
+        "naziv": "Name",
+        "lokacijaAdresa": "Standort / Adresse",
+        "gradRegija": "Stadt / Region",
+        "kontakt": "Kontakt",
+        "akcije": "Aktionen"
+      },
+      "kontaktLinkTitle": "Im Tab Kontakte öffnen"
+    },
+    "obrisiLokaciju": {
+      "dialogNaslov": "Standort löschen?",
+      "dialogOpis": "Das Löschen des Standorts entfernt die Verknüpfung mit bestehenden Terminen (der Termin bleibt bestehen, der Standort wird leer).",
+      "confirmPending": "Wird gelöscht…"
+    },
+    "dokumentUpload": {
+      "tipovi": {
+        "strucni_nalaz": "Fachgutachten",
+        "zapisnik": "Protokoll",
+        "ugovor": "Vertrag",
+        "ponuda": "Angebot",
+        "fotografija": "Foto",
+        "ostalo": "Sonstiges"
+      },
+      "fajlPrevelik": "Die Datei ist zu groß ({velicina}). Maximal {max} MB.",
+      "ukloniFajlAriaLabel": "Datei entfernen",
+      "prevuciDokument": "Dokument hierher ziehen oder",
+      "klikniZaOdabir": "zum Auswählen klicken",
+      "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
+      "tipDokumentaLabel": "Dokumenttyp",
+      "submitPending": "Wird hochgeladen…",
+      "submit": "Dokument hinzufügen"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Firmen ({count})",
+      "naslov": "Zugewiesene Firmen",
+      "opis": "Der Benutzer sieht und bearbeitet nur die ihm hier zugewiesenen Firmen.",
+      "pretragaPlaceholder": "Firmen suchen…",
+      "prazno": "Keine Ergebnisse.",
+      "brojac": "{count} ausgewählt",
+      "submitPending": "Wird gespeichert…",
+      "toastSuccess": "Firmen zugewiesen.",
+      "toastErrorFallback": "Fehler."
     }
   }
 }

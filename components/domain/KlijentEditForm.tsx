@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Pencil } from "lucide-react"
 import { APP_NAME } from "@/lib/brand"
 import {
@@ -35,6 +36,8 @@ export function KlijentEditForm({
   }
   korisnici: { id: string; ime: string }[]
 }) {
+  const t = useTranslations("klijenti.uredi")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(updateKlijent, initial)
@@ -42,8 +45,9 @@ export function KlijentEditForm({
 
   // items mapa (value→label) za base-ui SelectValue — prikaz IMENA radnika kad je
   // select zatvoren (bez nje base-ui prikaže sirovu vrijednost = UUID).
+  const nijePostavljeno = t("nijePostavljeno")
   const zaduzeniItems: Record<string, string> = {
-    none: "— (nije postavljeno)",
+    none: nijePostavljeno,
     ...Object.fromEntries(korisnici.map((k) => [k.id, k.ime])),
   }
 
@@ -60,7 +64,7 @@ export function KlijentEditForm({
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid="uredi-klijent-btn">
-            <Pencil className="w-3.5 h-3.5" aria-hidden /> Uredi
+            <Pencil className="w-3.5 h-3.5" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
@@ -69,7 +73,7 @@ export function KlijentEditForm({
         data-testid="klijent-edit-sheet"
       >
         <DialogHeader>
-          <DialogTitle>Uredi klijenta</DialogTitle>
+          <DialogTitle>{t("naslov")}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -87,7 +91,7 @@ export function KlijentEditForm({
           <input type="hidden" name="id" value={klijent.id} />
 
           <label className="block text-sm">
-            <span className="text-slate-600">Naziv *</span>
+            <span className="text-slate-600">{t("poljeNaziv")}</span>
             <Input
               name="naziv"
               required
@@ -100,7 +104,7 @@ export function KlijentEditForm({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Napomena</span>
+            <span className="text-slate-600">{t("poljeNapomena")}</span>
             <Input
               name="napomena"
               defaultValue={klijent.napomena ?? ""}
@@ -109,12 +113,12 @@ export function KlijentEditForm({
           </label>
 
           {([
-            ["adresa", "Adresa *", true],
-            ["telefon", "Telefon *", true],
-            ["email", "Email *", true],
-            ["pib", "PIB", false],
-            ["maticni_broj", "Matični broj", false],
-            ["sifra_djelatnosti", "Šifra djelatnosti", false],
+            ["adresa", t("polja.adresa"), true],
+            ["telefon", t("polja.telefon"), true],
+            ["email", t("polja.email"), true],
+            ["pib", t("polja.pib"), false],
+            ["maticni_broj", t("polja.maticniBroj"), false],
+            ["sifra_djelatnosti", t("polja.sifraDjelatnosti"), false],
           ] as const).map(([name, label, obavezno]) => (
             <label key={name} className="block text-sm">
               <span className="text-slate-600">{label}</span>
@@ -132,13 +136,13 @@ export function KlijentEditForm({
           ))}
 
           <div className="space-y-1">
-            <span className="block text-sm text-slate-600">Zadužena osoba ({APP_NAME})</span>
+            <span className="block text-sm text-slate-600">{t("zaduzenaOsoba", { appName: APP_NAME })}</span>
             <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"} items={zaduzeniItems}>
               <SelectTrigger data-testid="edit-klijent-zaduzeni" className="w-full">
-                <SelectValue placeholder="— (nije postavljeno)" />
+                <SelectValue placeholder={nijePostavljeno} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— (nije postavljeno)</SelectItem>
+                <SelectItem value="none">{nijePostavljeno}</SelectItem>
                 {korisnici.map((k) => (
                   <SelectItem key={k.id} value={k.id}>{k.ime}</SelectItem>
                 ))}
@@ -147,11 +151,11 @@ export function KlijentEditForm({
           </div>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Primaoci podsjetnika (email, odvojeni zarezom)</span>
+            <span className="text-slate-600">{t("primaociLabel")}</span>
             <Input
               name="podsjetnik_emails"
               defaultValue={klijent.podsjetnik_emails.join(", ")}
-              placeholder="npr. sef@firma.com, tehnicar@firma.com"
+              placeholder={t("primaociPlaceholder")}
               data-testid="edit-klijent-primaoci"
             />
             {state.ok === false && state.errors?.podsjetnik_emails && (
@@ -160,18 +164,18 @@ export function KlijentEditForm({
           </label>
 
           <div className="space-y-1">
-            <span className="block text-sm text-slate-600">Tip odnosa</span>
+            <span className="block text-sm text-slate-600">{t("tipOdnosaLabel")}</span>
             <Select
               name="tip_odnosa"
               defaultValue={klijent.tip_odnosa ?? "none"}
             >
               <SelectTrigger data-testid="klijent-tip-odnosa" className="w-full">
-                <SelectValue placeholder="— (nije postavljeno)" />
+                <SelectValue placeholder={nijePostavljeno} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— (nije postavljeno)</SelectItem>
-                <SelectItem value="ugovor">Po ugovoru</SelectItem>
-                <SelectItem value="ponuda">Po ponudi</SelectItem>
+                <SelectItem value="none">{nijePostavljeno}</SelectItem>
+                <SelectItem value="ugovor">{t("tipOdnosaOpcije.ugovor")}</SelectItem>
+                <SelectItem value="ponuda">{t("tipOdnosaOpcije.ponuda")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -183,12 +187,12 @@ export function KlijentEditForm({
           )}
 
           <Button type="submit" disabled={pending} data-testid="edit-klijent-submit">
-            {pending ? "Spremam…" : "Spremi izmjene"}
+            {pending ? t("submitPending") : t("submit")}
           </Button>
         </form>
 
         <DialogFooter>
-          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

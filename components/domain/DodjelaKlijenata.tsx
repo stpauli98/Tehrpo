@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Building2 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -26,6 +27,8 @@ export function DodjelaKlijenata({
   klijenti: { id: string; naziv: string }[]
   izabrani: string[]
 }) {
+  const t = useTranslations("klijenti.dodjelaKlijenata")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [sel, setSel] = useState<Set<string>>(() => new Set(izabrani))
@@ -47,11 +50,11 @@ export function DodjelaKlijenata({
     start(async () => {
       const r = await postaviDodjele(korisnikId, [...sel])
       if (r.ok) {
-        toast.success("Firme dodijeljene.")
+        toast.success(t("toastSuccess"))
         setOpen(false)
         router.refresh()
       } else {
-        toast.error(r.message ?? "Greška.")
+        toast.error(r.message ?? t("toastErrorFallback"))
       }
     })
   }
@@ -71,21 +74,21 @@ export function DodjelaKlijenata({
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid={`dodjela-${korisnikId}`}>
-            <Building2 className="h-3.5 w-3.5" aria-hidden /> Firme ({izabrani.length})
+            <Building2 className="h-3.5 w-3.5" aria-hidden /> {t("dugme", { count: izabrani.length })}
           </Button>
         }
       />
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Dodijeljene firme</DialogTitle>
+          <DialogTitle>{t("naslov")}</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-slate-500">
-          Korisnik vidi i radi samo na firmama koje su mu ovdje dodijeljene.
+          {t("opis")}
         </p>
 
         <Input
-          placeholder="Pretraži firme…"
+          placeholder={t("pretragaPlaceholder")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           data-testid={`dodjela-pretraga-${korisnikId}`}
@@ -99,18 +102,18 @@ export function DodjelaKlijenata({
             </label>
           ))}
           {filtrirani.length === 0 && (
-            <p className="px-3 py-4 text-center text-sm text-slate-400">Nema rezultata.</p>
+            <p className="px-3 py-4 text-center text-sm text-slate-400">{t("prazno")}</p>
           )}
         </div>
 
         <DialogFooter className="justify-between">
           <span className="text-xs text-slate-500" data-testid={`dodjela-brojac-${korisnikId}`}>
-            {sel.size} izabrano
+            {t("brojac", { count: sel.size })}
           </span>
           <div className="flex gap-2">
-            <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+            <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
             <Button onClick={sacuvaj} disabled={pending} data-testid={`dodjela-sacuvaj-${korisnikId}`}>
-              {pending ? "Snimam…" : "Sačuvaj"}
+              {pending ? t("submitPending") : tc("sacuvaj")}
             </Button>
           </div>
         </DialogFooter>

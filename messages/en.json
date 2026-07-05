@@ -9,6 +9,11 @@
     "prikaziJosLista": {
       "prikaziManje": "Show less",
       "prikaziJos": "Show {count} more"
+    },
+    "pagination": {
+      "prethodna": "Previous",
+      "sljedeca": "Next",
+      "strana": "Page {pageNum} / {totalPages}"
     }
   },
   "shell": {
@@ -128,6 +133,286 @@
       "izaberiKlijenta": "Select a client",
       "izaberiMjesec": "Select a month",
       "godina": "Year"
+    }
+  },
+  "klijenti": {
+    "lista": {
+      "naslov": "Clients",
+      "prazno": "No clients found for this search.",
+      "ukupno": "Total clients: {count}"
+    },
+    "actions": {
+      "nazivObavezan": "Name is required",
+      "adresaObavezna": "Address is required",
+      "telefonObavezan": "Phone is required",
+      "emailObavezan": "Email is required",
+      "emailNeispravan": "Invalid email",
+      "korisnikNeispravan": "Invalid user",
+      "klijentNazivPostoji": "A client with that name already exists.",
+      "klijentImaTermine": "You cannot delete a client that has appointments.",
+      "primaociNeispravanEmail": "Invalid email: {lista}",
+      "brojOpseg": "Number must be {min}–{max}",
+      "datumNeispravan": "Invalid date",
+      "datumIstekaNakonPotpisivanja": "The expiry date must be after the signing date.",
+      "neispravanZahtjev": "Invalid request.",
+      "vrstaObavezna": "Type is required.",
+      "lokacijaObavezna": "Location is required.",
+      "zadnjiDatumObavezan": "Last date is required.",
+      "prviRokObavezan": "First deadline is required.",
+      "lokacijaNePripada": "The location does not belong to the client.",
+      "vrstaNemaInterval": "This type has no default interval — set one in Settings.",
+      "provjeraVecPostoji": "This check already exists in the profile.",
+      "terminProvjeraOsvjezi": "The check was saved, but the appointment check failed — refresh the page.",
+      "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
+      "nedostajeId": "Missing id.",
+      "imeObavezno": "Name is required"
+    },
+    "detalj": {
+      "nazad": "Clients",
+      "terminiTab": {
+        "prazno": "No appointments for this client. Add a check to generate the first appointment.",
+        "kolone": {
+          "datumRoka": "Due date",
+          "vrsta": "Type",
+          "lokacija": "Location",
+          "status": "Status",
+          "zaduzeni": "Assigned to"
+        }
+      },
+      "kontaktiTab": {
+        "infoPuniSpisak": "Full list of the company's contacts, searchable by name and role.",
+        "naslovLokacije": "Location contacts",
+        "infoLokacije": "Contact persons for individual locations, derived from location data. Edited in the Locations tab.",
+        "urediULokacijama": "Edit in Locations"
+      },
+      "dokumentiTab": {
+        "prazno": "No documents for this client.",
+        "kolone": {
+          "naziv": "Name",
+          "tip": "Type",
+          "izvor": "Source",
+          "datum": "Date"
+        },
+        "izvorAi": "AI record",
+        "izvorUpload": "Upload",
+        "preuzmi": "Download"
+      }
+    },
+    "karta": {
+      "kasniBadge": "{count} overdue",
+      "lokacija": "{count} loc.",
+      "aktivnih": "{count} active",
+      "ukupno": "{count} total"
+    },
+    "uredi": {
+      "dugme": "Edit",
+      "naslov": "Edit client",
+      "poljeNaziv": "Name *",
+      "poljeNapomena": "Note",
+      "polja": {
+        "adresa": "Address *",
+        "telefon": "Phone *",
+        "email": "Email *",
+        "pib": "Tax ID",
+        "maticniBroj": "Registration number",
+        "sifraDjelatnosti": "Activity code"
+      },
+      "zaduzenaOsoba": "Assigned person ({appName})",
+      "nijePostavljeno": "— (not set)",
+      "primaociLabel": "Reminder recipients (emails, comma-separated)",
+      "primaociPlaceholder": "e.g. boss@company.com, tech@company.com",
+      "tipOdnosaLabel": "Relationship type",
+      "tipOdnosaOpcije": {
+        "ugovor": "Under contract",
+        "ponuda": "Under offer"
+      },
+      "submitPending": "Saving…",
+      "submit": "Save changes"
+    },
+    "tabs": {
+      "idKarta": {
+        "label": "ID card",
+        "info": "The client's profile in one place: basic company details, contracts, key contacts, and an overview of contracted services with upcoming deadlines."
+      },
+      "termini": {
+        "label": "Appointments",
+        "info": "All concrete deadlines for this client — past and future. Each row is one appointment with a due date, status (planned, scheduled, overdue, completed), and an assigned person. Appointments are generated from the checks defined in the Profile."
+      },
+      "lokacije": {
+        "label": "Locations",
+        "info": "The client's facilities and business units where checks and visits take place. Each location can have its own address and contact person, and appointments can be linked to a specific location."
+      },
+      "kontakti": {
+        "label": "Contacts",
+        "info": "All of the client's contact persons: company contacts (director, responsible persons…) and contacts for individual locations. Location contacts are edited in the Locations tab."
+      },
+      "dokumenti": {
+        "label": "Documents",
+        "info": "All documents linked to the client — manually added files and AI-generated records. The Source column shows whether a document was uploaded or generated by AI."
+      },
+      "profil": {
+        "label": "Profile",
+        "info": "The definition of recurring checks for the client: which type of check is performed, at which location, and at what interval. Appointments are generated automatically from these entries. “Last time” is the last actual completion, “Next deadline” is the due date of the active appointment."
+      }
+    },
+    "pretraga": {
+      "placeholder": "Search companies..."
+    },
+    "noviKlijent": {
+      "dugme": "New client",
+      "naslov": "New client",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "e.g. WAIKIKI Banja Luka",
+      "poljeAdresa": "Address *",
+      "poljeTelefon": "Phone *",
+      "poljeEmail": "Email *",
+      "poljeNapomena": "Note",
+      "submitPending": "Creating…",
+      "submit": "Create client"
+    },
+    "obrisi": {
+      "disabledTitle": "The client has appointments and cannot be deleted",
+      "dialogNaslov": "Delete client?",
+      "dialogOpis": "This action is permanent. The client's locations will also be deleted.",
+      "confirmPending": "Deleting…",
+      "greskaFallback": "Error while deleting."
+    },
+    "idKarta": {
+      "osnovniPodaci": {
+        "naslov": "Basic details",
+        "info": "The company's registration and contact details (address, tax ID, registration number…) and the person assigned to the client. Edited via the Edit button in the header."
+      },
+      "polja": {
+        "adresa": "Address",
+        "telefon": "Phone",
+        "email": "Email",
+        "pib": "Tax ID",
+        "maticniBroj": "Registration number",
+        "sifraDjelatnosti": "Activity code",
+        "zaduzen": "Assigned ({appName})"
+      },
+      "ugovoriInfo": "Contracts signed with the client. Only one contract can be active; older ones remain as history.",
+      "kontaktiInfo": "A short preview of the company's contacts (the first few). The full list and search are in the Contacts tab.",
+      "usluge": {
+        "naslov": "Contracted services",
+        "info": "A summary of the checks from the Profile with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
+        "prazno": "No services defined. Add them via the Profile tab.",
+        "sljedeci": "next: {datum}",
+        "imenica": "services"
+      }
+    },
+    "ugovorSheet": {
+      "uredi": "Edit",
+      "novi": "New contract",
+      "naslovUredi": "Edit contract",
+      "naslovNovi": "New contract",
+      "poljeZavodniBroj": "Registration number (contract number)",
+      "poljeDatumPotpisivanja": "Signing date",
+      "poljeDatumIsteka": "Expiry date",
+      "poljeVazenje": "Duration (months)",
+      "poljeObilasci": "Visits / month",
+      "poljeAutoObnavljanje": "Automatic renewal",
+      "poljeAktivan": "Active contract (deactivates others)",
+      "poljeNapomena": "Note",
+      "submitPending": "Saving…",
+      "submitEdit": "Save changes",
+      "submitNovi": "Create contract"
+    },
+    "ugovori": {
+      "naslov": "Contracts",
+      "prazno": "No contracts. Add the first contract.",
+      "imenica": "contracts",
+      "bezBroja": "No number",
+      "aktivan": "active",
+      "neaktivan": "inactive",
+      "obrisiAriaLabel": "Delete contract",
+      "obilazMjesecno": " · {count} visits/mo."
+    },
+    "tipOdnosa": {
+      "ugovor": "under contract",
+      "ponuda": "under offer"
+    },
+    "kontaktSheet": {
+      "uredi": "Edit",
+      "novi": "New contact",
+      "naslovUredi": "Edit contact",
+      "naslovNovi": "New contact",
+      "poljeIme": "Full name *",
+      "poljeFunkcija": "Role",
+      "poljeTelefon": "Phone",
+      "poljeEmail": "Email",
+      "submitPending": "Saving…",
+      "submitEdit": "Save changes",
+      "submitNovi": "Create contact"
+    },
+    "kontaktiFirme": {
+      "naslov": "Contact persons (company)",
+      "pretragaPlaceholder": "Search by name or role…",
+      "prazno": "No company contacts.",
+      "praznoPretraga": "No contacts found for “{q}”.",
+      "obrisiAriaLabel": "Delete contact",
+      "vidiSve": "See all ({count}) →"
+    },
+    "lokacijaSheet": {
+      "uredi": "Edit",
+      "novi": "New location",
+      "naslovUredi": "Edit location",
+      "naslovNovi": "New location",
+      "poljeNaziv": "Name *",
+      "poljeGrad": "City",
+      "poljeRegija": "Region",
+      "poljeAdresa": "Address",
+      "poljeKontaktOsoba": "Contact person",
+      "poljeEmail": "Email",
+      "poljeTelefon": "Phone",
+      "submitPending": "Saving…",
+      "submitEdit": "Save changes",
+      "submitNovi": "Create location"
+    },
+    "lokacije": {
+      "prazno": "No locations. Add the first location for this client.",
+      "kolone": {
+        "naziv": "Name",
+        "lokacijaAdresa": "Location / Address",
+        "gradRegija": "City / Region",
+        "kontakt": "Contact",
+        "akcije": "Actions"
+      },
+      "kontaktLinkTitle": "Open in the Contacts tab"
+    },
+    "obrisiLokaciju": {
+      "dialogNaslov": "Delete location?",
+      "dialogOpis": "Deleting the location will remove its link with existing appointments (the appointment stays, the location becomes empty).",
+      "confirmPending": "Deleting…"
+    },
+    "dokumentUpload": {
+      "tipovi": {
+        "strucni_nalaz": "Expert report",
+        "zapisnik": "Record",
+        "ugovor": "Contract",
+        "ponuda": "Offer",
+        "fotografija": "Photo",
+        "ostalo": "Other"
+      },
+      "fajlPrevelik": "File is too large ({velicina}). Maximum {max} MB.",
+      "ukloniFajlAriaLabel": "Remove file",
+      "prevuciDokument": "Drag a document here or",
+      "klikniZaOdabir": "click to choose",
+      "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
+      "tipDokumentaLabel": "Document type",
+      "submitPending": "Uploading…",
+      "submit": "Add document"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Companies ({count})",
+      "naslov": "Assigned companies",
+      "opis": "The user only sees and works with companies assigned to them here.",
+      "pretragaPlaceholder": "Search companies…",
+      "prazno": "No results.",
+      "brojac": "{count} selected",
+      "submitPending": "Saving…",
+      "toastSuccess": "Companies assigned.",
+      "toastErrorFallback": "Error."
     }
   }
 }

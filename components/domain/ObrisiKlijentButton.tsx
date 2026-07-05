@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogTrigger,
@@ -22,6 +23,8 @@ export function ObrisiKlijentButton({
   klijentId: string
   brojTermina: number
 }) {
+  const t = useTranslations("klijenti.obrisi")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -33,10 +36,10 @@ export function ObrisiKlijentButton({
         variant="outline"
         size="sm"
         disabled
-        title="Klijent ima termine i ne može se obrisati"
+        title={t("disabledTitle")}
         data-testid="obrisi-klijent-disabled"
       >
-        Obriši
+        {tc("obrisi")}
       </Button>
     )
   }
@@ -50,7 +53,7 @@ export function ObrisiKlijentButton({
       if (result.ok) {
         router.push("/klijenti")
       } else {
-        setErrorMsg("message" in result && result.message ? result.message : "Greška pri brisanju.")
+        setErrorMsg("message" in result && result.message ? result.message : t("greskaFallback"))
       }
     })
   }
@@ -60,16 +63,16 @@ export function ObrisiKlijentButton({
       <DialogTrigger
         render={
           <Button variant="destructive" size="sm" data-testid="obrisi-klijent-btn">
-            Obriši
+            {tc("obrisi")}
           </Button>
         }
       />
       <DialogContent data-testid="obrisi-klijent-dialog">
         <DialogHeader>
-          <DialogTitle>Obrisati klijenta?</DialogTitle>
+          <DialogTitle>{t("dialogNaslov")}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-slate-600">
-          Ova radnja je trajna. Lokacije klijenta će takođe biti obrisane.
+          {t("dialogOpis")}
         </p>
         {errorMsg && (
           <p className="text-sm text-red-600" role="alert">
@@ -77,7 +80,7 @@ export function ObrisiKlijentButton({
           </p>
         )}
         <DialogFooter>
-          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
           <Button
             type="button"
             variant="destructive"
@@ -85,7 +88,7 @@ export function ObrisiKlijentButton({
             data-testid="obrisi-klijent-potvrdi"
             onClick={handleDelete}
           >
-            {isPending ? "Brišem…" : "Obriši"}
+            {isPending ? t("confirmPending") : tc("obrisi")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentCard, type KlijentRow } from "@/components/domain/KlijentCard"
 import { KlijentiSearch } from "@/components/domain/KlijentiSearch"
@@ -11,6 +12,7 @@ export default async function KlijentiPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const t = await getTranslations("klijenti.lista")
   const sp = await searchParams
   const q = typeof sp.q === "string" ? sp.q.trim() : ""
   const pageNum = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1)
@@ -48,7 +50,7 @@ export default async function KlijentiPage({
   return (
     <div className="flex min-h-full flex-col">
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Klijenti</h1>
+        <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
         <div className="flex items-center gap-3">
           <KlijentiSearch />
           <NoviKlijentButton />
@@ -58,7 +60,7 @@ export default async function KlijentiPage({
       <div className="flex-1">
         {rows.length === 0 ? (
           <div data-testid="klijenti-empty" className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500">
-            Nema klijenata za zadanu pretragu.
+            {t("prazno")}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" data-testid="klijenti-grid">
@@ -68,7 +70,7 @@ export default async function KlijentiPage({
       </div>
 
       <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-sm text-slate-600" data-testid="klijenti-pagination">
-        <span data-testid="klijenti-total">Ukupno klijenata: {total}</span>
+        <span data-testid="klijenti-total">{t("ukupno", { count: total })}</span>
           <Pagination pageNum={pageNum} totalPages={totalPages} hrefFor={pageHref} pageTestId="klijenti-page" />
       </div>
     </div>

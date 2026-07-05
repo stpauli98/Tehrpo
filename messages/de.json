@@ -589,5 +589,52 @@
       "placeholderMjesec": "Monat",
       "placeholderKvartal": "Quartal"
     }
+  },
+  "plan": {
+    "naslov": "Aktivitätsplan",
+    "izvoz": {
+      "excel": "Excel-Export",
+      "pdf": "PDF-Export"
+    },
+    "viewSwitcher": {
+      "kalendar": "Kalender",
+      "lista": "Liste",
+      "matrica": "Matrix"
+    },
+    "nav": {
+      "prethodniMjesec": "Vorheriger Monat",
+      "sljedeciMjesec": "Nächster Monat",
+      "danas": "Heute"
+    },
+    "legenda": {
+      "naslov": "Legende:"
+    },
+    "matrixLegenda": {
+      "izvrseno": "✓ durchgeführt",
+      "kasni": "! überfällig",
+      "viseTermina": "(+N) weitere Termine",
+      "nemaTermina": "· keine Termine"
+    },
+    "matrixGrid": {
+      "vrstaHeader": "Prüfungs-/Untersuchungsart",
+      "viseTerminaTitle": "Mehrere Termine — Liste öffnen",
+      "prazno": "Keine Daten."
+    },
+    "monthCalendar": {
+      "danAriaLabel": "Tag {broj}",
+      "jos": "{count} weitere"
+    },
+    "kalendar": {
+      "nemaTerminaZaDan": "Keine Termine für diesen Tag.",
+      "detalji": "Details"
+    },
+    "lista": {
+      "ukupnoRezultata": "Ergebnisse insgesamt: {count}"
+    },
+    "matrica": {
+      "izaberiteKlijenta": "Wählen Sie einen Kunden, um die Jahresmatrix anzuzeigen.",
+      "nemaTerminaMjesec": "Keine Termine für den ausgewählten Monat.",
+      "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr."
+    }
   }
 }

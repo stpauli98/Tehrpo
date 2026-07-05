@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -28,6 +29,7 @@ export function PlanNav({
 }) {
   const router = useRouter()
   const params = useSearchParams()
+  const t = useTranslations("plan.nav")
 
   const href = (g: number, m: number) => {
     const p = new URLSearchParams(params.toString())
@@ -47,7 +49,7 @@ export function PlanNav({
         href={href(p.year, p.month)}
         className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }))}
         data-testid="plan-nav-prev"
-        aria-label="Prethodni mjesec"
+        aria-label={t("prethodniMjesec")}
       >
         <ChevronLeft className="w-4 h-4" />
       </Link>
@@ -63,7 +65,7 @@ export function PlanNav({
         href={href(n.year, n.month)}
         className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }))}
         data-testid="plan-nav-next"
-        aria-label="Sljedeći mjesec"
+        aria-label={t("sljedeciMjesec")}
       >
         <ChevronRight className="w-4 h-4" />
       </Link>
@@ -73,7 +75,7 @@ export function PlanNav({
         className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
         data-testid="plan-nav-today"
       >
-        Danas
+        {t("danas")}
       </Link>
 
       <Select

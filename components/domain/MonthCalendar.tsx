@@ -1,6 +1,10 @@
+"use client"
+
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import type { CalDay } from "@/lib/calendar"
 import { STATUS_DOT_CLASS, type DerivedStatus } from "@/lib/termini"
+import { APP_LOCALE } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
 export type DayTermin = {
@@ -10,7 +14,25 @@ export type DayTermin = {
   status: DerivedStatus
 }
 
-const DANI = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"]
+// Nazivi dana u sedmici (pon-prva sedmica), za header kalendara.
+// sr: zadržan postojeći bosanski/ijekavski oblik verbatim ("Sri" za srijedu) —
+// CLDR "sr-Latn" preko Intl.DateTimeFormat vraća drugačiji (ekavski, malim slovom)
+// oblik "sre", što bi promijenilo postojeći, testovima provjeravan tekst.
+// en/de: generisano preko Intl.DateTimeFormat (§procedura-i18n Step 1), prvo
+// slovo kapitalizovano radi vizuelne dosljednosti sa sr prikazom.
+const DANI_SR = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"] as const
+const REF_MONDAY_UTC = Date.UTC(2024, 0, 1) // 2024-01-01 = ponedjeljak (referentna sedmica za Intl)
+
+function weekdayShortLabels(): string[] {
+  if (APP_LOCALE === "sr") return [...DANI_SR]
+  const fmt = new Intl.DateTimeFormat(APP_LOCALE, { weekday: "short", timeZone: "UTC" })
+  return Array.from({ length: 7 }, (_, i) => {
+    const label = fmt.format(new Date(REF_MONDAY_UTC + i * 86_400_000))
+    return label.charAt(0).toUpperCase() + label.slice(1)
+  })
+}
+
+const DANI = weekdayShortLabels()
 
 export function MonthCalendar({
   grid,
@@ -25,6 +47,7 @@ export function MonthCalendar({
   selectedDan: string | null
   currentSearch: string
 }) {
+  const t = useTranslations("plan.monthCalendar")
   const dayHref = (date: string) => {
     const p = new URLSearchParams(currentSearch)
     p.set("dan", date)
@@ -77,7 +100,7 @@ export function MonthCalendar({
                 data-testid="plan-day-cell"
                 data-date={c.date}
                 data-selected={isSelected}
-                aria-label={`Dan ${c.day}`}
+                aria-label={t("danAriaLabel", { broj: c.day })}
                 className="absolute inset-0"
               />
               {/* Sloj sadržaja: broj dana + termini (klikovi prolaze do pozadine osim na linkovima) */}
@@ -94,23 +117,23 @@ export function MonthCalendar({
                   </span>
                 </div>
                 <div className="mt-1 space-y-0.5">
-                  {termini.slice(0, 3).map((t) => (
+                  {termini.slice(0, 3).map((termin) => (
                     <Link
-                      key={t.id}
-                      href={terminHref(t.id)}
+                      key={termin.id}
+                      href={terminHref(termin.id)}
                       data-testid="cell-termin"
-                      data-status={t.status}
+                      data-status={termin.status}
                       className="pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-slate-600 hover:bg-slate-100"
                     >
                       <span
                         className={cn(
                           "w-1.5 h-1.5 rounded-full shrink-0",
-                          STATUS_DOT_CLASS[t.status],
+                          STATUS_DOT_CLASS[termin.status],
                         )}
                       />
                       <span className="truncate">
-                        {t.klijentNaziv}
-                        {t.lokacijaNaziv ? ` · ${t.lokacijaNaziv}` : ""}
+                        {termin.klijentNaziv}
+                        {termin.lokacijaNaziv ? ` · ${termin.lokacijaNaziv}` : ""}
                       </span>
                     </Link>
                   ))}
@@ -120,7 +143,7 @@ export function MonthCalendar({
                       data-testid="cell-vise"
                       className="pointer-events-auto block text-[10px] text-brand font-medium hover:underline"
                     >
-                      još {termini.length - 3}
+                      {t("jos", { count: termini.length - 3 })}
                     </Link>
                   )}
                 </div>

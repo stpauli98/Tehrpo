@@ -589,5 +589,52 @@
       "placeholderMjesec": "Mjesec",
       "placeholderKvartal": "Kvartal"
     }
+  },
+  "plan": {
+    "naslov": "Plan aktivnosti",
+    "izvoz": {
+      "excel": "Izvoz Excel",
+      "pdf": "Izvoz PDF"
+    },
+    "viewSwitcher": {
+      "kalendar": "Kalendar",
+      "lista": "Lista",
+      "matrica": "Matrica"
+    },
+    "nav": {
+      "prethodniMjesec": "Prethodni mjesec",
+      "sljedeciMjesec": "Sljedeći mjesec",
+      "danas": "Danas"
+    },
+    "legenda": {
+      "naslov": "Legenda:"
+    },
+    "matrixLegenda": {
+      "izvrseno": "✓ izvršeno",
+      "kasni": "! kasni",
+      "viseTermina": "(+N) još termina",
+      "nemaTermina": "· nema termina"
+    },
+    "matrixGrid": {
+      "vrstaHeader": "Vrsta pregleda / ispitivanja",
+      "viseTerminaTitle": "Više termina — otvori listu",
+      "prazno": "Nema podataka."
+    },
+    "monthCalendar": {
+      "danAriaLabel": "Dan {broj}",
+      "jos": "još {count}"
+    },
+    "kalendar": {
+      "nemaTerminaZaDan": "Nema termina za ovaj dan.",
+      "detalji": "Detalji"
+    },
+    "lista": {
+      "ukupnoRezultata": "Ukupno rezultata: {count}"
+    },
+    "matrica": {
+      "izaberiteKlijenta": "Izaberite klijenta za prikaz godišnje matrice.",
+      "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
+      "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
+    }
   }
 }

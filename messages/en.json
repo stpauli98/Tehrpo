@@ -589,5 +589,52 @@
       "placeholderMjesec": "Month",
       "placeholderKvartal": "Quarter"
     }
+  },
+  "plan": {
+    "naslov": "Activity plan",
+    "izvoz": {
+      "excel": "Export to Excel",
+      "pdf": "Export to PDF"
+    },
+    "viewSwitcher": {
+      "kalendar": "Calendar",
+      "lista": "List",
+      "matrica": "Matrix"
+    },
+    "nav": {
+      "prethodniMjesec": "Previous month",
+      "sljedeciMjesec": "Next month",
+      "danas": "Today"
+    },
+    "legenda": {
+      "naslov": "Legend:"
+    },
+    "matrixLegenda": {
+      "izvrseno": "✓ completed",
+      "kasni": "! overdue",
+      "viseTermina": "(+N) more appointments",
+      "nemaTermina": "· no appointments"
+    },
+    "matrixGrid": {
+      "vrstaHeader": "Inspection / test type",
+      "viseTerminaTitle": "Multiple appointments — open list",
+      "prazno": "No data."
+    },
+    "monthCalendar": {
+      "danAriaLabel": "Day {broj}",
+      "jos": "{count} more"
+    },
+    "kalendar": {
+      "nemaTerminaZaDan": "No appointments for this day.",
+      "detalji": "Details"
+    },
+    "lista": {
+      "ukupnoRezultata": "Total results: {count}"
+    },
+    "matrica": {
+      "izaberiteKlijenta": "Select a client to view the annual matrix.",
+      "nemaTerminaMjesec": "No appointments for the selected month.",
+      "nemaTerminaGodina": "This client has no appointments in the selected year."
+    }
   }
 }

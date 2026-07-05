@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
@@ -15,6 +16,7 @@ import type { Database } from "@/db/types"
 
 export function ListaView() {
   const searchParams = useSearchParams()
+  const t = useTranslations("plan.lista")
 
   const pageNum = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const statusFilter = searchParams.get("status") ?? "svi"
@@ -115,7 +117,7 @@ export function ListaView() {
         className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 text-sm text-slate-600"
         data-testid="termini-pagination"
       >
-        <span data-testid="termini-total">Ukupno rezultata: {total}</span>
+        <span data-testid="termini-total">{t("ukupnoRezultata", { count: total })}</span>
         <Pagination pageNum={pageNum} totalPages={totalPages} hrefFor={pageHref} pageTestId="termini-page" />
       </div>
 

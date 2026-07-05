@@ -1,5 +1,6 @@
 "use client"
 import { useActionState } from "react"
+import { useTranslations } from "next-intl"
 import { prijaviSe, type ActionResult } from "./actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { APP_NAME, APP_INITIAL } from "@/lib/brand"
 const initial: ActionResult = { ok: true }
 
 export default function PrijavaPage() {
+  const t = useTranslations("auth.prijava")
   const [state, action, pending] = useActionState(prijaviSe, initial)
   return (
     <div className="min-h-screen grid place-items-center bg-slate-50">
@@ -16,17 +18,17 @@ export default function PrijavaPage() {
           <div className="w-7 h-7 rounded bg-brand text-white text-xs font-bold grid place-items-center">{APP_INITIAL}</div>
           <span className="font-semibold">{APP_NAME}</span>
         </div>
-        <h1 className="text-lg font-medium">Prijava</h1>
-        <Input name="email" type="email" placeholder="Email" autoComplete="username" required />
-        <Input name="lozinka" type="password" placeholder="Lozinka" autoComplete="current-password" required />
+        <h1 className="text-lg font-medium">{t("naslov")}</h1>
+        <Input name="email" type="email" placeholder={t("emailPlaceholder")} autoComplete="username" required />
+        <Input name="lozinka" type="password" placeholder={t("lozinkaPlaceholder")} autoComplete="current-password" required />
         {state.ok === false && state.message && (
           <p className="text-sm text-status-kasni" role="alert">{state.message}</p>
         )}
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Prijava…" : "Prijavi se"}
+          {pending ? t("dugmeUToku") : t("dugme")}
         </Button>
         <a href="/zaboravljena-lozinka" className="block text-center text-xs text-slate-500 hover:underline">
-          Zaboravljena lozinka?
+          {t("zaboravljenaLozinka")}
         </a>
       </form>
     </div>

@@ -38,5 +38,46 @@
     "layout": {
       "description": "Track periodic inspections, tests and checks for the {appName} team."
     }
+  },
+  "auth": {
+    "prijava": {
+      "naslov": "Sign in",
+      "emailPlaceholder": "Email",
+      "lozinkaPlaceholder": "Password",
+      "dugme": "Sign in",
+      "dugmeUToku": "Signing in…",
+      "zaboravljenaLozinka": "Forgot password?",
+      "greske": {
+        "email": "Invalid email",
+        "lozinka": "Enter your password",
+        "nepotpunoUnijeto": "Enter your email and password.",
+        "pogresnoUneseno": "Incorrect email or password."
+      }
+    },
+    "zaboravljenaLozinka": {
+      "naslov": "Reset password",
+      "linkIstekao": "The link has expired or is invalid. Enter your email to send a new one.",
+      "emailPlaceholder": "Email",
+      "dugme": "Send link",
+      "dugmeUToku": "Sending…",
+      "nazadNaPrijavu": "Back to sign in",
+      "greske": {
+        "neispravanEmail": "Invalid email."
+      },
+      "poruke": {
+        "linkPoslat": "If an account exists, we've sent a reset link."
+      }
+    },
+    "novaLozinka": {
+      "naslov": "New password",
+      "lozinkaPlaceholder": "New password (min. 8 characters)",
+      "dugme": "Set password",
+      "dugmeUToku": "Saving…",
+      "greske": {
+        "minDuzina": "Password must be at least 8 characters",
+        "validacija": "Validation error.",
+        "linkIstekao": "The link has expired or is invalid. Request a new one."
+      }
+    }
   }
 }

@@ -38,5 +38,46 @@
     "layout": {
       "description": "Praćenje periodičnih pregleda, ispitivanja i provjera za {appName} tim."
     }
+  },
+  "auth": {
+    "prijava": {
+      "naslov": "Prijava",
+      "emailPlaceholder": "Email",
+      "lozinkaPlaceholder": "Lozinka",
+      "dugme": "Prijavi se",
+      "dugmeUToku": "Prijava…",
+      "zaboravljenaLozinka": "Zaboravljena lozinka?",
+      "greske": {
+        "email": "Neispravan email",
+        "lozinka": "Unesite lozinku",
+        "nepotpunoUnijeto": "Unesite email i lozinku.",
+        "pogresnoUneseno": "Pogrešan email ili lozinka."
+      }
+    },
+    "zaboravljenaLozinka": {
+      "naslov": "Reset lozinke",
+      "linkIstekao": "Link je istekao ili je nevažeći. Unesite email da pošaljemo novi.",
+      "emailPlaceholder": "Email",
+      "dugme": "Pošalji link",
+      "dugmeUToku": "Slanje…",
+      "nazadNaPrijavu": "Nazad na prijavu",
+      "greske": {
+        "neispravanEmail": "Neispravan email."
+      },
+      "poruke": {
+        "linkPoslat": "Ako nalog postoji, poslali smo link za reset."
+      }
+    },
+    "novaLozinka": {
+      "naslov": "Nova lozinka",
+      "lozinkaPlaceholder": "Nova lozinka (min 8)",
+      "dugme": "Postavi lozinku",
+      "dugmeUToku": "Snimanje…",
+      "greske": {
+        "minDuzina": "Lozinka mora imati bar 8 znakova",
+        "validacija": "Greška pri validaciji.",
+        "linkIstekao": "Link je istekao ili je nevažeći. Zatražite novi."
+      }
+    }
   }
 }

@@ -414,5 +414,164 @@
       "toastSuccess": "Firmen zugewiesen.",
       "toastErrorFallback": "Fehler."
     }
+  },
+  "termini": {
+    "tabela": {
+      "kolone": {
+        "datumRoka": "Fälligkeitsdatum",
+        "klijent": "Kunde",
+        "lokacija": "Standort",
+        "vrsta": "Art",
+        "status": "Status",
+        "zaduzeni": "Zuständig",
+        "akcije": "Aktionen"
+      },
+      "prazno": "Keine Termine für die gewählten Filter.",
+      "samoPracenje": "Nur Verfolgung",
+      "detalji": "Details"
+    },
+    "filteri": {
+      "sveFirme": "Alle Firmen",
+      "sveLokacije": "Alle Standorte",
+      "sveVrste": "Alle Arten",
+      "sviMjeseci": "Alle Monate",
+      "sviNacini": "Alle Methoden",
+      "nacinIzvrsava": "Führt aus",
+      "nacinPracenje": "Nur Verfolgung",
+      "svi": "Alle",
+      "godina": "Jahr",
+      "pretragaPlaceholder": "Firma suchen..."
+    },
+    "sheet": {
+      "naslovFallback": "Termin",
+      "rok": "Frist: {datum}",
+      "detaljiNaslov": "Details",
+      "poljeDatumZakazan": "Geplantes Datum",
+      "poljeDatumIzvrsenja": "Datum der Durchführung",
+      "poljeZaduzeni": "Zuständig",
+      "placeholderZaduzeni": "z. B. Marija K.",
+      "poljeNapomena": "Notiz",
+      "spremam": "Speichere…",
+      "spremiIzmjene": "Änderungen speichern",
+      "akcijeNaslov": "Aktionen",
+      "oznaciKaoIzvrseno": "Als durchgeführt markieren",
+      "oznacavam": "Markiere…",
+      "oznaciIzvrseno": "Als durchgeführt markieren",
+      "autoCiklus": "Das System erstellt automatisch den nächsten Termin im Zyklus.",
+      "otkaziTermin": "Termin stornieren",
+      "otkazujem": "Storniere…",
+      "potvrdiOtkazivanje": "Stornierung bestätigen",
+      "odustani": "Abbrechen",
+      "istorijaNaslov": "Verlauf",
+      "istorijaPrazno": "Keine vorherigen abgeschlossenen Zyklen.",
+      "toastIzmjeneSacuvane": "Änderungen gespeichert",
+      "toastOznacenIzvrsenim": "Termin als durchgeführt markiert",
+      "toastOtkazan": "Termin storniert"
+    },
+    "statusBadge": {
+      "zakPrefix": "gepl. {datum}",
+      "zakazanoFallback": "geplant"
+    },
+    "noviTermin": {
+      "dugme": "Neuer Termin",
+      "poljeKlijent": "Kunde *",
+      "placeholderKlijent": "Kunde auswählen",
+      "poljeLokacija": "Standort",
+      "placeholderLokacija": "Standort auswählen (optional)",
+      "poljeVrsta": "Prüfungsart *",
+      "placeholderVrsta": "Art auswählen",
+      "poljeRok": "Fälligkeitsdatum *",
+      "poljeDatumZakazan": "Geplantes Datum",
+      "poljeZaduzeni": "Zuständig",
+      "placeholderZaduzeni": "z. B. Marija K.",
+      "kreiram": "Erstelle…",
+      "kreirajTermin": "Termin erstellen"
+    },
+    "dodajProvjeru": {
+      "dugme": "Prüfung hinzufügen",
+      "naslov": "Prüfung zum Profil hinzufügen",
+      "bezLokacijaTekst": "Der Kunde hat keinen Standort, jede Prüfung muss jedoch mit einem Standort verknüpft sein.",
+      "bezLokacijaLink": "Zuerst einen Standort des Kunden anlegen.",
+      "poljeVrsta": "Art *",
+      "placeholderVrsta": "Art auswählen",
+      "poljeLokacija": "Standort *",
+      "placeholderLokacija": "Standort auswählen",
+      "poljeInterval": "Intervall (Monate) — aus der Art übernommen",
+      "bezIntervalaTekst": "Diese Art hat kein Standardintervall — legen Sie es in den",
+      "bezIntervalaLink": "Einstellungen",
+      "bezIntervalaKraj": "fest, bevor Sie sie zum Profil hinzufügen.",
+      "poljeRadjenoRanije": "Wurde diese Prüfung bereits durchgeführt? *",
+      "opcijaVecRadeno": "Ja — ich gebe das letzte Datum ein",
+      "opcijaPrviPut": "Nein — zum ersten Mal (ich gebe die erste Frist ein)",
+      "poljeZadnjiDatum": "Zuletzt durchgeführt *",
+      "poljePrviRok": "Erste Frist *",
+      "poljeNacinIzvrsenja": "Durchführungsart *",
+      "nacinIzvrsava": "{appName} führt es durch",
+      "nacinPracenje": "Nur Fristverfolgung",
+      "dodajem": "Füge hinzu…",
+      "dodajIGenerisi": "Hinzufügen und Termin erstellen"
+    },
+    "novaVrsta": {
+      "dugme": "Neue Art",
+      "naslov": "Neue Prüfungsart",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "z. B. Prüfung der Lüftungsanlage",
+      "poljeInterval": "Intervall (Monate)",
+      "placeholderInterval": "leer = keine automatische Planung",
+      "poljeZakonskiOsnov": "Rechtsgrundlage",
+      "placeholderZakonskiOsnov": "z. B. Verordnung… (optional)",
+      "kreiram": "Erstelle…",
+      "kreirajVrstu": "Art erstellen"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Bearbeiten",
+      "naslov": "Prüfungsart bearbeiten",
+      "poljeNaziv": "Name *",
+      "poljeZakonskiOsnov": "Rechtsgrundlage",
+      "poljeVodiDokumentaciju": "Für diese Leistung wird Dokumentation geführt",
+      "spremam": "Speichere…",
+      "spremiIzmjene": "Änderungen speichern",
+      "deaktiviraj": "Deaktivieren",
+      "aktiviraj": "Aktivieren"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Auch inaktive anzeigen",
+      "brojVrsta": "{count} Arten",
+      "kolone": {
+        "vrsta": "Prüfungsart",
+        "interval": "Intervall (Mon.)",
+        "dokumentacija": "Dok.",
+        "status": "Status",
+        "akcije": "Aktionen"
+      },
+      "vodiDokumentacijuTitle": "Dokumentation wird geführt",
+      "bezDokumentacijeTitle": "Keine Dokumentation",
+      "prazno": "Keine Arten zum Anzeigen.",
+      "intervalGreska": "1–120 oder leer",
+      "intervalSpremljeno": "✓ gespeichert",
+      "intervalGreskaFallback": "Fehler beim Speichern",
+      "klikDeaktivacija": "Klicken zum Deaktivieren",
+      "klikAktivacija": "Klicken zum Aktivieren",
+      "aktivna": "Aktiv",
+      "neaktivna": "Inaktiv"
+    },
+    "actions": {
+      "datumNeispravan": "Ungültiges Datum",
+      "datumUBuducnosti": "Das Durchführungsdatum darf nicht in der Zukunft liegen",
+      "neispravanZahtjev": "Ungültige Anfrage.",
+      "klijentObavezan": "Kunde ist erforderlich",
+      "vrstaObavezna": "Art ist erforderlich",
+      "rokObavezan": "Frist ist erforderlich",
+      "lokacijaNePripada": "Der Standort gehört nicht zum ausgewählten Kunden.",
+      "terminVecPostoji": "Ein Termin für diese Firma, Art und Frist existiert bereits.",
+      "datumObavezan": "Datum ist erforderlich"
+    }
+  },
+  "status": {
+    "planirano": "Geplant",
+    "zakazano": "Terminiert",
+    "izvrseno": "Durchgeführt",
+    "otkazano": "Storniert",
+    "kasni": "Überfällig"
   }
 }

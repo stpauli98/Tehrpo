@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Pencil } from "lucide-react"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import {
@@ -19,6 +20,8 @@ export function VrstaSheet({
   vrsta: { id: string; naziv: string; interval: number | null; zakonski_osnov: string | null; aktivna: boolean; vodi_dokumentaciju: boolean }
 }) {
   const router = useRouter()
+  const t = useTranslations("termini.vrstaSheet")
+  const tc = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(updateVrsta, initial)
   const submitted = useRef(false)
@@ -31,13 +34,13 @@ export function VrstaSheet({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={
-        <Button variant="outline" size="icon-sm" data-testid={`uredi-vrstu-${vrsta.id}`} aria-label="Uredi" className="group/tt relative">
+        <Button variant="outline" size="icon-sm" data-testid={`uredi-vrstu-${vrsta.id}`} aria-label={t("urediAriaLabel")} className="group/tt relative">
           <Pencil className="h-4 w-4" aria-hidden />
-          <Tooltip>Uredi</Tooltip>
+          <Tooltip>{t("urediAriaLabel")}</Tooltip>
         </Button>
       } />
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="vrsta-sheet">
-        <DialogHeader><DialogTitle>Uredi vrstu pregleda</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("naslov")}</DialogTitle></DialogHeader>
         <form
           key={vrsta.id}
           action={(fd) => { submitted.current = true; action(fd) }}
@@ -49,22 +52,22 @@ export function VrstaSheet({
               polje samo čuva trenutnu vrijednost da je updateVrsta ne prebriše na NULL. */}
           <input type="hidden" name="interval" value={vrsta.interval ?? ""} />
           <label className="block text-sm">
-            <span className="text-slate-600">Naziv *</span>
+            <span className="text-slate-600">{t("poljeNaziv")}</span>
             <Input name="naziv" required defaultValue={vrsta.naziv} data-testid="vrsta-naziv" />
           </label>
           <label className="block text-sm">
-            <span className="text-slate-600">Zakonski osnov</span>
+            <span className="text-slate-600">{t("poljeZakonskiOsnov")}</span>
             <Input name="zakonski_osnov" defaultValue={vrsta.zakonski_osnov ?? ""} data-testid="vrsta-osnov" />
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="vodi_dokumentaciju" defaultChecked={vrsta.vodi_dokumentaciju} data-testid="vrsta-vodi-dok" />
-            <span className="text-slate-600">Za ovu uslugu se vodi dokumentacija</span>
+            <span className="text-slate-600">{t("poljeVodiDokumentaciju")}</span>
           </label>
           {state.ok === false && state.message && (
             <p className="text-sm text-red-600" role="alert">{state.message}</p>
           )}
           <Button type="submit" disabled={pending} data-testid="vrsta-submit">
-            {pending ? "Spremam…" : "Spremi izmjene"}
+            {pending ? t("spremam") : t("spremiIzmjene")}
           </Button>
         </form>
         <DialogFooter className="justify-between">
@@ -76,9 +79,9 @@ export function VrstaSheet({
             className={vrsta.aktivna ? "text-red-600 border-red-200 hover:bg-red-50" : "text-green-700 border-green-200 hover:bg-green-50"}
             onClick={() => startToggle(async () => { await postaviVrstaAktivna(vrsta.id, !vrsta.aktivna); router.refresh() })}
           >
-            {vrsta.aktivna ? "Deaktiviraj" : "Aktiviraj"}
+            {vrsta.aktivna ? t("deaktiviraj") : t("aktiviraj")}
           </Button>
-          <DialogClose render={<Button variant="outline">Zatvori</Button>} />
+          <DialogClose render={<Button variant="outline">{tc("zatvori")}</Button>} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -414,5 +414,164 @@
       "toastSuccess": "Firme dodijeljene.",
       "toastErrorFallback": "Greška."
     }
+  },
+  "termini": {
+    "tabela": {
+      "kolone": {
+        "datumRoka": "Datum roka",
+        "klijent": "Klijent",
+        "lokacija": "Lokacija",
+        "vrsta": "Vrsta",
+        "status": "Status",
+        "zaduzeni": "Zaduženi",
+        "akcije": "Akcije"
+      },
+      "prazno": "Nema termina za zadane filtere.",
+      "samoPracenje": "Samo praćenje",
+      "detalji": "Detalji"
+    },
+    "filteri": {
+      "sveFirme": "Sve firme",
+      "sveLokacije": "Sve lokacije",
+      "sveVrste": "Sve vrste",
+      "sviMjeseci": "Svi mjeseci",
+      "sviNacini": "Svi načini",
+      "nacinIzvrsava": "Izvršava",
+      "nacinPracenje": "Samo praćenje",
+      "svi": "Svi",
+      "godina": "Godina",
+      "pretragaPlaceholder": "Pretraga firme..."
+    },
+    "sheet": {
+      "naslovFallback": "Termin",
+      "rok": "Rok: {datum}",
+      "detaljiNaslov": "Detalji",
+      "poljeDatumZakazan": "Datum zakazan",
+      "poljeDatumIzvrsenja": "Datum izvršenja",
+      "poljeZaduzeni": "Zaduženi",
+      "placeholderZaduzeni": "npr. Marija K.",
+      "poljeNapomena": "Napomena",
+      "spremam": "Spremam…",
+      "spremiIzmjene": "Spremi izmjene",
+      "akcijeNaslov": "Akcije",
+      "oznaciKaoIzvrseno": "Označi kao izvršeno",
+      "oznacavam": "Označavam…",
+      "oznaciIzvrseno": "Označi izvršeno",
+      "autoCiklus": "Sistem automatski kreira sljedeći termin u ciklusu.",
+      "otkaziTermin": "Otkaži termin",
+      "otkazujem": "Otkazujem…",
+      "potvrdiOtkazivanje": "Potvrdi otkazivanje",
+      "odustani": "Odustani",
+      "istorijaNaslov": "Istorija",
+      "istorijaPrazno": "Nema prethodnih izvršenih ciklusa.",
+      "toastIzmjeneSacuvane": "Izmjene sačuvane",
+      "toastOznacenIzvrsenim": "Termin označen izvršenim",
+      "toastOtkazan": "Termin otkazan"
+    },
+    "statusBadge": {
+      "zakPrefix": "zak. {datum}",
+      "zakazanoFallback": "zakazano"
+    },
+    "noviTermin": {
+      "dugme": "Novi termin",
+      "poljeKlijent": "Klijent *",
+      "placeholderKlijent": "Izaberi klijenta",
+      "poljeLokacija": "Lokacija",
+      "placeholderLokacija": "Izaberi lokaciju (opcionalno)",
+      "poljeVrsta": "Vrsta provjere *",
+      "placeholderVrsta": "Izaberi vrstu",
+      "poljeRok": "Rok dospijeća *",
+      "poljeDatumZakazan": "Datum zakazan",
+      "poljeZaduzeni": "Zaduženi",
+      "placeholderZaduzeni": "npr. Marija K.",
+      "kreiram": "Kreiram…",
+      "kreirajTermin": "Kreiraj termin"
+    },
+    "dodajProvjeru": {
+      "dugme": "Dodaj provjeru",
+      "naslov": "Dodaj provjeru u profil",
+      "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
+      "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
+      "poljeVrsta": "Vrsta *",
+      "placeholderVrsta": "Izaberi vrstu",
+      "poljeLokacija": "Lokacija *",
+      "placeholderLokacija": "Izaberi lokaciju",
+      "poljeInterval": "Interval (mjeseci) — povučeno iz vrste",
+      "bezIntervalaTekst": "Ova vrsta nema podrazumijevani interval — postavite ga u",
+      "bezIntervalaLink": "Postavkama",
+      "bezIntervalaKraj": "prije dodavanja u profil.",
+      "poljeRadjenoRanije": "Da li je provjera već rađena? *",
+      "opcijaVecRadeno": "Da — unosim zadnji datum",
+      "opcijaPrviPut": "Ne — prvi put (unosim prvi rok)",
+      "poljeZadnjiDatum": "Zadnji put rađeno *",
+      "poljePrviRok": "Prvi rok *",
+      "poljeNacinIzvrsenja": "Način izvršenja *",
+      "nacinIzvrsava": "{appName} izvršava",
+      "nacinPracenje": "Samo praćenje roka",
+      "dodajem": "Dodajem…",
+      "dodajIGenerisi": "Dodaj i generiši termin"
+    },
+    "novaVrsta": {
+      "dugme": "Nova vrsta",
+      "naslov": "Nova vrsta pregleda",
+      "poljeNaziv": "Naziv *",
+      "placeholderNaziv": "npr. Pregled ventilacionog sistema",
+      "poljeInterval": "Interval (mjeseci)",
+      "placeholderInterval": "prazno = bez auto-zakazivanja",
+      "poljeZakonskiOsnov": "Zakonski osnov",
+      "placeholderZakonskiOsnov": "npr. Pravilnik… (opciono)",
+      "kreiram": "Kreiram…",
+      "kreirajVrstu": "Kreiraj vrstu"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Uredi",
+      "naslov": "Uredi vrstu pregleda",
+      "poljeNaziv": "Naziv *",
+      "poljeZakonskiOsnov": "Zakonski osnov",
+      "poljeVodiDokumentaciju": "Za ovu uslugu se vodi dokumentacija",
+      "spremam": "Spremam…",
+      "spremiIzmjene": "Spremi izmjene",
+      "deaktiviraj": "Deaktiviraj",
+      "aktiviraj": "Aktiviraj"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Prikaži i neaktivne",
+      "brojVrsta": "{count} vrsta",
+      "kolone": {
+        "vrsta": "Vrsta pregleda",
+        "interval": "Interval (mj)",
+        "dokumentacija": "Dok.",
+        "status": "Status",
+        "akcije": "Akcije"
+      },
+      "vodiDokumentacijuTitle": "Vodi se dokumentacija",
+      "bezDokumentacijeTitle": "Bez dokumentacije",
+      "prazno": "Nema vrsta za prikaz.",
+      "intervalGreska": "1–120 ili prazno",
+      "intervalSpremljeno": "✓ spremljeno",
+      "intervalGreskaFallback": "Greška pri snimanju",
+      "klikDeaktivacija": "Klik za deaktivaciju",
+      "klikAktivacija": "Klik za aktivaciju",
+      "aktivna": "Aktivna",
+      "neaktivna": "Neaktivna"
+    },
+    "actions": {
+      "datumNeispravan": "Neispravan datum",
+      "datumUBuducnosti": "Datum izvršenja ne može biti u budućnosti",
+      "neispravanZahtjev": "Neispravan zahtjev.",
+      "klijentObavezan": "Klijent je obavezan",
+      "vrstaObavezna": "Vrsta je obavezna",
+      "rokObavezan": "Rok je obavezan",
+      "lokacijaNePripada": "Lokacija ne pripada izabranom klijentu.",
+      "terminVecPostoji": "Termin za istu firmu, vrstu i rok već postoji.",
+      "datumObavezan": "Datum je obavezan"
+    }
+  },
+  "status": {
+    "planirano": "Planirano",
+    "zakazano": "Zakazano",
+    "izvrseno": "Izvršeno",
+    "otkazano": "Otkazano",
+    "kasni": "Kasni"
   }
 }

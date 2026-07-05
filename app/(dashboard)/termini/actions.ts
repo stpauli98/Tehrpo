@@ -1,9 +1,12 @@
 'use server'
 
 import { z } from "zod"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { friendlyDbError } from "@/lib/db-errors"
 import { todayIso } from "@/lib/date"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
 import type { Database } from "@/db/types"
 
 export type ActionResult =
@@ -12,13 +15,15 @@ export type ActionResult =
 
 type TerminiUpdate = Database["public"]["Tables"]["termini"]["Update"]
 
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "termini.actions" })
+
 const optionalDate = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Neispravan datum")
+  .regex(/^\d{4}-\d{2}-\d{2}$/, t("datumNeispravan"))
   .optional()
   .or(z.literal("").transform(() => undefined))
 
-const NE_U_BUDUCNOSTI = "Datum izvršenja ne može biti u budućnosti"
+const NE_U_BUDUCNOSTI = t("datumUBuducnosti")
 
 const updateSchema = z.object({
   id: z.string().uuid(),
@@ -76,7 +81,7 @@ export async function otkaziTermin(
   formData: FormData,
 ): Promise<ActionResult> {
   const parsed = otkaziSchema.safeParse(Object.fromEntries(formData))
-  if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
+  if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase
     .from("termini").update({ status: "otkazano" }).eq("id", parsed.data.id)
@@ -85,10 +90,10 @@ export async function otkaziTermin(
 }
 
 const createSchema = z.object({
-  klijent_id: z.string().uuid("Klijent je obavezan"),
-  vrsta_provjere_id: z.string().uuid("Vrsta je obavezna"),
+  klijent_id: z.string().uuid(t("klijentObavezan")),
+  vrsta_provjere_id: z.string().uuid(t("vrstaObavezna")),
   lokacija_id: z.string().uuid().optional().or(z.literal("").transform(() => undefined)),
-  rok_dospijeca: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Rok je obavezan"),
+  rok_dospijeca: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, t("rokObavezan")),
   datum_zakazan: optionalDate,
   zaduzeni: z.string().max(200).optional().or(z.literal("").transform(() => undefined)),
 })
@@ -114,7 +119,7 @@ export async function createTermin(
       .eq("id", lokacija_id)
       .eq("klijent_id", klijent_id)
       .maybeSingle()
-    if (!lok) return { ok: false, message: "Lokacija ne pripada izabranom klijentu." }
+    if (!lok) return { ok: false, message: t("lokacijaNePripada") }
   }
 
   // Provjera duplikata: isti klijent + vrsta + rok (+ ista lokacija) koji nije otkazan
@@ -128,7 +133,7 @@ export async function createTermin(
   dupQuery = lokacija_id ? dupQuery.eq("lokacija_id", lokacija_id) : dupQuery.is("lokacija_id", null)
   const { data: dup } = await dupQuery.limit(1)
   if (dup && dup.length > 0) {
-    return { ok: false, message: "Termin za istu firmu, vrstu i rok već postoji." }
+    return { ok: false, message: t("terminVecPostoji") }
   }
 
   const { error } = await supabase.from("termini").insert({
@@ -150,7 +155,7 @@ const markSchema = z.object({
   id: z.string().uuid(),
   datum_izvrsenja: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Datum je obavezan")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, t("datumObavezan"))
     .refine((d) => d <= todayIso(), NE_U_BUDUCNOSTI),
 })
 

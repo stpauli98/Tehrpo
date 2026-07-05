@@ -1,4 +1,7 @@
-import { STATUS_BADGE_CLASS, STATUS_LABEL, toDerivedStatus } from "@/lib/termini"
+"use client"
+
+import { useTranslations } from "next-intl"
+import { STATUS_BADGE_CLASS, toDerivedStatus } from "@/lib/termini"
 import { formatDatum } from "@/lib/date"
 import { cn } from "@/lib/utils"
 
@@ -12,6 +15,8 @@ export function StatusBadge({
   stvarniStatus?: string | null
   datumZakazan?: string | null
 }) {
+  const t = useTranslations("status")
+  const tSheet = useTranslations("termini.statusBadge")
   const s = toDerivedStatus(status)
   const badge = (
     <span
@@ -22,7 +27,7 @@ export function StatusBadge({
         STATUS_BADGE_CLASS[s]
       )}
     >
-      {STATUS_LABEL[s]}
+      {t(s)}
     </span>
   )
   if (s !== "kasni" || stvarniStatus !== "zakazano") return badge
@@ -30,7 +35,7 @@ export function StatusBadge({
     <span className="inline-flex items-center gap-1.5">
       {badge}
       <span data-testid="status-zakazan-hint" className="whitespace-nowrap text-xs text-slate-500">
-        {datumZakazan ? `zak. ${formatDatum(datumZakazan)}` : "zakazano"}
+        {datumZakazan ? tSheet("zakPrefix", { datum: formatDatum(datumZakazan) }) : tSheet("zakazanoFallback")}
       </span>
     </span>
   )

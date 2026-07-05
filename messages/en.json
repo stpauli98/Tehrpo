@@ -414,5 +414,164 @@
       "toastSuccess": "Companies assigned.",
       "toastErrorFallback": "Error."
     }
+  },
+  "termini": {
+    "tabela": {
+      "kolone": {
+        "datumRoka": "Due date",
+        "klijent": "Client",
+        "lokacija": "Location",
+        "vrsta": "Type",
+        "status": "Status",
+        "zaduzeni": "Assigned to",
+        "akcije": "Actions"
+      },
+      "prazno": "No appointments for the selected filters.",
+      "samoPracenje": "Tracking only",
+      "detalji": "Details"
+    },
+    "filteri": {
+      "sveFirme": "All companies",
+      "sveLokacije": "All locations",
+      "sveVrste": "All types",
+      "sviMjeseci": "All months",
+      "sviNacini": "All methods",
+      "nacinIzvrsava": "Performs",
+      "nacinPracenje": "Tracking only",
+      "svi": "All",
+      "godina": "Year",
+      "pretragaPlaceholder": "Search company..."
+    },
+    "sheet": {
+      "naslovFallback": "Appointment",
+      "rok": "Due: {datum}",
+      "detaljiNaslov": "Details",
+      "poljeDatumZakazan": "Scheduled date",
+      "poljeDatumIzvrsenja": "Completion date",
+      "poljeZaduzeni": "Assigned to",
+      "placeholderZaduzeni": "e.g. Marija K.",
+      "poljeNapomena": "Note",
+      "spremam": "Saving…",
+      "spremiIzmjene": "Save changes",
+      "akcijeNaslov": "Actions",
+      "oznaciKaoIzvrseno": "Mark as completed",
+      "oznacavam": "Marking…",
+      "oznaciIzvrseno": "Mark completed",
+      "autoCiklus": "The system automatically creates the next appointment in the cycle.",
+      "otkaziTermin": "Cancel appointment",
+      "otkazujem": "Cancelling…",
+      "potvrdiOtkazivanje": "Confirm cancellation",
+      "odustani": "Cancel",
+      "istorijaNaslov": "History",
+      "istorijaPrazno": "No previous completed cycles.",
+      "toastIzmjeneSacuvane": "Changes saved",
+      "toastOznacenIzvrsenim": "Appointment marked as completed",
+      "toastOtkazan": "Appointment cancelled"
+    },
+    "statusBadge": {
+      "zakPrefix": "sched. {datum}",
+      "zakazanoFallback": "scheduled"
+    },
+    "noviTermin": {
+      "dugme": "New appointment",
+      "poljeKlijent": "Client *",
+      "placeholderKlijent": "Select client",
+      "poljeLokacija": "Location",
+      "placeholderLokacija": "Select location (optional)",
+      "poljeVrsta": "Check type *",
+      "placeholderVrsta": "Select type",
+      "poljeRok": "Due date *",
+      "poljeDatumZakazan": "Scheduled date",
+      "poljeZaduzeni": "Assigned to",
+      "placeholderZaduzeni": "e.g. Marija K.",
+      "kreiram": "Creating…",
+      "kreirajTermin": "Create appointment"
+    },
+    "dodajProvjeru": {
+      "dugme": "Add check",
+      "naslov": "Add check to profile",
+      "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
+      "bezLokacijaLink": "Add a client location first.",
+      "poljeVrsta": "Type *",
+      "placeholderVrsta": "Select type",
+      "poljeLokacija": "Location *",
+      "placeholderLokacija": "Select location",
+      "poljeInterval": "Interval (months) — taken from type",
+      "bezIntervalaTekst": "This type has no default interval — set it in",
+      "bezIntervalaLink": "Settings",
+      "bezIntervalaKraj": "before adding it to the profile.",
+      "poljeRadjenoRanije": "Has this check already been done? *",
+      "opcijaVecRadeno": "Yes — I'll enter the last date",
+      "opcijaPrviPut": "No — first time (I'll enter the first deadline)",
+      "poljeZadnjiDatum": "Last done *",
+      "poljePrviRok": "First deadline *",
+      "poljeNacinIzvrsenja": "Execution method *",
+      "nacinIzvrsava": "{appName} performs it",
+      "nacinPracenje": "Deadline tracking only",
+      "dodajem": "Adding…",
+      "dodajIGenerisi": "Add and generate appointment"
+    },
+    "novaVrsta": {
+      "dugme": "New type",
+      "naslov": "New check type",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "e.g. Ventilation system check",
+      "poljeInterval": "Interval (months)",
+      "placeholderInterval": "empty = no auto-scheduling",
+      "poljeZakonskiOsnov": "Legal basis",
+      "placeholderZakonskiOsnov": "e.g. Regulation… (optional)",
+      "kreiram": "Creating…",
+      "kreirajVrstu": "Create type"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Edit",
+      "naslov": "Edit check type",
+      "poljeNaziv": "Name *",
+      "poljeZakonskiOsnov": "Legal basis",
+      "poljeVodiDokumentaciju": "Documentation is kept for this service",
+      "spremam": "Saving…",
+      "spremiIzmjene": "Save changes",
+      "deaktiviraj": "Deactivate",
+      "aktiviraj": "Activate"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Show inactive too",
+      "brojVrsta": "{count} types",
+      "kolone": {
+        "vrsta": "Check type",
+        "interval": "Interval (mo)",
+        "dokumentacija": "Doc.",
+        "status": "Status",
+        "akcije": "Actions"
+      },
+      "vodiDokumentacijuTitle": "Documentation is kept",
+      "bezDokumentacijeTitle": "No documentation",
+      "prazno": "No types to display.",
+      "intervalGreska": "1–120 or empty",
+      "intervalSpremljeno": "✓ saved",
+      "intervalGreskaFallback": "Error saving",
+      "klikDeaktivacija": "Click to deactivate",
+      "klikAktivacija": "Click to activate",
+      "aktivna": "Active",
+      "neaktivna": "Inactive"
+    },
+    "actions": {
+      "datumNeispravan": "Invalid date",
+      "datumUBuducnosti": "Completion date cannot be in the future",
+      "neispravanZahtjev": "Invalid request.",
+      "klijentObavezan": "Client is required",
+      "vrstaObavezna": "Type is required",
+      "rokObavezan": "Due date is required",
+      "lokacijaNePripada": "The location does not belong to the selected client.",
+      "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
+      "datumObavezan": "Date is required"
+    }
+  },
+  "status": {
+    "planirano": "Planned",
+    "zakazano": "Scheduled",
+    "izvrseno": "Completed",
+    "otkazano": "Cancelled",
+    "kasni": "Overdue"
   }
 }

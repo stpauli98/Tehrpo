@@ -573,5 +573,21 @@
     "izvrseno": "Durchgeführt",
     "otkazano": "Storniert",
     "kasni": "Überfällig"
+  },
+  "obilasci": {
+    "naslov": "Begehungen",
+    "podnaslov": "Nach Stadt gruppiert für eine effizientere Planung der Einsätze.",
+    "prazno": "Keine Termine im ausgewählten Zeitraum.",
+    "toolbar": {
+      "periodMjesec": "Monat",
+      "periodKvartal": "Quartal",
+      "periodGodina": "Jahr",
+      "statusAktivni": "Aktiv",
+      "statusSvi": "Alle",
+      "gradSvi": "Alle Städte",
+      "gradBez": "Ohne Stadt",
+      "placeholderMjesec": "Monat",
+      "placeholderKvartal": "Quartal"
+    }
   }
 }

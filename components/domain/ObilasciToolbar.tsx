@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useTransition } from "react"
+import { useTranslations } from "next-intl"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
@@ -20,6 +21,8 @@ export function ObilasciToolbar({
   kvartal?: number
   gradovi?: string[]
 }) {
+  const t = useTranslations("obilasci.toolbar")
+  const tStatus = useTranslations("status")
   const router = useRouter()
   const pathname = usePathname()
   const sp = useSearchParams()
@@ -34,13 +37,15 @@ export function ObilasciToolbar({
 
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
-  const periodItems: Record<string, string> = { mjesec: "Mjesec", kvartal: "Kvartal", godina: "Godina" }
+  const periodItems: Record<string, string> = {
+    mjesec: t("periodMjesec"), kvartal: t("periodKvartal"), godina: t("periodGodina"),
+  }
   const statusItems: Record<string, string> = {
-    aktivni: "Aktivni", svi: "Svi", kasni: "Kasni", planirano: "Planirano",
-    zakazano: "Zakazano", izvrseno: "Izvršeno", otkazano: "Otkazano",
+    aktivni: t("statusAktivni"), svi: t("statusSvi"), kasni: tStatus("kasni"), planirano: tStatus("planirano"),
+    zakazano: tStatus("zakazano"), izvrseno: tStatus("izvrseno"), otkazano: tStatus("otkazano"),
   }
   const gradItems: Record<string, string> = {
-    svi: "Svi gradovi", __bez__: "Bez grada",
+    svi: t("gradSvi"), __bez__: t("gradBez"),
     ...Object.fromEntries((gradovi ?? []).map((g) => [g, g])),
   }
   const mjesecItems: Record<string, string> = Object.fromEntries(
@@ -63,9 +68,9 @@ export function ObilasciToolbar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="mjesec">Mjesec</SelectItem>
-          <SelectItem value="kvartal">Kvartal</SelectItem>
-          <SelectItem value="godina">Godina</SelectItem>
+          <SelectItem value="mjesec">{t("periodMjesec")}</SelectItem>
+          <SelectItem value="kvartal">{t("periodKvartal")}</SelectItem>
+          <SelectItem value="godina">{t("periodGodina")}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -74,13 +79,13 @@ export function ObilasciToolbar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="aktivni">Aktivni</SelectItem>
-          <SelectItem value="svi">Svi</SelectItem>
-          <SelectItem value="kasni">Kasni</SelectItem>
-          <SelectItem value="planirano">Planirano</SelectItem>
-          <SelectItem value="zakazano">Zakazano</SelectItem>
-          <SelectItem value="izvrseno">Izvršeno</SelectItem>
-          <SelectItem value="otkazano">Otkazano</SelectItem>
+          <SelectItem value="aktivni">{t("statusAktivni")}</SelectItem>
+          <SelectItem value="svi">{t("statusSvi")}</SelectItem>
+          <SelectItem value="kasni">{tStatus("kasni")}</SelectItem>
+          <SelectItem value="planirano">{tStatus("planirano")}</SelectItem>
+          <SelectItem value="zakazano">{tStatus("zakazano")}</SelectItem>
+          <SelectItem value="izvrseno">{tStatus("izvrseno")}</SelectItem>
+          <SelectItem value="otkazano">{tStatus("otkazano")}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -89,18 +94,18 @@ export function ObilasciToolbar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="svi">Svi gradovi</SelectItem>
+          <SelectItem value="svi">{t("gradSvi")}</SelectItem>
           {(gradovi ?? []).map((g) => (
             <SelectItem key={g} value={g}>{g}</SelectItem>
           ))}
-          <SelectItem value="__bez__">Bez grada</SelectItem>
+          <SelectItem value="__bez__">{t("gradBez")}</SelectItem>
         </SelectContent>
       </Select>
 
       {period === "mjesec" && (
         <Select value={mjesecStr} onValueChange={(v) => setParam("mjesec", v ?? "")} items={mjesecItems}>
           <SelectTrigger data-testid="obilasci-mjesec" className="w-40">
-            <SelectValue placeholder="Mjesec" />
+            <SelectValue placeholder={t("placeholderMjesec")} />
           </SelectTrigger>
           <SelectContent>
             {MONTHS_BS.map((m, i) => (
@@ -113,7 +118,7 @@ export function ObilasciToolbar({
       {period === "kvartal" && (
         <Select value={kvartalStr} onValueChange={(v) => setParam("kvartal", v ?? "")} items={kvartalItems}>
           <SelectTrigger data-testid="obilasci-kvartal" className="w-32">
-            <SelectValue placeholder="Kvartal" />
+            <SelectValue placeholder={t("placeholderKvartal")} />
           </SelectTrigger>
           <SelectContent>
             {[1, 2, 3, 4].map((q) => (

@@ -573,5 +573,21 @@
     "izvrseno": "Completed",
     "otkazano": "Cancelled",
     "kasni": "Overdue"
+  },
+  "obilasci": {
+    "naslov": "Site visits",
+    "podnaslov": "Grouped by city for more efficient scheduling of visits.",
+    "prazno": "No appointments in the selected period.",
+    "toolbar": {
+      "periodMjesec": "Month",
+      "periodKvartal": "Quarter",
+      "periodGodina": "Year",
+      "statusAktivni": "Active",
+      "statusSvi": "All",
+      "gradSvi": "All cities",
+      "gradBez": "No city",
+      "placeholderMjesec": "Month",
+      "placeholderKvartal": "Quarter"
+    }
   }
 }

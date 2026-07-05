@@ -573,5 +573,21 @@
     "izvrseno": "Izvršeno",
     "otkazano": "Otkazano",
     "kasni": "Kasni"
+  },
+  "obilasci": {
+    "naslov": "Obilasci",
+    "podnaslov": "Grupisano po gradu za efikasniji raspored izlazaka.",
+    "prazno": "Nema termina u izabranom periodu.",
+    "toolbar": {
+      "periodMjesec": "Mjesec",
+      "periodKvartal": "Kvartal",
+      "periodGodina": "Godina",
+      "statusAktivni": "Aktivni",
+      "statusSvi": "Svi",
+      "gradSvi": "Svi gradovi",
+      "gradBez": "Bez grada",
+      "placeholderMjesec": "Mjesec",
+      "placeholderKvartal": "Kvartal"
+    }
   }
 }

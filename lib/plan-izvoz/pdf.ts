@@ -1,5 +1,9 @@
 import { PDFDocument, StandardFonts } from "pdf-lib"
+import { createTranslator } from "next-intl"
+import { APP_LOCALE, type Locale } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
 import type { PlanRed, IzvozMeta } from "./types"
+import { PLAN_KOLONE_KEYS } from "./types"
 
 // WinAnsi (standard PDF fonts) cannot encode Bosnian-specific chars — transliterate them.
 // Sve ostalo van WinAnsi/CP1252 (ćirilica, emoji, CJK…) → "?" da pdf-lib NIKAD ne baci
@@ -13,18 +17,11 @@ const ascii = (s: string) =>
     .replace(/[đĐ]/g, (c) => (c === "đ" ? "d" : "D"))
     .replace(/[^\x20-\x7E\xA0-\xFF–—…‚„‘’“”•€™]/g, "?")
 
-const KOLONE = [
-  { label: "Klijent", w: 138 },
-  { label: "Lokacija", w: 100 },
-  { label: "Usluga", w: 128 },
-  { label: "Rok", w: 66 },
-  { label: "Status", w: 84 },
-  { label: "Periodika", w: 62 },
-  { label: "Odgovorna", w: 130 },
-  { label: "Način", w: 74 },
-] as const
+const KOLONE_SIRINE = [138, 100, 128, 66, 84, 62, 130, 74] as const
 
-export async function planToPdf(rows: PlanRed[], meta: IzvozMeta): Promise<Buffer> {
+export async function planToPdf(rows: PlanRed[], meta: IzvozMeta, locale: Locale = APP_LOCALE): Promise<Buffer> {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "izvoz.plan" })
+  const KOLONE = PLAN_KOLONE_KEYS.map((k, i) => ({ label: t(`kolonePdf.${k}`), w: KOLONE_SIRINE[i]! }))
   const pdf = await PDFDocument.create()
   const font = await pdf.embedFont(StandardFonts.Helvetica)
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
@@ -34,13 +31,13 @@ export async function planToPdf(rows: PlanRed[], meta: IzvozMeta): Promise<Buffe
 
   const skratiti = (s: string, w: number) => {
     const a = ascii(s)
-    let t = a
-    while (t.length > 1 && font.widthOfTextAtSize(t, size) > w - 6) t = t.slice(0, -1)
-    return t.length < a.length ? `${t.slice(0, -1)}…` : t
+    let cur = a
+    while (cur.length > 1 && font.widthOfTextAtSize(cur, size) > w - 6) cur = cur.slice(0, -1)
+    return cur.length < a.length ? `${cur.slice(0, -1)}…` : cur
   }
   const zaglavlje = () => {
     page.drawText(ascii(meta.naslov), { x: margin, y: y - 12, size: 14, font: bold })
-    page.drawText(ascii(`Plan aktivnosti — ${meta.period}`), { x: margin, y: y - 28, size: 10, font })
+    page.drawText(ascii(t("podnaslov", { period: meta.period })), { x: margin, y: y - 28, size: 10, font })
     y -= 44
     let x = margin
     for (const c of KOLONE) { page.drawText(ascii(c.label), { x: x + 2, y: y - 12, size, font: bold }); x += c.w }
@@ -54,7 +51,7 @@ export async function planToPdf(rows: PlanRed[], meta: IzvozMeta): Promise<Buffe
     vals.forEach((v, i) => { page.drawText(skratiti(String(v ?? "-"), KOLONE[i]!.w), { x: x + 2, y: y - 12, size, font }); x += KOLONE[i]!.w })
     y -= rowH
   }
-  if (rows.length === 0) page.drawText("Nema aktivnosti za odabrane filtere.", { x: margin, y: y - 12, size: 10, font })
+  if (rows.length === 0) page.drawText(ascii(t("nemaAktivnosti")), { x: margin, y: y - 12, size: 10, font })
   const bytes = await pdf.save()
   return Buffer.from(bytes)
 }

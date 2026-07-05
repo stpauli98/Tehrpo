@@ -1,4 +1,7 @@
+import { createTranslator } from "next-intl"
 import { APP_NAME } from "@/lib/brand"
+import { APP_LOCALE, type Locale } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
 
 /** iCal escaping: backslash, tačka-zarez, zarez, novi red. */
 function icsEscape(s: string): string {
@@ -37,13 +40,14 @@ export function buildTerminIcs(args: {
   lokacija?: string | null
   baseUrl?: string
   now?: Date
-}): string {
+}, locale: Locale = APP_LOCALE): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.ics" })
   const now = args.now ?? new Date()
   const host = args.baseUrl ? new URL(args.baseUrl).hostname : "termini"
   const summary = icsEscape(`${args.vrsta} — ${args.klijent}`)
   const descText = args.baseUrl
-    ? `Podsjetnik o roku.\n\nDetalji: ${args.baseUrl}/plan-aktivnosti?selected=${args.terminId}`
-    : "Podsjetnik o roku."
+    ? `${t("opis")}\n\n${t("detalji", { url: `${args.baseUrl}/plan-aktivnosti?selected=${args.terminId}` })}`
+    : t("opis")
   const description = icsEscape(descText)
   const lines = [
     "BEGIN:VCALENDAR",

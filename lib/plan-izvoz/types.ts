@@ -11,4 +11,7 @@ export type PlanRed = {
 
 export type IzvozMeta = { naslov: string; period: string }
 
-export const PLAN_KOLONE = ["Klijent", "Lokacija", "Usluga", "Rok", "Status", "Periodika (mj)", "Odgovorna osoba", "Način"] as const
+/** Ključevi kolona plana (prevode se na mjestu renderovanja — izvoz.plan.kolone / izvoz.plan.kolonePdf). */
+export const PLAN_KOLONE_KEYS = [
+  "klijent", "lokacija", "usluga", "rok", "status", "periodika", "odgovorna", "nacin",
+] as const

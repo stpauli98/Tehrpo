@@ -859,5 +859,80 @@
       "terminNePostoji": "Termin ne postoji.",
       "snimanjeNijeUspjelo": "Snimanje nije uspjelo."
     }
+  },
+  "email": {
+    "test": {
+      "predmet": "Testni email — {appName}",
+      "headerLabel": "Test",
+      "znacka": "TESTNI EMAIL",
+      "pozdravIme": "Zdravo {ime},",
+      "pozdrav": "Zdravo,",
+      "opis": "Ako vidiš ovu poruku, dostava emaila na tvoju adresu radi ispravno. Na ovu adresu ćeš primati automatske podsjetnike o rokovima dospijeća.",
+      "napomena": "Ovo je test poslan iz postavki — nije potrebno ništa raditi."
+    },
+    "podsjetnik": {
+      "predmet": "Podsjetnik: {vrsta} — {klijent} ({stanje})",
+      "rok": "rok {tekst}",
+      "headerLabel": "Podsjetnik",
+      "znackaKasni": "KASNI",
+      "znackaUskoro": "USKORO",
+      "rokDospijeca": "Rok dospijeća:",
+      "poljeVrsta": "Vrsta",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija",
+      "dugmeTermin": "Otvori termin",
+      "dugmeKlijent": "Otvori klijenta",
+      "prilogNaziv": "termin.ics"
+    },
+    "ics": {
+      "opis": "Podsjetnik o roku.",
+      "detalji": "Detalji: {url}"
+    }
+  },
+  "izvoz": {
+    "plan": {
+      "naslov": "Plan aktivnosti",
+      "podnaslov": "Plan aktivnosti — {period}",
+      "sviMjeseci": "svi mjeseci",
+      "nemaAktivnosti": "Nema aktivnosti za odabrane filtere.",
+      "kolone": {
+        "klijent": "Klijent",
+        "lokacija": "Lokacija",
+        "usluga": "Usluga",
+        "rok": "Rok",
+        "status": "Status",
+        "periodika": "Periodika (mj)",
+        "odgovorna": "Odgovorna osoba",
+        "nacin": "Način"
+      },
+      "kolonePdf": {
+        "klijent": "Klijent",
+        "lokacija": "Lokacija",
+        "usluga": "Usluga",
+        "rok": "Rok",
+        "status": "Status",
+        "periodika": "Periodika",
+        "odgovorna": "Odgovorna",
+        "nacin": "Način"
+      },
+      "nacin": {
+        "izvrsava": "Izvršava",
+        "pracenje": "Praćenje"
+      }
+    },
+    "zapisnik": {
+      "naslov": "ZAPISNIK O IZVRŠENOJ PROVJERI",
+      "podnaslov": "{appName} — zaštita na radu",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija",
+      "poljeVrstaProvjere": "Vrsta provjere",
+      "poljeDatumIzvrsenja": "Datum izvršenja",
+      "poljeZaduzeni": "Zaduženi",
+      "nalaz": "Nalaz",
+      "zakljucak": "Zaključak",
+      "potpis": "Potpis ovlaštenog lica: ______________________________",
+      "imeFajla": "Zapisnik - {vrsta} - {datum}.docx",
+      "provjeraFallback": "provjera"
+    }
   }
 }

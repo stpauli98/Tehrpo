@@ -859,5 +859,80 @@
       "terminNePostoji": "Der Termin existiert nicht.",
       "snimanjeNijeUspjelo": "Speichern fehlgeschlagen."
     }
+  },
+  "email": {
+    "test": {
+      "predmet": "Test-E-Mail — {appName}",
+      "headerLabel": "Test",
+      "znacka": "TEST-E-MAIL",
+      "pozdravIme": "Hallo {ime},",
+      "pozdrav": "Hallo,",
+      "opis": "Wenn du diese Nachricht siehst, funktioniert die E-Mail-Zustellung an deine Adresse korrekt. An diese Adresse erhältst du automatische Erinnerungen zu Fristen.",
+      "napomena": "Dies ist ein Test aus den Einstellungen — es ist keine weitere Aktion nötig."
+    },
+    "podsjetnik": {
+      "predmet": "Erinnerung: {vrsta} — {klijent} ({stanje})",
+      "rok": "{tekst}",
+      "headerLabel": "Erinnerung",
+      "znackaKasni": "ÜBERFÄLLIG",
+      "znackaUskoro": "DEMNÄCHST",
+      "rokDospijeca": "Fälligkeitsdatum:",
+      "poljeVrsta": "Art",
+      "poljeKlijent": "Kunde",
+      "poljeLokacija": "Standort",
+      "dugmeTermin": "Termin öffnen",
+      "dugmeKlijent": "Kunde öffnen",
+      "prilogNaziv": "termin.ics"
+    },
+    "ics": {
+      "opis": "Erinnerung an die Frist.",
+      "detalji": "Details: {url}"
+    }
+  },
+  "izvoz": {
+    "plan": {
+      "naslov": "Aktivitätsplan",
+      "podnaslov": "Aktivitätsplan — {period}",
+      "sviMjeseci": "alle Monate",
+      "nemaAktivnosti": "Keine Aktivitäten für die gewählten Filter.",
+      "kolone": {
+        "klijent": "Kunde",
+        "lokacija": "Standort",
+        "usluga": "Leistung",
+        "rok": "Frist",
+        "status": "Status",
+        "periodika": "Periodik (Mon.)",
+        "odgovorna": "Verantwortliche Person",
+        "nacin": "Art"
+      },
+      "kolonePdf": {
+        "klijent": "Kunde",
+        "lokacija": "Standort",
+        "usluga": "Leistung",
+        "rok": "Frist",
+        "status": "Status",
+        "periodika": "Periodik",
+        "odgovorna": "Verantwortlich",
+        "nacin": "Art"
+      },
+      "nacin": {
+        "izvrsava": "Führt aus",
+        "pracenje": "Verfolgung"
+      }
+    },
+    "zapisnik": {
+      "naslov": "PROTOKOLL ÜBER DIE DURCHGEFÜHRTE PRÜFUNG",
+      "podnaslov": "{appName} — Arbeitsschutz",
+      "poljeKlijent": "Kunde",
+      "poljeLokacija": "Standort",
+      "poljeVrstaProvjere": "Prüfungsart",
+      "poljeDatumIzvrsenja": "Datum der Durchführung",
+      "poljeZaduzeni": "Zuständig",
+      "nalaz": "Befund",
+      "zakljucak": "Schlussfolgerung",
+      "potpis": "Unterschrift der befugten Person: ______________________________",
+      "imeFajla": "Protokoll - {vrsta} - {datum}.docx",
+      "provjeraFallback": "Prüfung"
+    }
   }
 }

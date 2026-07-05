@@ -19,6 +19,7 @@ import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
+const tIzvoz = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "izvoz.zapisnik" })
 
 export type ActionResult =
   | { ok: true }
@@ -139,7 +140,7 @@ export async function generateZapisnikAction(
     zakljucak: content.zakljucak,
   })
 
-  const naziv = `Zapisnik - ${term.vrsta_naziv ?? "provjera"} - ${datum}.docx`
+  const naziv = tIzvoz("imeFajla", { vrsta: term.vrsta_naziv ?? tIzvoz("provjeraFallback"), datum })
   const path = `termini/${termin_id}/zapisnik-${crypto.randomUUID()}.docx`
 
   try {

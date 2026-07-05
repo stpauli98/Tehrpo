@@ -859,5 +859,80 @@
       "terminNePostoji": "Appointment does not exist.",
       "snimanjeNijeUspjelo": "Save failed."
     }
+  },
+  "email": {
+    "test": {
+      "predmet": "Test email — {appName}",
+      "headerLabel": "Test",
+      "znacka": "TEST EMAIL",
+      "pozdravIme": "Hello {ime},",
+      "pozdrav": "Hello,",
+      "opis": "If you see this message, email delivery to your address is working correctly. You will receive automatic deadline reminders at this address.",
+      "napomena": "This is a test sent from settings — no action is needed."
+    },
+    "podsjetnik": {
+      "predmet": "Reminder: {vrsta} — {klijent} ({stanje})",
+      "rok": "{tekst}",
+      "headerLabel": "Reminder",
+      "znackaKasni": "OVERDUE",
+      "znackaUskoro": "UPCOMING",
+      "rokDospijeca": "Due date:",
+      "poljeVrsta": "Type",
+      "poljeKlijent": "Client",
+      "poljeLokacija": "Location",
+      "dugmeTermin": "Open appointment",
+      "dugmeKlijent": "Open client",
+      "prilogNaziv": "appointment.ics"
+    },
+    "ics": {
+      "opis": "Deadline reminder.",
+      "detalji": "Details: {url}"
+    }
+  },
+  "izvoz": {
+    "plan": {
+      "naslov": "Activity plan",
+      "podnaslov": "Activity plan — {period}",
+      "sviMjeseci": "all months",
+      "nemaAktivnosti": "No activities for the selected filters.",
+      "kolone": {
+        "klijent": "Client",
+        "lokacija": "Location",
+        "usluga": "Service",
+        "rok": "Due date",
+        "status": "Status",
+        "periodika": "Frequency (mo)",
+        "odgovorna": "Responsible person",
+        "nacin": "Mode"
+      },
+      "kolonePdf": {
+        "klijent": "Client",
+        "lokacija": "Location",
+        "usluga": "Service",
+        "rok": "Due",
+        "status": "Status",
+        "periodika": "Frequency",
+        "odgovorna": "Responsible",
+        "nacin": "Mode"
+      },
+      "nacin": {
+        "izvrsava": "Performs",
+        "pracenje": "Tracking"
+      }
+    },
+    "zapisnik": {
+      "naslov": "RECORD OF COMPLETED INSPECTION",
+      "podnaslov": "{appName} — occupational safety",
+      "poljeKlijent": "Client",
+      "poljeLokacija": "Location",
+      "poljeVrstaProvjere": "Inspection type",
+      "poljeDatumIzvrsenja": "Completion date",
+      "poljeZaduzeni": "Assigned to",
+      "nalaz": "Findings",
+      "zakljucak": "Conclusion",
+      "potpis": "Signature of authorized person: ______________________________",
+      "imeFajla": "Record - {vrsta} - {datum}.docx",
+      "provjeraFallback": "inspection"
+    }
   }
 }

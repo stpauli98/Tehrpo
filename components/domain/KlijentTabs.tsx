@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { InfoIkona } from "@/components/ui/info-ikona"
+import { href } from "@/i18n/routes"
 
 const TABS = [
   { value: "id-karta", labelKey: "idKarta" },
@@ -20,7 +21,7 @@ export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klije
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(v) => router.push(`/klijenti/${klijentId}?tab=${v ?? "termini"}`)}
+      onValueChange={(v) => router.push(href(`/klijenti/${klijentId}?tab=${v ?? "termini"}`))}
     >
       <TabsList variant="line">
         {TABS.map((tab, i) => (

@@ -6,6 +6,7 @@ import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { downloadDokument } from "@/lib/supabase/storage"
 import { DocxPreview } from "@/components/domain/DocxPreview"
 import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
+import { href } from "@/i18n/routes"
 import mammoth from "mammoth"
 
 export default async function PregledPage({
@@ -79,7 +80,7 @@ export default async function PregledPage({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">{previewNaziv}</h2>
-            <Link href="/zapisnici" className={IKONA_INLINE_KLASA} data-testid="pregled-zatvori" aria-label={t("zatvoriPregled")}>
+            <Link href={href("/zapisnici")} className={IKONA_INLINE_KLASA} data-testid="pregled-zatvori" aria-label={t("zatvoriPregled")}>
               <X className="h-4 w-4" aria-hidden />
               <Tooltip>{t("zatvoriPregled")}</Tooltip>
             </Link>

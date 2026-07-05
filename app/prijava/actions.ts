@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { href } from "@/i18n/routes"
 
 export type ActionResult = { ok: false; message?: string } | { ok: true }
 
@@ -26,5 +27,5 @@ export async function prijaviSe(_prev: ActionResult, formData: FormData): Promis
   })
   if (error) return { ok: false, message: t("prijava.greske.pogresnoUneseno") }
   revalidatePath("/", "layout")
-  redirect("/pregled")
+  redirect(href("/pregled"))
 }

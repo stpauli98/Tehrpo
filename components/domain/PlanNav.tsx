@@ -15,6 +15,7 @@ import {
 import { prevMonth, nextMonth, monthLabel } from "@/lib/calendar"
 import { monthName } from "@/lib/date"
 import { cn } from "@/lib/utils"
+import { href as localizeHref } from "@/i18n/routes"
 
 // 12 lokalizovanih naziva mjeseci (1=Januar) za select opcije ispod.
 const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
@@ -40,7 +41,7 @@ export function PlanNav({
     p.set("mjesec", String(m))
     p.delete("dan")
     p.delete("selected")
-    return `/plan-aktivnosti?${p.toString()}`
+    return localizeHref(`/plan-aktivnosti?${p.toString()}`)
   }
 
   const p = prevMonth(godina, mjesec)

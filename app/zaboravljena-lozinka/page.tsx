@@ -7,6 +7,7 @@ import Link from "next/link"
 import { posaljiReset, type ActionResult } from "./actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { href } from "@/i18n/routes"
 
 const initial: ActionResult = { ok: false }
 
@@ -28,7 +29,7 @@ function ZaboravljenaLozinkaForm() {
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? t("dugmeUToku") : t("dugme")}
         </Button>
-        <Link href="/prijava" className="block text-center text-xs text-slate-500 hover:underline">{t("nazadNaPrijavu")}</Link>
+        <Link href={href("/prijava")} className="block text-center text-xs text-slate-500 hover:underline">{t("nazadNaPrijavu")}</Link>
       </form>
     </div>
   )

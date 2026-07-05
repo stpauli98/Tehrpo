@@ -4,6 +4,7 @@ import { User } from "lucide-react"
 import type { Database } from "@/db/types"
 import { LokacijaSheet } from "@/components/domain/LokacijaSheet"
 import { ObrisiLokacijuButton } from "@/components/domain/ObrisiLokacijuButton"
+import { href } from "@/i18n/routes"
 
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 
@@ -60,7 +61,7 @@ export async function LokacijeTab({
                   <td className="px-3 py-2.5">
                     {l.kontakt_osoba ? (
                       <Link
-                        href={`/klijenti/${klijentId}?tab=kontakti&highlight=${l.id}`}
+                        href={href(`/klijenti/${klijentId}?tab=kontakti&highlight=${l.id}`)}
                         scroll={false}
                         className="inline-flex items-center gap-1 font-medium text-brand transition-colors hover:underline"
                         data-testid={`lokacija-kontakt-link-${l.id}`}

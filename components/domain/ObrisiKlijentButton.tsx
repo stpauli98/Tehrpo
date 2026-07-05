@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { deleteKlijent } from "@/app/(dashboard)/klijenti/actions"
 import { useState } from "react"
+import { href } from "@/i18n/routes"
 
 export function ObrisiKlijentButton({
   klijentId,
@@ -51,7 +52,7 @@ export function ObrisiKlijentButton({
     startTransition(async () => {
       const result = await deleteKlijent({ ok: true }, fd)
       if (result.ok) {
-        router.push("/klijenti")
+        router.push(href("/klijenti"))
       } else {
         setErrorMsg("message" in result && result.message ? result.message : t("greskaFallback"))
       }

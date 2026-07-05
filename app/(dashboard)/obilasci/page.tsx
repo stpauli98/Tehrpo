@@ -6,6 +6,7 @@ import { ObilasciToolbar } from "@/components/domain/ObilasciToolbar"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { groupByGrad, type ObilazakItem } from "@/lib/obilasci"
 import { periodRange, currentYear, todayIso, formatDatum } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 export default async function ObilasciPage({
   searchParams,
@@ -83,7 +84,7 @@ export default async function ObilasciPage({
               {g.items.map((termin) => (
                 <Link
                   key={termin.id}
-                  href={`/plan-aktivnosti?view=lista&klijent_id=${termin.klijent_id}&mjesec=svi`}
+                  href={href(`/plan-aktivnosti?view=lista&klijent_id=${termin.klijent_id}&mjesec=svi`)}
                   data-testid="obilasci-card"
                   className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
                 >

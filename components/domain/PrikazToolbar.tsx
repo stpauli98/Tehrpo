@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { MONTHS_BS, todayIso } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 type Opt = { id: string; naziv: string }
 
@@ -45,7 +46,7 @@ export function PrikazToolbar({
     if (m === "mjesec" && !next.get("mjesec")) {
       next.set("mjesec", String(Number(todayIso().slice(5, 7))))
     }
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   function setParam(key: string, value: string) {
@@ -53,7 +54,7 @@ export function PrikazToolbar({
     if (value) next.set(key, value)
     else next.delete(key)
     next.delete("selected")
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   return (

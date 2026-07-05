@@ -5,6 +5,7 @@ import { formatDatum } from "@/lib/date"
 import { rokRelativnaOznaka } from "@/lib/hitno"
 import type { HitnoKasniItem } from "@/lib/termini"
 import { cn } from "@/lib/utils"
+import { href } from "@/i18n/routes"
 
 const TONE: Record<"danger" | "warning", string> = {
   danger: "text-red-600",
@@ -38,7 +39,7 @@ export async function HitnoKasniList({
             return (
               <li key={item.id}>
                 <Link
-                  href={`/plan-aktivnosti?view=lista&selected=${item.id}&mjesec=svi`}
+                  href={href(`/plan-aktivnosti?view=lista&selected=${item.id}&mjesec=svi`)}
                   data-testid="hitno-kasni-row"
                   className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
                 >
@@ -63,7 +64,7 @@ export async function HitnoKasniList({
       )}
       {ukupnoKasni > 0 && (
         <Link
-          href="/plan-aktivnosti?view=lista&status=kasni&mjesec=svi"
+          href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")}
           data-testid="hitno-kasni-footer"
           className="mt-3 inline-block text-xs text-brand hover:underline"
         >

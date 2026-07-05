@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { href } from "@/i18n/routes"
 
 export type ActionResult = { ok: false; message: string } | { ok: true }
 
@@ -16,5 +17,5 @@ export async function postaviLozinku(_prev: ActionResult, formData: FormData): P
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.auth.updateUser({ password: parsed.data })
   if (error) return { ok: false, message: t("novaLozinka.greske.linkIstekao") }
-  redirect("/pregled")
+  redirect(href("/pregled"))
 }

@@ -14,6 +14,7 @@ import { currentYear, todayIso, monthName } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
 import { getTerminiMatrica, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 export function MatricaView() {
@@ -95,8 +96,8 @@ export function MatricaView() {
   // multiHref: za ćelije sa više termina (brojUCeliji > 1) → /plan-aktivnosti lista filtriran
   const multiHref = (vrstaId: string, colId: string): string =>
     mode === "mjesec"
-      ? `/plan-aktivnosti?view=lista&klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`
-      : `/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`
+      ? href(`/plan-aktivnosti?view=lista&klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`)
+      : href(`/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`)
 
   const currentSearch = searchParams.toString()
 
@@ -109,7 +110,7 @@ export function MatricaView() {
   // closeHref = trenutni URL bez "selected", čuva klijent/godina
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
-  const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+  const closeHref = href(`/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`)
 
   const showMatrix = mode === "mjesec" || (mode === "klijent" && !!klijentId)
 

@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { AsistentChat } from "@/components/domain/AsistentChat"
 import { NoviRazgovorButton } from "@/components/domain/NoviRazgovorButton"
 import type { UiPoruka } from "@/components/domain/ChatMessage"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 type PorukaRow = Database["public"]["Tables"]["chat_poruke"]["Row"]
@@ -58,7 +59,7 @@ export default async function AsistentPage({
           {razgovori.map((r) => (
             <li key={r.id}>
               <Link
-                href={`/asistent?k=${r.id}`}
+                href={href(`/asistent?k=${r.id}`)}
                 data-testid="razgovor-link"
                 className={`block truncate rounded-md px-2 py-1 text-sm hover:bg-slate-50 ${r.id === aktivni ? "bg-slate-100 font-medium" : "text-slate-600"}`}
               >

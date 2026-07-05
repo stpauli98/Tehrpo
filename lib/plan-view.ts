@@ -1,3 +1,5 @@
+import { href } from "@/i18n/routes"
+
 // Redoslijed tabova u switcher-u: Kalendar prvi, Lista druga, Matrica treća.
 export const PLAN_VIEWS = ["kalendar", "lista", "matrica"] as const
 export type PlanView = (typeof PLAN_VIEWS)[number]
@@ -12,7 +14,7 @@ export function buildViewHref(params: URLSearchParams, view: PlanView): string {
   next.delete("view")
   next.set("view", view)
   const qs = next.toString()
-  return `/plan-aktivnosti${qs ? `?${qs}` : ""}`
+  return href(`/plan-aktivnosti${qs ? `?${qs}` : ""}`)
 }
 
 /** Redirect URL sa stare rute: čuva sve string query-parametre + dodaje view. */
@@ -22,5 +24,5 @@ export function buildRedirectHref(view: PlanView, sp: Record<string, string | st
     if (typeof v === "string") next.set(k, v)
   }
   next.set("view", view)
-  return `/plan-aktivnosti?${next.toString()}`
+  return href(`/plan-aktivnosti?${next.toString()}`)
 }

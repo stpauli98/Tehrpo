@@ -5,6 +5,7 @@ import type { Database } from "@/db/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
+import { href } from "@/i18n/routes"
 
 export type KlijentRow = Database["public"]["Views"]["klijenti_view"]["Row"]
 
@@ -13,7 +14,7 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
   const kasni = klijent.broj_kasni ?? 0
   return (
     <Link
-      href={`/klijenti/${klijent.id}`}
+      href={href(`/klijenti/${klijent.id}`)}
       data-testid="klijent-card"
       className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-xl"
     >

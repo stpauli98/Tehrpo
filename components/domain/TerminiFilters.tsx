@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 import { MONTHS_BS_OPTION } from "@/lib/termini-filters"
 import { currentYear } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 type Opt = { id: string; naziv: string }
 
@@ -52,7 +53,7 @@ export function TerminiFilters({
     else next.set(key, value)
     next.delete("page")       // reset paginaciju
     next.delete("selected")   // zatvori detalje
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   function setStatus(value: string) {
@@ -64,7 +65,7 @@ export function TerminiFilters({
     if (value === "kasni") next.set("mjesec", "svi")
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   function setMjesec(value: string) {
@@ -72,7 +73,7 @@ export function TerminiFilters({
     next.set("mjesec", value) // uvijek eksplicitno (tn|svi|1..12)
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   // Promjena firme resetuje lokaciju (stale lokacija druge firme → prazna lista)
@@ -83,7 +84,7 @@ export function TerminiFilters({
     next.delete("lokacija")
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   // Live search: kontrolisani input + debounce (filtrira čim se kuca, bez Entera).

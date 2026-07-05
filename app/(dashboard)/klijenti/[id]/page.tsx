@@ -19,6 +19,7 @@ import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
 import { formatDatum, addMjeseci } from "@/lib/date"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
@@ -120,7 +121,7 @@ export default async function KlijentDetailPage({
   return (
     <div className="space-y-6">
       <Link
-        href="/klijenti"
+        href={href("/klijenti")}
         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
         data-testid="nazad-klijenti"
       >
@@ -275,7 +276,7 @@ export default async function KlijentDetailPage({
                             <span className="font-normal text-slate-400"> · {l.naziv}</span>
                           </span>
                           <Link
-                            href={`/klijenti/${id}?tab=lokacije`}
+                            href={href(`/klijenti/${id}?tab=lokacije`)}
                             className="shrink-0 text-xs text-brand hover:underline"
                           >
                             {t("kontaktiTab.urediULokacijama")}

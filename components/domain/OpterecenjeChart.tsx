@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { MONTHS_BS } from "@/lib/date"
 import { cn } from "@/lib/utils"
+import { href } from "@/i18n/routes"
 
 export type OpterecenjeRow = {
   mjesec: number
@@ -99,7 +100,7 @@ export async function OpterecenjeChart({
             return godina ? (
               <Link
                 key={m.mjesec}
-                href={`/plan-aktivnosti?view=matrica&mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`}
+                href={href(`/plan-aktivnosti?view=matrica&mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`)}
                 data-testid="chart-bar"
                 data-mjesec={m.mjesec}
                 data-ukupno={m.ukupno}

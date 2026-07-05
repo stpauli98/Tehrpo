@@ -5,6 +5,7 @@ import { prijaviSe, type ActionResult } from "./actions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { APP_NAME, APP_INITIAL } from "@/lib/brand"
+import { href } from "@/i18n/routes"
 
 const initial: ActionResult = { ok: true }
 
@@ -27,7 +28,7 @@ export default function PrijavaPage() {
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? t("dugmeUToku") : t("dugme")}
         </Button>
-        <a href="/zaboravljena-lozinka" className="block text-center text-xs text-slate-500 hover:underline">
+        <a href={href("/zaboravljena-lozinka")} className="block text-center text-xs text-slate-500 hover:underline">
           {t("zaboravljenaLozinka")}
         </a>
       </form>

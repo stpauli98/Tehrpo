@@ -15,6 +15,7 @@ import { toDerivedStatus } from "@/lib/termini"
 import { PlanLegenda } from "@/components/domain/PlanLegenda"
 import type { TerminRow } from "@/components/domain/TerminiTable"
 import { getTerminiKalendar, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 export function KalendarView() {
@@ -82,12 +83,12 @@ export function KalendarView() {
 
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
-  const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+  const closeHref = href(`/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`)
 
   const detailHref = (id: string) => {
     const p = new URLSearchParams(currentSearch)
     p.set("selected", id)
-    return `/plan-aktivnosti?${p.toString()}`
+    return href(`/plan-aktivnosti?${p.toString()}`)
   }
 
   if (isPending) {

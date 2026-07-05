@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { currentYear } from "@/lib/date"
 import { getTerminiLista, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
 import { TERMINI_PER_PAGE } from "@/lib/plan-filteri"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 export function ListaView() {
@@ -80,12 +81,12 @@ export function ListaView() {
 
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
-  const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+  const closeHref = href(`/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`)
 
   const pageHref = (p: number) => {
     const params = new URLSearchParams(currentSearch)
     params.set("page", String(p))
-    return `/plan-aktivnosti?${params.toString()}`
+    return href(`/plan-aktivnosti?${params.toString()}`)
   }
 
   if (isPending) {

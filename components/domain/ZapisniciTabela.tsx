@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { formatDatum } from "@/lib/date"
 import { ObrisiDokumentButton } from "./ObrisiDokumentButton"
+import { href } from "@/i18n/routes"
 
 type Zapisnik = {
   id: string
@@ -68,7 +69,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
                 <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
-                    <Link href={`/zapisnici?preview=${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label={t("pregled")}>
+                    <Link href={href(`/zapisnici?preview=${d.id}`)} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label={t("pregled")}>
                       <Eye className="h-4 w-4" aria-hidden />
                       <Tooltip>{t("pregled")}</Tooltip>
                     </Link>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { createProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { APP_NAME } from "@/lib/brand"
+import { href } from "@/i18n/routes"
 
 const initial: ActionResult = { ok: true }
 
@@ -63,7 +64,7 @@ export function DodajProvjeruButton({
         {lokacije.length === 0 ? (
           <p className="text-sm text-slate-600" data-testid="profil-bez-lokacija">
             {t("bezLokacijaTekst")}{" "}
-            <Link href={`/klijenti/${klijentId}?tab=lokacije`} className="text-brand underline">
+            <Link href={href(`/klijenti/${klijentId}?tab=lokacije`)} className="text-brand underline">
               {t("bezLokacijaLink")}
             </Link>
           </p>
@@ -108,7 +109,7 @@ export function DodajProvjeruButton({
           {vrstaId && !interval && (
             <p className="text-sm text-status-kasni" role="alert" data-testid="profil-bez-intervala">
               {t("bezIntervalaTekst")}{" "}
-              <Link href="/postavke" className="underline">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
+              <Link href={href("/postavke")} className="underline">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
             </p>
           )}
 

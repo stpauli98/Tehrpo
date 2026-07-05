@@ -7,6 +7,7 @@ import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/Opter
 import { HitnoKasniList } from "@/components/domain/HitnoKasniList"
 import { getPredstojeciCount, getHitnoKasni } from "@/lib/termini"
 import { currentYear, todayIso } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 export default async function PregledPage() {
   const t = await getTranslations("pregled")
@@ -45,7 +46,7 @@ export default async function PregledPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Klikabilne: vode na filter koji TAČNO odgovara broju na kartici */}
-        <Link href={`/plan-aktivnosti?view=lista&mjesec=${mjesec}`} className="block" aria-label={terminiLabel}>
+        <Link href={href(`/plan-aktivnosti?view=lista&mjesec=${mjesec}`)} className="block" aria-label={terminiLabel}>
           <StatCard
             label={terminiLabel}
             value={stats.ovog_mjeseca}
@@ -55,7 +56,7 @@ export default async function PregledPage() {
             testId="stat-card"
           />
         </Link>
-        <Link href="/plan-aktivnosti?view=lista&status=kasni&mjesec=svi" className="block" aria-label={kasniLabel}>
+        <Link href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")} className="block" aria-label={kasniLabel}>
           <StatCard
             label={kasniLabel}
             value={stats.kasni}

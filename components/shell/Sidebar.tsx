@@ -15,18 +15,19 @@ import {
   ChevronsLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { href } from "@/i18n/routes"
 
 const NAV_ITEMS = [
-  { href: "/pregled",         labelKey: "pregled",         icon: LayoutDashboard },
-  { href: "/plan-aktivnosti", labelKey: "planAktivnosti",  icon: Calendar },
-  { href: "/obilasci",        labelKey: "obilasci",        icon: Map },
-  { href: "/klijenti",        labelKey: "klijenti",        icon: Users },
-  { href: "/asistent",        labelKey: "asistent",        icon: Bot },
-  { href: "/zapisnici",       labelKey: "zapisnici",       icon: FileText },
+  { href: href("/pregled"),         labelKey: "pregled",         icon: LayoutDashboard },
+  { href: href("/plan-aktivnosti"), labelKey: "planAktivnosti",  icon: Calendar },
+  { href: href("/obilasci"),        labelKey: "obilasci",        icon: Map },
+  { href: href("/klijenti"),        labelKey: "klijenti",        icon: Users },
+  { href: href("/asistent"),        labelKey: "asistent",        icon: Bot },
+  { href: href("/zapisnici"),       labelKey: "zapisnici",       icon: FileText },
 ] as const
 
 // Postavke se prikvačuje na dno (kao zadnji li:last-child u originalu).
-const FOOTER_ITEM = { href: "/postavke", labelKey: "postavke", icon: Settings } as const
+const FOOTER_ITEM = { href: href("/postavke"), labelKey: "postavke", icon: Settings } as const
 
 const MIN_WIDTH = 64          // skupljeno — samo ikonice
 const MAX_WIDTH = 264

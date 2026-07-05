@@ -9,6 +9,7 @@ import { Eye } from "lucide-react"
 import { formatDatum } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { href } from "@/i18n/routes"
 
 export type TerminRow = Database["public"]["Views"]["termini_view"]["Row"]
 
@@ -20,7 +21,7 @@ const COL_KEYS = [
 function detailHref(id: string, currentSearch: string): string {
   const params = new URLSearchParams(currentSearch)
   params.set("selected", id)
-  return `/plan-aktivnosti?${params.toString()}`
+  return href(`/plan-aktivnosti?${params.toString()}`)
 }
 
 export function TerminiTable({

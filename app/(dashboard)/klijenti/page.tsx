@@ -4,6 +4,7 @@ import { KlijentCard, type KlijentRow } from "@/components/domain/KlijentCard"
 import { KlijentiSearch } from "@/components/domain/KlijentiSearch"
 import { NoviKlijentButton } from "@/components/domain/NoviKlijentButton"
 import { Pagination } from "@/components/domain/Pagination"
+import { href } from "@/i18n/routes"
 
 const PER_PAGE = 24
 
@@ -44,7 +45,7 @@ export default async function KlijentiPage({
   const pageHref = (p: number) => {
     const params = new URLSearchParams(currentSearch)
     params.set("page", String(p))
-    return `/klijenti?${params.toString()}`
+    return href(`/klijenti?${params.toString()}`)
   }
 
   return (

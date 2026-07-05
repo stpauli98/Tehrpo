@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange, addMjeseci } from "./date"
+import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange, addMjeseci, monthName } from "./date"
 
 describe("formatDatum", () => {
   it("ISO datum → DD.MM.YYYY.", () => {
@@ -16,6 +16,41 @@ describe("formatDatum", () => {
   it("nevažeći format → em-dash", () => {
     expect(formatDatum("28/07/2026")).toBe("—")
     expect(formatDatum("garbage")).toBe("—")
+  })
+  it("sr eksplicitno → identično defaultu (byte-identical)", () => {
+    expect(formatDatum("2026-07-28", "sr")).toBe("28.07.2026.")
+  })
+  it("en → Intl.DateTimeFormat('en') MM/DD/YYYY", () => {
+    expect(formatDatum("2026-07-28", "en")).toBe("07/28/2026")
+  })
+  it("de → Intl.DateTimeFormat('de') DD.MM.YYYY (bez tačke na kraju)", () => {
+    expect(formatDatum("2026-07-28", "de")).toBe("28.07.2026")
+  })
+  it("en/de null → i dalje em-dash (logika prije locale grananja)", () => {
+    expect(formatDatum(null, "en")).toBe("—")
+    expect(formatDatum(undefined, "de")).toBe("—")
+  })
+})
+
+describe("monthName", () => {
+  it("sr (default) → identično MONTHS_BS (byte-identical)", () => {
+    expect(monthName(1)).toBe("Januar")
+    expect(monthName(12)).toBe("Decembar")
+    expect(monthName(1, "sr")).toBe("Januar")
+  })
+  it("en → puno ime mjeseca preko Intl", () => {
+    expect(monthName(1, "en")).toBe("January")
+    expect(monthName(7, "en")).toBe("July")
+    expect(monthName(12, "en")).toBe("December")
+  })
+  it("de → puno ime mjeseca preko Intl", () => {
+    expect(monthName(1, "de")).toBe("Januar")
+    expect(monthName(7, "de")).toBe("Juli")
+    expect(monthName(12, "de")).toBe("Dezember")
+  })
+  it("nevažeći broj mjeseca → prazan string", () => {
+    expect(monthName(0)).toBe("")
+    expect(monthName(13)).toBe("")
   })
 })
 

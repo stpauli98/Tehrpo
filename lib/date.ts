@@ -1,19 +1,46 @@
 /** Datumski helperi — Bosanski format DD.MM.YYYY. iz ISO YYYY-MM-DD. */
 
+import { APP_LOCALE, type Locale } from "@/lib/locale"
+
 export const MONTHS_BS = [
   "Januar", "Februar", "Mart", "April", "Maj", "Jun",
   "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar",
 ] as const
 
-/** ISO (ili Date-string) → "DD.MM.YYYY.". Null/nevažeće → "—". */
-export function formatDatum(iso: string | null | undefined): string {
+/**
+ * ISO (ili Date-string) → lokalizovan prikaz datuma. Null/nevažeće → "—".
+ * sr: zadržan postojeći hardkodirani "DD.MM.YYYY." oblik (early-return) — CLDR
+ * "sr-Latn" preko Intl.DateTimeFormat ne dodaje tačku na kraju i ne nulira dane/
+ * mjesece < 10, što bi promijenilo postojeći, testovima provjeravan tekst.
+ * en/de: Intl.DateTimeFormat(locale, ...) (§procedura-i18n Step 1).
+ */
+export function formatDatum(iso: string | null | undefined, locale: Locale = APP_LOCALE): string {
   if (!iso) return "—"
   const parts = iso.slice(0, 10).split("-")
   if (parts.length !== 3) return "—"
   const [y, mo, d] = parts
   if (!y || !mo || !d) return "—"
   if (y.length !== 4) return "—"
-  return `${d}.${mo}.${y}.`
+  if (locale === "sr") return `${d}.${mo}.${y}.`
+  const dt = new Date(Date.UTC(Number(y), Number(mo) - 1, Number(d)))
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC",
+  }).format(dt)
+}
+
+/**
+ * Naziv mjeseca (1=Januar), lokalizovan.
+ * sr: zadržan postojeći hardkodirani MONTHS_BS (early-return) — CLDR "sr-Latn"
+ * preko Intl.DateTimeFormat vraća malim slovom ("januar"), što bi promijenilo
+ * postojeći, testovima provjeravan tekst (precedent: MonthCalendar.tsx, Task 8).
+ * en/de: Intl.DateTimeFormat(locale, { month: "long" }).
+ */
+export function monthName(month1to12: number, locale: Locale = APP_LOCALE): string {
+  if (month1to12 < 1 || month1to12 > 12) return ""
+  if (locale === "sr") return MONTHS_BS[month1to12 - 1] ?? ""
+  const fmt = new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" })
+  const label = fmt.format(new Date(Date.UTC(2024, month1to12 - 1, 1)))
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 /** Današnji datum kao "YYYY-MM-DD" (UTC, usklađen s DB current_date). */

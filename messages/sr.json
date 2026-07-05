@@ -14,6 +14,11 @@
       "prethodna": "Prethodna",
       "sljedeca": "Sljedeća",
       "strana": "Strana {pageNum} / {totalPages}"
+    },
+    "rok": {
+      "kasni": "kasni {count, plural, =1 {# dan} other {# dana}}",
+      "danas": "danas",
+      "za": "za {count, plural, =1 {# dan} other {# dana}}"
     }
   },
   "shell": {
@@ -458,7 +463,8 @@
       "nacinPracenje": "Samo praćenje",
       "svi": "Svi",
       "godina": "Godina",
-      "pretragaPlaceholder": "Pretraga firme..."
+      "pretragaPlaceholder": "Pretraga firme...",
+      "tekuciNaredni": "Tekući + naredni mjesec"
     },
     "sheet": {
       "naslovFallback": "Termin",

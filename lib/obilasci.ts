@@ -1,3 +1,7 @@
+import { createTranslator } from "next-intl"
+import { APP_LOCALE, type Locale } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
 // Whitelist pravih BiH gradova (fold ključ → kanonski oblik za prikaz)
 const GRADOVI_BIH: Record<string, string> = {
   "banja luka": "Banja Luka", "bijeljina": "Bijeljina", "brcko": "Brčko",
@@ -45,19 +49,27 @@ export type ObilazakItem = {
   status_izvedeni: string
 }
 
-export function groupByGrad(items: ObilazakItem[]): { grad: string; items: ObilazakItem[] }[] {
+// Interni sentinel za grupu "bez grada" — NIJE prikazni tekst (taj dolazi iz
+// obilasci.toolbar.gradBez, isti ključ koji ObilasciToolbar već koristi za "Bez grada"
+// select opciju). Prikazna vrijednost i URL-filter sentinel ("__bez__" u toolbaru) su
+// namjerno odvojeni — provjereno: g.grad se ovdje koristi samo za prikaz/React key,
+// nikad za poređenje sa URL parametrom.
+const BEZ_GRADA_KEY = "\0bez-grada"
+
+export function groupByGrad(items: ObilazakItem[], locale: Locale = APP_LOCALE): { grad: string; items: ObilazakItem[] }[] {
   const map = new Map<string, ObilazakItem[]>()
   for (const it of items) {
-    const key = it.lokacija_grad ?? "Bez grada"
+    const key = it.lokacija_grad ?? BEZ_GRADA_KEY
     const arr = map.get(key) ?? []
     arr.push(it)
     map.set(key, arr)
   }
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "obilasci.toolbar" })
   return Array.from(map.entries())
     .sort(([a], [b]) => {
-      if (a === "Bez grada") return 1
-      if (b === "Bez grada") return -1
+      if (a === BEZ_GRADA_KEY) return 1
+      if (b === BEZ_GRADA_KEY) return -1
       return a.localeCompare(b)
     })
-    .map(([grad, items]) => ({ grad, items }))
+    .map(([grad, items]) => ({ grad: grad === BEZ_GRADA_KEY ? t("gradBez") : grad, items }))
 }

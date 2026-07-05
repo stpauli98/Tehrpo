@@ -13,8 +13,11 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { prevMonth, nextMonth, monthLabel } from "@/lib/calendar"
-import { MONTHS_BS } from "@/lib/date"
+import { monthName } from "@/lib/date"
 import { cn } from "@/lib/utils"
+
+// 12 lokalizovanih naziva mjeseci (1=Januar) za select opcije ispod.
+const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
 
 export function PlanNav({
   godina,
@@ -93,7 +96,7 @@ export function PlanNav({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {MONTHS_BS.map((naziv, i) => (
+          {MJESEC_NAZIVI.map((naziv, i) => (
             <SelectItem key={naziv} value={String(i + 1)}>
               {naziv}
             </SelectItem>

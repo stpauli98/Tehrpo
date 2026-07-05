@@ -10,7 +10,7 @@ import { MatrixLegenda } from "@/components/domain/MatrixLegenda"
 import type { MatrixColumn } from "@/lib/matrix"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { currentYear, todayIso, MONTHS_BS } from "@/lib/date"
+import { currentYear, todayIso, monthName } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
 import { getTerminiMatrica, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
@@ -84,9 +84,9 @@ export function MatricaView() {
     matrixRows = buildMatrix(inputs)
     const currentMonthNum = Number(today.slice(5, 7))
     const currentYearNum = currentYear()
-    kolone = MONTHS_BS.map((label, i) => ({
+    kolone = Array.from({ length: 12 }, (_, i) => ({
       id: String(i + 1),
-      label: label.slice(0, 3),
+      label: monthName(i + 1).slice(0, 3),
       isCurrent: godina === currentYearNum && i + 1 === currentMonthNum,
     }))
     emptyMessage = t("nemaTerminaGodina")

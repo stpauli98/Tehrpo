@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useRef, useState, useTransition } from "react"
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import {
@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
-import { MONTHS_BS_OPTION } from "@/lib/termini-filters"
-import { currentYear } from "@/lib/date"
+import { currentYear, monthName } from "@/lib/date"
 import { href } from "@/i18n/routes"
 
 type Opt = { id: string; naziv: string }
@@ -40,11 +39,19 @@ export function TerminiFilters({
   const godinaItems: Record<string, string> = Object.fromEntries(godine.map((g) => [String(g), String(g)]))
   const firmaLokacije = klijentId !== "svi" ? lokacijeByFirma[klijentId] ?? [] : []
 
+  // Mjesec opcije — građeno u komponenti (useTranslations + monthName), NE preko
+  // lib/termini-filters.ts (Task 15 fix: taj modul vuče i18n/messages, koji ne
+  // smije ući u klijent bundle — vidi buildMonthsOption za server-only ekvivalent).
+  const monthsOption = useMemo(() => [
+    { value: "tn", label: t("tekuciNaredni") },
+    ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: monthName(i + 1) })),
+  ], [t])
+
   // items mape (value→label) — base-ui SelectValue prikazuje labelu kad je dropdown zatvoren
   const firmaItems: Record<string, string> = { svi: t("sveFirme"), ...Object.fromEntries(klijenti.map((k) => [k.id, k.naziv])) }
   const lokacijaItems: Record<string, string> = { svi: t("sveLokacije"), ...Object.fromEntries(firmaLokacije.map((l) => [l.id, l.naziv])) }
   const vrstaItems: Record<string, string> = { svi: t("sveVrste"), ...Object.fromEntries(vrste.map((v) => [v.id, v.naziv])) }
-  const mjesecItems: Record<string, string> = { svi: t("sviMjeseci"), ...Object.fromEntries(MONTHS_BS_OPTION.map((m) => [m.value, m.label])) }
+  const mjesecItems: Record<string, string> = { svi: t("sviMjeseci"), ...Object.fromEntries(monthsOption.map((m) => [m.value, m.label])) }
   const nacinItems: Record<string, string> = { svi: t("sviNacini"), izvrsava: t("nacinIzvrsava"), pracenje: t("nacinPracenje") }
 
   function setParam(key: string, value: string | null) {
@@ -181,7 +188,7 @@ export function TerminiFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="svi">{t("sviMjeseci")}</SelectItem>
-          {MONTHS_BS_OPTION.map((m) => (
+          {monthsOption.map((m) => (
             <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
           ))}
         </SelectContent>

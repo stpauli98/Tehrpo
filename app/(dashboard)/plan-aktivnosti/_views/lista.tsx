@@ -18,6 +18,7 @@ import type { Database } from "@/db/types"
 export function ListaView() {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.lista")
+  const tPag = useTranslations("common.pagination")
 
   const pageNum = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const statusFilter = searchParams.get("status") ?? "svi"
@@ -119,7 +120,15 @@ export function ListaView() {
         data-testid="termini-pagination"
       >
         <span data-testid="termini-total">{t("ukupnoRezultata", { count: total })}</span>
-        <Pagination pageNum={pageNum} totalPages={totalPages} hrefFor={pageHref} pageTestId="termini-page" />
+        <Pagination
+          pageNum={pageNum}
+          totalPages={totalPages}
+          hrefFor={pageHref}
+          pageTestId="termini-page"
+          prethodnaLabel={tPag("prethodna")}
+          sljedecaLabel={tPag("sljedeca")}
+          stranaText={tPag("strana", { pageNum, totalPages })}
+        />
       </div>
 
       {selectedTermin && (

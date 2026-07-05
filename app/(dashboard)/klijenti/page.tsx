@@ -14,6 +14,7 @@ export default async function KlijentiPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const t = await getTranslations("klijenti.lista")
+  const tPag = await getTranslations("common.pagination")
   const sp = await searchParams
   const q = typeof sp.q === "string" ? sp.q.trim() : ""
   const pageNum = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1)
@@ -72,7 +73,15 @@ export default async function KlijentiPage({
 
       <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-sm text-slate-600" data-testid="klijenti-pagination">
         <span data-testid="klijenti-total">{t("ukupno", { count: total })}</span>
-          <Pagination pageNum={pageNum} totalPages={totalPages} hrefFor={pageHref} pageTestId="klijenti-page" />
+        <Pagination
+          pageNum={pageNum}
+          totalPages={totalPages}
+          hrefFor={pageHref}
+          pageTestId="klijenti-page"
+          prethodnaLabel={tPag("prethodna")}
+          sljedecaLabel={tPag("sljedeca")}
+          stranaText={tPag("strana", { pageNum, totalPages })}
+        />
       </div>
     </div>
   )

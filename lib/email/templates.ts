@@ -3,6 +3,7 @@ import { formatDatum } from "../date"
 import { APP_NAME, APP_TAGLINE } from "../brand"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { localizeHref } from "@/i18n/routes"
 
 export function escapeHtml(s: string): string {
   return s
@@ -96,8 +97,12 @@ export function reminderHtml(args: {
 
   // Dugmad: samo s baseUrl + odgovarajući id. Table-based ("bulletproof") za Outlook.
   const base = args.baseUrl ? args.baseUrl.replace(/\/$/, "") : ""
-  const terminUrl = base && args.terminId ? `${base}/plan-aktivnosti?selected=${encodeURIComponent(args.terminId)}` : ""
-  const klijentUrl = base && args.klijentId ? `${base}/klijenti/${encodeURIComponent(args.klijentId)}` : ""
+  const terminUrl = base && args.terminId
+    ? `${base}${localizeHref(`/plan-aktivnosti?selected=${encodeURIComponent(args.terminId)}`, locale)}`
+    : ""
+  const klijentUrl = base && args.klijentId
+    ? `${base}${localizeHref(`/klijenti/${encodeURIComponent(args.klijentId)}`, locale)}`
+    : ""
   const dugme = (url: string, tekst: string, filled: boolean) =>
     `<td style="padding:0 6px"><table role="presentation" cellspacing="0" cellpadding="0"><tr><td style="border-radius:6px;background:${filled ? boja : "#ffffff"};border:1px solid ${boja}"><a href="${url}" style="display:inline-block;padding:10px 18px;font-size:14px;color:${filled ? "#ffffff" : boja};text-decoration:none">${tekst}</a></td></tr></table></td>`
   const dugmici = [

@@ -1,32 +1,28 @@
 import Link from "next/link"
-import { createTranslator } from "next-intl"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
-import { APP_LOCALE } from "@/lib/locale"
-import { getMessages } from "@/i18n/messages"
 
 // Prop-driven dumb komponenta (renderuje se i iz server i iz klijent stabla —
 // npr. klijenti/page.tsx prosljeđuje hrefFor kao plain funkciju, što onemogućuje
-// "use client" na ovoj komponenti). Labele se prevode na mjestu poziva preko
-// props-a; default vrijednosti (Pattern C, ne zahtijeva React kontekst) pokrivaju
-// pozivaoce koji ih još ne prosljeđuju.
-const dt = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "common.pagination" })
-
+// "use client" na ovoj komponenti). Nema pristupa i18n kontekstu/katalozima na
+// ovom nivou (namjerno — vidi Task 15 fix: i18n/messages ne smije ući u klijent
+// bundle), pa su labele OBAVEZNI props — pozivalac ih prevodi (server:
+// getTranslations, client: useTranslations), obje strane iz "common.pagination".
 export function Pagination({
   pageNum, totalPages, hrefFor, pageTestId,
-  prethodnaLabel = dt("prethodna"),
-  sljedecaLabel = dt("sljedeca"),
-  stranaText = dt("strana", { pageNum, totalPages }),
+  prethodnaLabel,
+  sljedecaLabel,
+  stranaText,
 }: {
   pageNum: number
   totalPages: number
   hrefFor: (p: number) => string
   pageTestId: string
-  prethodnaLabel?: string
-  sljedecaLabel?: string
-  stranaText?: string
+  prethodnaLabel: string
+  sljedecaLabel: string
+  stranaText: string
 }) {
   if (totalPages <= 1) return null
   const cls = cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "group/tt relative")

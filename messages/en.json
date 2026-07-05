@@ -858,6 +858,12 @@
       "neispravanTermin": "Invalid appointment",
       "terminNePostoji": "Appointment does not exist.",
       "snimanjeNijeUspjelo": "Save failed."
+    },
+    "api": {
+      "neispravanZahtjev": "Invalid request",
+      "snimanjeNijeUspjelo": "Saving the message failed",
+      "greskaAsistenta": "Assistant error",
+      "bezTeksta": "(no text)"
     }
   },
   "email": {
@@ -918,7 +924,9 @@
       "nacin": {
         "izvrsava": "Performs",
         "pracenje": "Tracking"
-      }
+      },
+      "greska": "Error",
+      "greskaGenerisanje": "Error generating file: {poruka}"
     },
     "zapisnik": {
       "naslov": "RECORD OF COMPLETED INSPECTION",
@@ -934,5 +942,13 @@
       "imeFajla": "Record - {vrsta} - {datum}.docx",
       "provjeraFallback": "inspection"
     }
+  },
+  "dbErrors": {
+    "chkTerminiDatumi": "Invalid date: the completion date cannot be in the future, and the interval must be between 1 and 120 months.",
+    "duplikat": "A record with these values already exists.",
+    "uUpotrebi": "The record is linked to other data and is in use.",
+    "nevazeciPodaci": "Invalid data — please check your input.",
+    "obaveznoPolje": "A required field is missing.",
+    "genericka": "An error occurred while saving. Please try again."
   }
 }

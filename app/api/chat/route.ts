@@ -1,9 +1,14 @@
 import { z } from "zod"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { runChat, type ChatTurn, type ChatEvent } from "@/lib/claude/chat"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "asistent.api" })
 
 const bodySchema = z.object({
   konverzacija_id: z.string().uuid(),
@@ -19,7 +24,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     parsed = bodySchema.parse(await req.json())
   } catch {
-    return new Response(JSON.stringify({ error: "Neispravan zahtjev" }), {
+    return new Response(JSON.stringify({ error: t("neispravanZahtjev") }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     })
@@ -32,7 +37,7 @@ export async function POST(req: Request): Promise<Response> {
     .from("chat_poruke")
     .insert({ konverzacija_id, uloga: "user", sadrzaj: userText })
   if (userErr) {
-    return new Response(JSON.stringify({ error: "Snimanje poruke nije uspjelo" }), {
+    return new Response(JSON.stringify({ error: t("snimanjeNijeUspjelo") }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     })
@@ -48,12 +53,12 @@ export async function POST(req: Request): Promise<Response> {
         const { error: asstErr } = await supabase.from("chat_poruke").insert({
           konverzacija_id,
           uloga: "assistant",
-          sadrzaj: assistantText || "(bez teksta)",
+          sadrzaj: assistantText || t("bezTeksta"),
           alat_pozivi: toolsUsed.length ? toolsUsed : null,
         })
         if (asstErr) console.error("Snimanje assistant poruke nije uspjelo:", asstErr.message)
       } catch (e) {
-        send({ type: "error", message: e instanceof Error ? e.message : "Greška asistenta" })
+        send({ type: "error", message: e instanceof Error ? e.message : t("greskaAsistenta") })
         send({ type: "done" })
       } finally {
         controller.close()

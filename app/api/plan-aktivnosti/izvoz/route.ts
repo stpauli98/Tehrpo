@@ -60,8 +60,8 @@ export async function GET(req: NextRequest) {
   try {
     buf = format === "pdf" ? await planToPdf(rows, meta) : await planToXlsx(rows, meta)
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Greška"
-    return NextResponse.json({ error: `Greška pri generisanju fajla: ${message}` }, { status: 500 })
+    const message = e instanceof Error ? e.message : tIzvoz("greska")
+    return NextResponse.json({ error: tIzvoz("greskaGenerisanje", { poruka: message }) }, { status: 500 })
   }
   const ext = format === "pdf" ? "pdf" : "xlsx"
   const ct = format === "pdf"

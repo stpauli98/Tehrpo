@@ -858,6 +858,12 @@
       "neispravanTermin": "Ungültiger Termin",
       "terminNePostoji": "Der Termin existiert nicht.",
       "snimanjeNijeUspjelo": "Speichern fehlgeschlagen."
+    },
+    "api": {
+      "neispravanZahtjev": "Ungültige Anfrage",
+      "snimanjeNijeUspjelo": "Speichern der Nachricht fehlgeschlagen",
+      "greskaAsistenta": "Fehler des Assistenten",
+      "bezTeksta": "(kein Text)"
     }
   },
   "email": {
@@ -918,7 +924,9 @@
       "nacin": {
         "izvrsava": "Führt aus",
         "pracenje": "Verfolgung"
-      }
+      },
+      "greska": "Fehler",
+      "greskaGenerisanje": "Fehler beim Generieren der Datei: {poruka}"
     },
     "zapisnik": {
       "naslov": "PROTOKOLL ÜBER DIE DURCHGEFÜHRTE PRÜFUNG",
@@ -934,5 +942,13 @@
       "imeFajla": "Protokoll - {vrsta} - {datum}.docx",
       "provjeraFallback": "Prüfung"
     }
+  },
+  "dbErrors": {
+    "chkTerminiDatumi": "Ungültiges Datum: das Ausführungsdatum darf nicht in der Zukunft liegen, und das Intervall muss zwischen 1 und 120 Monaten liegen.",
+    "duplikat": "Ein Eintrag mit diesen Werten existiert bereits.",
+    "uUpotrebi": "Der Eintrag ist mit anderen Daten verknüpft und wird verwendet.",
+    "nevazeciPodaci": "Ungültige Daten — bitte überprüfen Sie die Eingabe.",
+    "obaveznoPolje": "Ein Pflichtfeld fehlt.",
+    "genericka": "Beim Speichern ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
   }
 }

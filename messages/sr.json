@@ -858,6 +858,12 @@
       "neispravanTermin": "Neispravan termin",
       "terminNePostoji": "Termin ne postoji.",
       "snimanjeNijeUspjelo": "Snimanje nije uspjelo."
+    },
+    "api": {
+      "neispravanZahtjev": "Neispravan zahtjev",
+      "snimanjeNijeUspjelo": "Snimanje poruke nije uspjelo",
+      "greskaAsistenta": "Greška asistenta",
+      "bezTeksta": "(bez teksta)"
     }
   },
   "email": {
@@ -918,7 +924,9 @@
       "nacin": {
         "izvrsava": "Izvršava",
         "pracenje": "Praćenje"
-      }
+      },
+      "greska": "Greška",
+      "greskaGenerisanje": "Greška pri generisanju fajla: {poruka}"
     },
     "zapisnik": {
       "naslov": "ZAPISNIK O IZVRŠENOJ PROVJERI",
@@ -934,5 +942,13 @@
       "imeFajla": "Zapisnik - {vrsta} - {datum}.docx",
       "provjeraFallback": "provjera"
     }
+  },
+  "dbErrors": {
+    "chkTerminiDatumi": "Neispravan datum: datum izvršenja ne može biti u budućnosti, a interval mora biti između 1 i 120 mjeseci.",
+    "duplikat": "Zapis sa tim vrijednostima već postoji.",
+    "uUpotrebi": "Zapis je povezan s drugim podacima i u upotrebi je.",
+    "nevazeciPodaci": "Nevažeći podaci — provjerite unos.",
+    "obaveznoPolje": "Nedostaje obavezno polje.",
+    "genericka": "Došlo je do greške pri spremanju. Pokušajte ponovo."
   }
 }

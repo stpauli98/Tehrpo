@@ -30,7 +30,7 @@ export default async function PregledPage({
   const { data: terminiData } = terminIds.length
     ? await supabase.from("termini_view").select("id, klijent_naziv, vrsta_naziv").in("id", terminIds)
     : { data: [] }
-  const terminMap = new Map((terminiData ?? []).map((t) => [t.id, t]))
+  const terminMap = new Map((terminiData ?? []).map((term) => [term.id, term]))
 
   const dokumenti = dokRedovi.map((d) => ({
     ...d,

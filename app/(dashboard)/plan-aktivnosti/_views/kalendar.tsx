@@ -70,7 +70,7 @@ export function KalendarView() {
 
   // ?dan sidebar
   const danTermini = selectedDan
-    ? termini.filter((t) => (t.rok_dospijeca ?? "").slice(0, 10) === selectedDan)
+    ? termini.filter((termin) => (termin.rok_dospijeca ?? "").slice(0, 10) === selectedDan)
     : []
 
   // ?selected TerminSheet

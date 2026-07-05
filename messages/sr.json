@@ -636,5 +636,50 @@
       "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
       "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
     }
+  },
+  "zapisnici": {
+    "naslov": "Zapisnici",
+    "prazno": "Još nema AI-generisanih zapisnika. Generiši ih iz detalja termina.",
+    "zatvoriPregled": "Zatvori pregled",
+    "pretragaPlaceholder": "Pretraži po klijentu ili vrsti provjere…",
+    "kolone": {
+      "klijent": "Klijent",
+      "vrsta": "Vrsta provjere",
+      "datum": "Datum",
+      "akcije": "Akcije"
+    },
+    "brojUkupno": "{count} zapisnika",
+    "brojFiltrirano": "{prikazano} / {ukupno}",
+    "pregled": "Pregled",
+    "preuzmi": "Preuzmi",
+    "obrisiZapisnik": "Obriši zapisnik",
+    "prazniRezultati": "Nema zapisnika za „{upit}”."
+  },
+  "dokumenti": {
+    "izaberiteFajl": "Izaberite fajl.",
+    "nedozvoljenTip": "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp).",
+    "fajlPrevelik": "Fajl je veći od {max} MB.",
+    "terminNePostoji": "Termin ne postoji.",
+    "terminObavezan": "Termin je obavezan",
+    "uploadNijeUspio": "Upload nije uspio.",
+    "zapisnikSamoIzvrsen": "Zapisnik se generiše samo za izvršen termin.",
+    "generisanjeNijeUspjelo": "Generisanje nije uspjelo.",
+    "samoAdminBrise": "Samo administrator može brisati dokumente.",
+    "dokumentNePostoji": "Dokument ne postoji.",
+    "dokumentNePostojiIliNemaPristupa": "Dokument ne postoji ili nemate pristup.",
+    "klijentObavezan": "Klijent je obavezan",
+    "tipNeispravan": "Neispravan tip",
+    "klijentNePostojiIliNemaPristupa": "Klijent ne postoji ili nemate pristup.",
+    "ugovorNePripadaKlijentu": "Ugovor ne pripada klijentu.",
+    "naslov": "Dokumenti",
+    "generisiZapisnik": "Generiši zapisnik (AI)",
+    "generisem": "Generišem…",
+    "zapisnikNedostupan": "Zapisnik (AI) je dostupan tek nakon što je termin izvršen.",
+    "saljem": "Šaljem…",
+    "uploadDugme": "Upload",
+    "prazno": "Nema dokumenata za ovaj termin.",
+    "preuzmi": "Preuzmi",
+    "obrisiDokument": "Obriši dokument",
+    "aiOznaka": "AI"
   }
 }

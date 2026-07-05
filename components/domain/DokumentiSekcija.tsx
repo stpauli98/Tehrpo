@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Sparkles, Trash2, Download } from "lucide-react"
 import { toast } from "sonner"
@@ -29,6 +30,7 @@ export function DokumentiSekcija({
   dokumenti: DokumentRow[]
   izvrsen: boolean
 }) {
+  const t = useTranslations("dokumenti")
   const router = useRouter()
   const queryClient = useQueryClient()
   const uloga = useUloga()
@@ -70,19 +72,19 @@ export function DokumentiSekcija({
 
   return (
     <section data-testid="sheet-dokumenti">
-      <p className="text-xs uppercase tracking-wide text-slate-400">Dokumenti</p>
+      <p className="text-xs uppercase tracking-wide text-slate-400">{t("naslov")}</p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {izvrsen ? (
           <form action={genAction}>
             <input type="hidden" name="termin_id" value={terminId} />
             <Button type="submit" variant="default" disabled={genPending} data-testid="generisi-zapisnik">
-              <Sparkles className="w-4 h-4" aria-hidden /> {genPending ? "Generišem…" : "Generiši zapisnik (AI)"}
+              <Sparkles className="w-4 h-4" aria-hidden /> {genPending ? t("generisem") : t("generisiZapisnik")}
             </Button>
           </form>
         ) : (
           <p className="text-xs text-slate-400" data-testid="zapisnik-nedostupan">
-            Zapisnik (AI) je dostupan tek nakon što je termin izvršen.
+            {t("zapisnikNedostupan")}
           </p>
         )}
 
@@ -98,13 +100,13 @@ export function DokumentiSekcija({
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file && file.size > MAX_MB * 1024 * 1024) {
-                toast.error(`Fajl je veći od ${MAX_MB} MB.`)
+                toast.error(t("fajlPrevelik", { max: MAX_MB }))
                 e.target.value = ""
               }
             }}
           />
           <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
-            {uploadPending ? "Šaljem…" : "Upload"}
+            {uploadPending ? t("saljem") : t("uploadDugme")}
           </Button>
         </form>
       </div>
@@ -116,7 +118,7 @@ export function DokumentiSekcija({
       )}
 
       {dokumenti.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">Nema dokumenata za ovaj termin.</p>
+        <p className="mt-3 text-sm text-slate-500">{t("prazno")}</p>
       ) : (
         <ul className="mt-3 space-y-2" data-testid="dokumenti-lista">
           {dokumenti.map((d) => (
@@ -129,7 +131,7 @@ export function DokumentiSekcija({
                 <FileText className="w-4 h-4 shrink-0 text-slate-400" aria-hidden />
                 <span className="truncate">{d.naziv}</span>
                 {d.generated_by_ai && (
-                  <span data-testid="dokument-ai-badge" className="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-xs text-brand">AI</span>
+                  <span data-testid="dokument-ai-badge" className="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-xs text-brand">{t("aiOznaka")}</span>
                 )}
               </span>
               <span className="flex shrink-0 items-center gap-1">
@@ -137,10 +139,10 @@ export function DokumentiSekcija({
                   href={`/api/dokumenti/${d.id}`}
                   className={IKONA_INLINE_KLASA}
                   data-testid="dokument-download"
-                  aria-label="Preuzmi"
+                  aria-label={t("preuzmi")}
                 >
                   <Download className="h-4 w-4" aria-hidden />
-                  <Tooltip>Preuzmi</Tooltip>
+                  <Tooltip>{t("preuzmi")}</Tooltip>
                 </a>
                 {mozeBrisati && (
                   <form action={delAction}>
@@ -151,11 +153,11 @@ export function DokumentiSekcija({
                       size="icon"
                       disabled={delPending}
                       data-testid="dokument-delete"
-                      aria-label="Obriši dokument"
+                      aria-label={t("obrisiDokument")}
                       className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden />
-                      <Tooltip>Obriši dokument</Tooltip>
+                      <Tooltip>{t("obrisiDokument")}</Tooltip>
                     </Button>
                   </form>
                 )}

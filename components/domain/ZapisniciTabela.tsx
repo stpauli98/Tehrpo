@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { Search, Download, Eye } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
@@ -16,15 +17,16 @@ type Zapisnik = {
 }
 
 export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
+  const t = useTranslations("zapisnici")
   const [q, setQ] = useState("")
-  const t = q.trim().toLowerCase()
+  const upit = q.trim().toLowerCase()
   const vidljivi =
-    t === ""
+    upit === ""
       ? dokumenti
       : dokumenti.filter(
           (d) =>
-            (d.klijent_naziv ?? "").toLowerCase().includes(t) ||
-            (d.vrsta_naziv ?? "").toLowerCase().includes(t),
+            (d.klijent_naziv ?? "").toLowerCase().includes(upit) ||
+            (d.vrsta_naziv ?? "").toLowerCase().includes(upit),
         )
 
   return (
@@ -35,13 +37,15 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Pretraži po klijentu ili vrsti provjere…"
+            placeholder={t("pretragaPlaceholder")}
             className="pl-8"
             data-testid="zapisnici-pretraga"
           />
         </div>
         <span className="shrink-0 text-xs text-slate-400">
-          {t === "" ? `${dokumenti.length} zapisnika` : `${vidljivi.length} / ${dokumenti.length}`}
+          {upit === ""
+            ? t("brojUkupno", { count: dokumenti.length })
+            : t("brojFiltrirano", { prikazano: vidljivi.length, ukupno: dokumenti.length })}
         </span>
       </div>
 
@@ -49,7 +53,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
         <table className="w-full text-sm" data-testid="pregled-tabela">
           <thead className="bg-slate-50">
             <tr>
-              {["Klijent", "Vrsta provjere", "Datum", "Akcije"].map((c) => (
+              {[t("kolone.klijent"), t("kolone.vrsta"), t("kolone.datum"), t("kolone.akcije")].map((c) => (
                 <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                   {c}
                 </th>
@@ -64,15 +68,15 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
                 <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
-                    <Link href={`/zapisnici?preview=${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label="Pregled">
+                    <Link href={`/zapisnici?preview=${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label={t("pregled")}>
                       <Eye className="h-4 w-4" aria-hidden />
-                      <Tooltip>Pregled</Tooltip>
+                      <Tooltip>{t("pregled")}</Tooltip>
                     </Link>
-                    <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-download" aria-label="Preuzmi">
+                    <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-download" aria-label={t("preuzmi")}>
                       <Download className="h-4 w-4" aria-hidden />
-                      <Tooltip>Preuzmi</Tooltip>
+                      <Tooltip>{t("preuzmi")}</Tooltip>
                     </a>
-                    <ObrisiDokumentButton dokumentId={d.id} label="Obriši zapisnik" testId="pregled-delete" />
+                    <ObrisiDokumentButton dokumentId={d.id} label={t("obrisiZapisnik")} testId="pregled-delete" />
                   </div>
                 </td>
               </tr>
@@ -80,7 +84,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
             {vidljivi.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-3 py-6 text-center text-slate-400">
-                  Nema zapisnika za „{q}”.
+                  {t("prazniRezultati", { upit: q })}
                 </td>
               </tr>
             )}

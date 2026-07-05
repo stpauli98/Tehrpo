@@ -636,5 +636,50 @@
       "nemaTerminaMjesec": "No appointments for the selected month.",
       "nemaTerminaGodina": "This client has no appointments in the selected year."
     }
+  },
+  "zapisnici": {
+    "naslov": "Records",
+    "prazno": "No AI-generated records yet. Generate them from the appointment details.",
+    "zatvoriPregled": "Close preview",
+    "pretragaPlaceholder": "Search by client or inspection type…",
+    "kolone": {
+      "klijent": "Client",
+      "vrsta": "Inspection type",
+      "datum": "Date",
+      "akcije": "Actions"
+    },
+    "brojUkupno": "{count} records",
+    "brojFiltrirano": "{prikazano} / {ukupno}",
+    "pregled": "Preview",
+    "preuzmi": "Download",
+    "obrisiZapisnik": "Delete record",
+    "prazniRezultati": "No records for \"{upit}\"."
+  },
+  "dokumenti": {
+    "izaberiteFajl": "Select a file.",
+    "nedozvoljenTip": "File type not allowed (docx, pdf, png, jpeg, webp).",
+    "fajlPrevelik": "File is larger than {max} MB.",
+    "terminNePostoji": "Appointment does not exist.",
+    "terminObavezan": "Appointment is required",
+    "uploadNijeUspio": "Upload failed.",
+    "zapisnikSamoIzvrsen": "The record can only be generated for a completed appointment.",
+    "generisanjeNijeUspjelo": "Generation failed.",
+    "samoAdminBrise": "Only an administrator can delete documents.",
+    "dokumentNePostoji": "Document does not exist.",
+    "dokumentNePostojiIliNemaPristupa": "Document does not exist or you don't have access.",
+    "klijentObavezan": "Client is required",
+    "tipNeispravan": "Invalid type",
+    "klijentNePostojiIliNemaPristupa": "Client does not exist or you don't have access.",
+    "ugovorNePripadaKlijentu": "Contract does not belong to the client.",
+    "naslov": "Documents",
+    "generisiZapisnik": "Generate record (AI)",
+    "generisem": "Generating…",
+    "zapisnikNedostupan": "The AI record is available only after the appointment is completed.",
+    "saljem": "Sending…",
+    "uploadDugme": "Upload",
+    "prazno": "No documents for this appointment.",
+    "preuzmi": "Download",
+    "obrisiDokument": "Delete document",
+    "aiOznaka": "AI"
   }
 }

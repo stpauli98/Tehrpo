@@ -636,5 +636,50 @@
       "nemaTerminaMjesec": "Keine Termine für den ausgewählten Monat.",
       "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr."
     }
+  },
+  "zapisnici": {
+    "naslov": "Protokolle",
+    "prazno": "Es gibt noch keine KI-generierten Protokolle. Erstellen Sie sie über die Termindetails.",
+    "zatvoriPregled": "Vorschau schließen",
+    "pretragaPlaceholder": "Nach Kunde oder Prüfungsart suchen…",
+    "kolone": {
+      "klijent": "Kunde",
+      "vrsta": "Prüfungsart",
+      "datum": "Datum",
+      "akcije": "Aktionen"
+    },
+    "brojUkupno": "{count} Protokolle",
+    "brojFiltrirano": "{prikazano} / {ukupno}",
+    "pregled": "Vorschau",
+    "preuzmi": "Herunterladen",
+    "obrisiZapisnik": "Protokoll löschen",
+    "prazniRezultati": "Keine Protokolle für „{upit}“."
+  },
+  "dokumenti": {
+    "izaberiteFajl": "Wählen Sie eine Datei aus.",
+    "nedozvoljenTip": "Dateityp nicht zulässig (docx, pdf, png, jpeg, webp).",
+    "fajlPrevelik": "Die Datei ist größer als {max} MB.",
+    "terminNePostoji": "Der Termin existiert nicht.",
+    "terminObavezan": "Termin ist erforderlich",
+    "uploadNijeUspio": "Upload fehlgeschlagen.",
+    "zapisnikSamoIzvrsen": "Das Protokoll kann nur für einen durchgeführten Termin erstellt werden.",
+    "generisanjeNijeUspjelo": "Erstellung fehlgeschlagen.",
+    "samoAdminBrise": "Nur ein Administrator kann Dokumente löschen.",
+    "dokumentNePostoji": "Das Dokument existiert nicht.",
+    "dokumentNePostojiIliNemaPristupa": "Das Dokument existiert nicht oder Sie haben keinen Zugriff.",
+    "klijentObavezan": "Kunde ist erforderlich",
+    "tipNeispravan": "Ungültiger Typ",
+    "klijentNePostojiIliNemaPristupa": "Der Kunde existiert nicht oder Sie haben keinen Zugriff.",
+    "ugovorNePripadaKlijentu": "Der Vertrag gehört nicht zum Kunden.",
+    "naslov": "Dokumente",
+    "generisiZapisnik": "Protokoll erstellen (KI)",
+    "generisem": "Wird erstellt…",
+    "zapisnikNedostupan": "Das KI-Protokoll ist erst verfügbar, nachdem der Termin durchgeführt wurde.",
+    "saljem": "Wird gesendet…",
+    "uploadDugme": "Hochladen",
+    "prazno": "Keine Dokumente für diesen Termin.",
+    "preuzmi": "Herunterladen",
+    "obrisiDokument": "Dokument löschen",
+    "aiOznaka": "KI"
   }
 }

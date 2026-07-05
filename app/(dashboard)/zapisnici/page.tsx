@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { X } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { downloadDokument } from "@/lib/supabase/storage"
@@ -12,6 +13,7 @@ export default async function PregledPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const t = await getTranslations("zapisnici")
   const sp = await searchParams
   const previewId = typeof sp.preview === "string" ? sp.preview : null
 
@@ -56,11 +58,11 @@ export default async function PregledPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Zapisnici</h1>
+      <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
 
       {dokumenti.length === 0 ? (
         <div data-testid="pregled-prazno" className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500">
-          Još nema AI-generisanih zapisnika. Generiši ih iz detalja termina.
+          {t("prazno")}
         </div>
       ) : (
         <ZapisniciTabela
@@ -77,9 +79,9 @@ export default async function PregledPage({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">{previewNaziv}</h2>
-            <Link href="/zapisnici" className={IKONA_INLINE_KLASA} data-testid="pregled-zatvori" aria-label="Zatvori pregled">
+            <Link href="/zapisnici" className={IKONA_INLINE_KLASA} data-testid="pregled-zatvori" aria-label={t("zatvoriPregled")}>
               <X className="h-4 w-4" aria-hidden />
-              <Tooltip>Zatvori pregled</Tooltip>
+              <Tooltip>{t("zatvoriPregled")}</Tooltip>
             </Link>
           </div>
           <DocxPreview html={previewHtml} />

@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import {
   uploadDokument,
@@ -14,6 +15,10 @@ import { buildZapisnikDocx } from "@/lib/zapisnik/template"
 import { dokumentStoragePath, jeValidanTip } from "@/lib/dokumenti"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { jeAdmin } from "@/lib/auth/roles"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
 
 export type ActionResult =
   | { ok: true }
@@ -30,7 +35,7 @@ function revalidateDokumenti(klijentId?: string | null): void {
   if (klijentId) revalidatePath(`/klijenti/${klijentId}`)
 }
 
-const uploadSchema = z.object({ termin_id: z.string().uuid("Termin je obavezan") })
+const uploadSchema = z.object({ termin_id: z.string().uuid(t("terminObavezan")) })
 
 export async function uploadDokumentAction(
   _prev: ActionResult,
@@ -42,13 +47,13 @@ export async function uploadDokumentAction(
 
   const file = formData.get("file")
   if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, message: "Izaberite fajl." }
+    return { ok: false, message: t("izaberiteFajl") }
   }
   if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
-    return { ok: false, message: "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp)." }
+    return { ok: false, message: t("nedozvoljenTip") }
   }
   if (file.size > MAX_BYTES) {
-    return { ok: false, message: "Fajl je veći od 10 MB." }
+    return { ok: false, message: t("fajlPrevelik", { max: 10 }) }
   }
 
   const supabase = await createServerSupabaseClient()
@@ -57,7 +62,7 @@ export async function uploadDokumentAction(
     .select("id, klijent_id")
     .eq("id", termin_id)
     .maybeSingle()
-  if (!termin) return { ok: false, message: "Termin ne postoji." }
+  if (!termin) return { ok: false, message: t("terminNePostoji") }
 
   const naziv = safeName(file.name)
   const path = `termini/${termin_id}/${crypto.randomUUID()}-${naziv}`
@@ -66,7 +71,7 @@ export async function uploadDokumentAction(
   try {
     await uploadDokument(path, bytes, file.type)
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Upload nije uspio." }
+    return { ok: false, message: e instanceof Error ? e.message : t("uploadNijeUspio") }
   }
 
   const { error } = await supabase.from("dokumenti").insert({
@@ -92,7 +97,7 @@ export async function uploadDokumentAction(
   return { ok: true }
 }
 
-const genSchema = z.object({ termin_id: z.string().uuid("Termin je obavezan") })
+const genSchema = z.object({ termin_id: z.string().uuid(t("terminObavezan")) })
 
 export async function generateZapisnikAction(
   _prev: ActionResult,
@@ -103,49 +108,49 @@ export async function generateZapisnikAction(
   const { termin_id } = parsed.data
 
   const supabase = await createServerSupabaseClient()
-  const { data: t } = await supabase
+  const { data: term } = await supabase
     .from("termini_view")
     .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja, zaduzeni, status")
     .eq("id", termin_id)
     .maybeSingle()
-  if (!t || !t.klijent_id) return { ok: false, message: "Termin ne postoji." }
+  if (!term || !term.klijent_id) return { ok: false, message: t("terminNePostoji") }
 
   // Zapisnik dokumentuje IZVRŠENU provjeru — ne generiši za otkazane/neizvršene termine
-  if (t.status !== "izvrseno") {
-    return { ok: false, message: "Zapisnik se generiše samo za izvršen termin." }
+  if (term.status !== "izvrseno") {
+    return { ok: false, message: t("zapisnikSamoIzvrsen") }
   }
 
-  const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
+  const datum = (term.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
   const content = await generateZapisnik({
-    klijent: t.klijent_naziv ?? "—",
-    lokacija: t.lokacija_naziv ?? null,
-    vrstaProvjere: t.vrsta_naziv ?? "—",
+    klijent: term.klijent_naziv ?? "—",
+    lokacija: term.lokacija_naziv ?? null,
+    vrstaProvjere: term.vrsta_naziv ?? "—",
     datum,
-    zaduzeni: t.zaduzeni ?? null,
+    zaduzeni: term.zaduzeni ?? null,
   })
 
   const docx = await buildZapisnikDocx({
-    klijent: t.klijent_naziv ?? "—",
-    lokacija: t.lokacija_naziv ?? null,
-    vrstaProvjere: t.vrsta_naziv ?? "—",
+    klijent: term.klijent_naziv ?? "—",
+    lokacija: term.lokacija_naziv ?? null,
+    vrstaProvjere: term.vrsta_naziv ?? "—",
     datum,
-    zaduzeni: t.zaduzeni ?? null,
+    zaduzeni: term.zaduzeni ?? null,
     nalaz: content.nalaz,
     zakljucak: content.zakljucak,
   })
 
-  const naziv = `Zapisnik - ${t.vrsta_naziv ?? "provjera"} - ${datum}.docx`
+  const naziv = `Zapisnik - ${term.vrsta_naziv ?? "provjera"} - ${datum}.docx`
   const path = `termini/${termin_id}/zapisnik-${crypto.randomUUID()}.docx`
 
   try {
     await uploadDokument(path, docx, DOCX_MIME)
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Generisanje nije uspjelo." }
+    return { ok: false, message: e instanceof Error ? e.message : t("generisanjeNijeUspjelo") }
   }
 
   const { error } = await supabase.from("dokumenti").insert({
     termin_id,
-    klijent_id: t.klijent_id,
+    klijent_id: term.klijent_id,
     naziv,
     storage_path: path,
     mime_type: DOCX_MIME,
@@ -162,7 +167,7 @@ export async function generateZapisnikAction(
     return { ok: false, message: error.message }
   }
 
-  revalidateDokumenti(t.klijent_id)
+  revalidateDokumenti(term.klijent_id)
   return { ok: true }
 }
 
@@ -180,7 +185,7 @@ export async function deleteDokumentAction(
   // ovdje (ne samo u RLS-u) jer removeDokument ide service-role klijentom koji RLS zaobilazi.
   const korisnik = await getTrenutniKorisnik()
   if (!korisnik || !jeAdmin(korisnik.uloga)) {
-    return { ok: false, message: "Samo administrator može brisati dokumente." }
+    return { ok: false, message: t("samoAdminBrise") }
   }
 
   const supabase = await createServerSupabaseClient()
@@ -189,7 +194,7 @@ export async function deleteDokumentAction(
     .select("storage_path, klijent_id")
     .eq("id", dokument_id)
     .maybeSingle()
-  if (!dok) return { ok: false, message: "Dokument ne postoji." }
+  if (!dok) return { ok: false, message: t("dokumentNePostoji") }
 
   // Prvo DB red pod RLS-om uz potvrdu da je stvarno obrisan, pa tek onda fajl —
   // inače bi korisnik kojem RLS blokira delete (0 pogođenih redova, bez greške)
@@ -203,7 +208,7 @@ export async function deleteDokumentAction(
     .select("id")
   if (error) return { ok: false, message: error.message }
   if (!deleted || deleted.length === 0) {
-    return { ok: false, message: "Dokument ne postoji ili nemate pristup." }
+    return { ok: false, message: t("dokumentNePostojiIliNemaPristupa") }
   }
   try {
     await removeDokument(dok.storage_path)
@@ -218,9 +223,9 @@ export async function deleteDokumentAction(
 // ─── Upload na nivou klijenta / ugovora (ne mora biti vezan za termin) ────────
 
 const uploadKlijentSchema = z.object({
-  klijent_id: z.string().uuid("Klijent je obavezan"),
+  klijent_id: z.string().uuid(t("klijentObavezan")),
   ugovor_id: z.union([z.string().uuid(), z.literal("").transform(() => undefined)]).optional(),
-  tip: z.string().refine(jeValidanTip, "Neispravan tip"),
+  tip: z.string().refine(jeValidanTip, t("tipNeispravan")),
 })
 
 export async function uploadKlijentDokumentAction(
@@ -236,21 +241,21 @@ export async function uploadKlijentDokumentAction(
   const { klijent_id, ugovor_id, tip } = parsed.data
 
   const file = formData.get("file")
-  if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Izaberite fajl." }
+  if (!(file instanceof File) || file.size === 0) return { ok: false, message: t("izaberiteFajl") }
   if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
-    return { ok: false, message: "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp)." }
+    return { ok: false, message: t("nedozvoljenTip") }
   }
-  if (file.size > MAX_BYTES) return { ok: false, message: "Fajl je veći od 10 MB." }
+  if (file.size > MAX_BYTES) return { ok: false, message: t("fajlPrevelik", { max: 10 }) }
 
   const supabase = await createServerSupabaseClient()
   // Pristup PRIJE upload-a u storage: RLS vraća null ako korisnik nema pristup klijentu
   // → izbjegava tranzitni orphan blob za neovlaštenog korisnika.
   const { data: kl } = await supabase.from("klijenti").select("id").eq("id", klijent_id).maybeSingle()
-  if (!kl) return { ok: false, message: "Klijent ne postoji ili nemate pristup." }
+  if (!kl) return { ok: false, message: t("klijentNePostojiIliNemaPristupa") }
   // Integritet: ako je dat ugovor, mora pripadati klijentu
   if (ugovor_id) {
     const { data: ug } = await supabase.from("ugovori").select("id").eq("id", ugovor_id).eq("klijent_id", klijent_id).maybeSingle()
-    if (!ug) return { ok: false, message: "Ugovor ne pripada klijentu." }
+    if (!ug) return { ok: false, message: t("ugovorNePripadaKlijentu") }
   }
 
   const naziv = safeName(file.name)
@@ -262,7 +267,7 @@ export async function uploadKlijentDokumentAction(
   try {
     await uploadDokument(path, bytes, file.type)
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Upload nije uspio." }
+    return { ok: false, message: e instanceof Error ? e.message : t("uploadNijeUspio") }
   }
 
   const { error } = await supabase.from("dokumenti").insert({

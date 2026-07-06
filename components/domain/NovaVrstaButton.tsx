@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Plus } from "lucide-react"
 import {
   Dialog,
@@ -20,6 +21,8 @@ const initial: ActionResult = { ok: true }
 
 export function NovaVrstaButton() {
   const router = useRouter()
+  const t = useTranslations("termini.novaVrsta")
+  const tc = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(createVrsta, initial)
   const submitted = useRef(false)
@@ -37,13 +40,13 @@ export function NovaVrstaButton() {
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid="nova-vrsta-btn">
-            <Plus className="w-4 h-4" aria-hidden /> Nova vrsta
+            <Plus className="w-4 h-4" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="nova-vrsta-sheet">
         <DialogHeader>
-          <DialogTitle>Nova vrsta pregleda</DialogTitle>
+          <DialogTitle>{t("naslov")}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -55,32 +58,32 @@ export function NovaVrstaButton() {
           data-testid="nova-vrsta-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">Naziv *</span>
+            <span className="text-slate-600">{t("poljeNaziv")}</span>
             <Input
               name="naziv"
               required
-              placeholder="npr. Pregled ventilacionog sistema"
+              placeholder={t("placeholderNaziv")}
               data-testid="nova-vrsta-naziv"
             />
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Interval (mjeseci)</span>
+            <span className="text-slate-600">{t("poljeInterval")}</span>
             <Input
               name="interval"
               type="number"
               min={1}
               max={120}
-              placeholder="prazno = bez auto-zakazivanja"
+              placeholder={t("placeholderInterval")}
               data-testid="nova-vrsta-interval"
             />
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Zakonski osnov</span>
+            <span className="text-slate-600">{t("poljeZakonskiOsnov")}</span>
             <Input
               name="zakonski_osnov"
-              placeholder="npr. Pravilnik… (opciono)"
+              placeholder={t("placeholderZakonskiOsnov")}
               data-testid="nova-vrsta-osnov"
             />
           </label>
@@ -95,12 +98,12 @@ export function NovaVrstaButton() {
             <DialogClose
               render={
                 <Button type="button" variant="outline" data-testid="nova-vrsta-cancel">
-                  Otkaži
+                  {tc("otkazi")}
                 </Button>
               }
             />
             <Button type="submit" disabled={pending} data-testid="nova-vrsta-submit">
-              {pending ? "Kreiram…" : "Kreiraj vrstu"}
+              {pending ? t("kreiram") : t("kreirajVrstu")}
             </Button>
           </DialogFooter>
         </form>

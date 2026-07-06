@@ -2,10 +2,17 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { env } from "@/lib/env"
+import { href } from "@/i18n/routes"
 
 // /api/cron je Bearer-authed (CRON_SECRET) i nema Supabase user cookie → mora
 // zaobići auth gate, inače getUser()=null → redirect /prijava (gasi podsjetnike).
-const PUBLIC = ["/prijava", "/zaboravljena-lozinka", "/auth", "/api/cron"]
+// PUBLIC mora sadržavati putanje na JEZIKU DEPLOYMENTA — proxy vidi `pathname` PRIJE
+// nego next.config rewrite prevede zahtjev natrag na fizičku (sr) rutu (middleware
+// se izvršava prije "afterFiles" rewrites-a u Next routing lifecycle-u). Za sr je
+// href() identitet pa se ništa ne mijenja; bez ovoga bi za de/en zahtjev za npr.
+// /anmeldung (prevedeni /prijava) bio tretiran kao zaštićena ruta → redirekcija
+// nazad na href("/prijava") === "/anmeldung" → beskonačna petlja.
+const PUBLIC = [href("/prijava"), href("/zaboravljena-lozinka"), "/auth", "/api/cron"]
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -55,7 +62,7 @@ export async function proxy(request: NextRequest) {
   )
 
   if (!user && !isPublic) {
-    return NextResponse.redirect(new URL("/prijava", request.url))
+    return NextResponse.redirect(new URL(href("/prijava"), request.url))
   }
 
   if (user && !isPublic) {
@@ -74,7 +81,7 @@ export async function proxy(request: NextRequest) {
     if (profil && profil.aktivan === false) {
       await supabase.auth.signOut()
 
-      const url = new URL("/prijava", request.url)
+      const url = new URL(href("/prijava"), request.url)
       url.searchParams.set("greska", "deaktiviran")
 
       // Copy session-clearing cookies set by signOut() onto the redirect response.

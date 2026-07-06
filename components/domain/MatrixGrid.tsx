@@ -1,5 +1,9 @@
+"use client"
+
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import type { DerivedStatus } from "@/lib/termini"
+import { href as localizedHref } from "@/i18n/routes"
 import { cn } from "@/lib/utils"
 import type { MatrixRow, MatrixColumn, MatrixCell } from "@/lib/matrix"
 
@@ -34,7 +38,7 @@ export function MatrixGrid({
   columns,
   rows,
   currentSearch,
-  emptyMessage = "Nema podataka.",
+  emptyMessage,
   multiHref,
   fillWidth = false,
 }: {
@@ -47,13 +51,14 @@ export function MatrixGrid({
   // false → sadržaj-široke kolone + horizontalni scroll (mjesec-mod, puno firmi)
   fillWidth?: boolean
 }) {
+  const t = useTranslations("plan.matrixGrid")
   if (rows.length === 0) {
     return (
       <div
         data-testid="matrix-empty"
         className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
       >
-        {emptyMessage}
+        {emptyMessage ?? t("prazno")}
       </div>
     )
   }
@@ -69,7 +74,7 @@ export function MatrixGrid({
               "sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-medium text-slate-600 border-r border-slate-200",
               fillWidth ? "w-[220px]" : "min-w-[220px]",
             )}>
-              Vrsta pregleda / ispitivanja
+              {t("vrstaHeader")}
             </th>
             {columns.map((c) => (
               <th
@@ -96,7 +101,7 @@ export function MatrixGrid({
                   cell && cell.brojUCeliji > 1 && multiHref
                     ? multiHref(row.rowId, c.id)
                     : cell
-                    ? `/plan-aktivnosti?${withParam(currentSearch, "selected", cell.terminId)}`
+                    ? localizedHref(`/plan-aktivnosti?${withParam(currentSearch, "selected", cell.terminId)}`)
                     : ""
                 return (
                   <td
@@ -110,7 +115,7 @@ export function MatrixGrid({
                         href={href}
                         data-testid="matrix-cell-filled"
                         data-status={cell.status}
-                        title={cell.brojUCeliji > 1 ? "Više termina — otvori listu" : undefined}
+                        title={cell.brojUCeliji > 1 ? t("viseTerminaTitle") : undefined}
                         className={cn(
                           "inline-block w-full rounded px-1.5 py-1 tabular-nums",
                           CELL_CLASS[cell.status],

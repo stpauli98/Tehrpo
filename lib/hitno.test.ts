@@ -23,4 +23,46 @@ describe("rokRelativnaOznaka", () => {
   it("prelazak mjeseca računa cijele dane", () => {
     expect(rokRelativnaOznaka("2026-01-20", "2026-02-01")).toEqual({ text: "kasni 12 dana", tone: "danger" })
   })
+  it("21 dana kasni ostaje 'dan' (sr n%10 pravilo) — sr izbjegava ICU =1 zamku", () => {
+    expect(rokRelativnaOznaka("2026-05-01", "2026-05-22").text).toBe("kasni 21 dan")
+  })
+  it("sr eksplicitno → identično defaultu (byte-identical)", () => {
+    expect(rokRelativnaOznaka("2026-06-20", "2026-06-22", "sr")).toEqual({ text: "kasni 2 dana", tone: "danger" })
+  })
+})
+
+describe("rokRelativnaOznaka — en", () => {
+  it("prošli rok → '# days overdue'", () => {
+    expect(rokRelativnaOznaka("2026-06-20", "2026-06-22", "en")).toEqual({ text: "2 days overdue", tone: "danger" })
+  })
+  it("kasni 1 dan (singular)", () => {
+    expect(rokRelativnaOznaka("2026-06-21", "2026-06-22", "en")).toEqual({ text: "1 day overdue", tone: "danger" })
+  })
+  it("rok danas → 'due today'", () => {
+    expect(rokRelativnaOznaka("2026-06-22", "2026-06-22", "en")).toEqual({ text: "due today", tone: "danger" })
+  })
+  it("budući 1 dan → 'due in 1 day'", () => {
+    expect(rokRelativnaOznaka("2026-06-23", "2026-06-22", "en")).toEqual({ text: "due in 1 day", tone: "warning" })
+  })
+  it("budući 5 dana → 'due in 5 days'", () => {
+    expect(rokRelativnaOznaka("2026-06-27", "2026-06-22", "en")).toEqual({ text: "due in 5 days", tone: "warning" })
+  })
+})
+
+describe("rokRelativnaOznaka — de", () => {
+  it("prošli rok → '# Tage überfällig'", () => {
+    expect(rokRelativnaOznaka("2026-06-20", "2026-06-22", "de")).toEqual({ text: "2 Tage überfällig", tone: "danger" })
+  })
+  it("kasni 1 dan (singular)", () => {
+    expect(rokRelativnaOznaka("2026-06-21", "2026-06-22", "de")).toEqual({ text: "1 Tag überfällig", tone: "danger" })
+  })
+  it("rok danas → 'heute fällig'", () => {
+    expect(rokRelativnaOznaka("2026-06-22", "2026-06-22", "de")).toEqual({ text: "heute fällig", tone: "danger" })
+  })
+  it("budući 1 dan → 'fällig in 1 Tag'", () => {
+    expect(rokRelativnaOznaka("2026-06-23", "2026-06-22", "de")).toEqual({ text: "fällig in 1 Tag", tone: "warning" })
+  })
+  it("budući 5 dana → 'fällig in 5 Tagen'", () => {
+    expect(rokRelativnaOznaka("2026-06-27", "2026-06-22", "de")).toEqual({ text: "fällig in 5 Tagen", tone: "warning" })
+  })
 })

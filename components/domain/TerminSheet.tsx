@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -40,6 +41,8 @@ export function TerminSheet({
 }) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations("termini.sheet")
+  const tc = useTranslations("common")
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
   const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)
@@ -50,7 +53,7 @@ export function TerminSheet({
   const prevUpdPending = useRef(updatePending)
   useEffect(() => {
     if (prevUpdPending.current && !updatePending && updateState.ok) {
-      toast.success("Izmjene sačuvane")
+      toast.success(t("toastIzmjeneSacuvane"))
       if (termin.id) {
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
@@ -59,12 +62,12 @@ export function TerminSheet({
       void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
     }
     prevUpdPending.current = updatePending
-  }, [updatePending, updateState, queryClient, termin.id])
+  }, [updatePending, updateState, queryClient, termin.id, t])
 
   const prevMarkPending = useRef(markPending)
   useEffect(() => {
     if (prevMarkPending.current && !markPending && markState.ok) {
-      toast.success("Termin označen izvršenim")
+      toast.success(t("toastOznacenIzvrsenim"))
       if (termin.id) {
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
@@ -73,12 +76,12 @@ export function TerminSheet({
       void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
     }
     prevMarkPending.current = markPending
-  }, [markPending, markState, queryClient, termin.id])
+  }, [markPending, markState, queryClient, termin.id, t])
 
   const prevOtkazPending = useRef(otkazPending)
   useEffect(() => {
     if (prevOtkazPending.current && !otkazPending && otkazState.ok) {
-      toast.success("Termin otkazan")
+      toast.success(t("toastOtkazan"))
       if (termin.id) {
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
@@ -87,7 +90,7 @@ export function TerminSheet({
       void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
     }
     prevOtkazPending.current = otkazPending
-  }, [otkazPending, otkazState, queryClient, termin.id])
+  }, [otkazPending, otkazState, queryClient, termin.id, t])
 
   function close() {
     router.push(closeHref)
@@ -101,14 +104,14 @@ export function TerminSheet({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span>{termin.klijent_naziv ?? "Termin"}</span>
+            <span>{termin.klijent_naziv ?? t("naslovFallback")}</span>
             <StatusBadge status={termin.status_izvedeni} stvarniStatus={termin.status} datumZakazan={termin.datum_zakazan} />
           </DialogTitle>
           <p className="text-sm text-slate-500">
             {termin.vrsta_naziv ?? "—"}
             {termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
           </p>
-          <p className="text-xs text-slate-400">Rok: {formatDatum(termin.rok_dospijeca)}</p>
+          <p className="text-xs text-slate-400">{t("rok", { datum: formatDatum(termin.rok_dospijeca) })}</p>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -124,10 +127,10 @@ export function TerminSheet({
             data-testid="termin-edit-form"
           >
             <input type="hidden" name="id" value={termin.id ?? ""} />
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Detalji</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("detaljiNaslov")}</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm">
-                <span className="text-slate-600">Datum zakazan</span>
+                <span className="text-slate-600">{t("poljeDatumZakazan")}</span>
                 <Input
                   type="date"
                   name="datum_zakazan"
@@ -137,7 +140,7 @@ export function TerminSheet({
               </label>
               {termin.status === "izvrseno" && (
                 <label className="block text-sm">
-                  <span className="text-slate-600">Datum izvršenja</span>
+                  <span className="text-slate-600">{t("poljeDatumIzvrsenja")}</span>
                   <Input
                     type="date"
                     name="datum_izvrsenja"
@@ -147,16 +150,16 @@ export function TerminSheet({
                 </label>
               )}
               <label className="block text-sm">
-                <span className="text-slate-600">Zaduženi</span>
+                <span className="text-slate-600">{t("poljeZaduzeni")}</span>
                 <Input
                   name="zaduzeni"
                   defaultValue={termin.zaduzeni ?? ""}
-                  placeholder="npr. Marija K."
+                  placeholder={t("placeholderZaduzeni")}
                   data-testid="edit-zaduzeni"
                 />
               </label>
               <label className="block text-sm col-span-2">
-                <span className="text-slate-600">Napomena</span>
+                <span className="text-slate-600">{t("poljeNapomena")}</span>
                 <Input
                   name="napomena"
                   defaultValue={termin.napomena ?? ""}
@@ -170,21 +173,21 @@ export function TerminSheet({
               </p>
             )}
             <Button type="submit" disabled={updatePending} data-testid="edit-save">
-              {updatePending ? "Spremam…" : "Spremi izmjene"}
+              {updatePending ? t("spremam") : t("spremiIzmjene")}
             </Button>
           </form>
 
           {/* Akcije — Označi izvršeno + Otkaži, jedno pored drugog */}
           {termin.status !== "izvrseno" && (
             <section className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Akcije</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("akcijeNaslov")}</p>
               <div className="grid grid-cols-2 gap-3 items-start">
                 <form
                   action={markAction}
                   className="space-y-2 rounded-lg border border-slate-200 p-3"
                   data-testid="mark-done-form"
                 >
-                  <p className="text-sm font-medium">Označi kao izvršeno</p>
+                  <p className="text-sm font-medium">{t("oznaciKaoIzvrseno")}</p>
                   <input type="hidden" name="id" value={termin.id ?? ""} />
                   <Input
                     type="date"
@@ -205,10 +208,10 @@ export function TerminSheet({
                     className="w-full"
                     data-testid="mark-done-submit"
                   >
-                    {markPending ? "Označavam…" : "Označi izvršeno"}
+                    {markPending ? t("oznacavam") : t("oznaciIzvrseno")}
                   </Button>
                   <p className="text-xs text-slate-400">
-                    Sistem automatski kreira sljedeći termin u ciklusu.
+                    {t("autoCiklus")}
                   </p>
                 </form>
 
@@ -219,7 +222,7 @@ export function TerminSheet({
                     className="space-y-2 rounded-lg border border-slate-200 p-3"
                     data-testid="otkazi-form"
                   >
-                    <p className="text-sm font-medium">Otkaži termin</p>
+                    <p className="text-sm font-medium">{t("otkaziTermin")}</p>
                     <input type="hidden" name="id" value={termin.id ?? ""} />
                     {otkazState.ok === false && otkazState.message && (
                       <p className="text-sm text-red-600" role="alert">{otkazState.message}</p>
@@ -232,7 +235,7 @@ export function TerminSheet({
                         className="w-full text-red-600 border-red-200 hover:bg-red-50"
                         data-testid="otkazi-arm"
                       >
-                        Otkaži termin
+                        {t("otkaziTermin")}
                       </Button>
                     ) : (
                       <div className="space-y-2">
@@ -243,10 +246,10 @@ export function TerminSheet({
                           className="w-full text-red-600 border-red-300 hover:bg-red-50"
                           data-testid="otkazi-submit"
                         >
-                          {otkazPending ? "Otkazujem…" : "Potvrdi otkazivanje"}
+                          {otkazPending ? t("otkazujem") : t("potvrdiOtkazivanje")}
                         </Button>
                         <Button type="button" variant="outline" className="w-full" onClick={() => setOtkazArmed(false)}>
-                          Odustani
+                          {t("odustani")}
                         </Button>
                       </div>
                     )}
@@ -261,9 +264,9 @@ export function TerminSheet({
 
           {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
           <section data-testid="sheet-istorija">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Istorija</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">{t("istorijaNaslov")}</p>
             {istorija.length === 0 ? (
-              <p className="mt-1 text-sm text-slate-500">Nema prethodnih izvršenih ciklusa.</p>
+              <p className="mt-1 text-sm text-slate-500">{t("istorijaPrazno")}</p>
             ) : (
               <ul className="mt-2 space-y-1">
                 {istorija.map((h) => (
@@ -284,7 +287,7 @@ export function TerminSheet({
 
         <DialogFooter>
           <Button variant="outline" onClick={close} data-testid="sheet-close">
-            Zatvori
+            {tc("zatvori")}
           </Button>
         </DialogFooter>
       </DialogContent>

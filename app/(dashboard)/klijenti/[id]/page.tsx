@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { ChevronLeft, MapPin, Download } from "lucide-react"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { InfoIkona } from "@/components/ui/info-ikona"
@@ -18,6 +19,7 @@ import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
 import { formatDatum, addMjeseci } from "@/lib/date"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
@@ -33,6 +35,7 @@ export default async function KlijentDetailPage({
   params: Promise<{ id: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const t = await getTranslations("klijenti.detalj")
   const { id } = await params
   const sp = await searchParams
   const tab = typeof sp.tab === "string" && VALID_TABS.includes(sp.tab) ? sp.tab : "termini"
@@ -80,11 +83,11 @@ export default async function KlijentDetailPage({
     const interval = p.interval_mjeseci ?? (p.vrsta_provjere as { podrazumevani_interval_mjeseci: number | null } | null)?.podrazumevani_interval_mjeseci ?? null
     // NULL lokacija se poklapa samo sa NULL lokacijom (?? null normalizuje undefined iz view-a)
     const istiPar = termini.filter(
-      (t) => t.vrsta_provjere_id === p.vrsta_provjere_id && (t.lokacija_id ?? null) === (p.lokacija_id ?? null),
+      (term) => term.vrsta_provjere_id === p.vrsta_provjere_id && (term.lokacija_id ?? null) === (p.lokacija_id ?? null),
     )
-    const aktivni = istiPar.find((t) => AKTIVNI_STATUSI.includes(t.status_izvedeni ?? ""))
+    const aktivni = istiPar.find((term) => AKTIVNI_STATUSI.includes(term.status_izvedeni ?? ""))
     const zadnjeIzvrsenje = istiPar.reduce<string | null>(
-      (max, t) => (t.status === "izvrseno" && t.datum_izvrsenja && (!max || t.datum_izvrsenja > max) ? t.datum_izvrsenja : max),
+      (max, term) => (term.status === "izvrseno" && term.datum_izvrsenja && (!max || term.datum_izvrsenja > max) ? term.datum_izvrsenja : max),
       null,
     )
     const zadnji = zadnjeIzvrsenje ?? (p.zadnji_datum as string | null)
@@ -118,11 +121,11 @@ export default async function KlijentDetailPage({
   return (
     <div className="space-y-6">
       <Link
-        href="/klijenti"
+        href={href("/klijenti")}
         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
         data-testid="nazad-klijenti"
       >
-        <ChevronLeft className="w-4 h-4" aria-hidden /> Klijenti
+        <ChevronLeft className="w-4 h-4" aria-hidden /> {t("nazad")}
       </Link>
 
       <div className="flex items-start justify-between gap-4">
@@ -193,13 +196,19 @@ export default async function KlijentDetailPage({
           <div className="rounded-xl border border-slate-200 overflow-hidden">
           {termini.length === 0 ? (
             <div className="p-8 text-center text-sm text-slate-500">
-              Nema termina za ovog klijenta. Dodajte provjeru da se generiše prvi termin.
+              {t("terminiTab.prazno")}
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  {["Datum roka", "Vrsta", "Lokacija", "Status", "Zaduženi"].map((c) => (
+                  {[
+                    t("terminiTab.kolone.datumRoka"),
+                    t("terminiTab.kolone.vrsta"),
+                    t("terminiTab.kolone.lokacija"),
+                    t("terminiTab.kolone.status"),
+                    t("terminiTab.kolone.zaduzeni"),
+                  ].map((c) => (
                     <th
                       key={c}
                       className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500"
@@ -210,15 +219,15 @@ export default async function KlijentDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {termini.map((t) => (
-                  <tr key={t.id ?? ""} className="border-t border-slate-100">
-                    <td className="px-3 py-2 tabular-nums whitespace-nowrap">{formatDatum(t.rok_dospijeca)}</td>
-                    <td className="px-3 py-2 text-slate-600">{t.vrsta_naziv ?? "—"}</td>
-                    <td className="px-3 py-2 text-slate-600">{t.lokacija_naziv ?? "—"}</td>
+                {termini.map((term) => (
+                  <tr key={term.id ?? ""} className="border-t border-slate-100">
+                    <td className="px-3 py-2 tabular-nums whitespace-nowrap">{formatDatum(term.rok_dospijeca)}</td>
+                    <td className="px-3 py-2 text-slate-600">{term.vrsta_naziv ?? "—"}</td>
+                    <td className="px-3 py-2 text-slate-600">{term.lokacija_naziv ?? "—"}</td>
                     <td className="px-3 py-2">
-                      <StatusBadge status={t.status_izvedeni} stvarniStatus={t.status} datumZakazan={t.datum_zakazan} />
+                      <StatusBadge status={term.status_izvedeni} stvarniStatus={term.status} datumZakazan={term.datum_zakazan} />
                     </td>
-                    <td className="px-3 py-2 text-slate-600">{t.zaduzeni ?? "—"}</td>
+                    <td className="px-3 py-2 text-slate-600">{term.zaduzeni ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -237,7 +246,7 @@ export default async function KlijentDetailPage({
               klijentId={id}
               kontakti={kontakti}
               searchable
-              info="Puni spisak kontakata firme sa pretragom po imenu i funkciji."
+              info={t("kontaktiTab.infoPuniSpisak")}
             />
           </section>
 
@@ -245,9 +254,9 @@ export default async function KlijentDetailPage({
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-slate-400" aria-hidden />
-                <h3 className="text-sm font-semibold text-slate-700">Kontakti lokacija</h3>
+                <h3 className="text-sm font-semibold text-slate-700">{t("kontaktiTab.naslovLokacije")}</h3>
                 <InfoIkona
-                  tekst="Kontakt osobe pojedinačnih lokacija, izvedene iz podataka lokacije. Uređuju se u tabu Lokacije."
+                  tekst={t("kontaktiTab.infoLokacije")}
                   testId="info-sekcija-kontakti-lokacija"
                 />
               </div>
@@ -267,10 +276,10 @@ export default async function KlijentDetailPage({
                             <span className="font-normal text-slate-400"> · {l.naziv}</span>
                           </span>
                           <Link
-                            href={`/klijenti/${id}?tab=lokacije`}
+                            href={href(`/klijenti/${id}?tab=lokacije`)}
                             className="shrink-0 text-xs text-brand hover:underline"
                           >
-                            Uredi u Lokacijama
+                            {t("kontaktiTab.urediULokacijama")}
                           </Link>
                         </div>
                         {(l.kontakt_telefon || l.kontakt_email) && (
@@ -291,13 +300,19 @@ export default async function KlijentDetailPage({
         <div data-testid="tab-dokumenti-content" className="space-y-3">
           <KlijentDokumentUpload klijentId={id} />
           {dokumenti.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500">Nema dokumenata za ovog klijenta.</div>
+            <div className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500">{t("dokumentiTab.prazno")}</div>
           ) : (
             <div className="rounded-xl border border-slate-200 overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    {["Naziv", "Tip", "Izvor", "Datum", ""].map((c) => (
+                    {[
+                      t("dokumentiTab.kolone.naziv"),
+                      t("dokumentiTab.kolone.tip"),
+                      t("dokumentiTab.kolone.izvor"),
+                      t("dokumentiTab.kolone.datum"),
+                      "",
+                    ].map((c) => (
                       <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                         {c}
                       </th>
@@ -309,13 +324,13 @@ export default async function KlijentDetailPage({
                     <tr key={d.id} className="border-t border-slate-100">
                       <td className="px-3 py-2">{d.naziv}</td>
                       <td className="px-3 py-2 text-slate-500">{d.tip}</td>
-                      <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? "AI zapisnik" : "Upload"}</td>
+                      <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? t("dokumentiTab.izvorAi") : t("dokumentiTab.izvorUpload")}</td>
                       <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
                       <td className="px-3 py-2">
                         <span className="flex items-center justify-end gap-1">
-                          <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label="Preuzmi">
+                          <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label={t("dokumentiTab.preuzmi")}>
                             <Download className="h-4 w-4" aria-hidden />
-                            <Tooltip>Preuzmi</Tooltip>
+                            <Tooltip>{t("dokumentiTab.preuzmi")}</Tooltip>
                           </a>
                           {/* Renderuje se samo adminu (samogating u komponenti; server akcija nameće isto pravilo) */}
                           <ObrisiDokumentButton dokumentId={d.id} testId="klijent-dokument-delete" />

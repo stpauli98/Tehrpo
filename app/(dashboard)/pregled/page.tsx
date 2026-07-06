@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Calendar, AlertTriangle, CheckCircle, Clock } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { StatCard } from "@/components/domain/StatCard"
@@ -6,8 +7,10 @@ import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/Opter
 import { HitnoKasniList } from "@/components/domain/HitnoKasniList"
 import { getPredstojeciCount, getHitnoKasni } from "@/lib/termini"
 import { currentYear, todayIso } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 export default async function PregledPage() {
+  const t = await getTranslations("pregled")
   const supabase = await createServerSupabaseClient()
   const godina = currentYear()
   const mjesec = Number(todayIso().slice(5, 7))
@@ -31,32 +34,34 @@ export default async function PregledPage() {
     izvrseno_ovog_mjeseca: number
   }
   const opterecenje = (opterecenjeRes.data ?? []) as OpterecenjeRow[]
+  const terminiLabel = t("statCard.terminiOvogMjeseca.label")
+  const kasniLabel = t("statCard.kasniRokovi.label")
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Pregled</h1>
-        <p className="text-sm text-slate-500">Rokovi i opterećenje</p>
+        <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
+        <p className="text-sm text-slate-500">{t("podnaslov")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Klikabilne: vode na filter koji TAČNO odgovara broju na kartici */}
-        <Link href={`/plan-aktivnosti?view=lista&mjesec=${mjesec}`} className="block" aria-label="Termini ovog mjeseca">
+        <Link href={href(`/plan-aktivnosti?view=lista&mjesec=${mjesec}`)} className="block" aria-label={terminiLabel}>
           <StatCard
-            label="Termini ovog mjeseca"
+            label={terminiLabel}
             value={stats.ovog_mjeseca}
-            sub="rok dospijeća ovaj mjesec"
+            sub={t("statCard.terminiOvogMjeseca.sub")}
             icon={Calendar}
             interactive
             testId="stat-card"
           />
         </Link>
-        <Link href="/plan-aktivnosti?view=lista&status=kasni&mjesec=svi" className="block" aria-label="Kasni rokovi">
+        <Link href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")} className="block" aria-label={kasniLabel}>
           <StatCard
-            label="Kasni rokovi"
+            label={kasniLabel}
             value={stats.kasni}
             tone="danger"
-            sub="zahtijevaju akciju"
+            sub={t("statCard.kasniRokovi.sub")}
             icon={AlertTriangle}
             interactive
             testId="stat-card"
@@ -65,18 +70,18 @@ export default async function PregledPage() {
         {/* Neklikabilne: metrika nema 1:1 filter u Termini listi (mjeri se po
             datumu izvršenja / prozoru od 30 dana), pa ne vode na pogrešan prikaz */}
         <StatCard
-          label="Izvršeni ovog mjeseca"
+          label={t("statCard.izvrseniOvogMjeseca.label")}
           value={stats.izvrseno_ovog_mjeseca}
           tone="success"
-          sub="završeno ovaj mjesec"
+          sub={t("statCard.izvrseniOvogMjeseca.sub")}
           icon={CheckCircle}
           testId="stat-card"
         />
         <StatCard
-          label="Predstojeći (30 dana)"
+          label={t("statCard.predstojeci.label")}
           value={predstojeci}
           tone="warning"
-          sub="još neizvršeni"
+          sub={t("statCard.predstojeci.sub")}
           icon={Clock}
           testId="stat-card"
         />

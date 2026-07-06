@@ -2,15 +2,15 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTransition } from "react"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { PLAN_VIEWS, buildViewHref, type PlanView } from "@/lib/plan-view"
-
-const LABELE: Record<PlanView, string> = { lista: "Lista", kalendar: "Kalendar", matrica: "Matrica" }
 
 export function PlanViewSwitcher({ current }: { current: PlanView }) {
   const router = useRouter()
   const params = useSearchParams()
   const [pending, startTransition] = useTransition()
+  const t = useTranslations("plan.viewSwitcher")
 
   return (
     <div className="flex items-center gap-1" data-testid="plan-view-switcher" data-pending={pending}>
@@ -30,7 +30,7 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
               : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50",
           )}
         >
-          {LABELE[v]}
+          {t(v)}
         </button>
       ))}
     </div>

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { UploadCloud, FileText, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -9,10 +10,6 @@ import { uploadKlijentDokumentAction, type ActionResult } from "@/app/(dashboard
 import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
 
 const initial: ActionResult = { ok: true }
-const TIP_LABEL = {
-  strucni_nalaz: "Stručni nalaz", zapisnik: "Zapisnik", ugovor: "Ugovor",
-  ponuda: "Ponuda", fotografija: "Fotografija", ostalo: "Ostalo",
-} satisfies Record<(typeof DOKUMENT_TIPOVI)[number], string>
 
 const MAX_MB = 10
 const MAX_BYTES = MAX_MB * 1024 * 1024
@@ -24,6 +21,7 @@ function formatBytes(n: number): string {
 }
 
 export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
+  const t = useTranslations("klijenti.dokumentUpload")
   const router = useRouter()
   const [state, action, pending] = useActionState(uploadKlijentDokumentAction, initial)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -48,7 +46,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   function prihvati(f: File | undefined): boolean {
     if (!f) return false
     if (f.size > MAX_BYTES) {
-      setGreska(`Fajl je prevelik (${formatBytes(f.size)}). Maksimalno ${MAX_MB} MB.`)
+      setGreska(t("fajlPrevelik", { velicina: formatBytes(f.size), max: MAX_MB }))
       if (fileRef.current) fileRef.current.value = ""
       setFile(null)
       return false
@@ -117,7 +115,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); ocisti() }}
-              aria-label="Ukloni fajl"
+              aria-label={t("ukloniFajlAriaLabel")}
               className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
@@ -126,9 +124,9 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
         ) : (
           <>
             <p className="text-sm font-medium text-slate-700">
-              Prevuci dokument ovdje ili <span className="text-brand">klikni za odabir</span>
+              {t("prevuciDokument")} <span className="text-brand">{t("klikniZaOdabir")}</span>
             </p>
-            <p className="text-xs text-slate-400">PDF, DOCX, PNG, JPG, WEBP</p>
+            <p className="text-xs text-slate-400">{t("formatiHint")}</p>
           </>
         )}
       </div>
@@ -145,18 +143,18 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <label className="block text-sm">
-          <span className="text-slate-600">Tip dokumenta</span>
+          <span className="text-slate-600">{t("tipDokumentaLabel")}</span>
           <select
             name="tip"
             defaultValue="ugovor"
             className="mt-1 block rounded-md border border-slate-300 px-2 py-1.5 text-sm"
             data-testid="klijent-dok-tip"
           >
-            {DOKUMENT_TIPOVI.map((t) => <option key={t} value={t}>{TIP_LABEL[t]}</option>)}
+            {DOKUMENT_TIPOVI.map((tip) => <option key={tip} value={tip}>{t(`tipovi.${tip}`)}</option>)}
           </select>
         </label>
         <Button type="submit" disabled={pending || !file} data-testid="klijent-dok-submit">
-          {pending ? "Šaljem…" : "Dodaj dokument"}
+          {pending ? t("submitPending") : t("submit")}
         </Button>
       </div>
 

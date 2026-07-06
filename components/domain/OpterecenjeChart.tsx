@@ -1,6 +1,8 @@
 import Link from "next/link"
-import { MONTHS_BS } from "@/lib/date"
+import { getTranslations } from "next-intl/server"
+import { monthName } from "@/lib/date"
 import { cn } from "@/lib/utils"
+import { href } from "@/i18n/routes"
 
 export type OpterecenjeRow = {
   mjesec: number
@@ -22,7 +24,7 @@ function LegendaStavka({ boja, tekst }: { boja: string; tekst: string }) {
   )
 }
 
-export function OpterecenjeChart({
+export async function OpterecenjeChart({
   data,
   currentMonth,
   godina,
@@ -32,6 +34,7 @@ export function OpterecenjeChart({
   // Kad je zadana godina, svaki mjesec je link na Prikaz "Po mjesecu" za taj mjesec.
   godina?: number
 }) {
+  const t = await getTranslations("pregled.opterecenje")
   // Popuni svih 12 mjeseci (RPC vraća samo mjesece sa podacima)
   const byMonth = new Map(data.map((r) => [r.mjesec, r]))
   const months = Array.from({ length: 12 }, (_, i) => byMonth.get(i + 1) ?? {
@@ -46,13 +49,13 @@ export function OpterecenjeChart({
     <div data-testid="opterecenje-chart">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-slate-800">Opterećenje po mjesecima</p>
-          <p className="text-xs text-slate-400">Broj termina po statusu</p>
+          <p className="text-sm font-semibold text-slate-800">{t("naslov")}</p>
+          <p className="text-xs text-slate-400">{t("podnaslov")}</p>
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-500">
-          <LegendaStavka boja="bg-emerald-500" tekst="Izvršeno" />
-          <LegendaStavka boja="bg-rose-500" tekst="Kasni" />
-          <LegendaStavka boja="bg-sky-400" tekst="U planu" />
+          <LegendaStavka boja="bg-emerald-500" tekst={t("legenda.izvrseno")} />
+          <LegendaStavka boja="bg-rose-500" tekst={t("legenda.kasni")} />
+          <LegendaStavka boja="bg-sky-400" tekst={t("legenda.uPlanu")} />
         </div>
       </div>
 
@@ -74,7 +77,7 @@ export function OpterecenjeChart({
         {/* Barovi */}
         <div className="relative flex h-full items-end gap-2">
           {months.map((m) => {
-            const naziv = MONTHS_BS[m.mjesec - 1] ?? ""
+            const naziv = monthName(m.mjesec)
             const pct = (seg(m) / max) * 100
             const jeTekuci = currentMonth === m.mjesec
             const bar = (
@@ -85,7 +88,7 @@ export function OpterecenjeChart({
                 )}
                 // Min 4% da i mali mjeseci ostanu vidljivi; 0 mjeseci → bez bara.
                 style={{ height: `${seg(m) > 0 ? Math.max(pct, 4) : 0}%` }}
-                title={`${naziv}: ${m.ukupno} termina`}
+                title={t("barTitle", { naziv, count: m.ukupno })}
               >
                 {/* stacked: izvrseno (zeleno) → kasni (crveno) → u_planu (plavo, na vrhu) */}
                 <div className="w-full bg-emerald-500" style={{ flexGrow: m.izvrseno }} />
@@ -97,11 +100,11 @@ export function OpterecenjeChart({
             return godina ? (
               <Link
                 key={m.mjesec}
-                href={`/plan-aktivnosti?view=matrica&mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`}
+                href={href(`/plan-aktivnosti?view=matrica&mode=mjesec&godina=${godina}&mjesec=${m.mjesec}`)}
                 data-testid="chart-bar"
                 data-mjesec={m.mjesec}
                 data-ukupno={m.ukupno}
-                aria-label={`${naziv}: ${m.ukupno} termina — otvori mjesec u matrici`}
+                aria-label={t("barAriaLabel", { naziv, count: m.ukupno })}
                 className={cn(common, "cursor-pointer rounded-md transition-colors hover:bg-slate-100/60")}
               >
                 {bar}
@@ -124,7 +127,7 @@ export function OpterecenjeChart({
       {/* Oznake mjeseci, poravnate sa barovima */}
       <div className="mt-2 flex gap-2">
         {months.map((m) => {
-          const naziv = MONTHS_BS[m.mjesec - 1] ?? ""
+          const naziv = monthName(m.mjesec)
           return (
             <span
               key={m.mjesec}

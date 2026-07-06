@@ -1,16 +1,19 @@
 import Link from "next/link"
 import { MapPin } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { ObilasciToolbar } from "@/components/domain/ObilasciToolbar"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { groupByGrad, type ObilazakItem } from "@/lib/obilasci"
 import { periodRange, currentYear, todayIso, formatDatum } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 export default async function ObilasciPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const t = await getTranslations("obilasci")
   const sp = await searchParams
   const period = (typeof sp.period === "string" ? sp.period : "mjesec") as "mjesec" | "kvartal" | "godina"
   const godina = Number(typeof sp.godina === "string" ? sp.godina : "") || currentYear()
@@ -49,8 +52,8 @@ export default async function ObilasciPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Obilasci</h1>
-        <p className="text-sm text-slate-500">Grupisano po gradu za efikasniji raspored izlazaka.</p>
+        <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
+        <p className="text-sm text-slate-500">{t("podnaslov")}</p>
       </div>
 
       <ObilasciToolbar
@@ -66,7 +69,7 @@ export default async function ObilasciPage({
           data-testid="obilasci-empty"
           className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
         >
-          Nema termina u izabranom periodu.
+          {t("prazno")}
         </div>
       ) : (
         grupe.map((g) => (
@@ -78,22 +81,22 @@ export default async function ObilasciPage({
               </h2>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-              {g.items.map((t) => (
+              {g.items.map((termin) => (
                 <Link
-                  key={t.id}
-                  href={`/plan-aktivnosti?view=lista&klijent_id=${t.klijent_id}&mjesec=svi`}
+                  key={termin.id}
+                  href={href(`/plan-aktivnosti?view=lista&klijent_id=${termin.klijent_id}&mjesec=svi`)}
                   data-testid="obilasci-card"
                   className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
                 >
                   <span>
-                    <span className="font-medium">{t.klijent_naziv}</span>
+                    <span className="font-medium">{termin.klijent_naziv}</span>
                     <span className="block text-xs text-slate-500">
-                      {t.vrsta_naziv}{t.lokacija_naziv ? ` · ${t.lokacija_naziv}` : ""}
+                      {termin.vrsta_naziv}{termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
                     </span>
                   </span>
                   <span className="flex items-center gap-2 text-sm text-slate-600">
-                    {formatDatum(t.rok_dospijeca)}
-                    <StatusBadge status={t.status_izvedeni} />
+                    {formatDatum(termin.rok_dospijeca)}
+                    <StatusBadge status={termin.status_izvedeni} />
                   </span>
                 </Link>
               ))}

@@ -1,15 +1,13 @@
 "use client"
 
-const PITANJA = [
-  "Koji termini kasne?",
-  "Koje firme imamo i koliko kasne?",
-  "Grupiši aktivne termine po klijentu",
-] as const
+import { useTranslations } from "next-intl"
 
 export function SuggestedPills({ onPick }: { onPick: (q: string) => void }) {
+  const t = useTranslations("asistent.suggestedPills")
+  const pitanja = [t("pitanje1"), t("pitanje2"), t("pitanje3")]
   return (
     <div className="flex flex-wrap gap-2" data-testid="suggested-pills">
-      {PITANJA.map((p) => (
+      {pitanja.map((p) => (
         <button
           key={p}
           type="button"

@@ -1,9 +1,11 @@
+import { getTranslations } from "next-intl/server"
 import { UgovoriTab } from "@/components/domain/UgovoriTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { formatDatum } from "@/lib/date"
 import { APP_NAME } from "@/lib/brand"
+import { href } from "@/i18n/routes"
 import { Building2, ClipboardCheck } from "lucide-react"
 import type { Database } from "@/db/types"
 
@@ -12,7 +14,7 @@ type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
 
 const CARD = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
 
-export function IdKartaTab({
+export async function IdKartaTab({
   klijentId,
   osnovni,
   zaduzeniIme,
@@ -30,14 +32,15 @@ export function IdKartaTab({
   kontakti: KontaktRow[]
   usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string | null }[]
 }) {
+  const t = await getTranslations("klijenti.idKarta")
   const redovi: [string, string | null][] = [
-    ["Adresa", osnovni.adresa],
-    ["Telefon", osnovni.telefon],
-    ["Email", osnovni.email],
-    ["PIB", osnovni.pib],
-    ["Matični broj", osnovni.maticni_broj],
-    ["Šifra djelatnosti", osnovni.sifra_djelatnosti],
-    [`Zadužen (${APP_NAME})`, zaduzeniIme],
+    [t("polja.adresa"), osnovni.adresa],
+    [t("polja.telefon"), osnovni.telefon],
+    [t("polja.email"), osnovni.email],
+    [t("polja.pib"), osnovni.pib],
+    [t("polja.maticniBroj"), osnovni.maticni_broj],
+    [t("polja.sifraDjelatnosti"), osnovni.sifra_djelatnosti],
+    [t("polja.zaduzen", { appName: APP_NAME }), zaduzeniIme],
   ]
   return (
     <div className="space-y-5" data-testid="tab-id-karta-content">
@@ -45,9 +48,9 @@ export function IdKartaTab({
         <div className="mb-4 flex items-center gap-2">
           <Building2 className="h-4 w-4 text-slate-400" aria-hidden />
           <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            Osnovni podaci
+            {t("osnovniPodaci.naslov")}
             <InfoIkona
-              tekst="Registracioni i kontakt podaci firme (adresa, PIB, matični broj…) i osoba zadužena za klijenta. Uređuje se preko dugmeta Uredi u zaglavlju."
+              tekst={t("osnovniPodaci.info")}
               testId="info-sekcija-osnovni"
             />
           </h3>
@@ -68,7 +71,7 @@ export function IdKartaTab({
         <UgovoriTab
           klijentId={klijentId}
           ugovori={ugovori}
-          info="Ugovori sklopljeni sa klijentom. Samo jedan ugovor može biti aktivan; stariji ostaju kao istorija."
+          info={t("ugovoriInfo")}
         />
       </section>
 
@@ -77,8 +80,8 @@ export function IdKartaTab({
           klijentId={klijentId}
           kontakti={kontakti}
           previewLimit={4}
-          seeAllHref={`/klijenti/${klijentId}?tab=kontakti`}
-          info="Skraćeni pregled kontakata firme (prvih nekoliko). Puni spisak i pretraga su u tabu Kontakti."
+          seeAllHref={href(`/klijenti/${klijentId}?tab=kontakti`)}
+          info={t("kontaktiInfo")}
         />
       </section>
 
@@ -86,19 +89,19 @@ export function IdKartaTab({
         <div className="mb-4 flex items-center gap-2">
           <ClipboardCheck className="h-4 w-4 text-slate-400" aria-hidden />
           <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            Ugovorene usluge
+            {t("usluge.naslov")}
             <InfoIkona
-              tekst="Sažetak provjera iz Profila sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red."
+              tekst={t("usluge.info")}
               testId="info-sekcija-usluge"
             />
           </h3>
         </div>
         {usluge.length === 0 ? (
-          <p className="text-sm text-slate-500">Nema definisanih usluga. Dodajte ih kroz tab Profil.</p>
+          <p className="text-sm text-slate-500">{t("usluge.prazno")}</p>
         ) : (
           <PrikaziJosLista
             ulClassName="divide-y divide-slate-100 text-sm"
-            imenicaGenitiv="usluga"
+            imenicaGenitiv={t("usluge.imenica")}
             testId="usluge-prikazi-jos"
             items={usluge.map((u, i) => (
               <li key={i} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
@@ -107,7 +110,7 @@ export function IdKartaTab({
                   {u.lokacija_naziv && <span className="text-slate-400"> · {u.lokacija_naziv}</span>}
                 </span>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs tabular-nums text-slate-500">
-                  sljedeći: {formatDatum(u.sljedeci_rok)}
+                  {t("usluge.sljedeci", { datum: formatDatum(u.sljedeci_rok) })}
                 </span>
               </li>
             ))}

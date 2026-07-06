@@ -2,9 +2,14 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { buildZapisnikDocx } from "@/lib/zapisnik/template"
 import { uploadDokument, removeDokument } from "@/lib/supabase/storage"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "asistent.actions" })
 
 export type ActionResult =
   | { ok: true }
@@ -13,7 +18,7 @@ export type ActionResult =
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 const schema = z.object({
-  termin_id: z.string().uuid("Neispravan termin"),
+  termin_id: z.string().uuid(t("neispravanTermin")),
   nalaz: z.string().min(1).max(8000),
   zakljucak: z.string().min(1).max(8000),
 })
@@ -25,34 +30,34 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
   const { termin_id, nalaz, zakljucak } = parsed.data
 
   const supabase = await createServerSupabaseClient()
-  const { data: t } = await supabase
+  const { data: term } = await supabase
     .from("termini_view")
     .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
     .eq("id", termin_id)
     .maybeSingle()
-  if (!t || !t.klijent_id) return { ok: false, message: "Termin ne postoji." }
+  if (!term || !term.klijent_id) return { ok: false, message: t("terminNePostoji") }
 
-  const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
+  const datum = (term.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
   const docx = await buildZapisnikDocx({
-    klijent: t.klijent_naziv ?? "—",
-    lokacija: t.lokacija_naziv ?? null,
-    vrstaProvjere: t.vrsta_naziv ?? "—",
+    klijent: term.klijent_naziv ?? "—",
+    lokacija: term.lokacija_naziv ?? null,
+    vrstaProvjere: term.vrsta_naziv ?? "—",
     datum,
     zaduzeni: null,
     nalaz,
     zakljucak,
   })
-  const naziv = `Zapisnik - ${t.vrsta_naziv ?? "provjera"} - ${datum}.docx`
+  const naziv = `Zapisnik - ${term.vrsta_naziv ?? "provjera"} - ${datum}.docx`
   const path = `termini/${termin_id}/zapisnik-${crypto.randomUUID()}.docx`
 
   try {
     await uploadDokument(path, docx, DOCX_MIME)
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Snimanje nije uspjelo." }
+    return { ok: false, message: e instanceof Error ? e.message : t("snimanjeNijeUspjelo") }
   }
   const { error } = await supabase.from("dokumenti").insert({
     termin_id,
-    klijent_id: t.klijent_id,
+    klijent_id: term.klijent_id,
     naziv,
     storage_path: path,
     mime_type: DOCX_MIME,
@@ -70,6 +75,6 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
   }
 
   revalidatePath("/zapisnici")
-  if (t.klijent_id) revalidatePath(`/klijenti/${t.klijent_id}`)
+  if (term.klijent_id) revalidatePath(`/klijenti/${term.klijent_id}`)
   return { ok: true }
 }

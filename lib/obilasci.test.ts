@@ -15,6 +15,18 @@ describe("groupByGrad", () => {
     const g = groupByGrad([it1({ lokacija_grad: null }), it1({ lokacija_grad: "Banja Luka" })])
     expect(g.map((x) => x.grad)).toEqual(["Banja Luka", "Bez grada"])
   })
+  it("sr eksplicitno → identično defaultu (byte-identical, reuse obilasci.toolbar.gradBez)", () => {
+    const g = groupByGrad([it1({ lokacija_grad: null }), it1({ lokacija_grad: "Banja Luka" })], "sr")
+    expect(g.map((x) => x.grad)).toEqual(["Banja Luka", "Bez grada"])
+  })
+  it("en → 'No city' na kraju (reuse obilasci.toolbar.gradBez)", () => {
+    const g = groupByGrad([it1({ lokacija_grad: null }), it1({ lokacija_grad: "Banja Luka" })], "en")
+    expect(g.map((x) => x.grad)).toEqual(["Banja Luka", "No city"])
+  })
+  it("de → 'Ohne Stadt' na kraju (reuse obilasci.toolbar.gradBez)", () => {
+    const g = groupByGrad([it1({ lokacija_grad: null }), it1({ lokacija_grad: "Banja Luka" })], "de")
+    expect(g.map((x) => x.grad)).toEqual(["Banja Luka", "Ohne Stadt"])
+  })
 })
 
 describe("izvediGrad", () => {

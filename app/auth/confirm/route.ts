@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { href } from "@/i18n/routes"
 
 /**
  * GET /auth/confirm
@@ -25,15 +26,15 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}/auth/nova-lozinka`)
+      return NextResponse.redirect(`${origin}${href("/auth/nova-lozinka")}`)
     }
   } else if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
     if (!error) {
-      return NextResponse.redirect(`${origin}/auth/nova-lozinka`)
+      return NextResponse.redirect(`${origin}${href("/auth/nova-lozinka")}`)
     }
   }
 
   // Greška ili nedostaju parametri — vrati korisnika na formu sa porukom
-  return NextResponse.redirect(`${origin}/zaboravljena-lozinka?greska=istekao`)
+  return NextResponse.redirect(`${origin}${href("/zaboravljena-lozinka")}?greska=istekao`)
 }

@@ -2,12 +2,17 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { parseEmailList, EMAIL_RE } from "@/lib/reminders/recipients"
 import { addMjeseci } from "@/lib/date"
 import { friendlyDbError } from "@/lib/db-errors"
 import { validUgovorDatumi } from "@/lib/ugovori"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
 import type { Database } from "@/db/types"
+
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "klijenti.actions" })
 
 type LokacijeUpdate = Database["public"]["Tables"]["lokacije"]["Update"]
 type KlijentiUpdate = Database["public"]["Tables"]["klijenti"]["Update"]
@@ -25,10 +30,10 @@ const requiredText = (max: number, msg: string) =>
 // Obavezna polja klijenta (odluka 2026-07-03): adresa, telefon, email — uz naziv.
 // Ista pravila važe za kreiranje i uređivanje, da podaci ostanu potpuni.
 const klijentObavezniFields = {
-  naziv: requiredText(200, "Naziv je obavezan"),
-  adresa: requiredText(300, "Adresa je obavezna"),
-  telefon: requiredText(60, "Telefon je obavezan"),
-  email: requiredText(200, "Email je obavezan").pipe(z.string().email("Neispravan email")),
+  naziv: requiredText(200, t("nazivObavezan")),
+  adresa: requiredText(300, t("adresaObavezna")),
+  telefon: requiredText(60, t("telefonObavezan")),
+  email: requiredText(200, t("emailObavezan")).pipe(z.string().email(t("emailNeispravan"))),
 }
 
 const createKlijentSchema = z.object({
@@ -55,7 +60,7 @@ export async function createKlijent(
   if (error) {
     // UNIQUE constraint na naziv → prijateljska poruka
     const msg = /duplicate|unique/i.test(error.message)
-      ? "Klijent sa tim nazivom već postoji."
+      ? t("klijentNazivPostoji")
       : friendlyDbError(error)
     return { ok: false, message: msg }
   }
@@ -71,7 +76,7 @@ const UUID_OR_EMPTY = z
   .transform((v) => (!v || v === "none" ? undefined : v))
   .refine(
     (v) => v === undefined || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
-    "Neispravan korisnik",
+    t("korisnikNeispravan"),
   )
 
 const updateKlijentSchema = z.object({
@@ -105,7 +110,7 @@ export async function updateKlijent(
     const lista = parseEmailList(f.podsjetnik_emails ?? "")
     const losi = lista.filter((e) => !EMAIL_RE.test(e))
     if (losi.length > 0) {
-      return { ok: false, errors: { podsjetnik_emails: [`Neispravan email: ${losi.join(", ")}`] } }
+      return { ok: false, errors: { podsjetnik_emails: [t("primaociNeispravanEmail", { lista: losi.join(", ") })] } }
     }
     patch.podsjetnik_emails = lista
   }
@@ -123,7 +128,7 @@ export async function updateKlijent(
   const { error } = await supabase.from("klijenti").update(patch).eq("id", id)
   if (error) {
     const msg = /duplicate|unique/i.test(error.message)
-      ? "Klijent sa tim nazivom već postoji."
+      ? t("klijentNazivPostoji")
       : friendlyDbError(error)
     return { ok: false, message: msg }
   }
@@ -143,7 +148,7 @@ export async function deleteKlijent(
   const { error } = await supabase.from("klijenti").delete().eq("id", parsed.data.id)
   if (error) {
     const msg = /foreign key|violates|restrict/i.test(error.message)
-      ? "Ne možete obrisati klijenta koji ima termine."
+      ? t("klijentImaTermine")
       : friendlyDbError(error)
     return { ok: false, message: msg }
   }
@@ -154,7 +159,7 @@ export async function deleteKlijent(
 // ─── Lokacije ──────────────────────────────────────────────────────────────
 
 const lokacijaFields = {
-  naziv: z.string().min(1, "Naziv je obavezan").max(200),
+  naziv: z.string().min(1, t("nazivObavezan")).max(200),
   grad: optionalText(120),
   regija: optionalText(120),
   adresa: optionalText(300),
@@ -248,30 +253,30 @@ export async function createProfilProvjere(
   const nacin_izvrsenja = nacinRaw === "pracenje" ? "pracenje" : "izvrsava"
 
   if (!klijent_id || !vrsta_provjere_id) {
-    return { ok: false, message: "Vrsta je obavezna." }
+    return { ok: false, message: t("vrstaObavezna") }
   }
   // Poslovno pravilo: svaka provjera u profilu mora imati konkretnu lokaciju.
   if (!lokacija_id) {
-    return { ok: false, message: "Lokacija je obavezna." }
+    return { ok: false, message: t("lokacijaObavezna") }
   }
   if (rezim === "vec_radeno" && !ISO_DATUM_RE.test(zadnji_datum)) {
-    return { ok: false, message: "Zadnji datum je obavezan." }
+    return { ok: false, message: t("zadnjiDatumObavezan") }
   }
   if (rezim === "prvi_put" && !ISO_DATUM_RE.test(prvi_rok)) {
-    return { ok: false, message: "Prvi rok je obavezan." }
+    return { ok: false, message: t("prviRokObavezan") }
   }
 
   const supabase = await createServerSupabaseClient()
 
   // lokacija mora pripadati klijentu
   const { data: lok } = await supabase.from("lokacije").select("id").eq("id", lokacija_id).eq("klijent_id", klijent_id).maybeSingle()
-  if (!lok) return { ok: false, message: "Lokacija ne pripada klijentu." }
+  if (!lok) return { ok: false, message: t("lokacijaNePripada") }
 
   // Periodika je ISKLJUČIVO podrazumijevani interval vrste (uređuje se u Postavkama);
   // ručni unos po stavci je ukinut — eventualna vrijednost iz forme se ignoriše.
   const { data: vrsta } = await supabase.from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", vrsta_provjere_id).maybeSingle()
   const interval = vrsta?.podrazumevani_interval_mjeseci ?? null
-  if (!interval) return { ok: false, message: "Vrsta nema podrazumijevani interval — postavite ga u Postavkama." }
+  if (!interval) return { ok: false, message: t("vrstaNemaInterval") }
 
   // upiši profil-stavku (interval_mjeseci: null = prati default vrste)
   const { error: insErr } = await supabase.from("klijent_provjere").insert({
@@ -282,7 +287,7 @@ export async function createProfilProvjere(
   })
   if (insErr) {
     return insErr.code === "23505"
-      ? { ok: false, message: "Ova provjera već postoji u profilu." }
+      ? { ok: false, message: t("provjeraVecPostoji") }
       : { ok: false, message: friendlyDbError(insErr) }
   }
 
@@ -294,13 +299,13 @@ export async function createProfilProvjere(
     .eq("klijent_id", klijent_id).eq("vrsta_provjere_id", vrsta_provjere_id).eq("lokacija_id", lokacija_id)
     .not("status", "in", "(izvrseno,otkazano)")
     .limit(1)
-  if (selErr) return { ok: false, message: "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu." }
+  if (selErr) return { ok: false, message: t("terminProvjeraOsvjezi") }
   if (!postoji || postoji.length === 0) {
     const { error: terminErr } = await supabase.from("termini").insert({
       klijent_id, vrsta_provjere_id, lokacija_id,
       rok_dospijeca: rok, status: "planirano", interval_mjeseci: interval, nacin_izvrsenja,
     })
-    if (terminErr) return { ok: false, message: "Provjera je sačuvana, ali termin nije generisan: " + terminErr.message }
+    if (terminErr) return { ok: false, message: t("terminNijeGenerisan", { poruka: terminErr.message }) }
   }
 
   revalidatePath(`/klijenti/${klijent_id}`)
@@ -312,7 +317,7 @@ export async function deleteProfilProvjere(
   formData: FormData,
 ): Promise<ActionResult> {
   const id = String(formData.get("id") ?? "")
-  if (!id) return { ok: false, message: "Nedostaje id." }
+  if (!id) return { ok: false, message: t("nedostajeId") }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijent_provjere").delete().eq("id", id)
   if (error) return { ok: false, message: friendlyDbError(error) }
@@ -325,9 +330,9 @@ export async function deleteProfilProvjere(
 const intOrNull = (min: number, max: number) =>
   z.string().trim().optional()
     .transform((s) => (!s ? null : Number(s)))
-    .refine((n) => n === null || (Number.isInteger(n) && n >= min && n <= max), `Broj mora biti ${min}–${max}`)
+    .refine((n) => n === null || (Number.isInteger(n) && n >= min && n <= max), t("brojOpseg", { min, max }))
 
-const dateOrNull = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Neispravan datum").optional()
+const dateOrNull = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, t("datumNeispravan")).optional()
   .or(z.literal("").transform(() => undefined)).transform((v) => v ?? null)
 
 const boolFromCheckbox = z.string().optional().transform((v) => v === "on" || v === "true")
@@ -354,7 +359,7 @@ export async function createUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { klijent_id, aktivan, ...f } = parsed.data
   if (!validUgovorDatumi(f.datum_potpisivanja, f.datum_isteka)) {
-    return { ok: false, message: "Datum isteka mora biti nakon datuma potpisivanja." }
+    return { ok: false, message: t("datumIstekaNakonPotpisivanja") }
   }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("ugovori").insert({ klijent_id, aktivan, ...f })
@@ -368,7 +373,7 @@ export async function updateUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { id, klijent_id, aktivan, ...f } = parsed.data
   if (!validUgovorDatumi(f.datum_potpisivanja, f.datum_isteka)) {
-    return { ok: false, message: "Datum isteka mora biti nakon datuma potpisivanja." }
+    return { ok: false, message: t("datumIstekaNakonPotpisivanja") }
   }
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("ugovori").update({ aktivan, ...f }).eq("id", id).eq("klijent_id", klijent_id)
@@ -380,7 +385,7 @@ export async function updateUgovor(_prev: ActionResult, formData: FormData): Pro
 export async function deleteUgovor(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid() })
     .safeParse(Object.fromEntries(formData))
-  if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
+  if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("ugovori").delete().eq("id", id).eq("klijent_id", klijent_id)
@@ -392,7 +397,7 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
 // ─── Kontakt osobe ────────────────────────────────────────────────────────────
 
 const kontaktFields = {
-  ime: z.string().min(1, "Ime je obavezno").max(200),
+  ime: z.string().min(1, t("imeObavezno")).max(200),
   funkcija: optionalText(120),
   telefon: optionalText(60),
   email: optionalText(200),
@@ -429,7 +434,7 @@ export async function updateKontakt(_prev: ActionResult, formData: FormData): Pr
 
 export async function deleteKontakt(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = deleteKontaktSchema.safeParse(Object.fromEntries(formData))
-  if (!parsed.success) return { ok: false, message: "Neispravan zahtjev." }
+  if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("kontakt_osobe").delete().eq("id", id).eq("klijent_id", klijent_id)

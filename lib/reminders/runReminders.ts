@@ -1,10 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { createTranslator } from "next-intl"
 import type { Database } from "@/db/types"
 import { env } from "@/lib/env"
 import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
 import { buildTerminIcs } from "@/lib/email/ics"
 import { reminderSubject, reminderHtml } from "@/lib/email/templates"
 import { recipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "email.podsjetnik" })
 
 export type SentItem = { terminId: string; danaPrije: number; to: string[]; resendId: string; dryRun: boolean }
 export type SkipItem = { terminId: string; danaPrije: number; razlog: string }
@@ -105,7 +110,7 @@ export async function runReminders(
             klijentId: r.klijent_id,
             baseUrl: env.NEXT_PUBLIC_APP_URL,
           }),
-          attachments: [{ filename: "termin.ics", content: Buffer.from(ics, "utf-8") }],
+          attachments: [{ filename: t("prilogNaziv"), content: Buffer.from(ics, "utf-8") }],
         })
         // Dry-run ILI produkcija bez RESEND_API_KEY (sendEmail tad vrati dryRun): NE upisuj audit.
         // Inače bi „lažno poslat" red kasnije blokirao stvarno slanje (idempotencija) čim se ključ doda.

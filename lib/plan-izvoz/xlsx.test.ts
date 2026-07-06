@@ -20,4 +20,14 @@ describe("planToXlsx", () => {
     expect(ws.getCell("H4").value).toBe("Način")
     expect(ws.getCell("H5").value).toBe("Praćenje")
   })
+
+  it("na engleskom: naslov lista i zaglavlje kolona su prevedeni", async () => {
+    const buf = await planToXlsx([ROW], { naslov: "Tehpro", period: "current + next month" }, "en")
+    const wb = new ExcelJS.Workbook()
+    await wb.xlsx.load(buf as unknown as Parameters<typeof wb.xlsx.load>[0])
+    const ws = wb.getWorksheet("Activity plan")!
+    expect(ws.getCell("A2").value).toBe("Activity plan — current + next month")
+    expect(ws.getCell("A4").value).toBe("Client")
+    expect(ws.getCell("H4").value).toBe("Mode")
+  })
 })

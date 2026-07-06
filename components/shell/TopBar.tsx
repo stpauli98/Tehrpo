@@ -1,10 +1,12 @@
 import { LogOut } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 import { odjaviSe } from "@/app/(dashboard)/odjava/actions"
 import type { TrenutniKorisnik } from "@/lib/auth/current-user"
 import { APP_NAME, APP_TAGLINE, APP_INITIAL } from "@/lib/brand"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 
-export function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }) {
+export async function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }) {
+  const t = await getTranslations("shell.topBar")
   return (
     <header className="h-14 shrink-0 border-b border-slate-200 px-6 flex items-center justify-between bg-white">
       <div className="flex items-center gap-3">
@@ -21,11 +23,11 @@ export function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }) {
         <form action={odjaviSe}>
           <button
             type="submit"
-            aria-label="Odjava"
+            aria-label={t("odjava")}
             className="group/tt relative inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <LogOut className="h-[18px] w-[18px]" aria-hidden />
-            <Tooltip>Odjava</Tooltip>
+            <Tooltip>{t("odjava")}</Tooltip>
           </button>
         </form>
       </div>

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { X, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -13,17 +14,13 @@ const initial: ActionResult = { ok: true }
 // Uobičajeni pragovi koji se nude u brzom izboru (0 = na dan roka).
 const DEFAULT_OPCIJE = [30, 14, 10, 7, 3, 1, 0]
 
-function labelFor(n: number): string {
-  if (n === 0) return "na dan"
-  if (n === 1) return "1 dan"
-  return `${n} dana`
-}
-
 function sortedDesc(arr: number[]): number[] {
   return Array.from(new Set(arr)).sort((a, b) => b - a)
 }
 
 export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
+  const t = useTranslations("postavke.reminderForm")
+  const labelFor = (n: number): string => (n === 0 ? t("naDan") : t("dana", { count: n }))
   const router = useRouter()
   const [state, action, pending] = useActionState(updatePostavke, initial)
   const [opcije, setOpcije] = useState<number[]>(() => sortedDesc([...DEFAULT_OPCIJE, ...danaPrije]))
@@ -65,7 +62,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
     if (s === "") return
     const n = Number(s)
     if (!Number.isInteger(n) || n < 0 || n > 365) {
-      setCustomError("Unesite cijeli broj dana 0–365")
+      setCustomError(t("customGreska"))
       return
     }
     setCustomError(null)
@@ -80,8 +77,8 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
 
       <div>
         <p className="mb-2 text-sm text-slate-600">
-          Klikni prag da uključiš/isključiš slanje.{" "}
-          <span className="text-slate-400">× uklanja opciju.</span>
+          {t("uputstvo")}{" "}
+          <span className="text-slate-400">{t("uputstvoUklanjanje")}</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {opcije.map((n) => {
@@ -109,7 +106,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                 <button
                   type="button"
                   onClick={() => ukloniOpciju(n)}
-                  aria-label={`Ukloni ${labelFor(n)}`}
+                  aria-label={t("ukloniAria", { labela: labelFor(n) })}
                   data-testid={`reminder-chip-remove-${n}`}
                   className={cn(
                     "rounded-full p-0.5 transition-colors",
@@ -141,13 +138,13 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                 dodaj()
               }
             }}
-            placeholder="npr. 21"
+            placeholder={t("customPlaceholder")}
             className="w-28"
             data-testid="reminder-custom-input"
           />
-          <span className="text-sm text-slate-500">dana prije</span>
+          <span className="text-sm text-slate-500">{t("danaPrije")}</span>
           <Button type="button" variant="outline" size="sm" onClick={dodaj} data-testid="reminder-custom-add">
-            <Plus className="h-4 w-4" aria-hidden /> Dodaj
+            <Plus className="h-4 w-4" aria-hidden /> {t("dodaj")}
           </Button>
         </div>
         {customError && (
@@ -159,7 +156,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
 
       {aktivni.length === 0 && (
         <p className="text-sm text-amber-600" data-testid="reminder-empty">
-          Nijedan prag nije uključen — emailovi se neće slati.
+          {t("prazno")}
         </p>
       )}
 
@@ -170,7 +167,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
       )}
 
       <Button type="submit" disabled={pending || aktivni.length === 0} data-testid="reminder-submit">
-        {pending ? "Spremam…" : "Spremi"}
+        {pending ? t("submitPending") : t("submit")}
       </Button>
     </form>
   )

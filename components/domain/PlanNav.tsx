@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -12,8 +13,12 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { prevMonth, nextMonth, monthLabel } from "@/lib/calendar"
-import { MONTHS_BS } from "@/lib/date"
+import { monthName } from "@/lib/date"
 import { cn } from "@/lib/utils"
+import { href as localizeHref } from "@/i18n/routes"
+
+// 12 lokalizovanih naziva mjeseci (1=Januar) za select opcije ispod.
+const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
 
 export function PlanNav({
   godina,
@@ -28,6 +33,7 @@ export function PlanNav({
 }) {
   const router = useRouter()
   const params = useSearchParams()
+  const t = useTranslations("plan.nav")
 
   const href = (g: number, m: number) => {
     const p = new URLSearchParams(params.toString())
@@ -35,7 +41,7 @@ export function PlanNav({
     p.set("mjesec", String(m))
     p.delete("dan")
     p.delete("selected")
-    return `/plan-aktivnosti?${p.toString()}`
+    return localizeHref(`/plan-aktivnosti?${p.toString()}`)
   }
 
   const p = prevMonth(godina, mjesec)
@@ -47,7 +53,7 @@ export function PlanNav({
         href={href(p.year, p.month)}
         className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }))}
         data-testid="plan-nav-prev"
-        aria-label="Prethodni mjesec"
+        aria-label={t("prethodniMjesec")}
       >
         <ChevronLeft className="w-4 h-4" />
       </Link>
@@ -63,7 +69,7 @@ export function PlanNav({
         href={href(n.year, n.month)}
         className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }))}
         data-testid="plan-nav-next"
-        aria-label="Sljedeći mjesec"
+        aria-label={t("sljedeciMjesec")}
       >
         <ChevronRight className="w-4 h-4" />
       </Link>
@@ -73,7 +79,7 @@ export function PlanNav({
         className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
         data-testid="plan-nav-today"
       >
-        Danas
+        {t("danas")}
       </Link>
 
       <Select
@@ -91,7 +97,7 @@ export function PlanNav({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {MONTHS_BS.map((naziv, i) => (
+          {MJESEC_NAZIVI.map((naziv, i) => (
             <SelectItem key={naziv} value={String(i + 1)}>
               {naziv}
             </SelectItem>

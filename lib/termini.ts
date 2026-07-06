@@ -48,14 +48,6 @@ export async function getHitnoKasni(
 export type DerivedStatus =
   | "planirano" | "zakazano" | "izvrseno" | "kasni" | "otkazano"
 
-export const STATUS_LABEL: Record<DerivedStatus, string> = {
-  planirano: "Planirano",
-  zakazano: "Zakazano",
-  izvrseno: "Izvršeno",
-  kasni: "Kasni",
-  otkazano: "Otkazano",
-}
-
 /** Soft-pill klase (Tailwind skale, ne sm:/md:). */
 export const STATUS_BADGE_CLASS: Record<DerivedStatus, string> = {
   planirano: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20",

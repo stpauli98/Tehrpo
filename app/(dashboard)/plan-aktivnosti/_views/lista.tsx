@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
 import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
@@ -11,10 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { currentYear } from "@/lib/date"
 import { getTerminiLista, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
 import { TERMINI_PER_PAGE } from "@/lib/plan-filteri"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 export function ListaView() {
   const searchParams = useSearchParams()
+  const t = useTranslations("plan.lista")
+  const tPag = useTranslations("common.pagination")
 
   const pageNum = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
   const statusFilter = searchParams.get("status") ?? "svi"
@@ -78,12 +82,12 @@ export function ListaView() {
 
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
-  const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+  const closeHref = href(`/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`)
 
   const pageHref = (p: number) => {
     const params = new URLSearchParams(currentSearch)
     params.set("page", String(p))
-    return `/plan-aktivnosti?${params.toString()}`
+    return href(`/plan-aktivnosti?${params.toString()}`)
   }
 
   if (isPending) {
@@ -115,8 +119,16 @@ export function ListaView() {
         className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 text-sm text-slate-600"
         data-testid="termini-pagination"
       >
-        <span data-testid="termini-total">Ukupno rezultata: {total}</span>
-        <Pagination pageNum={pageNum} totalPages={totalPages} hrefFor={pageHref} pageTestId="termini-page" />
+        <span data-testid="termini-total">{t("ukupnoRezultata", { count: total })}</span>
+        <Pagination
+          pageNum={pageNum}
+          totalPages={totalPages}
+          hrefFor={pageHref}
+          pageTestId="termini-page"
+          prethodnaLabel={tPag("prethodna")}
+          sljedecaLabel={tPag("sljedeca")}
+          stranaText={tPag("strana", { pageNum, totalPages })}
+        />
       </div>
 
       {selectedTermin && (

@@ -1,18 +1,21 @@
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { User } from "lucide-react"
 import type { Database } from "@/db/types"
 import { LokacijaSheet } from "@/components/domain/LokacijaSheet"
 import { ObrisiLokacijuButton } from "@/components/domain/ObrisiLokacijuButton"
+import { href } from "@/i18n/routes"
 
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 
-export function LokacijeTab({
+export async function LokacijeTab({
   klijentId,
   lokacije,
 }: {
   klijentId: string
   lokacije: LokacijaRow[]
 }) {
+  const t = await getTranslations("klijenti.lokacije")
   return (
     <div data-testid="tab-lokacije-content" className="space-y-4">
       <div className="flex justify-end">
@@ -24,14 +27,20 @@ export function LokacijeTab({
           data-testid="lokacije-empty"
           className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500"
         >
-          Nema lokacija. Dodajte prvu lokaciju za ovog klijenta.
+          {t("prazno")}
         </div>
       ) : (
         <div className="rounded-xl border border-slate-200 overflow-hidden">
           <table className="w-full text-sm" data-testid="lokacije-table">
             <thead className="bg-slate-50">
               <tr>
-                {["Naziv", "Lokacija / Adresa", "Grad / Regija", "Kontakt", "Akcije"].map((c) => (
+                {[
+                  t("kolone.naziv"),
+                  t("kolone.lokacijaAdresa"),
+                  t("kolone.gradRegija"),
+                  t("kolone.kontakt"),
+                  t("kolone.akcije"),
+                ].map((c) => (
                   <th
                     key={c}
                     className="px-3 py-2 text-left align-top text-xs font-medium uppercase tracking-wide text-slate-500"
@@ -52,11 +61,11 @@ export function LokacijeTab({
                   <td className="px-3 py-2.5">
                     {l.kontakt_osoba ? (
                       <Link
-                        href={`/klijenti/${klijentId}?tab=kontakti&highlight=${l.id}`}
+                        href={href(`/klijenti/${klijentId}?tab=kontakti&highlight=${l.id}`)}
                         scroll={false}
                         className="inline-flex items-center gap-1 font-medium text-brand transition-colors hover:underline"
                         data-testid={`lokacija-kontakt-link-${l.id}`}
-                        title="Otvori u tabu Kontakti"
+                        title={t("kontaktLinkTitle")}
                       >
                         <User className="h-3.5 w-3.5" aria-hidden />
                         {l.kontakt_osoba}

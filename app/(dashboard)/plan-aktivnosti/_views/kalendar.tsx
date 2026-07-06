@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
 import { MonthCalendar, type DayTermin } from "@/components/domain/MonthCalendar"
@@ -14,10 +15,12 @@ import { toDerivedStatus } from "@/lib/termini"
 import { PlanLegenda } from "@/components/domain/PlanLegenda"
 import type { TerminRow } from "@/components/domain/TerminiTable"
 import { getTerminiKalendar, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 export function KalendarView() {
   const searchParams = useSearchParams()
+  const t = useTranslations("plan.kalendar")
 
   const today = todayIso()
   const godina =
@@ -51,15 +54,15 @@ export function KalendarView() {
   const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   const terminiByDan = new Map<string, DayTermin[]>()
-  for (const t of termini) {
-    if (!t.id || !t.rok_dospijeca) continue
-    const dan = t.rok_dospijeca.slice(0, 10)
+  for (const termin of termini) {
+    if (!termin.id || !termin.rok_dospijeca) continue
+    const dan = termin.rok_dospijeca.slice(0, 10)
     const arr = terminiByDan.get(dan) ?? []
     arr.push({
-      id: t.id,
-      klijentNaziv: t.klijent_naziv ?? "—",
-      lokacijaNaziv: t.lokacija_naziv,
-      status: toDerivedStatus(t.status_izvedeni),
+      id: termin.id,
+      klijentNaziv: termin.klijent_naziv ?? "—",
+      lokacijaNaziv: termin.lokacija_naziv,
+      status: toDerivedStatus(termin.status_izvedeni),
     })
     terminiByDan.set(dan, arr)
   }
@@ -68,7 +71,7 @@ export function KalendarView() {
 
   // ?dan sidebar
   const danTermini = selectedDan
-    ? termini.filter((t) => (t.rok_dospijeca ?? "").slice(0, 10) === selectedDan)
+    ? termini.filter((termin) => (termin.rok_dospijeca ?? "").slice(0, 10) === selectedDan)
     : []
 
   // ?selected TerminSheet
@@ -80,12 +83,12 @@ export function KalendarView() {
 
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
-  const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+  const closeHref = href(`/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`)
 
   const detailHref = (id: string) => {
     const p = new URLSearchParams(currentSearch)
     p.set("selected", id)
-    return `/plan-aktivnosti?${p.toString()}`
+    return href(`/plan-aktivnosti?${p.toString()}`)
   }
 
   if (isPending) {
@@ -128,32 +131,32 @@ export function KalendarView() {
               {formatDatum(selectedDan)}
             </p>
             {danTermini.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">Nema termina za ovaj dan.</p>
+              <p className="mt-2 text-sm text-slate-500">{t("nemaTerminaZaDan")}</p>
             ) : (
               <ul className="mt-3 space-y-2">
-                {danTermini.map((t) => (
+                {danTermini.map((termin) => (
                   <li
-                    key={t.id ?? ""}
+                    key={termin.id ?? ""}
                     data-testid="sidebar-termin"
                     className="text-sm border-b border-slate-100 pb-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-slate-800 truncate">
-                        {t.klijent_naziv ?? "—"}
-                        {t.lokacija_naziv ? (
-                          <span className="text-slate-400"> · {t.lokacija_naziv}</span>
+                        {termin.klijent_naziv ?? "—"}
+                        {termin.lokacija_naziv ? (
+                          <span className="text-slate-400"> · {termin.lokacija_naziv}</span>
                         ) : null}
                       </span>
-                      <StatusBadge status={t.status_izvedeni} />
+                      <StatusBadge status={termin.status_izvedeni} />
                     </div>
-                    <p className="text-slate-500">{t.vrsta_naziv ?? "—"}</p>
-                    {t.id && (
+                    <p className="text-slate-500">{termin.vrsta_naziv ?? "—"}</p>
+                    {termin.id && (
                       <Link
-                        href={detailHref(t.id)}
+                        href={detailHref(termin.id)}
                         className="text-brand hover:underline text-xs"
                         data-testid="sidebar-detalji"
                       >
-                        Detalji
+                        {t("detalji")}
                       </Link>
                     )}
                   </li>

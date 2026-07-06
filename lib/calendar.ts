@@ -1,4 +1,5 @@
-import { MONTHS_BS } from "./date"
+import { monthName } from "./date"
+import { APP_LOCALE, type Locale } from "./locale"
 
 export type CalDay = { date: string; day: number; inMonth: boolean }
 
@@ -6,9 +7,9 @@ function pad(n: number): string {
   return String(n).padStart(2, "0")
 }
 
-/** Naziv mjeseca (1=Januar). Fallback "" za nevažeći broj. */
-export function monthLabel(month1to12: number): string {
-  return MONTHS_BS[month1to12 - 1] ?? ""
+/** Naziv mjeseca (1=Januar), lokalizovan. Fallback "" za nevažeći broj. */
+export function monthLabel(month1to12: number, locale: Locale = APP_LOCALE): string {
+  return monthName(month1to12, locale)
 }
 
 /** Prethodni mjesec (sa prelaskom godine). */

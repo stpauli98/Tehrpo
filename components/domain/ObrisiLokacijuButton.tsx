@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogTrigger,
@@ -17,6 +18,8 @@ import { deleteLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/ac
 const initial: ActionResult = { ok: true }
 
 export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
+  const t = useTranslations("klijenti.obrisiLokaciju")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [state, action, pending] = useActionState(deleteLokacija, initial)
   const submitted = useRef(false)
@@ -33,17 +36,16 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
       <DialogTrigger
         render={
           <Button variant="destructive" size="sm" data-testid={`obrisi-lokaciju-${lokacijaId}`}>
-            Obriši
+            {tc("obrisi")}
           </Button>
         }
       />
       <DialogContent data-testid="obrisi-lokaciju-dialog">
         <DialogHeader>
-          <DialogTitle>Obrisati lokaciju?</DialogTitle>
+          <DialogTitle>{t("dialogNaslov")}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-slate-600">
-          Brisanje lokacije će ukloniti vezu sa postojećim terminima (termin ostaje, lokacija
-          postaje prazna).
+          {t("dialogOpis")}
         </p>
         {state.ok === false && state.message && (
           <p className="text-sm text-red-600" role="alert">
@@ -51,7 +53,7 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
           </p>
         )}
         <DialogFooter>
-          <DialogClose render={<Button variant="outline">Otkaži</Button>} />
+          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
           <form
             action={(fd) => {
               submitted.current = true
@@ -65,7 +67,7 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
               disabled={pending}
               data-testid="obrisi-lokaciju-potvrdi"
             >
-              {pending ? "Brišem…" : "Obriši"}
+              {pending ? t("confirmPending") : tc("obrisi")}
             </Button>
           </form>
         </DialogFooter>

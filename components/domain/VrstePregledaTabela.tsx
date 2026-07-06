@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { VrstaSheet } from "./VrstaSheet"
@@ -17,6 +18,8 @@ type Vrsta = {
 }
 
 export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
+  const t = useTranslations("termini.vrstePregleda")
+  const tKolone = useTranslations("termini.vrstePregleda.kolone")
   const [prikaziNeaktivne, setPrikaziNeaktivne] = useState(false)
   const brNeaktivnih = vrste.filter((v) => !v.aktivna).length
   const vidljive = prikaziNeaktivne ? vrste : vrste.filter((v) => v.aktivna)
@@ -31,20 +34,20 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
             onChange={(e) => setPrikaziNeaktivne(e.target.checked)}
             data-testid="vrste-prikazi-neaktivne"
           />
-          Prikaži i neaktivne{brNeaktivnih > 0 && ` (${brNeaktivnih})`}
+          {t("prikaziNeaktivne")}{brNeaktivnih > 0 && ` (${brNeaktivnih})`}
         </label>
-        <span className="text-slate-400">{vidljive.length} vrsta</span>
+        <span className="text-slate-400">{t("brojVrsta", { count: vidljive.length })}</span>
       </div>
 
       <div className="max-h-96 overflow-auto rounded-lg border border-slate-200">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-slate-50 text-left text-slate-500">
             <tr>
-              <th className="px-3 py-2 font-medium">Vrsta pregleda</th>
-              <th className="w-44 px-3 py-2 font-medium">Interval (mj)</th>
-              <th className="w-16 px-3 py-2 text-center font-medium">Dok.</th>
-              <th className="w-32 px-3 py-2 font-medium">Status</th>
-              <th className="w-20 px-3 py-2 text-right font-medium">Akcije</th>
+              <th className="px-3 py-2 font-medium">{tKolone("vrsta")}</th>
+              <th className="w-44 px-3 py-2 font-medium">{tKolone("interval")}</th>
+              <th className="w-16 px-3 py-2 text-center font-medium">{tKolone("dokumentacija")}</th>
+              <th className="w-32 px-3 py-2 font-medium">{tKolone("status")}</th>
+              <th className="w-20 px-3 py-2 text-right font-medium">{tKolone("akcije")}</th>
             </tr>
           </thead>
           <tbody data-testid="vrste-lista">
@@ -59,9 +62,9 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
                 </td>
                 <td className="px-3 py-2 text-center">
                   {v.vodi_dokumentaciju ? (
-                    <span className="text-slate-500" title="Vodi se dokumentacija">✓</span>
+                    <span className="text-slate-500" title={t("vodiDokumentacijuTitle")}>✓</span>
                   ) : (
-                    <span className="text-slate-300" title="Bez dokumentacije">—</span>
+                    <span className="text-slate-300" title={t("bezDokumentacijeTitle")}>—</span>
                   )}
                 </td>
                 <td className="px-3 py-2">
@@ -75,7 +78,7 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
             {vidljive.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-3 py-6 text-center text-slate-400">
-                  Nema vrsta za prikaz.
+                  {t("prazno")}
                 </td>
               </tr>
             )}
@@ -91,6 +94,7 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
 // lokalnog stanja kroz effect.
 function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
   const router = useRouter()
+  const t = useTranslations("termini.vrstePregleda")
   const serverVal = vrsta.interval?.toString() ?? ""
   const [val, setVal] = useState(serverVal)
   const [pending, startSave] = useTransition()
@@ -112,7 +116,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
     }
     const parsed = trimmed === "" ? null : Number(trimmed)
     if (parsed !== null && (!Number.isInteger(parsed) || parsed < 1 || parsed > 120)) {
-      setErr("1–120 ili prazno")
+      setErr(t("intervalGreska"))
       return
     }
     setErr(null)
@@ -122,7 +126,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
         setSaved(true)
         router.refresh()
       } else {
-        setErr(res.message ?? "Greška pri snimanju")
+        setErr(res.message ?? t("intervalGreskaFallback"))
       }
     })
   }
@@ -149,7 +153,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
       />
       <span className="w-24 text-xs">
         {pending && <span className="text-slate-400">…</span>}
-        {!pending && saved && <span className="text-green-600">✓ spremljeno</span>}
+        {!pending && saved && <span className="text-green-600">{t("intervalSpremljeno")}</span>}
         {!pending && err && <span className="text-red-600">{err}</span>}
       </span>
     </div>
@@ -158,6 +162,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
 
 function StatusPill({ vrsta }: { vrsta: Vrsta }) {
   const router = useRouter()
+  const t = useTranslations("termini.vrstePregleda")
   const [pending, startToggle] = useTransition()
 
   return (
@@ -165,7 +170,7 @@ function StatusPill({ vrsta }: { vrsta: Vrsta }) {
       type="button"
       disabled={pending}
       data-testid={`status-vrsta-${vrsta.id}`}
-      title={vrsta.aktivna ? "Klik za deaktivaciju" : "Klik za aktivaciju"}
+      title={vrsta.aktivna ? t("klikDeaktivacija") : t("klikAktivacija")}
       onClick={() =>
         startToggle(async () => {
           await postaviVrstaAktivna(vrsta.id, !vrsta.aktivna)
@@ -180,7 +185,7 @@ function StatusPill({ vrsta }: { vrsta: Vrsta }) {
       )}
     >
       <span className={cn("h-1.5 w-1.5 rounded-full", vrsta.aktivna ? "bg-green-500" : "bg-slate-400")} />
-      {vrsta.aktivna ? "Aktivna" : "Neaktivna"}
+      {vrsta.aktivna ? t("aktivna") : t("neaktivna")}
     </button>
   )
 }

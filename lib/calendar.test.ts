@@ -40,4 +40,8 @@ describe("monthLabel", () => {
     expect(monthLabel(1)).toBe("Januar")
     expect(monthLabel(12)).toBe("Decembar")
   })
+  it("en/de → lokalizovano preko monthName", () => {
+    expect(monthLabel(7, "en")).toBe("July")
+    expect(monthLabel(7, "de")).toBe("Juli")
+  })
 })

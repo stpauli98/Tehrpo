@@ -1,0 +1,954 @@
+{
+  "common": {
+    "ucitavanje": "Učitavanje…",
+    "sacuvaj": "Sačuvaj",
+    "otkazi": "Otkaži",
+    "obrisi": "Obriši",
+    "zatvori": "Zatvori",
+    "pretraga": "Pretraga",
+    "prikaziJosLista": {
+      "prikaziManje": "Prikaži manje",
+      "prikaziJos": "Prikaži još {count} {imenica}"
+    },
+    "pagination": {
+      "prethodna": "Prethodna",
+      "sljedeca": "Sljedeća",
+      "strana": "Strana {pageNum} / {totalPages}"
+    },
+    "rok": {
+      "kasni": "kasni {count, plural, =1 {# dan} other {# dana}}",
+      "danas": "danas",
+      "za": "za {count, plural, =1 {# dan} other {# dana}}"
+    }
+  },
+  "shell": {
+    "nav": {
+      "pregled": "Pregled",
+      "planAktivnosti": "Plan aktivnosti",
+      "obilasci": "Obilasci",
+      "klijenti": "Klijenti",
+      "asistent": "Asistent",
+      "zapisnici": "Zapisnici",
+      "postavke": "Postavke"
+    },
+    "sidebar": {
+      "glavnaNavigacija": "Glavna navigacija",
+      "prosiriNavigaciju": "Proširi navigaciju",
+      "skupiNavigaciju": "Skupi navigaciju",
+      "skupi": "Skupi",
+      "resizeHint": "Povuci za promjenu širine · dvoklik za skupljanje"
+    },
+    "topBar": {
+      "odjava": "Odjava"
+    },
+    "comingSoon": {
+      "naslovUskoro": "{naslov} — uskoro"
+    },
+    "desktopOnlyGate": {
+      "naslov": "{appName} je optimizovan za desktop",
+      "opis": "Za rad sa sistemom otvorite aplikaciju na laptopu ili desktop računaru (ekran minimalno 1024px širine).",
+      "napomena": "Mobilna verzija nije u obimu ovog projekta."
+    },
+    "layout": {
+      "description": "Praćenje periodičnih pregleda, ispitivanja i provjera za {appName} tim."
+    }
+  },
+  "auth": {
+    "prijava": {
+      "naslov": "Prijava",
+      "emailPlaceholder": "Email",
+      "lozinkaPlaceholder": "Lozinka",
+      "dugme": "Prijavi se",
+      "dugmeUToku": "Prijava…",
+      "zaboravljenaLozinka": "Zaboravljena lozinka?",
+      "greske": {
+        "email": "Neispravan email",
+        "lozinka": "Unesite lozinku",
+        "nepotpunoUnijeto": "Unesite email i lozinku.",
+        "pogresnoUneseno": "Pogrešan email ili lozinka."
+      }
+    },
+    "zaboravljenaLozinka": {
+      "naslov": "Reset lozinke",
+      "linkIstekao": "Link je istekao ili je nevažeći. Unesite email da pošaljemo novi.",
+      "emailPlaceholder": "Email",
+      "dugme": "Pošalji link",
+      "dugmeUToku": "Slanje…",
+      "nazadNaPrijavu": "Nazad na prijavu",
+      "greske": {
+        "neispravanEmail": "Neispravan email."
+      },
+      "poruke": {
+        "linkPoslat": "Ako nalog postoji, poslali smo link za reset."
+      }
+    },
+    "novaLozinka": {
+      "naslov": "Nova lozinka",
+      "lozinkaPlaceholder": "Nova lozinka (min 8)",
+      "dugme": "Postavi lozinku",
+      "dugmeUToku": "Snimanje…",
+      "greske": {
+        "minDuzina": "Lozinka mora imati bar 8 znakova",
+        "validacija": "Greška pri validaciji.",
+        "linkIstekao": "Link je istekao ili je nevažeći. Zatražite novi."
+      }
+    }
+  },
+  "pregled": {
+    "naslov": "Pregled",
+    "podnaslov": "Rokovi i opterećenje",
+    "statCard": {
+      "terminiOvogMjeseca": {
+        "label": "Termini ovog mjeseca",
+        "sub": "rok dospijeća ovaj mjesec"
+      },
+      "kasniRokovi": {
+        "label": "Kasni rokovi",
+        "sub": "zahtijevaju akciju"
+      },
+      "izvrseniOvogMjeseca": {
+        "label": "Izvršeni ovog mjeseca",
+        "sub": "završeno ovaj mjesec"
+      },
+      "predstojeci": {
+        "label": "Predstojeći (30 dana)",
+        "sub": "još neizvršeni"
+      }
+    },
+    "hitnoKasni": {
+      "naslov": "Hitno / kasni",
+      "prazno": "Nema hitnih ni kasnih termina.",
+      "footer": "Svi kasni rokovi ({count}) →"
+    },
+    "opterecenje": {
+      "naslov": "Opterećenje po mjesecima",
+      "podnaslov": "Broj termina po statusu",
+      "legenda": {
+        "izvrseno": "Izvršeno",
+        "kasni": "Kasni",
+        "uPlanu": "U planu"
+      },
+      "barTitle": "{naziv}: {count} termina",
+      "barAriaLabel": "{naziv}: {count} termina — otvori mjesec u matrici"
+    },
+    "prikaz": {
+      "modKlijent": "Po klijentu",
+      "modMjesec": "Po mjesecu",
+      "sviKlijenti": "— svi klijenti —",
+      "izaberiKlijenta": "Izaberi klijenta",
+      "izaberiMjesec": "Izaberi mjesec",
+      "godina": "Godina"
+    }
+  },
+  "klijenti": {
+    "lista": {
+      "naslov": "Klijenti",
+      "prazno": "Nema klijenata za zadanu pretragu.",
+      "ukupno": "Ukupno klijenata: {count}"
+    },
+    "actions": {
+      "nazivObavezan": "Naziv je obavezan",
+      "adresaObavezna": "Adresa je obavezna",
+      "telefonObavezan": "Telefon je obavezan",
+      "emailObavezan": "Email je obavezan",
+      "emailNeispravan": "Neispravan email",
+      "korisnikNeispravan": "Neispravan korisnik",
+      "klijentNazivPostoji": "Klijent sa tim nazivom već postoji.",
+      "klijentImaTermine": "Ne možete obrisati klijenta koji ima termine.",
+      "primaociNeispravanEmail": "Neispravan email: {lista}",
+      "brojOpseg": "Broj mora biti {min}–{max}",
+      "datumNeispravan": "Neispravan datum",
+      "datumIstekaNakonPotpisivanja": "Datum isteka mora biti nakon datuma potpisivanja.",
+      "neispravanZahtjev": "Neispravan zahtjev.",
+      "vrstaObavezna": "Vrsta je obavezna.",
+      "lokacijaObavezna": "Lokacija je obavezna.",
+      "zadnjiDatumObavezan": "Zadnji datum je obavezan.",
+      "prviRokObavezan": "Prvi rok je obavezan.",
+      "lokacijaNePripada": "Lokacija ne pripada klijentu.",
+      "vrstaNemaInterval": "Vrsta nema podrazumijevani interval — postavite ga u Postavkama.",
+      "provjeraVecPostoji": "Ova provjera već postoji u profilu.",
+      "terminProvjeraOsvjezi": "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu.",
+      "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
+      "nedostajeId": "Nedostaje id.",
+      "imeObavezno": "Ime je obavezno"
+    },
+    "detalj": {
+      "nazad": "Klijenti",
+      "terminiTab": {
+        "prazno": "Nema termina za ovog klijenta. Dodajte provjeru da se generiše prvi termin.",
+        "kolone": {
+          "datumRoka": "Datum roka",
+          "vrsta": "Vrsta",
+          "lokacija": "Lokacija",
+          "status": "Status",
+          "zaduzeni": "Zaduženi"
+        }
+      },
+      "kontaktiTab": {
+        "infoPuniSpisak": "Puni spisak kontakata firme sa pretragom po imenu i funkciji.",
+        "naslovLokacije": "Kontakti lokacija",
+        "infoLokacije": "Kontakt osobe pojedinačnih lokacija, izvedene iz podataka lokacije. Uređuju se u tabu Lokacije.",
+        "urediULokacijama": "Uredi u Lokacijama"
+      },
+      "dokumentiTab": {
+        "prazno": "Nema dokumenata za ovog klijenta.",
+        "kolone": {
+          "naziv": "Naziv",
+          "tip": "Tip",
+          "izvor": "Izvor",
+          "datum": "Datum"
+        },
+        "izvorAi": "AI zapisnik",
+        "izvorUpload": "Upload",
+        "preuzmi": "Preuzmi"
+      }
+    },
+    "karta": {
+      "kasniBadge": "{count} kasni",
+      "lokacija": "{count} lok.",
+      "aktivnih": "{count} aktivnih",
+      "ukupno": "{count} ukupno"
+    },
+    "uredi": {
+      "dugme": "Uredi",
+      "naslov": "Uredi klijenta",
+      "poljeNaziv": "Naziv *",
+      "poljeNapomena": "Napomena",
+      "polja": {
+        "adresa": "Adresa *",
+        "telefon": "Telefon *",
+        "email": "Email *",
+        "pib": "PIB",
+        "maticniBroj": "Matični broj",
+        "sifraDjelatnosti": "Šifra djelatnosti"
+      },
+      "zaduzenaOsoba": "Zadužena osoba ({appName})",
+      "nijePostavljeno": "— (nije postavljeno)",
+      "primaociLabel": "Primaoci podsjetnika (email, odvojeni zarezom)",
+      "primaociPlaceholder": "npr. sef@firma.com, tehnicar@firma.com",
+      "tipOdnosaLabel": "Tip odnosa",
+      "tipOdnosaOpcije": {
+        "ugovor": "Po ugovoru",
+        "ponuda": "Po ponudi"
+      },
+      "submitPending": "Spremam…",
+      "submit": "Spremi izmjene"
+    },
+    "tabs": {
+      "idKarta": {
+        "label": "ID karta",
+        "info": "Lična karta klijenta na jednom mjestu: osnovni podaci firme, ugovori, ključni kontakti i pregled ugovorenih usluga sa sljedećim rokovima."
+      },
+      "termini": {
+        "label": "Termini",
+        "info": "Svi konkretni rokovi za ovog klijenta — prošli i budući. Svaki red je jedan termin sa datumom roka, statusom (planirano, zakazano, kasni, izvršeno) i zaduženom osobom. Termini se generišu iz provjera definisanih u Profilu."
+      },
+      "lokacije": {
+        "label": "Lokacije",
+        "info": "Objekti i poslovne jedinice klijenta na kojima se vrše provjere i obilasci. Svaka lokacija može imati svoju adresu i kontakt osobu, a termini se mogu vezati za konkretnu lokaciju."
+      },
+      "kontakti": {
+        "label": "Kontakti",
+        "info": "Sve kontakt osobe klijenta: kontakti firme (direktor, odgovorna lica…) i kontakti pojedinačnih lokacija. Kontakti lokacija se uređuju u tabu Lokacije."
+      },
+      "dokumenti": {
+        "label": "Dokumenti",
+        "info": "Svi dokumenti vezani za klijenta — ručno dodati fajlovi i AI-generisani zapisnici. Kolona Izvor pokazuje da li je dokument nastao uploadom ili ga je generisao AI."
+      },
+      "profil": {
+        "label": "Profil",
+        "info": "Definicija ponavljajućih provjera za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
+      }
+    },
+    "pretraga": {
+      "placeholder": "Pretraga firme..."
+    },
+    "noviKlijent": {
+      "dugme": "Novi klijent",
+      "naslov": "Novi klijent",
+      "poljeNaziv": "Naziv *",
+      "placeholderNaziv": "npr. WAIKIKI Banja Luka",
+      "poljeAdresa": "Adresa *",
+      "poljeTelefon": "Telefon *",
+      "poljeEmail": "Email *",
+      "poljeNapomena": "Napomena",
+      "submitPending": "Kreiram…",
+      "submit": "Kreiraj klijenta"
+    },
+    "obrisi": {
+      "disabledTitle": "Klijent ima termine i ne može se obrisati",
+      "dialogNaslov": "Obrisati klijenta?",
+      "dialogOpis": "Ova radnja je trajna. Lokacije klijenta će takođe biti obrisane.",
+      "confirmPending": "Brišem…",
+      "greskaFallback": "Greška pri brisanju."
+    },
+    "idKarta": {
+      "osnovniPodaci": {
+        "naslov": "Osnovni podaci",
+        "info": "Registracioni i kontakt podaci firme (adresa, PIB, matični broj…) i osoba zadužena za klijenta. Uređuje se preko dugmeta Uredi u zaglavlju."
+      },
+      "polja": {
+        "adresa": "Adresa",
+        "telefon": "Telefon",
+        "email": "Email",
+        "pib": "PIB",
+        "maticniBroj": "Matični broj",
+        "sifraDjelatnosti": "Šifra djelatnosti",
+        "zaduzen": "Zadužen ({appName})"
+      },
+      "ugovoriInfo": "Ugovori sklopljeni sa klijentom. Samo jedan ugovor može biti aktivan; stariji ostaju kao istorija.",
+      "kontaktiInfo": "Skraćeni pregled kontakata firme (prvih nekoliko). Puni spisak i pretraga su u tabu Kontakti.",
+      "usluge": {
+        "naslov": "Ugovorene usluge",
+        "info": "Sažetak provjera iz Profila sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red.",
+        "prazno": "Nema definisanih usluga. Dodajte ih kroz tab Profil.",
+        "sljedeci": "sljedeći: {datum}",
+        "imenica": "usluga"
+      }
+    },
+    "ugovorSheet": {
+      "uredi": "Uredi",
+      "novi": "Novi ugovor",
+      "naslovUredi": "Uredi ugovor",
+      "naslovNovi": "Novi ugovor",
+      "poljeZavodniBroj": "Zavodni broj (broj ugovora)",
+      "poljeDatumPotpisivanja": "Datum potpisivanja",
+      "poljeDatumIsteka": "Datum isteka",
+      "poljeVazenje": "Važenje (mjeseci)",
+      "poljeObilasci": "Obilazaka / mjesec",
+      "poljeAutoObnavljanje": "Automatsko obnavljanje",
+      "poljeAktivan": "Aktivan ugovor (deaktivira ostale)",
+      "poljeNapomena": "Napomena",
+      "submitPending": "Spremam…",
+      "submitEdit": "Spremi izmjene",
+      "submitNovi": "Kreiraj ugovor"
+    },
+    "ugovori": {
+      "naslov": "Ugovori",
+      "prazno": "Nema ugovora. Dodajte prvi ugovor.",
+      "imenica": "ugovora",
+      "bezBroja": "Bez broja",
+      "aktivan": "aktivan",
+      "neaktivan": "neaktivan",
+      "obrisiAriaLabel": "Obriši ugovor",
+      "obilazMjesecno": " · {count} obilaz./mj."
+    },
+    "tipOdnosa": {
+      "ugovor": "po ugovoru",
+      "ponuda": "po ponudi"
+    },
+    "kontaktSheet": {
+      "uredi": "Uredi",
+      "novi": "Novi kontakt",
+      "naslovUredi": "Uredi kontakt",
+      "naslovNovi": "Novi kontakt",
+      "poljeIme": "Ime i prezime *",
+      "poljeFunkcija": "Funkcija",
+      "poljeTelefon": "Telefon",
+      "poljeEmail": "Email",
+      "submitPending": "Spremam…",
+      "submitEdit": "Spremi izmjene",
+      "submitNovi": "Kreiraj kontakt"
+    },
+    "kontaktiFirme": {
+      "naslov": "Kontakt osobe (firma)",
+      "pretragaPlaceholder": "Pretraži po imenu ili funkciji…",
+      "prazno": "Nema kontakata firme.",
+      "praznoPretraga": "Nema kontakata za „{q}”.",
+      "obrisiAriaLabel": "Obriši kontakt",
+      "vidiSve": "Vidi sve ({count}) →"
+    },
+    "lokacijaSheet": {
+      "uredi": "Uredi",
+      "novi": "Nova lokacija",
+      "naslovUredi": "Uredi lokaciju",
+      "naslovNovi": "Nova lokacija",
+      "poljeNaziv": "Naziv *",
+      "poljeGrad": "Grad",
+      "poljeRegija": "Regija",
+      "poljeAdresa": "Adresa",
+      "poljeKontaktOsoba": "Kontakt osoba",
+      "poljeEmail": "Email",
+      "poljeTelefon": "Telefon",
+      "submitPending": "Spremam…",
+      "submitEdit": "Spremi izmjene",
+      "submitNovi": "Kreiraj lokaciju"
+    },
+    "lokacije": {
+      "prazno": "Nema lokacija. Dodajte prvu lokaciju za ovog klijenta.",
+      "kolone": {
+        "naziv": "Naziv",
+        "lokacijaAdresa": "Lokacija / Adresa",
+        "gradRegija": "Grad / Regija",
+        "kontakt": "Kontakt",
+        "akcije": "Akcije"
+      },
+      "kontaktLinkTitle": "Otvori u tabu Kontakti"
+    },
+    "obrisiLokaciju": {
+      "dialogNaslov": "Obrisati lokaciju?",
+      "dialogOpis": "Brisanje lokacije će ukloniti vezu sa postojećim terminima (termin ostaje, lokacija postaje prazna).",
+      "confirmPending": "Brišem…"
+    },
+    "dokumentUpload": {
+      "tipovi": {
+        "strucni_nalaz": "Stručni nalaz",
+        "zapisnik": "Zapisnik",
+        "ugovor": "Ugovor",
+        "ponuda": "Ponuda",
+        "fotografija": "Fotografija",
+        "ostalo": "Ostalo"
+      },
+      "fajlPrevelik": "Fajl je prevelik ({velicina}). Maksimalno {max} MB.",
+      "ukloniFajlAriaLabel": "Ukloni fajl",
+      "prevuciDokument": "Prevuci dokument ovdje ili",
+      "klikniZaOdabir": "klikni za odabir",
+      "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
+      "tipDokumentaLabel": "Tip dokumenta",
+      "submitPending": "Šaljem…",
+      "submit": "Dodaj dokument"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Firme ({count})",
+      "naslov": "Dodijeljene firme",
+      "opis": "Korisnik vidi i radi samo na firmama koje su mu ovdje dodijeljene.",
+      "pretragaPlaceholder": "Pretraži firme…",
+      "prazno": "Nema rezultata.",
+      "brojac": "{count} izabrano",
+      "submitPending": "Snimam…",
+      "toastSuccess": "Firme dodijeljene.",
+      "toastErrorFallback": "Greška."
+    },
+    "profil": {
+      "prazno": "Nema provjera u profilu. Dodajte provjeru da generišete termine.",
+      "kolone": {
+        "vrsta": "Vrsta",
+        "lokacija": "Lokacija",
+        "interval": "Interval (mj)",
+        "zadnjiPut": "Zadnji put",
+        "sljedeciRok": "Sljedeći rok"
+      },
+      "prviPut": "— (prvi put)"
+    },
+    "obrisiProfil": {
+      "tooltip": "Ukloni iz profila",
+      "dialogNaslov": "Ukloniti provjeru iz profila?",
+      "dialogOpis": "Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).",
+      "potvrdi": "Ukloni",
+      "confirmPending": "Brišem…"
+    }
+  },
+  "termini": {
+    "tabela": {
+      "kolone": {
+        "datumRoka": "Datum roka",
+        "klijent": "Klijent",
+        "lokacija": "Lokacija",
+        "vrsta": "Vrsta",
+        "status": "Status",
+        "zaduzeni": "Zaduženi",
+        "akcije": "Akcije"
+      },
+      "prazno": "Nema termina za zadane filtere.",
+      "samoPracenje": "Samo praćenje",
+      "detalji": "Detalji"
+    },
+    "filteri": {
+      "sveFirme": "Sve firme",
+      "sveLokacije": "Sve lokacije",
+      "sveVrste": "Sve vrste",
+      "sviMjeseci": "Svi mjeseci",
+      "sviNacini": "Svi načini",
+      "nacinIzvrsava": "Izvršava",
+      "nacinPracenje": "Samo praćenje",
+      "svi": "Svi",
+      "godina": "Godina",
+      "pretragaPlaceholder": "Pretraga firme...",
+      "tekuciNaredni": "Tekući + naredni mjesec"
+    },
+    "sheet": {
+      "naslovFallback": "Termin",
+      "rok": "Rok: {datum}",
+      "detaljiNaslov": "Detalji",
+      "poljeDatumZakazan": "Datum zakazan",
+      "poljeDatumIzvrsenja": "Datum izvršenja",
+      "poljeZaduzeni": "Zaduženi",
+      "placeholderZaduzeni": "npr. Marija K.",
+      "poljeNapomena": "Napomena",
+      "spremam": "Spremam…",
+      "spremiIzmjene": "Spremi izmjene",
+      "akcijeNaslov": "Akcije",
+      "oznaciKaoIzvrseno": "Označi kao izvršeno",
+      "oznacavam": "Označavam…",
+      "oznaciIzvrseno": "Označi izvršeno",
+      "autoCiklus": "Sistem automatski kreira sljedeći termin u ciklusu.",
+      "otkaziTermin": "Otkaži termin",
+      "otkazujem": "Otkazujem…",
+      "potvrdiOtkazivanje": "Potvrdi otkazivanje",
+      "odustani": "Odustani",
+      "istorijaNaslov": "Istorija",
+      "istorijaPrazno": "Nema prethodnih izvršenih ciklusa.",
+      "toastIzmjeneSacuvane": "Izmjene sačuvane",
+      "toastOznacenIzvrsenim": "Termin označen izvršenim",
+      "toastOtkazan": "Termin otkazan"
+    },
+    "statusBadge": {
+      "zakPrefix": "zak. {datum}",
+      "zakazanoFallback": "zakazano"
+    },
+    "noviTermin": {
+      "dugme": "Novi termin",
+      "poljeKlijent": "Klijent *",
+      "placeholderKlijent": "Izaberi klijenta",
+      "poljeLokacija": "Lokacija",
+      "placeholderLokacija": "Izaberi lokaciju (opcionalno)",
+      "poljeVrsta": "Vrsta provjere *",
+      "placeholderVrsta": "Izaberi vrstu",
+      "poljeRok": "Rok dospijeća *",
+      "poljeDatumZakazan": "Datum zakazan",
+      "poljeZaduzeni": "Zaduženi",
+      "placeholderZaduzeni": "npr. Marija K.",
+      "kreiram": "Kreiram…",
+      "kreirajTermin": "Kreiraj termin"
+    },
+    "dodajProvjeru": {
+      "dugme": "Dodaj provjeru",
+      "naslov": "Dodaj provjeru u profil",
+      "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
+      "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
+      "poljeVrsta": "Vrsta *",
+      "placeholderVrsta": "Izaberi vrstu",
+      "poljeLokacija": "Lokacija *",
+      "placeholderLokacija": "Izaberi lokaciju",
+      "poljeInterval": "Interval (mjeseci) — povučeno iz vrste",
+      "bezIntervalaTekst": "Ova vrsta nema podrazumijevani interval — postavite ga u",
+      "bezIntervalaLink": "Postavkama",
+      "bezIntervalaKraj": "prije dodavanja u profil.",
+      "poljeRadjenoRanije": "Da li je provjera već rađena? *",
+      "opcijaVecRadeno": "Da — unosim zadnji datum",
+      "opcijaPrviPut": "Ne — prvi put (unosim prvi rok)",
+      "poljeZadnjiDatum": "Zadnji put rađeno *",
+      "poljePrviRok": "Prvi rok *",
+      "poljeNacinIzvrsenja": "Način izvršenja *",
+      "nacinIzvrsava": "{appName} izvršava",
+      "nacinPracenje": "Samo praćenje roka",
+      "dodajem": "Dodajem…",
+      "dodajIGenerisi": "Dodaj i generiši termin"
+    },
+    "novaVrsta": {
+      "dugme": "Nova vrsta",
+      "naslov": "Nova vrsta pregleda",
+      "poljeNaziv": "Naziv *",
+      "placeholderNaziv": "npr. Pregled ventilacionog sistema",
+      "poljeInterval": "Interval (mjeseci)",
+      "placeholderInterval": "prazno = bez auto-zakazivanja",
+      "poljeZakonskiOsnov": "Zakonski osnov",
+      "placeholderZakonskiOsnov": "npr. Pravilnik… (opciono)",
+      "kreiram": "Kreiram…",
+      "kreirajVrstu": "Kreiraj vrstu"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Uredi",
+      "naslov": "Uredi vrstu pregleda",
+      "poljeNaziv": "Naziv *",
+      "poljeZakonskiOsnov": "Zakonski osnov",
+      "poljeVodiDokumentaciju": "Za ovu uslugu se vodi dokumentacija",
+      "spremam": "Spremam…",
+      "spremiIzmjene": "Spremi izmjene",
+      "deaktiviraj": "Deaktiviraj",
+      "aktiviraj": "Aktiviraj"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Prikaži i neaktivne",
+      "brojVrsta": "{count} vrsta",
+      "kolone": {
+        "vrsta": "Vrsta pregleda",
+        "interval": "Interval (mj)",
+        "dokumentacija": "Dok.",
+        "status": "Status",
+        "akcije": "Akcije"
+      },
+      "vodiDokumentacijuTitle": "Vodi se dokumentacija",
+      "bezDokumentacijeTitle": "Bez dokumentacije",
+      "prazno": "Nema vrsta za prikaz.",
+      "intervalGreska": "1–120 ili prazno",
+      "intervalSpremljeno": "✓ spremljeno",
+      "intervalGreskaFallback": "Greška pri snimanju",
+      "klikDeaktivacija": "Klik za deaktivaciju",
+      "klikAktivacija": "Klik za aktivaciju",
+      "aktivna": "Aktivna",
+      "neaktivna": "Neaktivna"
+    },
+    "actions": {
+      "datumNeispravan": "Neispravan datum",
+      "datumUBuducnosti": "Datum izvršenja ne može biti u budućnosti",
+      "neispravanZahtjev": "Neispravan zahtjev.",
+      "klijentObavezan": "Klijent je obavezan",
+      "vrstaObavezna": "Vrsta je obavezna",
+      "rokObavezan": "Rok je obavezan",
+      "lokacijaNePripada": "Lokacija ne pripada izabranom klijentu.",
+      "terminVecPostoji": "Termin za istu firmu, vrstu i rok već postoji.",
+      "datumObavezan": "Datum je obavezan"
+    }
+  },
+  "status": {
+    "planirano": "Planirano",
+    "zakazano": "Zakazano",
+    "izvrseno": "Izvršeno",
+    "otkazano": "Otkazano",
+    "kasni": "Kasni"
+  },
+  "obilasci": {
+    "naslov": "Obilasci",
+    "podnaslov": "Grupisano po gradu za efikasniji raspored izlazaka.",
+    "prazno": "Nema termina u izabranom periodu.",
+    "toolbar": {
+      "periodMjesec": "Mjesec",
+      "periodKvartal": "Kvartal",
+      "periodGodina": "Godina",
+      "statusAktivni": "Aktivni",
+      "statusSvi": "Svi",
+      "gradSvi": "Svi gradovi",
+      "gradBez": "Bez grada",
+      "placeholderMjesec": "Mjesec",
+      "placeholderKvartal": "Kvartal"
+    }
+  },
+  "plan": {
+    "naslov": "Plan aktivnosti",
+    "izvoz": {
+      "excel": "Izvoz Excel",
+      "pdf": "Izvoz PDF"
+    },
+    "viewSwitcher": {
+      "kalendar": "Kalendar",
+      "lista": "Lista",
+      "matrica": "Matrica"
+    },
+    "nav": {
+      "prethodniMjesec": "Prethodni mjesec",
+      "sljedeciMjesec": "Sljedeći mjesec",
+      "danas": "Danas"
+    },
+    "legenda": {
+      "naslov": "Legenda:"
+    },
+    "matrixLegenda": {
+      "izvrseno": "✓ izvršeno",
+      "kasni": "! kasni",
+      "viseTermina": "(+N) još termina",
+      "nemaTermina": "· nema termina"
+    },
+    "matrixGrid": {
+      "vrstaHeader": "Vrsta pregleda / ispitivanja",
+      "viseTerminaTitle": "Više termina — otvori listu",
+      "prazno": "Nema podataka."
+    },
+    "monthCalendar": {
+      "danAriaLabel": "Dan {broj}",
+      "jos": "još {count}"
+    },
+    "kalendar": {
+      "nemaTerminaZaDan": "Nema termina za ovaj dan.",
+      "detalji": "Detalji"
+    },
+    "lista": {
+      "ukupnoRezultata": "Ukupno rezultata: {count}"
+    },
+    "matrica": {
+      "izaberiteKlijenta": "Izaberite klijenta za prikaz godišnje matrice.",
+      "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
+      "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
+    }
+  },
+  "zapisnici": {
+    "naslov": "Zapisnici",
+    "prazno": "Još nema AI-generisanih zapisnika. Generiši ih iz detalja termina.",
+    "zatvoriPregled": "Zatvori pregled",
+    "pretragaPlaceholder": "Pretraži po klijentu ili vrsti provjere…",
+    "kolone": {
+      "klijent": "Klijent",
+      "vrsta": "Vrsta provjere",
+      "datum": "Datum",
+      "akcije": "Akcije"
+    },
+    "brojUkupno": "{count} zapisnika",
+    "brojFiltrirano": "{prikazano} / {ukupno}",
+    "pregled": "Pregled",
+    "preuzmi": "Preuzmi",
+    "obrisiZapisnik": "Obriši zapisnik",
+    "prazniRezultati": "Nema zapisnika za „{upit}”."
+  },
+  "dokumenti": {
+    "izaberiteFajl": "Izaberite fajl.",
+    "nedozvoljenTip": "Nedozvoljen tip fajla (docx, pdf, png, jpeg, webp).",
+    "fajlPrevelik": "Fajl je veći od {max} MB.",
+    "terminNePostoji": "Termin ne postoji.",
+    "terminObavezan": "Termin je obavezan",
+    "uploadNijeUspio": "Upload nije uspio.",
+    "zapisnikSamoIzvrsen": "Zapisnik se generiše samo za izvršen termin.",
+    "generisanjeNijeUspjelo": "Generisanje nije uspjelo.",
+    "samoAdminBrise": "Samo administrator može brisati dokumente.",
+    "dokumentNePostoji": "Dokument ne postoji.",
+    "dokumentNePostojiIliNemaPristupa": "Dokument ne postoji ili nemate pristup.",
+    "klijentObavezan": "Klijent je obavezan",
+    "tipNeispravan": "Neispravan tip",
+    "klijentNePostojiIliNemaPristupa": "Klijent ne postoji ili nemate pristup.",
+    "ugovorNePripadaKlijentu": "Ugovor ne pripada klijentu.",
+    "naslov": "Dokumenti",
+    "generisiZapisnik": "Generiši zapisnik (AI)",
+    "generisem": "Generišem…",
+    "zapisnikNedostupan": "Zapisnik (AI) je dostupan tek nakon što je termin izvršen.",
+    "saljem": "Šaljem…",
+    "uploadDugme": "Upload",
+    "prazno": "Nema dokumenata za ovaj termin.",
+    "preuzmi": "Preuzmi",
+    "obrisiDokument": "Obriši dokument",
+    "aiOznaka": "AI"
+  },
+  "postavke": {
+    "naslov": "Postavke",
+    "reminders": {
+      "naslov": "Email podsjetnici",
+      "opis": "Koliko dana prije roka dospijeća se šalje podsjetnik. Sistem dnevno provjerava termine."
+    },
+    "vrste": {
+      "naslov": "Vrste pregleda",
+      "opis": "Usluge koje sistem prati i automatski zakazuje. Interval (mjeseci) određuje kada se po izvršenju zakazuje sljedeći termin. Prazno = bez auto-zakazivanja."
+    },
+    "korisnici": {
+      "naslov": "Korisnici"
+    },
+    "uloge": {
+      "admin": "Administrator",
+      "operater": "Operater",
+      "pregled": "Pregled"
+    },
+    "korisniciTabela": {
+      "pretragaPlaceholder": "Pretraži korisnike…",
+      "brojUkupno": "{count} korisnika",
+      "brojFiltrirano": "{prikazano} / {ukupno}",
+      "kolone": {
+        "korisnik": "Korisnik",
+        "uloga": "Uloga",
+        "podsjetnici": "Podsjetnici",
+        "firme": "Firme",
+        "akcije": "Akcije"
+      },
+      "ti": "(ti)",
+      "deaktiviran": "deaktiviran",
+      "sveFirme": "sve firme",
+      "sveFirmeTitle": "Administrator vidi sve firme",
+      "nemaDodijeljenih": "nema dodijeljenih",
+      "prazno": "Nema korisnika za „{upit}”."
+    },
+    "korisnikAkcije": {
+      "aria": "Akcije",
+      "testEmail": "Pošalji test email",
+      "deaktivirajKorisnika": "Deaktiviraj korisnika",
+      "aktivirajKorisnika": "Aktiviraj korisnika",
+      "greskaSlanja": "Greška pri slanju.",
+      "dryRunNaslov": "Email nije stvarno poslan (dry-run).",
+      "dryRunOpis": "Resend nije konfigurisan. Test je simuliran za {email}.",
+      "testniPoslat": "Testni email poslan na {email}.",
+      "napomenaIskljuceniPodsjetnici": "Napomena: korisnik ima isključene podsjetnike.",
+      "korisnikDeaktiviran": "Korisnik deaktiviran.",
+      "korisnikAktiviran": "Korisnik aktiviran.",
+      "greska": "Greška."
+    },
+    "noviKorisnik": {
+      "dugme": "Novi korisnik",
+      "naslov": "Novi korisnik",
+      "placeholderIme": "Ime i prezime",
+      "placeholderEmail": "Email",
+      "placeholderLozinka": "Početna lozinka (min 8)",
+      "submitPending": "Kreiranje…",
+      "submit": "Kreiraj"
+    },
+    "ulogaSelect": {
+      "vlastitaUlogaTitle": "Ne možeš mijenjati vlastitu ulogu",
+      "promijeniUlogu": "Promijeni ulogu",
+      "sacuvano": "Uloga promijenjena.",
+      "greska": "Greška."
+    },
+    "primaPodsjetnike": {
+      "aria": "Prima email podsjetnike",
+      "sacuvano": "Sačuvano.",
+      "greska": "Greška."
+    },
+    "reminderForm": {
+      "naDan": "na dan",
+      "dana": "{count, plural, =1 {# dan} other {# dana}}",
+      "ukloniAria": "Ukloni {labela}",
+      "uputstvo": "Klikni prag da uključiš/isključiš slanje.",
+      "uputstvoUklanjanje": "× uklanja opciju.",
+      "customPlaceholder": "npr. 21",
+      "danaPrije": "dana prije",
+      "dodaj": "Dodaj",
+      "customGreska": "Unesite cijeli broj dana 0–365",
+      "prazno": "Nijedan prag nije uključen — emailovi se neće slati.",
+      "submitPending": "Spremam…",
+      "submit": "Spremi"
+    },
+    "actions": {
+      "pragObavezan": "Unesite barem jedan prag",
+      "pragoviNeispravni": "Pragovi moraju biti cijeli brojevi 0–365, odvojeni zarezom",
+      "samoAdministrator": "Samo administrator.",
+      "intervalGreskaVrijednost": "Interval mora biti cijeli broj 1–120 ili prazno (greška: \"{vrijednost}\")",
+      "nazivObavezan": "Naziv je obavezan",
+      "intervalNeispravan": "Interval mora biti cijeli broj 1–120 ili prazno",
+      "vrstaPregledaNazivPostoji": "Vrsta pregleda sa tim nazivom već postoji.",
+      "imeObavezno": "Ime je obavezno",
+      "emailNeispravan": "Neispravan email",
+      "lozinkaMin": "Lozinka min 8 znakova",
+      "korisnikEmailPostoji": "Korisnik sa tim emailom već postoji.",
+      "greskaFallback": "Greška.",
+      "sebiOduzetiUlogu": "Ne možeš sebi oduzeti administratorsku ulogu.",
+      "barJedanAdmin": "Mora postojati barem jedan aktivan administrator.",
+      "deaktivirajVlastitiNalog": "Ne možeš deaktivirati vlastiti nalog.",
+      "korisnikNemaEmail": "Korisnik nema email adresu.",
+      "greskaSlanjaEmailaFallback": "Greška pri slanju emaila.",
+      "resendTestniRezim": "Resend je u testnom režimu: dok domena nije verifikovana, mejlovi se mogu slati samo na email vlasnika Resend naloga. Verifikuj domenu na resend.com/domains i postavi EMAIL_FROM na adresu te domene.",
+      "klijentNepostojeciUDodjeli": "Nepostojeći klijent u dodjeli.",
+      "intervalNeispravanKratko": "Interval mora biti 1–120 ili prazno",
+      "vrstaNazivPostoji": "Vrsta sa tim nazivom već postoji.",
+      "vrstaIdNeispravan": "Neispravan ID vrste.",
+      "intervalNeispravanTacka": "Interval mora biti cijeli broj 1–120 ili prazno."
+    }
+  },
+  "asistent": {
+    "naslov": "Asistent",
+    "sidebar": {
+      "naslov": "Razgovori",
+      "prazno": "Nema razgovora.",
+      "bezNaslova": "Razgovor"
+    },
+    "prazanRazgovor": "Klikni „+ Novi razgovor” za početak, ili izaberi postojeći razgovor lijevo.",
+    "chat": {
+      "prazno": "Postavi pitanje o terminima, firmama ili zatraži prijedlog zapisnika.",
+      "nemaStream": "Nema stream-a",
+      "greskaEvent": "\n[Greška: {poruka}]",
+      "greskaVeze": "\n[Greška veze: {poruka}]",
+      "nepoznatoGreska": "nepoznato"
+    },
+    "chatInput": {
+      "placeholder": "Napiši pitanje…",
+      "posalji": "Pošalji"
+    },
+    "chatMessage": {
+      "alati": "Alati: {lista}",
+      "proposal": {
+        "naslov": "Prijedlog zapisnika · {klijent} · {vrsta}",
+        "nalaz": "Nalaz:",
+        "zakljucak": "Zaključak:",
+        "snimi": "Snimi zapisnik",
+        "snimam": "Snimam…",
+        "snimljeno": "Snimljeno ✓"
+      }
+    },
+    "noviRazgovor": {
+      "dugme": "Novi razgovor"
+    },
+    "suggestedPills": {
+      "pitanje1": "Koji termini kasne?",
+      "pitanje2": "Koje firme imamo i koliko kasne?",
+      "pitanje3": "Grupiši aktivne termine po klijentu"
+    },
+    "actions": {
+      "neispravanTermin": "Neispravan termin",
+      "terminNePostoji": "Termin ne postoji.",
+      "snimanjeNijeUspjelo": "Snimanje nije uspjelo."
+    },
+    "api": {
+      "neispravanZahtjev": "Neispravan zahtjev",
+      "snimanjeNijeUspjelo": "Snimanje poruke nije uspjelo",
+      "greskaAsistenta": "Greška asistenta",
+      "bezTeksta": "(bez teksta)"
+    }
+  },
+  "email": {
+    "test": {
+      "predmet": "Testni email — {appName}",
+      "headerLabel": "Test",
+      "znacka": "TESTNI EMAIL",
+      "pozdravIme": "Zdravo {ime},",
+      "pozdrav": "Zdravo,",
+      "opis": "Ako vidiš ovu poruku, dostava emaila na tvoju adresu radi ispravno. Na ovu adresu ćeš primati automatske podsjetnike o rokovima dospijeća.",
+      "napomena": "Ovo je test poslan iz postavki — nije potrebno ništa raditi."
+    },
+    "podsjetnik": {
+      "predmet": "Podsjetnik: {vrsta} — {klijent} ({stanje})",
+      "rok": "rok {tekst}",
+      "headerLabel": "Podsjetnik",
+      "znackaKasni": "KASNI",
+      "znackaUskoro": "USKORO",
+      "rokDospijeca": "Rok dospijeća:",
+      "poljeVrsta": "Vrsta",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija",
+      "dugmeTermin": "Otvori termin",
+      "dugmeKlijent": "Otvori klijenta",
+      "prilogNaziv": "termin.ics"
+    },
+    "ics": {
+      "opis": "Podsjetnik o roku.",
+      "detalji": "Detalji: {url}"
+    }
+  },
+  "izvoz": {
+    "plan": {
+      "naslov": "Plan aktivnosti",
+      "podnaslov": "Plan aktivnosti — {period}",
+      "sviMjeseci": "svi mjeseci",
+      "nemaAktivnosti": "Nema aktivnosti za odabrane filtere.",
+      "kolone": {
+        "klijent": "Klijent",
+        "lokacija": "Lokacija",
+        "usluga": "Usluga",
+        "rok": "Rok",
+        "status": "Status",
+        "periodika": "Periodika (mj)",
+        "odgovorna": "Odgovorna osoba",
+        "nacin": "Način"
+      },
+      "kolonePdf": {
+        "klijent": "Klijent",
+        "lokacija": "Lokacija",
+        "usluga": "Usluga",
+        "rok": "Rok",
+        "status": "Status",
+        "periodika": "Periodika",
+        "odgovorna": "Odgovorna",
+        "nacin": "Način"
+      },
+      "nacin": {
+        "izvrsava": "Izvršava",
+        "pracenje": "Praćenje"
+      },
+      "greska": "Greška",
+      "greskaGenerisanje": "Greška pri generisanju fajla: {poruka}"
+    },
+    "zapisnik": {
+      "naslov": "ZAPISNIK O IZVRŠENOJ PROVJERI",
+      "podnaslov": "{appName} — zaštita na radu",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija",
+      "poljeVrstaProvjere": "Vrsta provjere",
+      "poljeDatumIzvrsenja": "Datum izvršenja",
+      "poljeZaduzeni": "Zaduženi",
+      "nalaz": "Nalaz",
+      "zakljucak": "Zaključak",
+      "potpis": "Potpis ovlaštenog lica: ______________________________",
+      "imeFajla": "Zapisnik - {vrsta} - {datum}.docx",
+      "provjeraFallback": "provjera"
+    }
+  },
+  "dbErrors": {
+    "chkTerminiDatumi": "Neispravan datum: datum izvršenja ne može biti u budućnosti, a interval mora biti između 1 i 120 mjeseci.",
+    "duplikat": "Zapis sa tim vrijednostima već postoji.",
+    "uUpotrebi": "Zapis je povezan s drugim podacima i u upotrebi je.",
+    "nevazeciPodaci": "Nevažeći podaci — provjerite unos.",
+    "obaveznoPolje": "Nedostaje obavezno polje.",
+    "genericka": "Došlo je do greške pri spremanju. Pokušajte ponovo."
+  }
+}

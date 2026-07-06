@@ -2,14 +2,45 @@ import Anthropic from "@anthropic-ai/sdk"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { grupisiPoKlijentu } from "./grouping"
+import { APP_LOCALE, type Locale } from "@/lib/locale"
 
 export type ToolName = "searchTermini" | "listFirme" | "predloziZapisnik" | "suggestGrupisanje"
 
-export const TOOL_LABELS: Record<ToolName, string> = {
-  searchTermini: "Pretražujem termine…",
-  listFirme: "Pregledam firme…",
-  suggestGrupisanje: "Grupišem termine po klijentu…",
-  predloziZapisnik: "Pripremam prijedlog zapisnika…",
+// Korisniku vidljive labele indikatora dok alat radi (prikazane u chat UI na STVARNOM API
+// putu, tj. van dry-run moda — vidi TOOL_LABEL_FALLBACK ispod i onEvent poziv u chat.ts).
+// Lokalno-ključana mapa, isti pristup kao MOCK_TEKSTOVI u lib/claude/mock.ts: sr ostaje
+// byte-identičan postojećem tekstu.
+const TOOL_LABELS: Record<Locale, Record<ToolName, string>> = {
+  sr: {
+    searchTermini: "Pretražujem termine…",
+    listFirme: "Pregledam firme…",
+    suggestGrupisanje: "Grupišem termine po klijentu…",
+    predloziZapisnik: "Pripremam prijedlog zapisnika…",
+  },
+  en: {
+    searchTermini: "Searching appointments…",
+    listFirme: "Reviewing companies…",
+    suggestGrupisanje: "Grouping appointments by client…",
+    predloziZapisnik: "Preparing the minutes proposal…",
+  },
+  de: {
+    searchTermini: "Termine werden durchsucht…",
+    listFirme: "Firmen werden überprüft…",
+    suggestGrupisanje: "Termine werden nach Klient gruppiert…",
+    predloziZapisnik: "Protokollentwurf wird vorbereitet…",
+  },
+}
+
+// Fallback labela za nepoznat/budući alat bez unosa u TOOL_LABELS (vidi ?? u toolLabel).
+const TOOL_LABEL_FALLBACK: Record<Locale, string> = {
+  sr: "Radim…",
+  en: "Working…",
+  de: "Arbeite…",
+}
+
+/** Labela indikatora za dati alat na datom jeziku (default APP_LOCALE). */
+export function toolLabel(name: string, locale: Locale = APP_LOCALE): string {
+  return TOOL_LABELS[locale][name as ToolName] ?? TOOL_LABEL_FALLBACK[locale]
 }
 
 export type ProposalData = {

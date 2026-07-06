@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { getTranslations } from "next-intl/server"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PlanViewSwitcher } from "@/components/domain/PlanViewSwitcher"
 import { PlanIzvozDugmad } from "@/components/domain/PlanIzvozDugmad"
@@ -33,11 +34,12 @@ export default async function PlanAktivnostiPage({
   const sp = await searchParams
   const raw = typeof sp.view === "string" ? sp.view : undefined
   const view: PlanView = jeValidanView(raw) ? raw : "kalendar"
+  const t = await getTranslations("plan")
 
   return (
     <div className="flex min-h-full flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Plan aktivnosti</h1>
+        <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
         <div className="flex items-center gap-3">
           <Suspense fallback={null}><PlanIzvozDugmad /></Suspense>
           <PlanViewSwitcher current={view} />

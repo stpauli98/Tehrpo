@@ -72,3 +72,33 @@ describe("reminderHtml", () => {
     expect(html).not.toContain("/plan-aktivnosti?selected")
   })
 })
+
+describe("en lokal", () => {
+  const baza = { klijent: "AS & co", vrsta: "Hidranti", rok: "2026-09-15", danaDoRoka: 7, lokacija: null }
+
+  it("testEmailSubject na engleskom", () => {
+    expect(testEmailSubject("en")).toContain("Test email")
+  })
+  it("testEmailHtml na engleskom: pozdrav, oznaka, html lang", () => {
+    const html = testEmailHtml({ ime: "Marko" }, "en")
+    expect(html).toContain("Hello Marko,")
+    expect(html).toContain("TEST EMAIL")
+    expect(html).toContain('<html lang="en">')
+  })
+  it("reminderSubject na engleskom: bez sr 'rok' prefiksa jer je već ugrađen u 'due'", () => {
+    expect(reminderSubject({ vrsta: "Servis PP aparata", klijent: "AS", danaDoRoka: 1 }, "en"))
+      .toBe("Reminder: Servis PP aparata — AS (due in 1 day)")
+    expect(reminderSubject({ vrsta: "Hidranti", klijent: "AS", danaDoRoka: -3 }, "en"))
+      .toBe("Reminder: Hidranti — AS (3 days overdue)")
+    expect(reminderSubject({ vrsta: "Hidranti", klijent: "AS", danaDoRoka: 0 }, "en"))
+      .toBe("Reminder: Hidranti — AS (due today)")
+  })
+  it("reminderHtml na engleskom: labele i dugmad", () => {
+    const html = reminderHtml({ ...baza, terminId: "t-123", klijentId: "k-456", baseUrl: "https://app.test" }, "en")
+    expect(html).toContain("Due date:")
+    expect(html).toContain("Open appointment")
+    expect(html).toContain("Open client")
+    expect(html).toContain("UPCOMING")
+    expect(html).toContain('<html lang="en">')
+  })
+})

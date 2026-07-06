@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   LayoutDashboard,
@@ -14,18 +15,19 @@ import {
   ChevronsLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { href } from "@/i18n/routes"
 
 const NAV_ITEMS = [
-  { href: "/pregled",         label: "Pregled",         icon: LayoutDashboard },
-  { href: "/plan-aktivnosti", label: "Plan aktivnosti", icon: Calendar },
-  { href: "/obilasci",        label: "Obilasci",        icon: Map },
-  { href: "/klijenti",        label: "Klijenti",        icon: Users },
-  { href: "/asistent",        label: "Asistent",        icon: Bot },
-  { href: "/zapisnici",       label: "Zapisnici",       icon: FileText },
+  { href: href("/pregled"),         labelKey: "pregled",         icon: LayoutDashboard },
+  { href: href("/plan-aktivnosti"), labelKey: "planAktivnosti",  icon: Calendar },
+  { href: href("/obilasci"),        labelKey: "obilasci",        icon: Map },
+  { href: href("/klijenti"),        labelKey: "klijenti",        icon: Users },
+  { href: href("/asistent"),        labelKey: "asistent",        icon: Bot },
+  { href: href("/zapisnici"),       labelKey: "zapisnici",       icon: FileText },
 ] as const
 
 // Postavke se prikvačuje na dno (kao zadnji li:last-child u originalu).
-const FOOTER_ITEM = { href: "/postavke", label: "Postavke", icon: Settings } as const
+const FOOTER_ITEM = { href: href("/postavke"), labelKey: "postavke", icon: Settings } as const
 
 const MIN_WIDTH = 64          // skupljeno — samo ikonice
 const MAX_WIDTH = 264
@@ -35,6 +37,8 @@ const STORAGE_KEY = "tehpro:sidebar-width"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const t = useTranslations("shell.nav")
+  const tSidebar = useTranslations("shell.sidebar")
   const navRef = useRef<HTMLElement>(null)
   const resizingRef = useRef(false)
   const lastExpandedRef = useRef(DEFAULT_WIDTH)
@@ -100,8 +104,9 @@ export function Sidebar() {
     setWidth((w) => (w < COLLAPSE_THRESHOLD ? lastExpandedRef.current || DEFAULT_WIDTH : MIN_WIDTH))
   }, [])
 
-  const renderItem = ({ href, label, icon: Icon }: { href: string; label: string; icon: typeof Settings }) => {
+  const renderItem = ({ href, labelKey, icon: Icon }: { href: string; labelKey: string; icon: typeof Settings }) => {
     const active = pathname.startsWith(href)
+    const label = t(labelKey)
     return (
       <Link
         key={href}
@@ -131,7 +136,7 @@ export function Sidebar() {
   return (
     <nav
       ref={navRef}
-      aria-label="Glavna navigacija"
+      aria-label={tSidebar("glavnaNavigacija")}
       style={{ width }}
       onTransitionEnd={() => setAnimating(false)}
       className={cn(
@@ -151,7 +156,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={toggle}
-            aria-label={collapsed ? "Proširi navigaciju" : "Skupi navigaciju"}
+            aria-label={collapsed ? tSidebar("prosiriNavigaciju") : tSidebar("skupiNavigaciju")}
             className={cn(
               "group/item relative flex h-9 items-center rounded-lg text-xs text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600",
               collapsed ? "justify-center px-0" : "gap-3 px-3",
@@ -161,7 +166,7 @@ export function Sidebar() {
               className={cn("h-[18px] w-[18px] shrink-0 transition-transform", collapsed && "rotate-180")}
               aria-hidden
             />
-            {!collapsed && <span className="truncate">Skupi</span>}
+            {!collapsed && <span className="truncate">{tSidebar("skupi")}</span>}
           </button>
         </div>
       </div>
@@ -172,7 +177,7 @@ export function Sidebar() {
         onDoubleClick={toggle}
         role="separator"
         aria-orientation="vertical"
-        title="Povuci za promjenu širine · dvoklik za skupljanje"
+        title={tSidebar("resizeHint")}
         className="group/handle absolute -right-1.5 top-0 z-10 flex h-full w-3 cursor-ew-resize items-center justify-center"
       >
         <span className="h-12 w-1 rounded-full bg-slate-200 transition-colors group-hover/handle:bg-brand" />

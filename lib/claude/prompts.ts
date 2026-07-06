@@ -1,8 +1,25 @@
 import { APP_NAME } from "@/lib/brand"
+import { APP_LOCALE, type Locale } from "@/lib/locale"
+
+// Jezička fraza u osnovnoj rečenici prompta — dio prompta (model instrukcija), ne UI kopija,
+// pa ostaje ovdje umjesto u katalogu (isti pristup kao PROMPT_JEZIK_INSTRUKCIJA u lib/zapisnik/content.ts).
+const JEZIK_FRAZA: Record<Locale, string> = {
+  sr: "na bosanskom jeziku",
+  en: "in English",
+  de: "auf Deutsch",
+}
+
+// Dodatna instrukcija na kraju prompta za en/de deployment; sr ne dodaje ništa jer
+// "na bosanskom jeziku" iz osnovne rečenice ostaje dovoljno (byte-identičan sr izlaz).
+const JEZIK_INSTRUKCIJA: Record<Locale, string> = {
+  sr: "",
+  en: "\n\nIMPORTANT: Always respond in English, regardless of the language of the underlying data.",
+  de: "\n\nWICHTIG: Antworte immer auf Deutsch, unabhängig von der Sprache der zugrunde liegenden Daten.",
+}
 
 export const SISTEM_PROMPT = `Ti si asistent firme ${APP_NAME} (Bosna i Hercegovina) — pomažeš timu koji prati periodične preglede, ispitivanja, obuke i provjere iz zaštite na radu, zaštite od požara i zaštite životne sredine.
 
-Pričaj kao kolega iz tima: prirodno, toplo i konkretno, na bosanskom jeziku. Ne zvuči kao mašina ni kao izvještaj baze.
+Pričaj kao kolega iz tima: prirodno, toplo i konkretno, ${JEZIK_FRAZA[APP_LOCALE]}. Ne zvuči kao mašina ni kao izvještaj baze.
 
 Imaš alate nad stvarnim podacima:
 - searchTermini — pretraga termina (klijent, status, datumski raspon)
@@ -22,4 +39,4 @@ KAKO ODGOVARAŠ (važno za izgled — cilj: profesionalno, uredno, da se skenira
 PRAVILA:
 - Kad treba podatak, KORISTI alat — nikad ne izmišljaj termine, firme ni brojeve. Pozovi isti alat samo jednom po upitu osim ako stvarno trebaš drugačiji filter.
 - Za zapisnik OBAVEZNO koristi predloziZapisnik; on samo PREDLAŽE tekst — korisnik ga potvrđuje i snima dugmetom u interfejsu. Nikad ne tvrdi da si zapisnik sačuvao.
-- Ako alat ne vrati rezultate, reci to jednostavno i predloži drugačiju pretragu.`
+- Ako alat ne vrati rezultate, reci to jednostavno i predloži drugačiju pretragu.` + JEZIK_INSTRUKCIJA[APP_LOCALE]

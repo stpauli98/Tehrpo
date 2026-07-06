@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
 import { MatrixGrid } from "@/components/domain/MatrixGrid"
@@ -9,14 +10,16 @@ import { MatrixLegenda } from "@/components/domain/MatrixLegenda"
 import type { MatrixColumn } from "@/lib/matrix"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { currentYear, todayIso, MONTHS_BS } from "@/lib/date"
+import { currentYear, todayIso, monthName } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
 import { getTerminiMatrica, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
 export function MatricaView() {
   const searchParams = useSearchParams()
+  const t = useTranslations("plan.matrica")
 
   const today = todayIso()
   const godina = Number(searchParams.get("godina")) || currentYear()
@@ -52,49 +55,49 @@ export function MatricaView() {
 
   let matrixRows: MatrixRow[] = []
   let kolone: MatrixColumn[] = []
-  let emptyMessage = "Izaberite klijenta za prikaz godišnje matrice."
+  let emptyMessage = t("izaberiteKlijenta")
 
   if (mode === "mjesec") {
     const inputs: MatrixInput[] = termini
-      .filter((t) => t.id && t.vrsta_provjere_id && t.klijent_id && t.rok_dospijeca)
-      .map((t) => ({
-        id: t.id!,
-        vrstaId: t.vrsta_provjere_id!,
-        vrstaNaziv: t.vrsta_naziv ?? "—",
-        columnKey: t.klijent_id!,
-        dan: Number(t.rok_dospijeca!.slice(8, 10)),
-        status: toDerivedStatus(t.status_izvedeni),
+      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.klijent_id && termin.rok_dospijeca)
+      .map((termin) => ({
+        id: termin.id!,
+        vrstaId: termin.vrsta_provjere_id!,
+        vrstaNaziv: termin.vrsta_naziv ?? "—",
+        columnKey: termin.klijent_id!,
+        dan: Number(termin.rok_dospijeca!.slice(8, 10)),
+        status: toDerivedStatus(termin.status_izvedeni),
       }))
     matrixRows = buildMatrix(inputs)
     kolone = klijenti.map((k) => ({ id: k.id, label: k.naziv }))
-    emptyMessage = "Nema termina za izabrani mjesec."
+    emptyMessage = t("nemaTerminaMjesec")
   } else if (klijentId) {
     const inputs: MatrixInput[] = termini
-      .filter((t) => t.id && t.vrsta_provjere_id && t.rok_dospijeca)
-      .map((t) => ({
-        id: t.id!,
-        vrstaId: t.vrsta_provjere_id!,
-        vrstaNaziv: t.vrsta_naziv ?? "—",
-        columnKey: String(Number(t.rok_dospijeca!.slice(5, 7))),
-        dan: Number(t.rok_dospijeca!.slice(8, 10)),
-        status: toDerivedStatus(t.status_izvedeni),
+      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.rok_dospijeca)
+      .map((termin) => ({
+        id: termin.id!,
+        vrstaId: termin.vrsta_provjere_id!,
+        vrstaNaziv: termin.vrsta_naziv ?? "—",
+        columnKey: String(Number(termin.rok_dospijeca!.slice(5, 7))),
+        dan: Number(termin.rok_dospijeca!.slice(8, 10)),
+        status: toDerivedStatus(termin.status_izvedeni),
       }))
     matrixRows = buildMatrix(inputs)
     const currentMonthNum = Number(today.slice(5, 7))
     const currentYearNum = currentYear()
-    kolone = MONTHS_BS.map((label, i) => ({
+    kolone = Array.from({ length: 12 }, (_, i) => ({
       id: String(i + 1),
-      label: label.slice(0, 3),
+      label: monthName(i + 1).slice(0, 3),
       isCurrent: godina === currentYearNum && i + 1 === currentMonthNum,
     }))
-    emptyMessage = "Ovaj klijent nema termina u izabranoj godini."
+    emptyMessage = t("nemaTerminaGodina")
   }
 
   // multiHref: za ćelije sa više termina (brojUCeliji > 1) → /plan-aktivnosti lista filtriran
   const multiHref = (vrstaId: string, colId: string): string =>
     mode === "mjesec"
-      ? `/plan-aktivnosti?view=lista&klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`
-      : `/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`
+      ? href(`/plan-aktivnosti?view=lista&klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`)
+      : href(`/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`)
 
   const currentSearch = searchParams.toString()
 
@@ -107,7 +110,7 @@ export function MatricaView() {
   // closeHref = trenutni URL bez "selected", čuva klijent/godina
   const closeParams = new URLSearchParams(currentSearch)
   closeParams.delete("selected")
-  const closeHref = `/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`
+  const closeHref = href(`/plan-aktivnosti${closeParams.toString() ? `?${closeParams.toString()}` : ""}`)
 
   const showMatrix = mode === "mjesec" || (mode === "klijent" && !!klijentId)
 

@@ -1,10 +1,13 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx"
+import { createTranslator } from "next-intl"
 import type { ZapisnikInput } from "./content"
 import { APP_NAME } from "../brand"
+import { APP_LOCALE, type Locale } from "../locale"
+import { getMessages } from "@/i18n/messages"
 
 export type ZapisnikData = ZapisnikInput & { nalaz: string; zakljucak: string }
 
-function red(label: string, value: string): Paragraph {
+function polje(label: string, value: string): Paragraph {
   return new Paragraph({
     children: [new TextRun({ text: `${label}: `, bold: true }), new TextRun(value)],
   })
@@ -14,7 +17,8 @@ function odlomci(tekst: string): Paragraph[] {
   return tekst.split("\n").map((linija) => new Paragraph({ children: [new TextRun(linija)] }))
 }
 
-export async function buildZapisnikDocx(data: ZapisnikData): Promise<Buffer> {
+export async function buildZapisnikDocx(data: ZapisnikData, locale: Locale = APP_LOCALE): Promise<Buffer> {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "izvoz.zapisnik" })
   const doc = new Document({
     sections: [
       {
@@ -22,27 +26,27 @@ export async function buildZapisnikDocx(data: ZapisnikData): Promise<Buffer> {
           new Paragraph({
             heading: HeadingLevel.TITLE,
             alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: "ZAPISNIK O IZVRŠENOJ PROVJERI", bold: true })],
+            children: [new TextRun({ text: t("naslov"), bold: true })],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: `${APP_NAME} — zaštita na radu`, italics: true })],
+            children: [new TextRun({ text: t("podnaslov", { appName: APP_NAME }), italics: true })],
           }),
           new Paragraph({ text: "" }),
-          red("Klijent", data.klijent),
-          red("Lokacija", data.lokacija ?? "—"),
-          red("Vrsta provjere", data.vrstaProvjere),
-          red("Datum izvršenja", data.datum),
-          red("Zaduženi", data.zaduzeni ?? "—"),
+          polje(t("poljeKlijent"), data.klijent),
+          polje(t("poljeLokacija"), data.lokacija ?? "—"),
+          polje(t("poljeVrstaProvjere"), data.vrstaProvjere),
+          polje(t("poljeDatumIzvrsenja"), data.datum),
+          polje(t("poljeZaduzeni"), data.zaduzeni ?? "—"),
           new Paragraph({ text: "" }),
-          new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: "Nalaz", bold: true })] }),
+          new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: t("nalaz"), bold: true })] }),
           ...odlomci(data.nalaz),
           new Paragraph({ text: "" }),
-          new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: "Zaključak", bold: true })] }),
+          new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: t("zakljucak"), bold: true })] }),
           ...odlomci(data.zakljucak),
           new Paragraph({ text: "" }),
           new Paragraph({ text: "" }),
-          new Paragraph({ children: [new TextRun("Potpis ovlaštenog lica: ______________________________")] }),
+          new Paragraph({ children: [new TextRun(t("potpis"))] }),
         ],
       },
     ],

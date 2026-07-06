@@ -2,13 +2,17 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTransition } from "react"
+import { useTranslations } from "next-intl"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { MONTHS_BS, todayIso } from "@/lib/date"
+import { monthName, todayIso } from "@/lib/date"
+import { href } from "@/i18n/routes"
 
 type Opt = { id: string; naziv: string }
+
+const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
 
 export function PrikazToolbar({
   klijenti,
@@ -19,6 +23,7 @@ export function PrikazToolbar({
   godine: number[]
   godina: number
 }) {
+  const t = useTranslations("pregled.prikaz")
   const router = useRouter()
   const params = useSearchParams()
   const [pending, startTransition] = useTransition()
@@ -26,13 +31,14 @@ export function PrikazToolbar({
   const godina = params.get("godina") ?? String(aktivnaGodina)
   const mode = params.get("mode") ?? "klijent"
   const mjesec = params.get("mjesec") ?? ""
+  const sviKlijentiLabel = t("sviKlijenti")
   // items mapa (value→label) za base-ui SelectValue (prikaz imena firme kad je zatvoreno)
   const klijentItems: Record<string, string> = {
-    __svi__: "— svi klijenti —",
+    __svi__: sviKlijentiLabel,
     ...Object.fromEntries(klijenti.map((k) => [k.id, k.naziv])),
   }
   const mjesecItems: Record<string, string> = Object.fromEntries(
-    MONTHS_BS.map((label, i) => [String(i + 1), label])
+    MJESEC_NAZIVI.map((label, i) => [String(i + 1), label])
   )
 
   function setMode(m: "klijent" | "mjesec") {
@@ -42,7 +48,7 @@ export function PrikazToolbar({
     if (m === "mjesec" && !next.get("mjesec")) {
       next.set("mjesec", String(Number(todayIso().slice(5, 7))))
     }
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   function setParam(key: string, value: string) {
@@ -50,7 +56,7 @@ export function PrikazToolbar({
     if (value) next.set(key, value)
     else next.delete(key)
     next.delete("selected")
-    startTransition(() => router.push(`/plan-aktivnosti?${next.toString()}`))
+    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
   }
 
   return (
@@ -64,7 +70,7 @@ export function PrikazToolbar({
             mode === "klijent" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
           )}
         >
-          Po klijentu
+          {t("modKlijent")}
         </button>
         <button
           data-testid="prikaz-mode-mjesec"
@@ -74,21 +80,21 @@ export function PrikazToolbar({
             mode === "mjesec" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
           )}
         >
-          Po mjesecu
+          {t("modMjesec")}
         </button>
       </div>
 
       {mode === "klijent" ? (
         <>
           <Select value={klijent} onValueChange={(v) => setParam("klijent", v === "__svi__" ? "" : (v ?? ""))} items={klijentItems}>
-            <SelectTrigger className="w-72" data-testid="prikaz-klijent"><SelectValue placeholder="Izaberi klijenta" /></SelectTrigger>
+            <SelectTrigger className="w-72" data-testid="prikaz-klijent"><SelectValue placeholder={t("izaberiKlijenta")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__svi__">— svi klijenti —</SelectItem>
+              <SelectItem value="__svi__">{sviKlijentiLabel}</SelectItem>
               {klijenti.map((k) => <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={godina} onValueChange={(v) => setParam("godina", v ?? "")}>
-            <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder="Godina" /></SelectTrigger>
+            <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder={t("godina")} /></SelectTrigger>
             <SelectContent>
               {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
             </SelectContent>
@@ -97,15 +103,15 @@ export function PrikazToolbar({
       ) : (
         <>
           <Select value={mjesec} onValueChange={(v) => setParam("mjesec", v ?? "")} items={mjesecItems}>
-            <SelectTrigger className="w-40" data-testid="prikaz-mjesec"><SelectValue placeholder="Izaberi mjesec" /></SelectTrigger>
+            <SelectTrigger className="w-40" data-testid="prikaz-mjesec"><SelectValue placeholder={t("izaberiMjesec")} /></SelectTrigger>
             <SelectContent>
-              {MONTHS_BS.map((label, i) => (
+              {MJESEC_NAZIVI.map((label, i) => (
                 <SelectItem key={i + 1} value={String(i + 1)}>{label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={godina} onValueChange={(v) => setParam("godina", v ?? "")}>
-            <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder="Godina" /></SelectTrigger>
+            <SelectTrigger className="w-28" data-testid="prikaz-godina"><SelectValue placeholder={t("godina")} /></SelectTrigger>
             <SelectContent>
               {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
             </SelectContent>

@@ -1,6 +1,7 @@
 "use client"
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Plus } from "lucide-react"
 import { kreirajKorisnika, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -10,6 +11,8 @@ import { Button } from "@/components/ui/button"
 const initial: ActionResult = { ok: true }
 
 export function NoviKorisnikButton() {
+  const t = useTranslations("postavke.noviKorisnik")
+  const tu = useTranslations("postavke.uloge")
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(kreirajKorisnika, initial)
@@ -25,9 +28,9 @@ export function NoviKorisnikButton() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm"><Plus className="w-4 h-4" aria-hidden /> Novi korisnik</Button>} />
+      <DialogTrigger render={<Button size="sm"><Plus className="w-4 h-4" aria-hidden /> {t("dugme")}</Button>} />
       <DialogContent>
-        <DialogHeader><DialogTitle>Novi korisnik</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("naslov")}</DialogTitle></DialogHeader>
         <form
           action={(fd) => {
             submitted.current = true
@@ -36,32 +39,32 @@ export function NoviKorisnikButton() {
           className="space-y-3"
         >
           <div>
-            <Input name="ime" placeholder="Ime i prezime" required />
+            <Input name="ime" placeholder={t("placeholderIme")} required />
             {state.ok === false && state.errors?.ime && (
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.ime[0]}</p>
             )}
           </div>
           <div>
-            <Input name="email" type="email" placeholder="Email" required />
+            <Input name="email" type="email" placeholder={t("placeholderEmail")} required />
             {state.ok === false && state.errors?.email && (
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.email[0]}</p>
             )}
           </div>
           <div>
-            <Input name="lozinka" type="password" placeholder="Početna lozinka (min 8)" required minLength={8} />
+            <Input name="lozinka" type="password" placeholder={t("placeholderLozinka")} required minLength={8} />
             {state.ok === false && state.errors?.lozinka && (
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.lozinka[0]}</p>
             )}
           </div>
           <select name="uloga" defaultValue="operater" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-            <option value="operater">Operater</option>
-            <option value="pregled">Pregled</option>
-            <option value="admin">Administrator</option>
+            <option value="operater">{tu("operater")}</option>
+            <option value="pregled">{tu("pregled")}</option>
+            <option value="admin">{tu("admin")}</option>
           </select>
           {state.ok === false && state.message && (
             <p className="text-sm text-status-kasni" role="alert">{state.message}</p>
           )}
-          <Button type="submit" disabled={pending} className="w-full">{pending ? "Kreiranje…" : "Kreiraj"}</Button>
+          <Button type="submit" disabled={pending} className="w-full">{pending ? t("submitPending") : t("submit")}</Button>
         </form>
       </DialogContent>
     </Dialog>

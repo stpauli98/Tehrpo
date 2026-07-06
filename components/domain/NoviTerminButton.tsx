@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslations } from "next-intl"
 import { Plus } from "lucide-react"
 import {
   Dialog,
@@ -38,6 +39,8 @@ export function NoviTerminButton({
 }) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations("termini.noviTermin")
+  const tc = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [klijentId, setKlijentId] = useState("")
   const [vrstaId, setVrstaId] = useState("")
@@ -85,7 +88,7 @@ export function NoviTerminButton({
       <DialogTrigger
         render={
           <Button data-testid="novi-termin-btn">
-            <Plus className="w-4 h-4" aria-hidden /> Novi termin
+            <Plus className="w-4 h-4" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
@@ -94,7 +97,7 @@ export function NoviTerminButton({
         data-testid="novi-termin-sheet"
       >
         <DialogHeader>
-          <DialogTitle>Novi termin</DialogTitle>
+          <DialogTitle>{t("dugme")}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -109,7 +112,7 @@ export function NoviTerminButton({
           data-testid="novi-termin-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">Klijent *</span>
+            <span className="text-slate-600">{t("poljeKlijent")}</span>
             <Select
               value={klijentId}
               onValueChange={(v) => {
@@ -119,7 +122,7 @@ export function NoviTerminButton({
               items={klijentItems}
             >
               <SelectTrigger className="w-full" data-testid="novi-klijent">
-                <SelectValue placeholder="Izaberi klijenta" />
+                <SelectValue placeholder={t("placeholderKlijent")} />
               </SelectTrigger>
               <SelectContent>
                 {klijenti.map((k) => (
@@ -133,10 +136,10 @@ export function NoviTerminButton({
 
           {lokacije.length > 0 && (
             <label className="block text-sm">
-              <span className="text-slate-600">Lokacija</span>
+              <span className="text-slate-600">{t("poljeLokacija")}</span>
               <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")} items={lokacijaItems}>
                 <SelectTrigger className="w-full" data-testid="novi-lokacija">
-                  <SelectValue placeholder="Izaberi lokaciju (opcionalno)" />
+                  <SelectValue placeholder={t("placeholderLokacija")} />
                 </SelectTrigger>
                 <SelectContent>
                   {lokacije.map((l) => (
@@ -150,10 +153,10 @@ export function NoviTerminButton({
           )}
 
           <label className="block text-sm">
-            <span className="text-slate-600">Vrsta provjere *</span>
+            <span className="text-slate-600">{t("poljeVrsta")}</span>
             <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
               <SelectTrigger className="w-full" data-testid="novi-vrsta">
-                <SelectValue placeholder="Izaberi vrstu" />
+                <SelectValue placeholder={t("placeholderVrsta")} />
               </SelectTrigger>
               <SelectContent>
                 {vrste.map((v) => (
@@ -166,18 +169,18 @@ export function NoviTerminButton({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Rok dospijeća *</span>
+            <span className="text-slate-600">{t("poljeRok")}</span>
             <Input type="date" name="rok_dospijeca" required data-testid="novi-rok" />
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Datum zakazan</span>
+            <span className="text-slate-600">{t("poljeDatumZakazan")}</span>
             <Input type="date" name="datum_zakazan" data-testid="novi-zakazan" />
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">Zaduženi</span>
-            <Input name="zaduzeni" placeholder="npr. Marija K." data-testid="novi-zaduzeni" />
+            <span className="text-slate-600">{t("poljeZaduzeni")}</span>
+            <Input name="zaduzeni" placeholder={t("placeholderZaduzeni")} data-testid="novi-zaduzeni" />
           </label>
 
           {state.ok === false && state.message && (
@@ -187,7 +190,7 @@ export function NoviTerminButton({
           )}
 
           <Button type="submit" disabled={pending} data-testid="novi-submit">
-            {pending ? "Kreiram…" : "Kreiraj termin"}
+            {pending ? t("kreiram") : t("kreirajTermin")}
           </Button>
         </form>
 
@@ -195,7 +198,7 @@ export function NoviTerminButton({
           <DialogClose
             render={
               <Button variant="outline" data-testid="novi-cancel">
-                Otkaži
+                {tc("otkazi")}
               </Button>
             }
           />

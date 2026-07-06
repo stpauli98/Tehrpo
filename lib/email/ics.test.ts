@@ -42,3 +42,14 @@ describe("buildTerminIcs", () => {
     expect(buildTerminIcs(baza)).not.toContain("http")
   })
 })
+
+describe("buildTerminIcs — en", () => {
+  it("DESCRIPTION na engleskom (bez baseUrl)", () => {
+    expect(buildTerminIcs(baza, "en")).toContain("DESCRIPTION:Deadline reminder.")
+  })
+  it("DESCRIPTION na engleskom (s baseUrl) — 'Details:' prefiks i link", () => {
+    const ics = buildTerminIcs({ ...baza, baseUrl: "https://app.test" }, "en")
+    expect(ics).toContain("Details:")
+    expect(ics).toContain("activity-plan?selected=t1")
+  })
+})

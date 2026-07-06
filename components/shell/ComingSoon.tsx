@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react"
+import { getTranslations } from "next-intl/server"
 
-export function ComingSoon({
+export async function ComingSoon({
   naslov,
   faza,
   opis,
@@ -11,6 +12,7 @@ export function ComingSoon({
   opis: string
   icon: LucideIcon
 }) {
+  const t = await getTranslations("shell.comingSoon")
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{naslov}</h1>
@@ -21,7 +23,7 @@ export function ComingSoon({
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-light text-brand">
           <Icon className="h-6 w-6" aria-hidden />
         </div>
-        <p className="mt-4 text-base font-medium text-slate-900">{naslov} — uskoro</p>
+        <p className="mt-4 text-base font-medium text-slate-900">{t("naslovUskoro", { naslov })}</p>
         <p className="mt-1 max-w-md text-sm text-slate-500">{opis}</p>
         <span className="mt-4 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
           {faza}

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,7 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
 }) {
+  const t = useTranslations("common")
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -67,12 +69,12 @@ function DialogContent({
                 variant="ghost"
                 className="absolute top-2 right-2"
                 size="icon-sm"
-                aria-label="Zatvori"
+                aria-label={t("zatvori")}
               />
             }
           >
             <XIcon />
-            <span className="sr-only">Zatvori</span>
+            <span className="sr-only">{t("zatvori")}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>

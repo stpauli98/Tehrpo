@@ -1,0 +1,954 @@
+{
+  "common": {
+    "ucitavanje": "Loading…",
+    "sacuvaj": "Save",
+    "otkazi": "Cancel",
+    "obrisi": "Delete",
+    "zatvori": "Close",
+    "pretraga": "Search",
+    "prikaziJosLista": {
+      "prikaziManje": "Show less",
+      "prikaziJos": "Show {count} more {imenica}"
+    },
+    "pagination": {
+      "prethodna": "Previous",
+      "sljedeca": "Next",
+      "strana": "Page {pageNum} / {totalPages}"
+    },
+    "rok": {
+      "kasni": "{count, plural, =1 {# day overdue} other {# days overdue}}",
+      "danas": "due today",
+      "za": "{count, plural, =1 {due in # day} other {due in # days}}"
+    }
+  },
+  "shell": {
+    "nav": {
+      "pregled": "Overview",
+      "planAktivnosti": "Activity plan",
+      "obilasci": "Visits",
+      "klijenti": "Clients",
+      "asistent": "Assistant",
+      "zapisnici": "Records",
+      "postavke": "Settings"
+    },
+    "sidebar": {
+      "glavnaNavigacija": "Main navigation",
+      "prosiriNavigaciju": "Expand navigation",
+      "skupiNavigaciju": "Collapse navigation",
+      "skupi": "Collapse",
+      "resizeHint": "Drag to resize · double-click to collapse"
+    },
+    "topBar": {
+      "odjava": "Sign out"
+    },
+    "comingSoon": {
+      "naslovUskoro": "{naslov} — coming soon"
+    },
+    "desktopOnlyGate": {
+      "naslov": "{appName} is optimized for desktop",
+      "opis": "To work with the system, open the application on a laptop or desktop computer (screen at least 1024px wide).",
+      "napomena": "A mobile version is not part of this project's scope."
+    },
+    "layout": {
+      "description": "Track periodic inspections, tests and checks for the {appName} team."
+    }
+  },
+  "auth": {
+    "prijava": {
+      "naslov": "Sign in",
+      "emailPlaceholder": "Email",
+      "lozinkaPlaceholder": "Password",
+      "dugme": "Sign in",
+      "dugmeUToku": "Signing in…",
+      "zaboravljenaLozinka": "Forgot password?",
+      "greske": {
+        "email": "Invalid email",
+        "lozinka": "Enter your password",
+        "nepotpunoUnijeto": "Enter your email and password.",
+        "pogresnoUneseno": "Incorrect email or password."
+      }
+    },
+    "zaboravljenaLozinka": {
+      "naslov": "Reset password",
+      "linkIstekao": "The link has expired or is invalid. Enter your email to send a new one.",
+      "emailPlaceholder": "Email",
+      "dugme": "Send link",
+      "dugmeUToku": "Sending…",
+      "nazadNaPrijavu": "Back to sign in",
+      "greske": {
+        "neispravanEmail": "Invalid email."
+      },
+      "poruke": {
+        "linkPoslat": "If an account exists, we've sent a reset link."
+      }
+    },
+    "novaLozinka": {
+      "naslov": "New password",
+      "lozinkaPlaceholder": "New password (min. 8 characters)",
+      "dugme": "Set password",
+      "dugmeUToku": "Saving…",
+      "greske": {
+        "minDuzina": "Password must be at least 8 characters",
+        "validacija": "Validation error.",
+        "linkIstekao": "The link has expired or is invalid. Request a new one."
+      }
+    }
+  },
+  "pregled": {
+    "naslov": "Overview",
+    "podnaslov": "Deadlines and workload",
+    "statCard": {
+      "terminiOvogMjeseca": {
+        "label": "Appointments this month",
+        "sub": "due date this month"
+      },
+      "kasniRokovi": {
+        "label": "Overdue deadlines",
+        "sub": "require action"
+      },
+      "izvrseniOvogMjeseca": {
+        "label": "Completed this month",
+        "sub": "finished this month"
+      },
+      "predstojeci": {
+        "label": "Upcoming (30 days)",
+        "sub": "not yet completed"
+      }
+    },
+    "hitnoKasni": {
+      "naslov": "Urgent / overdue",
+      "prazno": "No urgent or overdue appointments.",
+      "footer": "All overdue deadlines ({count}) →"
+    },
+    "opterecenje": {
+      "naslov": "Workload by month",
+      "podnaslov": "Number of appointments by status",
+      "legenda": {
+        "izvrseno": "Completed",
+        "kasni": "Overdue",
+        "uPlanu": "Planned"
+      },
+      "barTitle": "{naziv}: {count, plural, =1 {# appointment} other {# appointments}}",
+      "barAriaLabel": "{naziv}: {count, plural, =1 {# appointment} other {# appointments}} — open month in matrix"
+    },
+    "prikaz": {
+      "modKlijent": "By client",
+      "modMjesec": "By month",
+      "sviKlijenti": "— all clients —",
+      "izaberiKlijenta": "Select a client",
+      "izaberiMjesec": "Select a month",
+      "godina": "Year"
+    }
+  },
+  "klijenti": {
+    "lista": {
+      "naslov": "Clients",
+      "prazno": "No clients found for this search.",
+      "ukupno": "Total clients: {count}"
+    },
+    "actions": {
+      "nazivObavezan": "Name is required",
+      "adresaObavezna": "Address is required",
+      "telefonObavezan": "Phone is required",
+      "emailObavezan": "Email is required",
+      "emailNeispravan": "Invalid email",
+      "korisnikNeispravan": "Invalid user",
+      "klijentNazivPostoji": "A client with that name already exists.",
+      "klijentImaTermine": "You cannot delete a client that has appointments.",
+      "primaociNeispravanEmail": "Invalid email: {lista}",
+      "brojOpseg": "Number must be {min}–{max}",
+      "datumNeispravan": "Invalid date",
+      "datumIstekaNakonPotpisivanja": "The expiry date must be after the signing date.",
+      "neispravanZahtjev": "Invalid request.",
+      "vrstaObavezna": "Type is required.",
+      "lokacijaObavezna": "Location is required.",
+      "zadnjiDatumObavezan": "Last date is required.",
+      "prviRokObavezan": "First deadline is required.",
+      "lokacijaNePripada": "The location does not belong to the client.",
+      "vrstaNemaInterval": "This type has no default interval — set one in Settings.",
+      "provjeraVecPostoji": "This check already exists in the profile.",
+      "terminProvjeraOsvjezi": "The check was saved, but the appointment check failed — refresh the page.",
+      "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
+      "nedostajeId": "Missing id.",
+      "imeObavezno": "Name is required"
+    },
+    "detalj": {
+      "nazad": "Clients",
+      "terminiTab": {
+        "prazno": "No appointments for this client. Add a check to generate the first appointment.",
+        "kolone": {
+          "datumRoka": "Due date",
+          "vrsta": "Type",
+          "lokacija": "Location",
+          "status": "Status",
+          "zaduzeni": "Assigned to"
+        }
+      },
+      "kontaktiTab": {
+        "infoPuniSpisak": "Full list of the company's contacts, searchable by name and role.",
+        "naslovLokacije": "Location contacts",
+        "infoLokacije": "Contact persons for individual locations, derived from location data. Edited in the Locations tab.",
+        "urediULokacijama": "Edit in Locations"
+      },
+      "dokumentiTab": {
+        "prazno": "No documents for this client.",
+        "kolone": {
+          "naziv": "Name",
+          "tip": "Type",
+          "izvor": "Source",
+          "datum": "Date"
+        },
+        "izvorAi": "AI record",
+        "izvorUpload": "Upload",
+        "preuzmi": "Download"
+      }
+    },
+    "karta": {
+      "kasniBadge": "{count} overdue",
+      "lokacija": "{count} loc.",
+      "aktivnih": "{count} active",
+      "ukupno": "{count} total"
+    },
+    "uredi": {
+      "dugme": "Edit",
+      "naslov": "Edit client",
+      "poljeNaziv": "Name *",
+      "poljeNapomena": "Note",
+      "polja": {
+        "adresa": "Address *",
+        "telefon": "Phone *",
+        "email": "Email *",
+        "pib": "Tax ID",
+        "maticniBroj": "Registration number",
+        "sifraDjelatnosti": "Activity code"
+      },
+      "zaduzenaOsoba": "Assigned person ({appName})",
+      "nijePostavljeno": "— (not set)",
+      "primaociLabel": "Reminder recipients (emails, comma-separated)",
+      "primaociPlaceholder": "e.g. boss@company.com, tech@company.com",
+      "tipOdnosaLabel": "Relationship type",
+      "tipOdnosaOpcije": {
+        "ugovor": "Under contract",
+        "ponuda": "Under offer"
+      },
+      "submitPending": "Saving…",
+      "submit": "Save changes"
+    },
+    "tabs": {
+      "idKarta": {
+        "label": "ID card",
+        "info": "The client's profile in one place: basic company details, contracts, key contacts, and an overview of contracted services with upcoming deadlines."
+      },
+      "termini": {
+        "label": "Appointments",
+        "info": "All concrete deadlines for this client — past and future. Each row is one appointment with a due date, status (planned, scheduled, overdue, completed), and an assigned person. Appointments are generated from the checks defined in the Profile."
+      },
+      "lokacije": {
+        "label": "Locations",
+        "info": "The client's facilities and business units where checks and visits take place. Each location can have its own address and contact person, and appointments can be linked to a specific location."
+      },
+      "kontakti": {
+        "label": "Contacts",
+        "info": "All of the client's contact persons: company contacts (director, responsible persons…) and contacts for individual locations. Location contacts are edited in the Locations tab."
+      },
+      "dokumenti": {
+        "label": "Documents",
+        "info": "All documents linked to the client — manually added files and AI-generated records. The Source column shows whether a document was uploaded or generated by AI."
+      },
+      "profil": {
+        "label": "Profile",
+        "info": "The definition of recurring checks for the client: which type of check is performed, at which location, and at what interval. Appointments are generated automatically from these entries. “Last time” is the last actual completion, “Next deadline” is the due date of the active appointment."
+      }
+    },
+    "pretraga": {
+      "placeholder": "Search companies..."
+    },
+    "noviKlijent": {
+      "dugme": "New client",
+      "naslov": "New client",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "e.g. WAIKIKI Banja Luka",
+      "poljeAdresa": "Address *",
+      "poljeTelefon": "Phone *",
+      "poljeEmail": "Email *",
+      "poljeNapomena": "Note",
+      "submitPending": "Creating…",
+      "submit": "Create client"
+    },
+    "obrisi": {
+      "disabledTitle": "The client has appointments and cannot be deleted",
+      "dialogNaslov": "Delete client?",
+      "dialogOpis": "This action is permanent. The client's locations will also be deleted.",
+      "confirmPending": "Deleting…",
+      "greskaFallback": "Error while deleting."
+    },
+    "idKarta": {
+      "osnovniPodaci": {
+        "naslov": "Basic details",
+        "info": "The company's registration and contact details (address, tax ID, registration number…) and the person assigned to the client. Edited via the Edit button in the header."
+      },
+      "polja": {
+        "adresa": "Address",
+        "telefon": "Phone",
+        "email": "Email",
+        "pib": "Tax ID",
+        "maticniBroj": "Registration number",
+        "sifraDjelatnosti": "Activity code",
+        "zaduzen": "Assigned ({appName})"
+      },
+      "ugovoriInfo": "Contracts signed with the client. Only one contract can be active; older ones remain as history.",
+      "kontaktiInfo": "A short preview of the company's contacts (the first few). The full list and search are in the Contacts tab.",
+      "usluge": {
+        "naslov": "Contracted services",
+        "info": "A summary of the checks from the Profile with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
+        "prazno": "No services defined. Add them via the Profile tab.",
+        "sljedeci": "next: {datum}",
+        "imenica": "services"
+      }
+    },
+    "ugovorSheet": {
+      "uredi": "Edit",
+      "novi": "New contract",
+      "naslovUredi": "Edit contract",
+      "naslovNovi": "New contract",
+      "poljeZavodniBroj": "Registration number (contract number)",
+      "poljeDatumPotpisivanja": "Signing date",
+      "poljeDatumIsteka": "Expiry date",
+      "poljeVazenje": "Duration (months)",
+      "poljeObilasci": "Visits / month",
+      "poljeAutoObnavljanje": "Automatic renewal",
+      "poljeAktivan": "Active contract (deactivates others)",
+      "poljeNapomena": "Note",
+      "submitPending": "Saving…",
+      "submitEdit": "Save changes",
+      "submitNovi": "Create contract"
+    },
+    "ugovori": {
+      "naslov": "Contracts",
+      "prazno": "No contracts. Add the first contract.",
+      "imenica": "contracts",
+      "bezBroja": "No number",
+      "aktivan": "active",
+      "neaktivan": "inactive",
+      "obrisiAriaLabel": "Delete contract",
+      "obilazMjesecno": " · {count} visits/mo."
+    },
+    "tipOdnosa": {
+      "ugovor": "under contract",
+      "ponuda": "under offer"
+    },
+    "kontaktSheet": {
+      "uredi": "Edit",
+      "novi": "New contact",
+      "naslovUredi": "Edit contact",
+      "naslovNovi": "New contact",
+      "poljeIme": "Full name *",
+      "poljeFunkcija": "Role",
+      "poljeTelefon": "Phone",
+      "poljeEmail": "Email",
+      "submitPending": "Saving…",
+      "submitEdit": "Save changes",
+      "submitNovi": "Create contact"
+    },
+    "kontaktiFirme": {
+      "naslov": "Contact persons (company)",
+      "pretragaPlaceholder": "Search by name or role…",
+      "prazno": "No company contacts.",
+      "praznoPretraga": "No contacts found for “{q}”.",
+      "obrisiAriaLabel": "Delete contact",
+      "vidiSve": "See all ({count}) →"
+    },
+    "lokacijaSheet": {
+      "uredi": "Edit",
+      "novi": "New location",
+      "naslovUredi": "Edit location",
+      "naslovNovi": "New location",
+      "poljeNaziv": "Name *",
+      "poljeGrad": "City",
+      "poljeRegija": "Region",
+      "poljeAdresa": "Address",
+      "poljeKontaktOsoba": "Contact person",
+      "poljeEmail": "Email",
+      "poljeTelefon": "Phone",
+      "submitPending": "Saving…",
+      "submitEdit": "Save changes",
+      "submitNovi": "Create location"
+    },
+    "lokacije": {
+      "prazno": "No locations. Add the first location for this client.",
+      "kolone": {
+        "naziv": "Name",
+        "lokacijaAdresa": "Location / Address",
+        "gradRegija": "City / Region",
+        "kontakt": "Contact",
+        "akcije": "Actions"
+      },
+      "kontaktLinkTitle": "Open in the Contacts tab"
+    },
+    "obrisiLokaciju": {
+      "dialogNaslov": "Delete location?",
+      "dialogOpis": "Deleting the location will remove its link with existing appointments (the appointment stays, the location becomes empty).",
+      "confirmPending": "Deleting…"
+    },
+    "dokumentUpload": {
+      "tipovi": {
+        "strucni_nalaz": "Expert report",
+        "zapisnik": "Record",
+        "ugovor": "Contract",
+        "ponuda": "Offer",
+        "fotografija": "Photo",
+        "ostalo": "Other"
+      },
+      "fajlPrevelik": "File is too large ({velicina}). Maximum {max} MB.",
+      "ukloniFajlAriaLabel": "Remove file",
+      "prevuciDokument": "Drag a document here or",
+      "klikniZaOdabir": "click to choose",
+      "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
+      "tipDokumentaLabel": "Document type",
+      "submitPending": "Uploading…",
+      "submit": "Add document"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Companies ({count})",
+      "naslov": "Assigned companies",
+      "opis": "The user only sees and works with companies assigned to them here.",
+      "pretragaPlaceholder": "Search companies…",
+      "prazno": "No results.",
+      "brojac": "{count} selected",
+      "submitPending": "Saving…",
+      "toastSuccess": "Companies assigned.",
+      "toastErrorFallback": "Error."
+    },
+    "profil": {
+      "prazno": "No checks in the profile. Add a check to generate appointments.",
+      "kolone": {
+        "vrsta": "Type",
+        "lokacija": "Location",
+        "interval": "Interval (mo)",
+        "zadnjiPut": "Last time",
+        "sljedeciRok": "Next due date"
+      },
+      "prviPut": "— (first time)"
+    },
+    "obrisiProfil": {
+      "tooltip": "Remove from profile",
+      "dialogNaslov": "Remove check from profile?",
+      "dialogOpis": "Removes the item from the profile. Existing appointments remain (tracked under Appointments).",
+      "potvrdi": "Remove",
+      "confirmPending": "Deleting…"
+    }
+  },
+  "termini": {
+    "tabela": {
+      "kolone": {
+        "datumRoka": "Due date",
+        "klijent": "Client",
+        "lokacija": "Location",
+        "vrsta": "Type",
+        "status": "Status",
+        "zaduzeni": "Assigned to",
+        "akcije": "Actions"
+      },
+      "prazno": "No appointments for the selected filters.",
+      "samoPracenje": "Tracking only",
+      "detalji": "Details"
+    },
+    "filteri": {
+      "sveFirme": "All companies",
+      "sveLokacije": "All locations",
+      "sveVrste": "All types",
+      "sviMjeseci": "All months",
+      "sviNacini": "All methods",
+      "nacinIzvrsava": "Performs",
+      "nacinPracenje": "Tracking only",
+      "svi": "All",
+      "godina": "Year",
+      "pretragaPlaceholder": "Search company...",
+      "tekuciNaredni": "Current + next month"
+    },
+    "sheet": {
+      "naslovFallback": "Appointment",
+      "rok": "Due: {datum}",
+      "detaljiNaslov": "Details",
+      "poljeDatumZakazan": "Scheduled date",
+      "poljeDatumIzvrsenja": "Completion date",
+      "poljeZaduzeni": "Assigned to",
+      "placeholderZaduzeni": "e.g. Marija K.",
+      "poljeNapomena": "Note",
+      "spremam": "Saving…",
+      "spremiIzmjene": "Save changes",
+      "akcijeNaslov": "Actions",
+      "oznaciKaoIzvrseno": "Mark as completed",
+      "oznacavam": "Marking…",
+      "oznaciIzvrseno": "Mark completed",
+      "autoCiklus": "The system automatically creates the next appointment in the cycle.",
+      "otkaziTermin": "Cancel appointment",
+      "otkazujem": "Cancelling…",
+      "potvrdiOtkazivanje": "Confirm cancellation",
+      "odustani": "Cancel",
+      "istorijaNaslov": "History",
+      "istorijaPrazno": "No previous completed cycles.",
+      "toastIzmjeneSacuvane": "Changes saved",
+      "toastOznacenIzvrsenim": "Appointment marked as completed",
+      "toastOtkazan": "Appointment cancelled"
+    },
+    "statusBadge": {
+      "zakPrefix": "sched. {datum}",
+      "zakazanoFallback": "scheduled"
+    },
+    "noviTermin": {
+      "dugme": "New appointment",
+      "poljeKlijent": "Client *",
+      "placeholderKlijent": "Select client",
+      "poljeLokacija": "Location",
+      "placeholderLokacija": "Select location (optional)",
+      "poljeVrsta": "Check type *",
+      "placeholderVrsta": "Select type",
+      "poljeRok": "Due date *",
+      "poljeDatumZakazan": "Scheduled date",
+      "poljeZaduzeni": "Assigned to",
+      "placeholderZaduzeni": "e.g. Marija K.",
+      "kreiram": "Creating…",
+      "kreirajTermin": "Create appointment"
+    },
+    "dodajProvjeru": {
+      "dugme": "Add check",
+      "naslov": "Add check to profile",
+      "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
+      "bezLokacijaLink": "Add a client location first.",
+      "poljeVrsta": "Type *",
+      "placeholderVrsta": "Select type",
+      "poljeLokacija": "Location *",
+      "placeholderLokacija": "Select location",
+      "poljeInterval": "Interval (months) — taken from type",
+      "bezIntervalaTekst": "This type has no default interval — set it in",
+      "bezIntervalaLink": "Settings",
+      "bezIntervalaKraj": "before adding it to the profile.",
+      "poljeRadjenoRanije": "Has this check already been done? *",
+      "opcijaVecRadeno": "Yes — I'll enter the last date",
+      "opcijaPrviPut": "No — first time (I'll enter the first deadline)",
+      "poljeZadnjiDatum": "Last done *",
+      "poljePrviRok": "First deadline *",
+      "poljeNacinIzvrsenja": "Execution method *",
+      "nacinIzvrsava": "{appName} performs it",
+      "nacinPracenje": "Deadline tracking only",
+      "dodajem": "Adding…",
+      "dodajIGenerisi": "Add and generate appointment"
+    },
+    "novaVrsta": {
+      "dugme": "New type",
+      "naslov": "New check type",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "e.g. Ventilation system check",
+      "poljeInterval": "Interval (months)",
+      "placeholderInterval": "empty = no auto-scheduling",
+      "poljeZakonskiOsnov": "Legal basis",
+      "placeholderZakonskiOsnov": "e.g. Regulation… (optional)",
+      "kreiram": "Creating…",
+      "kreirajVrstu": "Create type"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Edit",
+      "naslov": "Edit check type",
+      "poljeNaziv": "Name *",
+      "poljeZakonskiOsnov": "Legal basis",
+      "poljeVodiDokumentaciju": "Documentation is kept for this service",
+      "spremam": "Saving…",
+      "spremiIzmjene": "Save changes",
+      "deaktiviraj": "Deactivate",
+      "aktiviraj": "Activate"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Show inactive too",
+      "brojVrsta": "{count} types",
+      "kolone": {
+        "vrsta": "Check type",
+        "interval": "Interval (mo)",
+        "dokumentacija": "Doc.",
+        "status": "Status",
+        "akcije": "Actions"
+      },
+      "vodiDokumentacijuTitle": "Documentation is kept",
+      "bezDokumentacijeTitle": "No documentation",
+      "prazno": "No types to display.",
+      "intervalGreska": "1–120 or empty",
+      "intervalSpremljeno": "✓ saved",
+      "intervalGreskaFallback": "Error saving",
+      "klikDeaktivacija": "Click to deactivate",
+      "klikAktivacija": "Click to activate",
+      "aktivna": "Active",
+      "neaktivna": "Inactive"
+    },
+    "actions": {
+      "datumNeispravan": "Invalid date",
+      "datumUBuducnosti": "Completion date cannot be in the future",
+      "neispravanZahtjev": "Invalid request.",
+      "klijentObavezan": "Client is required",
+      "vrstaObavezna": "Type is required",
+      "rokObavezan": "Due date is required",
+      "lokacijaNePripada": "The location does not belong to the selected client.",
+      "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
+      "datumObavezan": "Date is required"
+    }
+  },
+  "status": {
+    "planirano": "Planned",
+    "zakazano": "Scheduled",
+    "izvrseno": "Completed",
+    "otkazano": "Cancelled",
+    "kasni": "Overdue"
+  },
+  "obilasci": {
+    "naslov": "Visits",
+    "podnaslov": "Grouped by city for more efficient scheduling of visits.",
+    "prazno": "No appointments in the selected period.",
+    "toolbar": {
+      "periodMjesec": "Month",
+      "periodKvartal": "Quarter",
+      "periodGodina": "Year",
+      "statusAktivni": "Active",
+      "statusSvi": "All",
+      "gradSvi": "All cities",
+      "gradBez": "No city",
+      "placeholderMjesec": "Month",
+      "placeholderKvartal": "Quarter"
+    }
+  },
+  "plan": {
+    "naslov": "Activity plan",
+    "izvoz": {
+      "excel": "Export to Excel",
+      "pdf": "Export to PDF"
+    },
+    "viewSwitcher": {
+      "kalendar": "Calendar",
+      "lista": "List",
+      "matrica": "Matrix"
+    },
+    "nav": {
+      "prethodniMjesec": "Previous month",
+      "sljedeciMjesec": "Next month",
+      "danas": "Today"
+    },
+    "legenda": {
+      "naslov": "Legend:"
+    },
+    "matrixLegenda": {
+      "izvrseno": "✓ completed",
+      "kasni": "! overdue",
+      "viseTermina": "(+N) more appointments",
+      "nemaTermina": "· no appointments"
+    },
+    "matrixGrid": {
+      "vrstaHeader": "Inspection / test type",
+      "viseTerminaTitle": "Multiple appointments — open list",
+      "prazno": "No data."
+    },
+    "monthCalendar": {
+      "danAriaLabel": "Day {broj}",
+      "jos": "{count} more"
+    },
+    "kalendar": {
+      "nemaTerminaZaDan": "No appointments for this day.",
+      "detalji": "Details"
+    },
+    "lista": {
+      "ukupnoRezultata": "Total results: {count}"
+    },
+    "matrica": {
+      "izaberiteKlijenta": "Select a client to view the annual matrix.",
+      "nemaTerminaMjesec": "No appointments for the selected month.",
+      "nemaTerminaGodina": "This client has no appointments in the selected year."
+    }
+  },
+  "zapisnici": {
+    "naslov": "Records",
+    "prazno": "No AI-generated records yet. Generate them from the appointment details.",
+    "zatvoriPregled": "Close preview",
+    "pretragaPlaceholder": "Search by client or inspection type…",
+    "kolone": {
+      "klijent": "Client",
+      "vrsta": "Inspection type",
+      "datum": "Date",
+      "akcije": "Actions"
+    },
+    "brojUkupno": "{count} records",
+    "brojFiltrirano": "{prikazano} / {ukupno}",
+    "pregled": "Preview",
+    "preuzmi": "Download",
+    "obrisiZapisnik": "Delete record",
+    "prazniRezultati": "No records for \"{upit}\"."
+  },
+  "dokumenti": {
+    "izaberiteFajl": "Select a file.",
+    "nedozvoljenTip": "File type not allowed (docx, pdf, png, jpeg, webp).",
+    "fajlPrevelik": "File is larger than {max} MB.",
+    "terminNePostoji": "Appointment does not exist.",
+    "terminObavezan": "Appointment is required",
+    "uploadNijeUspio": "Upload failed.",
+    "zapisnikSamoIzvrsen": "The record can only be generated for a completed appointment.",
+    "generisanjeNijeUspjelo": "Generation failed.",
+    "samoAdminBrise": "Only an administrator can delete documents.",
+    "dokumentNePostoji": "Document does not exist.",
+    "dokumentNePostojiIliNemaPristupa": "Document does not exist or you don't have access.",
+    "klijentObavezan": "Client is required",
+    "tipNeispravan": "Invalid type",
+    "klijentNePostojiIliNemaPristupa": "Client does not exist or you don't have access.",
+    "ugovorNePripadaKlijentu": "Contract does not belong to the client.",
+    "naslov": "Documents",
+    "generisiZapisnik": "Generate record (AI)",
+    "generisem": "Generating…",
+    "zapisnikNedostupan": "The AI record is available only after the appointment is completed.",
+    "saljem": "Sending…",
+    "uploadDugme": "Upload",
+    "prazno": "No documents for this appointment.",
+    "preuzmi": "Download",
+    "obrisiDokument": "Delete document",
+    "aiOznaka": "AI"
+  },
+  "postavke": {
+    "naslov": "Settings",
+    "reminders": {
+      "naslov": "Email reminders",
+      "opis": "How many days before the due date a reminder is sent. The system checks appointments daily."
+    },
+    "vrste": {
+      "naslov": "Check types",
+      "opis": "Services the system tracks and automatically schedules. The interval (months) determines when the next appointment is scheduled after completion. Empty = no auto-scheduling."
+    },
+    "korisnici": {
+      "naslov": "Users"
+    },
+    "uloge": {
+      "admin": "Administrator",
+      "operater": "Operator",
+      "pregled": "Viewer"
+    },
+    "korisniciTabela": {
+      "pretragaPlaceholder": "Search users…",
+      "brojUkupno": "{count} users",
+      "brojFiltrirano": "{prikazano} / {ukupno}",
+      "kolone": {
+        "korisnik": "User",
+        "uloga": "Role",
+        "podsjetnici": "Reminders",
+        "firme": "Companies",
+        "akcije": "Actions"
+      },
+      "ti": "(you)",
+      "deaktiviran": "deactivated",
+      "sveFirme": "all companies",
+      "sveFirmeTitle": "Administrator sees all companies",
+      "nemaDodijeljenih": "none assigned",
+      "prazno": "No users for \"{upit}\"."
+    },
+    "korisnikAkcije": {
+      "aria": "Actions",
+      "testEmail": "Send test email",
+      "deaktivirajKorisnika": "Deactivate user",
+      "aktivirajKorisnika": "Activate user",
+      "greskaSlanja": "Error sending.",
+      "dryRunNaslov": "Email was not actually sent (dry run).",
+      "dryRunOpis": "Resend is not configured. The test was simulated for {email}.",
+      "testniPoslat": "Test email sent to {email}.",
+      "napomenaIskljuceniPodsjetnici": "Note: the user has reminders turned off.",
+      "korisnikDeaktiviran": "User deactivated.",
+      "korisnikAktiviran": "User activated.",
+      "greska": "Error."
+    },
+    "noviKorisnik": {
+      "dugme": "New user",
+      "naslov": "New user",
+      "placeholderIme": "Full name",
+      "placeholderEmail": "Email",
+      "placeholderLozinka": "Initial password (min 8)",
+      "submitPending": "Creating…",
+      "submit": "Create"
+    },
+    "ulogaSelect": {
+      "vlastitaUlogaTitle": "You cannot change your own role",
+      "promijeniUlogu": "Change role",
+      "sacuvano": "Role changed.",
+      "greska": "Error."
+    },
+    "primaPodsjetnike": {
+      "aria": "Receives email reminders",
+      "sacuvano": "Saved.",
+      "greska": "Error."
+    },
+    "reminderForm": {
+      "naDan": "on the day",
+      "dana": "{count, plural, =1 {# day} other {# days}}",
+      "ukloniAria": "Remove {labela}",
+      "uputstvo": "Click a threshold to turn sending on/off.",
+      "uputstvoUklanjanje": "× removes the option.",
+      "customPlaceholder": "e.g. 21",
+      "danaPrije": "days before",
+      "dodaj": "Add",
+      "customGreska": "Enter a whole number of days 0–365",
+      "prazno": "No threshold is enabled — no emails will be sent.",
+      "submitPending": "Saving…",
+      "submit": "Save"
+    },
+    "actions": {
+      "pragObavezan": "Enter at least one threshold",
+      "pragoviNeispravni": "Thresholds must be whole numbers 0–365, separated by commas",
+      "samoAdministrator": "Administrator only.",
+      "intervalGreskaVrijednost": "Interval must be a whole number 1–120 or empty (error: \"{vrijednost}\")",
+      "nazivObavezan": "Name is required",
+      "intervalNeispravan": "Interval must be a whole number 1–120 or empty",
+      "vrstaPregledaNazivPostoji": "A check type with that name already exists.",
+      "imeObavezno": "Name is required",
+      "emailNeispravan": "Invalid email",
+      "lozinkaMin": "Password min 8 characters",
+      "korisnikEmailPostoji": "A user with that email already exists.",
+      "greskaFallback": "Error.",
+      "sebiOduzetiUlogu": "You cannot remove your own administrator role.",
+      "barJedanAdmin": "There must be at least one active administrator.",
+      "deaktivirajVlastitiNalog": "You cannot deactivate your own account.",
+      "korisnikNemaEmail": "The user has no email address.",
+      "greskaSlanjaEmailaFallback": "Error sending the email.",
+      "resendTestniRezim": "Resend is in test mode: until a domain is verified, emails can only be sent to the Resend account owner's email. Verify a domain at resend.com/domains and set EMAIL_FROM to an address on that domain.",
+      "klijentNepostojeciUDodjeli": "Nonexistent client in the assignment.",
+      "intervalNeispravanKratko": "Interval must be 1–120 or empty",
+      "vrstaNazivPostoji": "A type with that name already exists.",
+      "vrstaIdNeispravan": "Invalid type ID.",
+      "intervalNeispravanTacka": "Interval must be a whole number 1–120 or empty."
+    }
+  },
+  "asistent": {
+    "naslov": "Assistant",
+    "sidebar": {
+      "naslov": "Conversations",
+      "prazno": "No conversations.",
+      "bezNaslova": "Conversation"
+    },
+    "prazanRazgovor": "Click \"+ New conversation\" to start, or select an existing conversation on the left.",
+    "chat": {
+      "prazno": "Ask a question about appointments, companies, or request a record draft.",
+      "nemaStream": "No stream",
+      "greskaEvent": "\n[Error: {poruka}]",
+      "greskaVeze": "\n[Connection error: {poruka}]",
+      "nepoznatoGreska": "unknown"
+    },
+    "chatInput": {
+      "placeholder": "Type a question…",
+      "posalji": "Send"
+    },
+    "chatMessage": {
+      "alati": "Tools: {lista}",
+      "proposal": {
+        "naslov": "Record draft · {klijent} · {vrsta}",
+        "nalaz": "Findings:",
+        "zakljucak": "Conclusion:",
+        "snimi": "Save record",
+        "snimam": "Saving…",
+        "snimljeno": "Saved ✓"
+      }
+    },
+    "noviRazgovor": {
+      "dugme": "New conversation"
+    },
+    "suggestedPills": {
+      "pitanje1": "Which appointments are overdue?",
+      "pitanje2": "What companies do we have and how much are they overdue?",
+      "pitanje3": "Group active appointments by client"
+    },
+    "actions": {
+      "neispravanTermin": "Invalid appointment",
+      "terminNePostoji": "Appointment does not exist.",
+      "snimanjeNijeUspjelo": "Save failed."
+    },
+    "api": {
+      "neispravanZahtjev": "Invalid request",
+      "snimanjeNijeUspjelo": "Saving the message failed",
+      "greskaAsistenta": "Assistant error",
+      "bezTeksta": "(no text)"
+    }
+  },
+  "email": {
+    "test": {
+      "predmet": "Test email — {appName}",
+      "headerLabel": "Test",
+      "znacka": "TEST EMAIL",
+      "pozdravIme": "Hello {ime},",
+      "pozdrav": "Hello,",
+      "opis": "If you see this message, email delivery to your address is working correctly. You will receive automatic deadline reminders at this address.",
+      "napomena": "This is a test sent from settings — no action is needed."
+    },
+    "podsjetnik": {
+      "predmet": "Reminder: {vrsta} — {klijent} ({stanje})",
+      "rok": "{tekst}",
+      "headerLabel": "Reminder",
+      "znackaKasni": "OVERDUE",
+      "znackaUskoro": "UPCOMING",
+      "rokDospijeca": "Due date:",
+      "poljeVrsta": "Type",
+      "poljeKlijent": "Client",
+      "poljeLokacija": "Location",
+      "dugmeTermin": "Open appointment",
+      "dugmeKlijent": "Open client",
+      "prilogNaziv": "appointment.ics"
+    },
+    "ics": {
+      "opis": "Deadline reminder.",
+      "detalji": "Details: {url}"
+    }
+  },
+  "izvoz": {
+    "plan": {
+      "naslov": "Activity plan",
+      "podnaslov": "Activity plan — {period}",
+      "sviMjeseci": "all months",
+      "nemaAktivnosti": "No activities for the selected filters.",
+      "kolone": {
+        "klijent": "Client",
+        "lokacija": "Location",
+        "usluga": "Service",
+        "rok": "Due date",
+        "status": "Status",
+        "periodika": "Frequency (mo)",
+        "odgovorna": "Responsible person",
+        "nacin": "Mode"
+      },
+      "kolonePdf": {
+        "klijent": "Client",
+        "lokacija": "Location",
+        "usluga": "Service",
+        "rok": "Due",
+        "status": "Status",
+        "periodika": "Frequency",
+        "odgovorna": "Responsible",
+        "nacin": "Mode"
+      },
+      "nacin": {
+        "izvrsava": "Performs",
+        "pracenje": "Tracking"
+      },
+      "greska": "Error",
+      "greskaGenerisanje": "Error generating file: {poruka}"
+    },
+    "zapisnik": {
+      "naslov": "RECORD OF COMPLETED INSPECTION",
+      "podnaslov": "{appName} — occupational safety",
+      "poljeKlijent": "Client",
+      "poljeLokacija": "Location",
+      "poljeVrstaProvjere": "Inspection type",
+      "poljeDatumIzvrsenja": "Completion date",
+      "poljeZaduzeni": "Assigned to",
+      "nalaz": "Findings",
+      "zakljucak": "Conclusion",
+      "potpis": "Signature of authorized person: ______________________________",
+      "imeFajla": "Record - {vrsta} - {datum}.docx",
+      "provjeraFallback": "inspection"
+    }
+  },
+  "dbErrors": {
+    "chkTerminiDatumi": "Invalid date: the completion date cannot be in the future, and the interval must be between 1 and 120 months.",
+    "duplikat": "A record with these values already exists.",
+    "uUpotrebi": "The record is linked to other data and is in use.",
+    "nevazeciPodaci": "Invalid data — please check your input.",
+    "obaveznoPolje": "A required field is missing.",
+    "genericka": "An error occurred while saving. Please try again."
+  }
+}

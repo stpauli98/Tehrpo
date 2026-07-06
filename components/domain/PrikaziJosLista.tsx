@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import { ChevronDown } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 // Lista koja prikazuje prvih `limit` stavki, a ostatak skriva iza "Prikaži još N".
@@ -19,6 +20,7 @@ export function PrikaziJosLista({
   imenicaGenitiv: string
   testId?: string
 }) {
+  const t = useTranslations("common.prikaziJosLista")
   const [expanded, setExpanded] = useState(false)
   const overflow = items.length > limit
   const visible = !overflow || expanded ? items : items.slice(0, limit)
@@ -35,7 +37,7 @@ export function PrikaziJosLista({
           className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:underline"
         >
           <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
-          {expanded ? "Prikaži manje" : `Prikaži još ${items.length - limit} ${imenicaGenitiv}`}
+          {expanded ? t("prikaziManje") : t("prikaziJos", { count: items.length - limit, imenica: imenicaGenitiv })}
         </button>
       )}
     </div>

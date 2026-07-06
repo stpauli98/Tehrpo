@@ -19,4 +19,14 @@ describe("planToPdf", () => {
     const buf = await planToPdf([r], { naslov: "Tehpro", period: "tekući" })
     expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-")
   })
+
+  it("na engleskom: i dalje validan PDF (zaglavlje prevedeno)", async () => {
+    const buf = await planToPdf([ROW], { naslov: "Tehpro", period: "all months" }, "en")
+    expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-")
+  })
+
+  it("na engleskom: prazna lista koristi prevedenu poruku bez rušenja", async () => {
+    const buf = await planToPdf([], { naslov: "Tehpro", period: "all months" }, "en")
+    expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-")
+  })
 })

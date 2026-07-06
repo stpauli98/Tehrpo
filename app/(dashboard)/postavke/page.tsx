@@ -15,7 +15,10 @@ export default async function PostavkePage() {
   const jeAdminKor = korisnik?.uloga === "admin"
   const supabase = await createServerSupabaseClient()
   const [postRes, vrsteData] = await Promise.all([
-    supabase.from("postavke").select("dana_prije, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
+    // select("*") umjesto eksplicitnih kolona: tolerantno na fazu prije cloud migracije
+    // koja dodaje podsjetnici_aktivni — eksplicitan select bi cijeli upit oborio i
+    // povukao za sobom postojeći dana_prije ako ta kolona (još) ne postoji na cloud DEMO.
+    supabase.from("postavke").select("*").eq("id", 1).maybeSingle(),
     getCachedVrste(),
   ])
   const danaPrije = postRes.data?.dana_prije ?? [30, 14, 7, 1]

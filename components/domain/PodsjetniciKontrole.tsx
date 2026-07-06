@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useRef, useState, useTransition } from "react"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import {
   Dialog,
@@ -28,10 +28,24 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
   const t = useTranslations("postavke.podsjetniciKontrole")
   const tc = useTranslations("common")
   const formRef = useRef<HTMLFormElement>(null)
+  const checkboxRef = useRef<HTMLInputElement>(null)
   const [toggleState, toggleAction, togglePending] = useActionState(
     updatePodsjetniciAktivni,
     initialToggleState,
   )
+  // Prati koji je toggleState već obrađen za rollback, da se checkbox vrati na
+  // server-istinu tačno jednom po neuspjehu (isti idiom kao PrimaPodsjetnikeToggle,
+  // ali ovdje kroz useActionState pa rollback ide preko useEffect-a, ne inline callbacka).
+  const obradjenoZa = useRef(initialToggleState)
+
+  useEffect(() => {
+    if (toggleState !== obradjenoZa.current) {
+      obradjenoZa.current = toggleState
+      if (toggleState.ok === false && checkboxRef.current) {
+        checkboxRef.current.checked = aktivni
+      }
+    }
+  }, [toggleState, aktivni])
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -48,6 +62,7 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
     <div className="space-y-4">
       <form ref={formRef} action={toggleAction} className="flex items-start gap-3">
         <input
+          ref={checkboxRef}
           type="checkbox"
           name="aktivni"
           defaultChecked={aktivni}

@@ -813,7 +813,11 @@
       "intervalNeispravanKratko": "Intervall muss 1–120 oder leer sein",
       "vrstaNazivPostoji": "Eine Art mit diesem Namen existiert bereits.",
       "vrstaIdNeispravan": "Ungültige Art-ID.",
-      "intervalNeispravanTacka": "Intervall muss eine ganze Zahl 1–120 oder leer sein."
+      "intervalNeispravanTacka": "Intervall muss eine ganze Zahl 1–120 oder leer sein.",
+      "podsjetniciToggleGreska": "Fehler beim Speichern der Erinnerungseinstellung.",
+      "samoAdmin": "Nur ein Administrator kann Erinnerungen ausführen.",
+      "pokreniNijeKonfigurisan": "CRON_SECRET ist auf diesem Deployment nicht konfiguriert.",
+      "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen."
     }
   },
   "asistent": {

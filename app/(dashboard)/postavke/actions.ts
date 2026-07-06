@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
@@ -11,6 +12,7 @@ import { sendEmail } from "@/lib/email/resend"
 import { testEmailSubject, testEmailHtml } from "@/lib/email/templates"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { env } from "@/lib/env"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "postavke.actions" })
 
@@ -372,4 +374,54 @@ export async function postaviVrstaInterval(vrstaId: string, interval: number | n
   revalidateVrste()
   revalidatePath("/postavke")
   return { ok: true }
+}
+
+// ─── Uključivanje/isključivanje automatskih podsjetnika ─────────────────────
+
+export async function updatePodsjetniciAktivni(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const aktivni = formData.get("aktivni") === "on"
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("postavke")
+    .update({ podsjetnici_aktivni: aktivni })
+    .eq("id", 1)
+  if (error) return { ok: false, message: t("podsjetniciToggleGreska") }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+// ─── Ručno pokretanje podsjetnika (poziva cron rutu preko HTTP-a) ───────────
+
+export type PokreniRezultat =
+  | { ok: true; poslano: number; preskoceno: number; greske: number }
+  | { ok: false; message: string }
+
+export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
+  // Ista provjera uloge kao zahtijevajAdmina, ali vraćamo poruku umjesto bacanja
+  // greške — dugme "Pokreni sada" nije forma pa nema _prev/formData obrazac.
+  const korisnik = await getTrenutniKorisnik()
+  if (!korisnik || korisnik.uloga !== "admin") return { ok: false, message: t("samoAdmin") }
+  if (!env.CRON_SECRET) return { ok: false, message: t("pokreniNijeKonfigurisan") }
+  const h = await headers()
+  const proto = h.get("x-forwarded-proto") ?? "https"
+  const host = h.get("host")
+  if (!host) return { ok: false, message: t("pokreniGreska") }
+  const res = await fetch(`${proto}://${host}/api/cron/reminders`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.CRON_SECRET}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ dryRun: false }),
+    cache: "no-store",
+  })
+  if (!res.ok) return { ok: false, message: t("pokreniGreska") }
+  const data = (await res.json()) as { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[] }
+  return {
+    ok: true,
+    poslano: data.sent?.length ?? 0,
+    preskoceno: data.skipped?.length ?? 0,
+    greske: data.errors?.length ?? 0,
+  }
 }

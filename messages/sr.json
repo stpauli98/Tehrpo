@@ -813,7 +813,11 @@
       "intervalNeispravanKratko": "Interval mora biti 1–120 ili prazno",
       "vrstaNazivPostoji": "Vrsta sa tim nazivom već postoji.",
       "vrstaIdNeispravan": "Neispravan ID vrste.",
-      "intervalNeispravanTacka": "Interval mora biti cijeli broj 1–120 ili prazno."
+      "intervalNeispravanTacka": "Interval mora biti cijeli broj 1–120 ili prazno.",
+      "podsjetniciToggleGreska": "Greška pri snimanju postavke podsjetnika.",
+      "samoAdmin": "Samo administrator može pokrenuti podsjetnike.",
+      "pokreniNijeKonfigurisan": "CRON_SECRET nije konfigurisan na ovom deploymentu.",
+      "pokreniGreska": "Pokretanje podsjetnika nije uspjelo."
     }
   },
   "asistent": {

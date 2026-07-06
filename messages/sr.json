@@ -776,6 +776,14 @@
       "sacuvano": "Sačuvano.",
       "greska": "Greška."
     },
+    "podsjetniciKontrole": {
+      "naslov": "Automatsko slanje",
+      "opis": "Dnevno slanje podsjetnika (06:00 UTC). Isključivanje zaustavlja samo automatiku — ručno pokretanje uvijek radi.",
+      "pokreni": "Pokreni sada",
+      "potvrda": "Poslati podsjetnike svim primaocima odmah?",
+      "saljem": "Šaljem…",
+      "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Greške: {greske}"
+    },
     "reminderForm": {
       "naDan": "na dan",
       "dana": "{count, plural, =1 {# dan} other {# dana}}",

@@ -776,6 +776,14 @@
       "sacuvano": "Gespeichert.",
       "greska": "Fehler."
     },
+    "podsjetniciKontrole": {
+      "naslov": "Automatischer Versand",
+      "opis": "Täglicher Erinnerungsversand (06:00 UTC). Das Ausschalten stoppt nur den Zeitplan — manuelle Ausführung funktioniert immer.",
+      "pokreni": "Jetzt ausführen",
+      "potvrda": "Erinnerungen jetzt an alle Empfänger senden?",
+      "saljem": "Wird gesendet…",
+      "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Fehler: {greske}"
+    },
     "reminderForm": {
       "naDan": "am Tag",
       "dana": "{count, plural, =1 {# Tag} other {# Tage}}",

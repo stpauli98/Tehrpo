@@ -776,6 +776,14 @@
       "sacuvano": "Saved.",
       "greska": "Error."
     },
+    "podsjetniciKontrole": {
+      "naslov": "Automatic sending",
+      "opis": "Daily reminder sending (06:00 UTC). Turning it off stops only the schedule — manual runs always work.",
+      "pokreni": "Run now",
+      "potvrda": "Send reminders to all recipients now?",
+      "saljem": "Sending…",
+      "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Errors: {greske}"
+    },
     "reminderForm": {
       "naDan": "on the day",
       "dana": "{count, plural, =1 {# day} other {# days}}",

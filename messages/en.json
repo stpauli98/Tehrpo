@@ -782,7 +782,7 @@
       "pokreni": "Run now",
       "potvrda": "Send reminders to all recipients now?",
       "saljem": "Sending…",
-      "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Errors: {greske}"
+      "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Deferred: {odgodjeno} · Errors: {greske}"
     },
     "reminderForm": {
       "naDan": "on the day",

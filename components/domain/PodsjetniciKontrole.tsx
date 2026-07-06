@@ -127,6 +127,7 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
             ? t("rezultat", {
                 poslano: rezultat.poslano,
                 preskoceno: rezultat.preskoceno,
+                odgodjeno: rezultat.odgodjeno,
                 greske: rezultat.greske,
               })
             : rezultat.message}

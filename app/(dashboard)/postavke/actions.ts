@@ -397,7 +397,7 @@ export async function updatePodsjetniciAktivni(
 // ─── Ručno pokretanje podsjetnika (poziva cron rutu preko HTTP-a) ───────────
 
 export type PokreniRezultat =
-  | { ok: true; poslano: number; preskoceno: number; greske: number }
+  | { ok: true; poslano: number; preskoceno: number; odgodjeno: number; greske: number }
   | { ok: false; message: string }
 
 export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
@@ -423,9 +423,9 @@ export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
     cache: "no-store",
   })
   if (!res.ok) return { ok: false, message: t("pokreniGreska") }
-  let data: { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[] }
+  let data: { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[]; deferred?: number }
   try {
-    data = (await res.json()) as { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[] }
+    data = (await res.json()) as { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[]; deferred?: number }
   } catch {
     return { ok: false, message: t("pokreniGreska") }
   }
@@ -433,6 +433,7 @@ export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
     ok: true,
     poslano: data.sent?.length ?? 0,
     preskoceno: data.skipped?.length ?? 0,
+    odgodjeno: data.deferred ?? 0,
     greske: data.errors?.length ?? 0,
   }
 }

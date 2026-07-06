@@ -782,7 +782,7 @@
       "pokreni": "Jetzt ausführen",
       "potvrda": "Erinnerungen jetzt an alle Empfänger senden?",
       "saljem": "Wird gesendet…",
-      "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Fehler: {greske}"
+      "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Zurückgestellt: {odgodjeno} · Fehler: {greske}"
     },
     "reminderForm": {
       "naDan": "am Tag",

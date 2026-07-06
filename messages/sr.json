@@ -782,7 +782,7 @@
       "pokreni": "Pokreni sada",
       "potvrda": "Poslati podsjetnike svim primaocima odmah?",
       "saljem": "Šaljem…",
-      "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Greške: {greske}"
+      "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Odgođeno: {odgodjeno} · Greške: {greske}"
     },
     "reminderForm": {
       "naDan": "na dan",

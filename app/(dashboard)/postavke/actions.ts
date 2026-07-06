@@ -406,18 +406,29 @@ export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
   const korisnik = await getTrenutniKorisnik()
   if (!korisnik || korisnik.uloga !== "admin") return { ok: false, message: t("samoAdmin") }
   if (!env.CRON_SECRET) return { ok: false, message: t("pokreniNijeKonfigurisan") }
-  const h = await headers()
-  const proto = h.get("x-forwarded-proto") ?? "https"
-  const host = h.get("host")
-  if (!host) return { ok: false, message: t("pokreniGreska") }
-  const res = await fetch(`${proto}://${host}/api/cron/reminders`, {
+  // Origin: prioritet ima konfigurisani NEXT_PUBLIC_APP_URL; headers su fallback
+  // (host header dolazi iz requesta — konfigurisan URL je čvršći izvor istine).
+  let origin = env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "")
+  if (!origin) {
+    const h = await headers()
+    const proto = h.get("x-forwarded-proto") ?? "https"
+    const host = h.get("host")
+    if (!host) return { ok: false, message: t("pokreniGreska") }
+    origin = `${proto}://${host}`
+  }
+  const res = await fetch(`${origin}/api/cron/reminders`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.CRON_SECRET}`, "Content-Type": "application/json" },
     body: JSON.stringify({ dryRun: false }),
     cache: "no-store",
   })
   if (!res.ok) return { ok: false, message: t("pokreniGreska") }
-  const data = (await res.json()) as { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[] }
+  let data: { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[] }
+  try {
+    data = (await res.json()) as { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[] }
+  } catch {
+    return { ok: false, message: t("pokreniGreska") }
+  }
   return {
     ok: true,
     poslano: data.sent?.length ?? 0,

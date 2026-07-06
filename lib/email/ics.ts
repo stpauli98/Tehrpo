@@ -2,6 +2,7 @@ import { createTranslator } from "next-intl"
 import { APP_NAME } from "@/lib/brand"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { localizeHref } from "@/i18n/routes"
 
 /** iCal escaping: backslash, tačka-zarez, zarez, novi red. */
 function icsEscape(s: string): string {
@@ -46,7 +47,7 @@ export function buildTerminIcs(args: {
   const host = args.baseUrl ? new URL(args.baseUrl).hostname : "termini"
   const summary = icsEscape(`${args.vrsta} — ${args.klijent}`)
   const descText = args.baseUrl
-    ? `${t("opis")}\n\n${t("detalji", { url: `${args.baseUrl}/plan-aktivnosti?selected=${args.terminId}` })}`
+    ? `${t("opis")}\n\n${t("detalji", { url: `${args.baseUrl}${localizeHref(`/plan-aktivnosti?selected=${args.terminId}`, locale)}` })}`
     : t("opis")
   const description = icsEscape(descText)
   const lines = [

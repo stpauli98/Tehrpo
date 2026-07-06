@@ -50,6 +50,6 @@ describe("buildTerminIcs — en", () => {
   it("DESCRIPTION na engleskom (s baseUrl) — 'Details:' prefiks i link", () => {
     const ics = buildTerminIcs({ ...baza, baseUrl: "https://app.test" }, "en")
     expect(ics).toContain("Details:")
-    expect(ics).toContain("plan-aktivnosti?selected=t1")
+    expect(ics).toContain("activity-plan?selected=t1")
   })
 })

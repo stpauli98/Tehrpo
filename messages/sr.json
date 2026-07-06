@@ -8,7 +8,7 @@
     "pretraga": "Pretraga",
     "prikaziJosLista": {
       "prikaziManje": "Prikaži manje",
-      "prikaziJos": "Prikaži još {count}"
+      "prikaziJos": "Prikaži još {count} {imenica}"
     },
     "pagination": {
       "prethodna": "Prethodna",

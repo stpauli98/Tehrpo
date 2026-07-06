@@ -5,6 +5,7 @@ import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { formatDatum } from "@/lib/date"
 import { APP_NAME } from "@/lib/brand"
+import { href } from "@/i18n/routes"
 import { Building2, ClipboardCheck } from "lucide-react"
 import type { Database } from "@/db/types"
 
@@ -79,7 +80,7 @@ export async function IdKartaTab({
           klijentId={klijentId}
           kontakti={kontakti}
           previewLimit={4}
-          seeAllHref={`/klijenti/${klijentId}?tab=kontakti`}
+          seeAllHref={href(`/klijenti/${klijentId}?tab=kontakti`)}
           info={t("kontaktiInfo")}
         />
       </section>

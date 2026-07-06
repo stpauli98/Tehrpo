@@ -8,7 +8,7 @@
     "pretraga": "Suche",
     "prikaziJosLista": {
       "prikaziManje": "Weniger anzeigen",
-      "prikaziJos": "{count} weitere anzeigen"
+      "prikaziJos": "{count} weitere {imenica} anzeigen"
     },
     "pagination": {
       "prethodna": "Zurück",

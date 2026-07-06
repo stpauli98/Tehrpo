@@ -37,7 +37,7 @@ export function PrikaziJosLista({
           className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:underline"
         >
           <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
-          {expanded ? t("prikaziManje") : `${t("prikaziJos", { count: items.length - limit })} ${imenicaGenitiv}`}
+          {expanded ? t("prikaziManje") : t("prikaziJos", { count: items.length - limit, imenica: imenicaGenitiv })}
         </button>
       )}
     </div>

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import type { CalDay } from "@/lib/calendar"
 import { STATUS_DOT_CLASS, type DerivedStatus } from "@/lib/termini"
 import { APP_LOCALE } from "@/lib/locale"
+import { href } from "@/i18n/routes"
 import { cn } from "@/lib/utils"
 
 export type DayTermin = {
@@ -52,14 +53,14 @@ export function MonthCalendar({
     const p = new URLSearchParams(currentSearch)
     p.set("dan", date)
     p.delete("selected")
-    return `/plan-aktivnosti?${p.toString()}`
+    return href(`/plan-aktivnosti?${p.toString()}`)
   }
 
   const terminHref = (id: string) => {
     const p = new URLSearchParams(currentSearch)
     p.set("selected", id)
     p.delete("dan")
-    return `/plan-aktivnosti?${p.toString()}`
+    return href(`/plan-aktivnosti?${p.toString()}`)
   }
 
   return (

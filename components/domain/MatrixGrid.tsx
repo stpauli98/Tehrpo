@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import type { DerivedStatus } from "@/lib/termini"
+import { href as localizedHref } from "@/i18n/routes"
 import { cn } from "@/lib/utils"
 import type { MatrixRow, MatrixColumn, MatrixCell } from "@/lib/matrix"
 
@@ -100,7 +101,7 @@ export function MatrixGrid({
                   cell && cell.brojUCeliji > 1 && multiHref
                     ? multiHref(row.rowId, c.id)
                     : cell
-                    ? `/plan-aktivnosti?${withParam(currentSearch, "selected", cell.terminId)}`
+                    ? localizedHref(`/plan-aktivnosti?${withParam(currentSearch, "selected", cell.terminId)}`)
                     : ""
                 return (
                   <td

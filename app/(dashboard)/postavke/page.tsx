@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { getCachedVrste } from "@/lib/cache"
 import { ReminderForm } from "@/components/domain/ReminderForm"
+import { PodsjetniciKontrole } from "@/components/domain/PodsjetniciKontrole"
 import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
 import { VrstePregledaTabela } from "@/components/domain/VrstePregledaTabela"
 import { KorisniciTab } from "@/components/domain/KorisniciTab"
@@ -14,7 +15,10 @@ export default async function PostavkePage() {
   const jeAdminKor = korisnik?.uloga === "admin"
   const supabase = await createServerSupabaseClient()
   const [postRes, vrsteData] = await Promise.all([
-    supabase.from("postavke").select("dana_prije").eq("id", 1).maybeSingle(),
+    // select("*") umjesto eksplicitnih kolona: tolerantno na fazu prije cloud migracije
+    // koja dodaje podsjetnici_aktivni — eksplicitan select bi cijeli upit oborio i
+    // povukao za sobom postojeći dana_prije ako ta kolona (još) ne postoji na cloud DEMO.
+    supabase.from("postavke").select("*").eq("id", 1).maybeSingle(),
     getCachedVrste(),
   ])
   const danaPrije = postRes.data?.dana_prije ?? [30, 14, 7, 1]
@@ -36,7 +40,10 @@ export default async function PostavkePage() {
           title={t("reminders.naslov")}
           description={t("reminders.opis")}
         >
-          <ReminderForm danaPrije={danaPrije} />
+          <div className="space-y-6">
+            <ReminderForm danaPrije={danaPrije} />
+            <PodsjetniciKontrole aktivni={postRes.data?.podsjetnici_aktivni ?? true} />
+          </div>
         </CollapsibleSection>
       )}
 

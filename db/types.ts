@@ -526,16 +526,19 @@ export type Database = {
         Row: {
           dana_prije: number[]
           id: number
+          podsjetnici_aktivni: boolean
           updated_at: string
         }
         Insert: {
           dana_prije?: number[]
           id?: number
+          podsjetnici_aktivni?: boolean
           updated_at?: string
         }
         Update: {
           dana_prije?: number[]
           id?: number
+          podsjetnici_aktivni?: boolean
           updated_at?: string
         }
         Relationships: []

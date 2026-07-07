@@ -776,6 +776,14 @@
       "sacuvano": "Saved.",
       "greska": "Error."
     },
+    "podsjetniciKontrole": {
+      "naslov": "Automatic sending",
+      "opis": "Daily reminder sending (06:00 UTC). Turning it off stops only the schedule — manual runs always work.",
+      "pokreni": "Run now",
+      "potvrda": "Send reminders to all recipients now?",
+      "saljem": "Sending…",
+      "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Deferred: {odgodjeno} · Errors: {greske}"
+    },
     "reminderForm": {
       "naDan": "on the day",
       "dana": "{count, plural, =1 {# day} other {# days}}",
@@ -813,7 +821,11 @@
       "intervalNeispravanKratko": "Interval must be 1–120 or empty",
       "vrstaNazivPostoji": "A type with that name already exists.",
       "vrstaIdNeispravan": "Invalid type ID.",
-      "intervalNeispravanTacka": "Interval must be a whole number 1–120 or empty."
+      "intervalNeispravanTacka": "Interval must be a whole number 1–120 or empty.",
+      "podsjetniciToggleGreska": "Error saving reminder setting.",
+      "samoAdmin": "Only an administrator can run reminders.",
+      "pokreniNijeKonfigurisan": "CRON_SECRET is not configured on this deployment.",
+      "pokreniGreska": "Running reminders failed."
     }
   },
   "asistent": {

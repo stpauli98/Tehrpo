@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { runReminders } from "@/lib/reminders/runReminders"
 import { drySend } from "@/lib/email/resend"
 import { isCronAuthorized } from "@/lib/reminders/cronAuth"
+import { podsjetniciAktivni } from "@/lib/reminders/gating"
 import { env } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
@@ -23,8 +24,21 @@ async function handle(req: Request) {
     // prazno telo (Vercel Cron šalje GET bez tijela) je OK → dryRun = false
   }
 
+  const supabase = createAdminSupabaseClient()
+
+  // Prekidač važi SAMO za automatski (Vercel cron) GET; POST (ručno/test) uvijek radi.
+  if (req.method === "GET") {
+    const { data: post } = await supabase
+      .from("postavke")
+      .select("podsjetnici_aktivni")
+      .eq("id", 1)
+      .maybeSingle()
+    if (!podsjetniciAktivni(post)) {
+      return NextResponse.json({ ok: true, skipped: "podsjetnici_iskljuceni" })
+    }
+  }
+
   try {
-    const supabase = createAdminSupabaseClient()
     const result = await runReminders(supabase, dryRun ? { send: drySend } : {})
     return NextResponse.json(result)
   } catch (e) {

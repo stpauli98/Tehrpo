@@ -86,6 +86,29 @@ test.describe("Faza 6 — Postavke UI", () => {
     await expect(page.getByTestId("reminder-chip-45")).toHaveCount(0)
   })
 
+  test("toggle automatskog slanja se perzistira", async ({ page }) => {
+    await page.goto("/postavke")
+    // Napomena: sekcija je collapsible (zatvorena po defaultu) — otvori je prije
+    // interakcije, isto kao ostali testovi u ovom describe bloku.
+    await otvoriPodsjetnike(page)
+    const toggle = page.getByTestId("podsjetnici-aktivni-toggle")
+    await expect(toggle).toBeVisible()
+    const prije = await toggle.isChecked()
+    await toggle.click()
+    await expect(toggle).toBeChecked({ checked: !prije })
+    // Server akcija se šalje asinhrono (form.requestSubmit u onChange) — sačekaj da
+    // se checkbox vrati iz disabled (pending) stanja prije reload-a, inače reload
+    // stigne prije nego se upis završi i pročita staru vrijednost (flaky race).
+    await expect(toggle).toBeEnabled()
+    await page.reload()
+    await otvoriPodsjetnike(page)
+    await expect(page.getByTestId("podsjetnici-aktivni-toggle")).toBeChecked({ checked: !prije })
+    // vrati na početno stanje da test ne mijenja ponašanje instance
+    await page.getByTestId("podsjetnici-aktivni-toggle").click()
+    await expect(page.getByTestId("podsjetnici-aktivni-toggle")).toBeChecked({ checked: prije })
+    await expect(page.getByTestId("podsjetnici-aktivni-toggle")).toBeEnabled()
+  })
+
   test("bez console grešaka na /postavke", async ({ page }) => {
     const errors: string[] = []
     page.on("pageerror", (e) => errors.push(String(e)))

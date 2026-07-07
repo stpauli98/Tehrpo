@@ -776,6 +776,14 @@
       "sacuvano": "Gespeichert.",
       "greska": "Fehler."
     },
+    "podsjetniciKontrole": {
+      "naslov": "Automatischer Versand",
+      "opis": "Täglicher Erinnerungsversand (06:00 UTC). Das Ausschalten stoppt nur den Zeitplan — manuelle Ausführung funktioniert immer.",
+      "pokreni": "Jetzt ausführen",
+      "potvrda": "Erinnerungen jetzt an alle Empfänger senden?",
+      "saljem": "Wird gesendet…",
+      "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Zurückgestellt: {odgodjeno} · Fehler: {greske}"
+    },
     "reminderForm": {
       "naDan": "am Tag",
       "dana": "{count, plural, =1 {# Tag} other {# Tage}}",
@@ -813,7 +821,11 @@
       "intervalNeispravanKratko": "Intervall muss 1–120 oder leer sein",
       "vrstaNazivPostoji": "Eine Art mit diesem Namen existiert bereits.",
       "vrstaIdNeispravan": "Ungültige Art-ID.",
-      "intervalNeispravanTacka": "Intervall muss eine ganze Zahl 1–120 oder leer sein."
+      "intervalNeispravanTacka": "Intervall muss eine ganze Zahl 1–120 oder leer sein.",
+      "podsjetniciToggleGreska": "Fehler beim Speichern der Erinnerungseinstellung.",
+      "samoAdmin": "Nur ein Administrator kann Erinnerungen ausführen.",
+      "pokreniNijeKonfigurisan": "CRON_SECRET ist auf diesem Deployment nicht konfiguriert.",
+      "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen."
     }
   },
   "asistent": {

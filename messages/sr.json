@@ -776,6 +776,14 @@
       "sacuvano": "Sačuvano.",
       "greska": "Greška."
     },
+    "podsjetniciKontrole": {
+      "naslov": "Automatsko slanje",
+      "opis": "Dnevno slanje podsjetnika (06:00 UTC). Isključivanje zaustavlja samo automatiku — ručno pokretanje uvijek radi.",
+      "pokreni": "Pokreni sada",
+      "potvrda": "Poslati podsjetnike svim primaocima odmah?",
+      "saljem": "Šaljem…",
+      "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Odgođeno: {odgodjeno} · Greške: {greske}"
+    },
     "reminderForm": {
       "naDan": "na dan",
       "dana": "{count, plural, =1 {# dan} other {# dana}}",
@@ -813,7 +821,11 @@
       "intervalNeispravanKratko": "Interval mora biti 1–120 ili prazno",
       "vrstaNazivPostoji": "Vrsta sa tim nazivom već postoji.",
       "vrstaIdNeispravan": "Neispravan ID vrste.",
-      "intervalNeispravanTacka": "Interval mora biti cijeli broj 1–120 ili prazno."
+      "intervalNeispravanTacka": "Interval mora biti cijeli broj 1–120 ili prazno.",
+      "podsjetniciToggleGreska": "Greška pri snimanju postavke podsjetnika.",
+      "samoAdmin": "Samo administrator može pokrenuti podsjetnike.",
+      "pokreniNijeKonfigurisan": "CRON_SECRET nije konfigurisan na ovom deploymentu.",
+      "pokreniGreska": "Pokretanje podsjetnika nije uspjelo."
     }
   },
   "asistent": {

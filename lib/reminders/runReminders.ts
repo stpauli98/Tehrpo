@@ -40,10 +40,11 @@ export async function runReminders(
 
   const { data: post } = await supabase
     .from("postavke")
-    .select("dana_prije")
+    .select("dana_prije, salji_klijentima")
     .eq("id", 1)
     .maybeSingle()
   const danaPrije = post?.dana_prije && post.dana_prije.length > 0 ? post.dana_prije : DEFAULT_DANA
+  const saljiKlijentima = post?.salji_klijentima ?? false
 
   const { data: due, error } = await supabase.rpc("get_due_podsjetnici", { dana_prije_arr: danaPrije })
   if (error) throw new Error(error.message)
@@ -61,7 +62,16 @@ export async function runReminders(
     .from("korisnik_klijent")
     .select("korisnik_id, klijent_id")
   if (kkErr) throw new Error(`Greška pri čitanju dodjela (korisnik_klijent): ${kkErr.message}`)
-  const recipientIndex = buildRecipientIndex(korisnici ?? [], dodjele ?? [])
+  const { data: klijentiZaSlanje, error: klErr } = await supabase
+    .from("klijenti")
+    .select("id, salji_podsjetnik_klijentu, podsjetnik_emails")
+  if (klErr) throw new Error(`Greška pri čitanju klijenata (Krug 2): ${klErr.message}`)
+  const recipientIndex = buildRecipientIndex(
+    korisnici ?? [],
+    dodjele ?? [],
+    klijentiZaSlanje ?? [],
+    saljiKlijentima,
+  )
   if (
     recipientIndex.adminEmails.length === 0 &&
     recipientIndex.assignedByKlijent.size === 0 &&

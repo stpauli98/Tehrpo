@@ -16,26 +16,33 @@ type DueRow = {
 }
 
 type KorRow = { id: string; email: string; uloga: string; aktivan: boolean; prima_podsjetnike: boolean }
+type KlRow = { id: string; salji_podsjetnik_klijentu: boolean; podsjetnik_emails: string[] | null }
 
 function makeFake(opts: {
   danaPrije?: number[]
+  saljiKlijentima?: boolean
   korisnici?: KorRow[]
   kk?: { korisnik_id: string; klijent_id: string }[]
+  klijenti?: KlRow[]
   dueRows?: DueRow[]
   korisniciError?: string
   kkError?: string
+  klijentiError?: string
 }) {
   const inserts: Array<Record<string, unknown>> = []
   const fake = {
     from(table: string) {
       if (table === "postavke") {
-        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { dana_prije: opts.danaPrije ?? [60, 30, 15, 7] }, error: null }) }) }) }
+        return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { dana_prije: opts.danaPrije ?? [60, 30, 15, 7], salji_klijentima: opts.saljiKlijentima ?? false }, error: null }) }) }) }
       }
       if (table === "korisnici") {
         return { select: async () => (opts.korisniciError ? { data: null, error: { message: opts.korisniciError } } : { data: opts.korisnici ?? [], error: null }) }
       }
       if (table === "korisnik_klijent") {
         return { select: async () => (opts.kkError ? { data: null, error: { message: opts.kkError } } : { data: opts.kk ?? [], error: null }) }
+      }
+      if (table === "klijenti") {
+        return { select: async () => (opts.klijentiError ? { data: null, error: { message: opts.klijentiError } } : { data: opts.klijenti ?? [], error: null }) }
       }
       if (table === "podsjetnici") {
         return { insert: async (row: Record<string, unknown>) => { inserts.push(row); return { error: null } } }
@@ -113,6 +120,39 @@ describe("runReminders", () => {
     await expect(runReminders(supabase)).rejects.toThrow(
       "Greška pri čitanju dodjela (korisnik_klijent): timeout",
     )
+  })
+
+  it("greška pri čitanju klijenata (Krug 2) → runReminders rejectuje", async () => {
+    const { supabase } = makeFake({ korisnici: [], kk: [], klijentiError: "timeout", dueRows: [baseRow] })
+    await expect(runReminders(supabase)).rejects.toThrow(
+      "Greška pri čitanju klijenata (Krug 2): timeout",
+    )
+  })
+
+  it("Krug 2: salji_klijentima uključeno → firmine adrese se dodaju uz interne primaoce", async () => {
+    const sends: SendArgs[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sends.push(a); return { id: "r", dryRun: false } }
+    const { supabase } = makeFake({
+      saljiKlijentima: true,
+      korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@klijent.com"] }],
+      dueRows: [baseRow], // baseRow.klijent_id === "k1"
+    })
+    await runReminders(supabase, { send, delayMs: 0 })
+    expect(sends[0]!.to).toEqual(["admin@tehpro.com", "firma@klijent.com"])
+  })
+
+  it("Krug 2: globalni prekidač isključen → firmine adrese se NE dodaju čak i ako je klijent uključen", async () => {
+    const sends: SendArgs[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sends.push(a); return { id: "r", dryRun: false } }
+    const { supabase } = makeFake({
+      saljiKlijentima: false,
+      korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@klijent.com"] }],
+      dueRows: [baseRow],
+    })
+    await runReminders(supabase, { send, delayMs: 0 })
+    expect(sends[0]!.to).toEqual(["admin@tehpro.com"])
   })
 
   it("nema internih primalaca → preskoči, ništa se ne šalje", async () => {

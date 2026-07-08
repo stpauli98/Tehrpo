@@ -197,3 +197,32 @@ export async function clearDodjele(korisnikId: string): Promise<void> {
   const { error } = await db.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
   if (error) throw new Error(`clearDodjele(${korisnikId}): ${error.message}`)
 }
+
+// ─── Podsjetnici v2 — singleton postavke (id=1) ──────────────────────────────
+
+export type PostavkeV2 = {
+  vrijeme_slanja_sat: number
+  salji_klijentima: boolean
+  zadnje_slanje_datum: string | null
+}
+
+/** Pročitaj podsjetnici-v2 kolone iz singleton postavke (id=1) — za read-before-restore u e2e. */
+export async function getPostavkeV2(): Promise<PostavkeV2> {
+  const { data, error } = await db
+    .from("postavke")
+    .select("vrijeme_slanja_sat, salji_klijentima, zadnje_slanje_datum")
+    .eq("id", 1)
+    .maybeSingle()
+  if (error) throw new Error(`getPostavkeV2: ${error.message}`)
+  return {
+    vrijeme_slanja_sat: (data?.vrijeme_slanja_sat as number | null) ?? 8,
+    salji_klijentima: (data?.salji_klijentima as boolean | null) ?? false,
+    zadnje_slanje_datum: (data?.zadnje_slanje_datum as string | null) ?? null,
+  }
+}
+
+/** Piši proizvoljan patch na singleton postavke (id=1) — koristi se za setup/restore (nikad hardkodiraj: pročitaj pa vrati). */
+export async function setPostavkeV2(patch: Partial<PostavkeV2>): Promise<void> {
+  const { error } = await db.from("postavke").update(patch).eq("id", 1)
+  if (error) throw new Error(`setPostavkeV2: ${JSON.stringify(patch)}: ${error.message}`)
+}

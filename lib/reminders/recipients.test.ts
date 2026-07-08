@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent, type KlijentReminderRow } from "./recipients"
+import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent } from "./recipients"
 
 describe("parseEmailList", () => {
   it("razdvaja po zarezu i trim-uje", () => {

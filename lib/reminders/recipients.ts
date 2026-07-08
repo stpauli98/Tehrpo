@@ -31,12 +31,24 @@ export type KorisnikRow = {
   prima_podsjetnike: boolean
 }
 
-export type RecipientIndex = { adminEmails: string[]; assignedByKlijent: Map<string, string[]> }
+export type KlijentReminderRow = {
+  id: string
+  salji_podsjetnik_klijentu: boolean
+  podsjetnik_emails: string[] | null
+}
 
-/** Indeks primalaca: admini (eligibilni) + mapa klijent_id → email-ovi dodijeljenih (eligibilnih). */
+export type RecipientIndex = {
+  adminEmails: string[]
+  assignedByKlijent: Map<string, string[]>
+  klijentEmailsByKlijent: Map<string, string[]>
+}
+
+/** Indeks primalaca: admini + dodijeljeni (interni) + firmine adrese (Krug 2, samo ako je uključeno). */
 export function buildRecipientIndex(
   korisnici: KorisnikRow[],
   dodjele: { korisnik_id: string; klijent_id: string }[],
+  klijenti: KlijentReminderRow[] = [],
+  saljiKlijentima = false,
 ): RecipientIndex {
   const eligibleEmail = new Map<string, string>() // id → email (aktivan + prima_podsjetnike)
   const adminEmails: string[] = []
@@ -53,11 +65,21 @@ export function buildRecipientIndex(
     arr.push(email)
     assignedByKlijent.set(d.klijent_id, arr)
   }
-  return { adminEmails, assignedByKlijent }
+  // Krug 2: firmine adrese samo kad je globalni prekidač uključen I firma per-firma uključena.
+  const klijentEmailsByKlijent = new Map<string, string[]>()
+  if (saljiKlijentima) {
+    for (const k of klijenti) {
+      if (!k.salji_podsjetnik_klijentu) continue
+      const emails = (k.podsjetnik_emails ?? []).filter((e) => EMAIL_RE.test(e.trim()))
+      if (emails.length > 0) klijentEmailsByKlijent.set(k.id, emails)
+    }
+  }
+  return { adminEmails, assignedByKlijent, klijentEmailsByKlijent }
 }
 
-/** Primaoci za jednu firmu: dodijeljeni ∪ admini ∪ REMINDER_TO (dedupe/validacija preko assembleRecipients). */
+/** Primaoci za jednu firmu: interni (dodijeljeni ∪ admini ∪ REMINDER_TO) ∪ firmine adrese. */
 export function recipientsForKlijent(index: RecipientIndex, klijentId: string, base: string[]): string[] {
   const assigned = index.assignedByKlijent.get(klijentId) ?? []
-  return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails] })
+  const firma = index.klijentEmailsByKlijent.get(klijentId) ?? []
+  return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails, ...firma] })
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent } from "./recipients"
+import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent, type KlijentReminderRow } from "./recipients"
 
 describe("parseEmailList", () => {
   it("razdvaja po zarezu i trim-uje", () => {
@@ -60,5 +60,60 @@ describe("buildRecipientIndex + recipientsForKlijent", () => {
   it("pregled dodijeljen + prima → dobija (flag je kapija, ne uloga)", () => {
     const idx = buildRecipientIndex([K("p", "pregled@x.com", "pregled")], [{ korisnik_id: "p", klijent_id: "FA" }])
     expect(recipientsForKlijent(idx, "FA", [])).toEqual(["pregled@x.com"])
+  })
+})
+
+const KL = (id: string, salji: boolean, emails: string[] | null) => ({
+  id, salji_podsjetnik_klijentu: salji, podsjetnik_emails: emails,
+})
+
+describe("Krug 2 — firmine adrese", () => {
+  it("salji_klijentima=false → firmine adrese se NIKAD ne dodaju", () => {
+    const idx = buildRecipientIndex(
+      [K("a", "admin@x.com", "admin")], [],
+      [KL("FA", true, ["firma@fa.com"])], false,
+    )
+    expect(recipientsForKlijent(idx, "FA", [])).toEqual(["admin@x.com"])
+  })
+
+  it("oba prekidača true + neprazna lista → firmine adrese dodate", () => {
+    const idx = buildRecipientIndex(
+      [K("a", "admin@x.com", "admin")], [],
+      [KL("FA", true, ["firma@fa.com"])], true,
+    )
+    expect(recipientsForKlijent(idx, "FA", [])).toEqual(["admin@x.com", "firma@fa.com"])
+  })
+
+  it("per-firma false uz globalni true → firma preskočena", () => {
+    const idx = buildRecipientIndex(
+      [K("a", "admin@x.com", "admin")], [],
+      [KL("FA", false, ["firma@fa.com"])], true,
+    )
+    expect(recipientsForKlijent(idx, "FA", [])).toEqual(["admin@x.com"])
+  })
+
+  it("dedupe kad se firmina adresa poklopi sa internom (case-insensitive)", () => {
+    const idx = buildRecipientIndex(
+      [K("a", "shared@x.com", "admin")], [],
+      [KL("FA", true, ["SHARED@x.com"])], true,
+    )
+    expect(recipientsForKlijent(idx, "FA", [])).toEqual(["shared@x.com"])
+  })
+
+  it("prazna/na null podsjetnik_emails → nema praznog slanja", () => {
+    const idx = buildRecipientIndex(
+      [K("a", "admin@x.com", "admin")], [],
+      [KL("FA", true, []), KL("FB", true, null)], true,
+    )
+    expect(recipientsForKlijent(idx, "FA", [])).toEqual(["admin@x.com"])
+    expect(recipientsForKlijent(idx, "FB", [])).toEqual(["admin@x.com"])
+  })
+
+  it("nevalidna firmina adresa se odbacuje", () => {
+    const idx = buildRecipientIndex(
+      [K("a", "admin@x.com", "admin")], [],
+      [KL("FA", true, ["nevalidno", "ok@fa.com"])], true,
+    )
+    expect(recipientsForKlijent(idx, "FA", [])).toEqual(["admin@x.com", "ok@fa.com"])
   })
 })

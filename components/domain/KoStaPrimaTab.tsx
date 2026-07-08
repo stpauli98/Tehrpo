@@ -15,7 +15,10 @@ export async function KoStaPrimaTab() {
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
-  const primaZa = (id: string) => korisnici.find((k) => k.id === id)?.prima_podsjetnike ?? false
+  const primaZa = (id: string) => {
+    const k = korisnici.find((k) => k.id === id)
+    return k ? k.aktivan && k.prima_podsjetnike : false
+  }
 
   const redovi = (klijentiRes.data ?? []).map((k) => {
     const radnici = dodjele

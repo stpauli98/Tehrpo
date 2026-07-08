@@ -793,6 +793,16 @@
       "naslov": "Erinnerungen auch an Firmen senden",
       "upozorenje": "Aktiviert = E-Mails verlassen TehPro (an Kunden). Nur einzeln aktivierte Firmen mit hinterlegten Adressen erhalten sie."
     },
+    "koStaPrima": {
+      "naslov": "Wer erhält was",
+      "opis": "Übersicht: für jede Firma welche Mitarbeiter und welche Firmenadressen die Erinnerung erhalten.",
+      "firma": "Firma",
+      "radnici": "Zugewiesene Mitarbeiter",
+      "firmaPrima": "Firma erhält?",
+      "adrese": "Firmenadressen",
+      "da": "Ja",
+      "ne": "Nein"
+    },
     "reminderForm": {
       "naDan": "am Tag",
       "dana": "{count, plural, =1 {# Tag} other {# Tage}}",

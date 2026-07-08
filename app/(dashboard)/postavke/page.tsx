@@ -9,6 +9,7 @@ import { SaljiKlijentimaToggle } from "@/components/domain/SaljiKlijentimaToggle
 import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
 import { VrstePregledaTabela } from "@/components/domain/VrstePregledaTabela"
 import { KorisniciTab } from "@/components/domain/KorisniciTab"
+import { KoStaPrimaTab } from "@/components/domain/KoStaPrimaTab"
 import { CollapsibleSection } from "@/components/domain/CollapsibleSection"
 
 export default async function PostavkePage() {
@@ -62,6 +63,8 @@ export default async function PostavkePage() {
       )}
 
       {jeAdminKor && <KorisniciTab />}
+
+      {jeAdminKor && <KoStaPrimaTab />}
     </div>
   )
 }

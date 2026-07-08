@@ -793,6 +793,16 @@
       "naslov": "Also send reminders to clients",
       "upozorenje": "Enabled = emails leave TehPro (to clients). Only clients individually enabled and with addresses set will receive them."
     },
+    "koStaPrima": {
+      "naslov": "Who receives what",
+      "opis": "Overview: for each client, which workers and which client addresses get the reminder.",
+      "firma": "Client",
+      "radnici": "Assigned workers",
+      "firmaPrima": "Client receives?",
+      "adrese": "Client addresses",
+      "da": "Yes",
+      "ne": "No"
+    },
     "reminderForm": {
       "naDan": "on the day",
       "dana": "{count, plural, =1 {# day} other {# days}}",

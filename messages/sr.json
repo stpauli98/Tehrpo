@@ -793,6 +793,16 @@
       "naslov": "Šalji podsjetnike i firmama",
       "upozorenje": "Uključeno = mailovi izlaze van TehPro-a (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
     },
+    "koStaPrima": {
+      "naslov": "Ko šta prima",
+      "opis": "Pregled: za svaku firmu koji radnici i koje adrese firme dobijaju podsjetnik.",
+      "firma": "Firma",
+      "radnici": "Dodijeljeni radnici",
+      "firmaPrima": "Firma prima?",
+      "adrese": "Adrese firme",
+      "da": "Da",
+      "ne": "Ne"
+    },
     "reminderForm": {
       "naDan": "na dan",
       "dana": "{count, plural, =1 {# dan} other {# dana}}",

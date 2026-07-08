@@ -167,8 +167,17 @@ export function trebaSlatiSada(vrijemeSat: number, zadnjeSlanjeDatum: string | n
   pouzdana rezerva ako admin izabere kasni sat > 9 — tada se oslanjamo na GH Actions + catch-up.)
 
 **Preostali rizici:**
-- **Dupli run u istoj minuti** (GH + Vercel prije nego iko upiše datum): idempotencija
-  (`uq_podsjetnici_termin_dana`) spriječi dvostruko slanje; drugi run najviše pošalje 0 novih.
+- **Dupli run u istom prozoru** (GH + Vercel prođu gate prije nego iko upiše `zadnje_slanje_datum`):
+  engine šalje email PRIJE upisa audit reda, pa `uq_podsjetnici_termin_dana` dedupira **audit red,
+  ne samo slanje** — tj. u uskom prozoru moguć je JEDAN dupli email po primaocu tog dana. Realno:
+  - **Uz default sat 8 nema kolizije** — GH tik u 06:00 (ljeti) / 07:00 (zimi) UTC prođe gate, upiše
+    marker, pa Vercel 08:00 UTC tik vidi `vec_slato_danas` i preskoči.
+  - Kolizija je dostižna samo kad prvi gate-prolazni tik izabranog sata padne baš oko 08:00 UTC
+    (izabrani lokalni sat ~9 zimi / ~10 ljeti) i oba crona se okinu unutar trajanja jednog run-a.
+  - GH se ne kolidira sam sa sobom (satni razmak ≫ trajanje run-a); jedini izvor kolizije je Vercel.
+  - Zatvaranje (ako se želi): izbaciti redundantni Vercel cron (GH pokriva satno), ili claim-before-send
+    (upisati audit red prije slanja — mijenja semantiku na at-most-once, rizik propuštanja pri grešci slanja).
+  Za trenutnu skalu (jedan mali konsultant) prihvatljivo uz default 8; odluka o Vercel cronu je otvorena.
 - **Cijeli dan bez ijednog tika** (GH i Vercel oba padnu 24h): taj dan se preskoči; pre-due
   pragovi se saniraju narednog dana (catch-up prozor), post-due za taj dan se ne replayuje
   (naredni dan emituje svoj marker). Prihvatljivo za dnevne podsjetnike.

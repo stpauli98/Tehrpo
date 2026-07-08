@@ -12,6 +12,7 @@ const TABS = [
   { value: "lokacije", labelKey: "lokacije" },
   { value: "kontakti", labelKey: "kontakti" },
   { value: "dokumenti", labelKey: "dokumenti" },
+  { value: "podsjetnici", labelKey: "podsjetnici" },
   { value: "profil", labelKey: "profil" },
 ] as const
 

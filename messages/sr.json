@@ -255,6 +255,10 @@
         "label": "Dokumenti",
         "info": "Svi dokumenti vezani za klijenta — ručno dodati fajlovi i AI-generisani zapisnici. Kolona Izvor pokazuje da li je dokument nastao uploadom ili ga je generisao AI."
       },
+      "podsjetnici": {
+        "label": "Podsjetnici",
+        "info": "Slanje podsjetnika ovoj firmi (uključi + adrese) i dodjela radnika koji rade na firmi."
+      },
       "profil": {
         "label": "Profil",
         "info": "Definicija ponavljajućih provjera za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
@@ -436,6 +440,27 @@
       "dialogOpis": "Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).",
       "potvrdi": "Ukloni",
       "confirmPending": "Brišem…"
+    },
+    "podsjetnici": {
+      "sekcijaSlanje": "Slanje firmi",
+      "sekcijaDodjela": "Dodijeljeni radnici",
+      "saljiNaslov": "Šalji podsjetnike ovoj firmi",
+      "saljiOpis": "Radi samo ako je u Postavkama uključeno globalno slanje firmama.",
+      "adreseNaslov": "Email adrese firme",
+      "nemaAdresa": "Nema adresa.",
+      "adresaPlaceholder": "email@firma.com",
+      "dodaj": "Dodaj",
+      "ukloniAdresu": "Ukloni {email}",
+      "emailNeispravan": "Neispravna email adresa.",
+      "spaseno": "Sačuvano."
+    },
+    "dodjelaRadnika": {
+      "naslov": "Radnici na firmi",
+      "opis": "Izabrani radnici imaju pristup firmi i primaju njene podsjetnike.",
+      "nemaRadnika": "Nema aktivnih radnika.",
+      "spasi": "Spasi",
+      "snimam": "Snimam…",
+      "spaseno": "Dodjela sačuvana."
     }
   },
   "termini": {

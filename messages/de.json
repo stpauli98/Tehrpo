@@ -255,6 +255,10 @@
         "label": "Dokumente",
         "info": "Alle mit dem Kunden verknüpften Dokumente — manuell hinzugefügte Dateien und KI-generierte Protokolle. Die Spalte Quelle zeigt, ob ein Dokument hochgeladen oder von der KI erstellt wurde."
       },
+      "podsjetnici": {
+        "label": "Erinnerungen",
+        "info": "Versand von Erinnerungen an diese Firma (Umschalter + Adressen) und Zuweisung der Mitarbeiter, die für die Firma zuständig sind."
+      },
       "profil": {
         "label": "Profil",
         "info": "Die Definition wiederkehrender Prüfungen für den Kunden: welche Art von Prüfung, an welchem Standort und in welchem Intervall durchgeführt wird. Aus diesen Einträgen werden automatisch Termine erzeugt. „Letztes Mal” ist die letzte tatsächliche Durchführung, „Nächste Frist” ist das Fälligkeitsdatum des aktiven Termins."
@@ -436,6 +440,27 @@
       "dialogOpis": "Entfernt den Eintrag aus dem Profil. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
       "potvrdi": "Entfernen",
       "confirmPending": "Wird gelöscht…"
+    },
+    "podsjetnici": {
+      "sekcijaSlanje": "Versand an die Firma",
+      "sekcijaDodjela": "Zugewiesene Mitarbeiter",
+      "saljiNaslov": "Erinnerungen an diese Firma senden",
+      "saljiOpis": "Funktioniert nur, wenn der globale Versand an Firmen in den Einstellungen aktiviert ist.",
+      "adreseNaslov": "E-Mail-Adressen der Firma",
+      "nemaAdresa": "Keine Adressen.",
+      "adresaPlaceholder": "email@firma.com",
+      "dodaj": "Hinzufügen",
+      "ukloniAdresu": "{email} entfernen",
+      "emailNeispravan": "Ungültige E-Mail-Adresse.",
+      "spaseno": "Gespeichert."
+    },
+    "dodjelaRadnika": {
+      "naslov": "Mitarbeiter dieser Firma",
+      "opis": "Ausgewählte Mitarbeiter haben Zugriff auf die Firma und erhalten deren Erinnerungen.",
+      "nemaRadnika": "Keine aktiven Mitarbeiter.",
+      "spasi": "Speichern",
+      "snimam": "Wird gespeichert…",
+      "spaseno": "Zuweisung gespeichert."
     }
   },
   "termini": {

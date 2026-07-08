@@ -826,7 +826,11 @@
       "firmaPrima": "Firma prima?",
       "adrese": "Adrese firme",
       "da": "Da",
-      "ne": "Ne"
+      "ne": "Ne",
+      "globalnoIskljucenoBanner": "Globalni prekidač „{prekidac}“ je isključen — trenutno nijedna firma ne prima podsjetnike, bez obzira na pojedinačne postavke. Uključi ga u postavkama iznad.",
+      "razlogGlobalno": "globalni prekidač isključen",
+      "razlogFirma": "firma isključena",
+      "razlogNemaAdrese": "nema adrese"
     },
     "reminderForm": {
       "naDan": "na dan",

@@ -826,7 +826,11 @@
       "firmaPrima": "Client receives?",
       "adrese": "Client addresses",
       "da": "Yes",
-      "ne": "No"
+      "ne": "No",
+      "globalnoIskljucenoBanner": "The global switch “{prekidac}” is off — no client currently receives reminders, regardless of individual settings. Enable it in the settings above.",
+      "razlogGlobalno": "global switch off",
+      "razlogFirma": "client disabled",
+      "razlogNemaAdrese": "no address"
     },
     "reminderForm": {
       "naDan": "on the day",

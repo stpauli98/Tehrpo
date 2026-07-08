@@ -784,6 +784,15 @@
       "saljem": "Šaljem…",
       "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Odgođeno: {odgodjeno} · Greške: {greske}"
     },
+    "vrijemeSlanja": {
+      "naslov": "Vrijeme slanja",
+      "opis": "Podsjetnici se šalju u prvom satu na/nakon izabranog, jednom dnevno.",
+      "zona": "po lokalnom vremenu (Beč)"
+    },
+    "saljiKlijentima": {
+      "naslov": "Šalji podsjetnike i firmama",
+      "upozorenje": "Uključeno = mailovi izlaze van TehPro-a (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
+    },
     "reminderForm": {
       "naDan": "na dan",
       "dana": "{count, plural, =1 {# dan} other {# dana}}",

@@ -784,6 +784,15 @@
       "saljem": "Sending…",
       "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Deferred: {odgodjeno} · Errors: {greske}"
     },
+    "vrijemeSlanja": {
+      "naslov": "Send time",
+      "opis": "Reminders are sent at the first hour at/after the selected one, once per day.",
+      "zona": "local time (Vienna)"
+    },
+    "saljiKlijentima": {
+      "naslov": "Also send reminders to clients",
+      "upozorenje": "Enabled = emails leave TehPro (to clients). Only clients individually enabled and with addresses set will receive them."
+    },
     "reminderForm": {
       "naDan": "on the day",
       "dana": "{count, plural, =1 {# day} other {# days}}",

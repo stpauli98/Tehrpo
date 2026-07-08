@@ -4,6 +4,8 @@ import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { getCachedVrste } from "@/lib/cache"
 import { ReminderForm } from "@/components/domain/ReminderForm"
 import { PodsjetniciKontrole } from "@/components/domain/PodsjetniciKontrole"
+import { VrijemeSlanjaForm } from "@/components/domain/VrijemeSlanjaForm"
+import { SaljiKlijentimaToggle } from "@/components/domain/SaljiKlijentimaToggle"
 import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
 import { VrstePregledaTabela } from "@/components/domain/VrstePregledaTabela"
 import { KorisniciTab } from "@/components/domain/KorisniciTab"
@@ -43,6 +45,8 @@ export default async function PostavkePage() {
           <div className="space-y-6">
             <ReminderForm danaPrije={danaPrije} />
             <PodsjetniciKontrole aktivni={postRes.data?.podsjetnici_aktivni ?? true} />
+            <VrijemeSlanjaForm vrijemeSat={postRes.data?.vrijeme_slanja_sat ?? 8} />
+            <SaljiKlijentimaToggle salji={postRes.data?.salji_klijentima ?? false} />
           </div>
         </CollapsibleSection>
       )}

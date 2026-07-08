@@ -784,6 +784,15 @@
       "saljem": "Wird gesendet…",
       "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Zurückgestellt: {odgodjeno} · Fehler: {greske}"
     },
+    "vrijemeSlanja": {
+      "naslov": "Sendezeit",
+      "opis": "Erinnerungen werden zur ersten Stunde ab der gewählten gesendet, einmal täglich.",
+      "zona": "Ortszeit (Wien)"
+    },
+    "saljiKlijentima": {
+      "naslov": "Erinnerungen auch an Firmen senden",
+      "upozorenje": "Aktiviert = E-Mails verlassen TehPro (an Kunden). Nur einzeln aktivierte Firmen mit hinterlegten Adressen erhalten sie."
+    },
     "reminderForm": {
       "naDan": "am Tag",
       "dana": "{count, plural, =1 {# Tag} other {# Tage}}",

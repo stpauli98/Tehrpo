@@ -825,7 +825,9 @@
       "podsjetniciToggleGreska": "Error saving reminder setting.",
       "samoAdmin": "Only an administrator can run reminders.",
       "pokreniNijeKonfigurisan": "CRON_SECRET is not configured on this deployment.",
-      "pokreniGreska": "Running reminders failed."
+      "pokreniGreska": "Running reminders failed.",
+      "vrijemeSatNeispravan": "Hour must be an integer 0–23.",
+      "saljiKlijentimaGreska": "Failed to change sending to clients."
     }
   },
   "asistent": {

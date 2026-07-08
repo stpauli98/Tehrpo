@@ -825,7 +825,9 @@
       "podsjetniciToggleGreska": "Fehler beim Speichern der Erinnerungseinstellung.",
       "samoAdmin": "Nur ein Administrator kann Erinnerungen ausführen.",
       "pokreniNijeKonfigurisan": "CRON_SECRET ist auf diesem Deployment nicht konfiguriert.",
-      "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen."
+      "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen.",
+      "vrijemeSatNeispravan": "Stunde muss eine ganze Zahl 0–23 sein.",
+      "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen."
     }
   },
   "asistent": {

@@ -825,7 +825,9 @@
       "podsjetniciToggleGreska": "Greška pri snimanju postavke podsjetnika.",
       "samoAdmin": "Samo administrator može pokrenuti podsjetnike.",
       "pokreniNijeKonfigurisan": "CRON_SECRET nije konfigurisan na ovom deploymentu.",
-      "pokreniGreska": "Pokretanje podsjetnika nije uspjelo."
+      "pokreniGreska": "Pokretanje podsjetnika nije uspjelo.",
+      "vrijemeSatNeispravan": "Sat mora biti cijeli broj 0–23.",
+      "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama."
     }
   },
   "asistent": {

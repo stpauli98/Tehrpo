@@ -156,7 +156,7 @@ export async function createVrsta(
 
 // ─── Admin: upravljanje korisnicima ──────────────────────────────────────────
 
-async function zahtijevajAdmina() {
+export async function zahtijevajAdmina() {
   const k = await getTrenutniKorisnik()
   if (!k || k.uloga !== "admin") throw new Error(t("samoAdministrator"))
   return k

@@ -22,6 +22,12 @@ const envSchema = z.object({
   REMINDER_MAX_PER_RUN: z.string().optional(),
   REMINDER_BATCH_SIZE: z.string().optional(),
   REMINDER_BATCH_DELAY_MS: z.string().optional(),
+  // Firmin (klijentski) email brend — nezavisno od NEXT_PUBLIC_APP_NAME.
+  FIRM_BRAND_NAME: z.string().min(1).default("TEHPRO"),
+  FIRM_BRAND_TAGLINE: z.string().min(1).default("Zaštita na radu i zaštita od požara"),
+  FIRM_CONTACT_EMAIL: optionalSecret,
+  FIRM_CONTACT_PHONE: optionalSecret,
+  FIRM_CONTACT_WEB: optionalSecret,
 })
 
 const parsed = envSchema.safeParse({
@@ -39,6 +45,11 @@ const parsed = envSchema.safeParse({
   REMINDER_MAX_PER_RUN: process.env.REMINDER_MAX_PER_RUN,
   REMINDER_BATCH_SIZE: process.env.REMINDER_BATCH_SIZE,
   REMINDER_BATCH_DELAY_MS: process.env.REMINDER_BATCH_DELAY_MS,
+  FIRM_BRAND_NAME: process.env.FIRM_BRAND_NAME,
+  FIRM_BRAND_TAGLINE: process.env.FIRM_BRAND_TAGLINE,
+  FIRM_CONTACT_EMAIL: process.env.FIRM_CONTACT_EMAIL,
+  FIRM_CONTACT_PHONE: process.env.FIRM_CONTACT_PHONE,
+  FIRM_CONTACT_WEB: process.env.FIRM_CONTACT_WEB,
 })
 
 if (!parsed.success) {

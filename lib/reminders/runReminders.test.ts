@@ -129,7 +129,7 @@ describe("runReminders", () => {
     )
   })
 
-  it("Krug 2: salji_klijentima uključeno → firmine adrese se dodaju uz interne primaoce", async () => {
+  it("Krug 2: salji_klijentima uključeno → firmine adrese idu u ODVOJEN firmin kanal (bcc), ne u interni to", async () => {
     const sends: SendArgs[] = []
     const send = async (a: SendArgs): Promise<SendResult> => { sends.push(a); return { id: "r", dryRun: false } }
     const { supabase } = makeFake({
@@ -139,7 +139,51 @@ describe("runReminders", () => {
       dueRows: [baseRow], // baseRow.klijent_id === "k1"
     })
     await runReminders(supabase, { send, delayMs: 0 })
-    expect(sends[0]!.to).toEqual(["admin@tehpro.com", "firma@klijent.com"])
+    expect(sends).toHaveLength(2)
+    const interni = sends.find((s) => s.to.includes("admin@tehpro.com"))
+    expect(interni).toBeTruthy()
+    expect(interni!.to).not.toContain("firma@klijent.com")
+    const firmin = sends.find((s) => (s.bcc ?? []).includes("firma@klijent.com"))
+    expect(firmin).toBeTruthy()
+    // Firmin ICS prilog NE smije sadržati interni /plan-aktivnosti link (login-zid za firmu).
+    const firminIcs = firmin!.attachments![0]!.content.toString("utf-8")
+    expect(firminIcs).not.toContain("plan-aktivnosti")
+    expect(firminIcs).not.toContain("/klijenti/")
+  })
+
+  it("šalje DVA kanala kad je firma primalac (interni + firma)", async () => {
+    const sent: { to: string[]; bcc?: string[] }[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sent.push({ to: a.to, bcc: a.bcc }); return { id: "x", dryRun: true } }
+    const { supabase } = makeFake({
+      saljiKlijentima: true,
+      korisnici: [{ id: "a", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true }],
+      kk: [{ korisnik_id: "a", klijent_id: "k1" }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@drina.ba"] }],
+      dueRows: [baseRow], // baseRow.klijent_id === "k1"
+    })
+    await runReminders(supabase, { send })
+    // interni: radnik u to, firma NIJE u to
+    const interni = sent.find((s) => s.to.includes("radnik@tehpro.test"))
+    expect(interni).toBeTruthy()
+    expect(interni!.to).not.toContain("firma@drina.ba")
+    // firmin: firma u bcc
+    const firmin = sent.find((s) => (s.bcc ?? []).includes("firma@drina.ba"))
+    expect(firmin).toBeTruthy()
+  })
+
+  it("firma isključena (per-firma) → samo interni kanal, bez bcc", async () => {
+    const sends: SendArgs[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sends.push(a); return { id: "r", dryRun: false } }
+    const { supabase } = makeFake({
+      saljiKlijentima: true,
+      korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: false, podsjetnik_emails: null }],
+      dueRows: [baseRow],
+    })
+    await runReminders(supabase, { send, delayMs: 0 })
+    expect(sends).toHaveLength(1)
+    expect(sends[0]!.to).toEqual(["admin@tehpro.com"])
+    expect(sends[0]!.bcc).toBeUndefined()
   })
 
   it("Krug 2: globalni prekidač isključen → firmine adrese se NE dodaju čak i ako je klijent uključen", async () => {

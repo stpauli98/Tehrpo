@@ -77,9 +77,22 @@ export function buildRecipientIndex(
   return { adminEmails, assignedByKlijent, klijentEmailsByKlijent }
 }
 
-/** Primaoci za jednu firmu: interni (dodijeljeni ∪ admini ∪ REMINDER_TO) ∪ firmine adrese. */
+/** Interni primaoci za jednu firmu: dodijeljeni ∪ admini ∪ REMINDER_TO base. BEZ firminih adresa. */
 export function recipientsForKlijent(index: RecipientIndex, klijentId: string, base: string[]): string[] {
   const assigned = index.assignedByKlijent.get(klijentId) ?? []
+  return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails] })
+}
+
+/** Firmine (Krug 2) adrese za jednu firmu — prazno ako global/per-firma isključen ili nema adresa. */
+export function firmaRecipientsForKlijent(index: RecipientIndex, klijentId: string): string[] {
   const firma = index.klijentEmailsByKlijent.get(klijentId) ?? []
-  return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails, ...firma] })
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of firma) {
+    const e = raw.trim().toLowerCase()
+    if (!EMAIL_RE.test(e) || seen.has(e)) continue
+    seen.add(e)
+    out.push(e)
+  }
+  return out
 }

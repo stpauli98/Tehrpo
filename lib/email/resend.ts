@@ -9,6 +9,7 @@ export type SendArgs = {
   subject: string
   html: string
   attachments?: { filename: string; content: Buffer }[]
+  bcc?: string[]
 }
 
 const FROM = () => env.EMAIL_FROM ?? `${APP_NAME} <onboarding@resend.dev>`
@@ -26,6 +27,7 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
   const { data, error } = await resend.emails.send({
     from: FROM(),
     to: args.to,
+    bcc: args.bcc,
     subject: args.subject,
     html: args.html,
     attachments: args.attachments,

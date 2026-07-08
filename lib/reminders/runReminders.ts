@@ -4,8 +4,9 @@ import type { Database } from "@/db/types"
 import { env } from "@/lib/env"
 import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
 import { buildTerminIcs } from "@/lib/email/ics"
-import { reminderSubject, reminderHtml } from "@/lib/email/templates"
-import { recipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
+import { reminderSubject, reminderHtml, reminderHtmlFirma } from "@/lib/email/templates"
+import { recipientsForKlijent, firmaRecipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
+import { firmBrand } from "@/lib/email/firmBrand"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
@@ -33,6 +34,8 @@ export async function runReminders(
   } = {},
 ): Promise<ReminderRunResult> {
   const send = deps.send ?? sendEmail
+  const brand = firmBrand()
+  const fromAddr = env.EMAIL_FROM ?? "no-reply@tehpro"
   // Throttling (env-konfigurabilno; defaulti za Resend free: 100/dan, ~2 req/s).
   const maxPerRun = deps.maxPerRun ?? (Number(env.REMINDER_MAX_PER_RUN) || 90)
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
@@ -82,73 +85,62 @@ export async function runReminders(
   }
 
   // Per-row obrada izdvojena radi throttlinga (grupe + pauza između njih).
-  const processRow = async (r: (typeof rows)[number]): Promise<Outcome> => {
-      if (
-        r.termin_id == null ||
-        r.klijent_id == null ||
-        r.dana_prije == null ||
-        r.dana_do_roka == null ||
-        r.rok_dospijeca == null ||
-        r.klijent_naziv == null ||
-        r.vrsta_naziv == null
-      ) {
-        return { kind: "skip", terminId: r.termin_id ?? "", danaPrije: r.dana_prije ?? -9999, razlog: "nepotpun red" }
-      }
-      const to = recipientsForKlijent(recipientIndex, r.klijent_id, base)
-      if (to.length === 0) {
-        return { kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "nema primalaca" }
-      }
+  const processRow = async (r: (typeof rows)[number]): Promise<Outcome[]> => {
+    if (r.termin_id == null || r.klijent_id == null || r.dana_prije == null || r.dana_do_roka == null ||
+        r.rok_dospijeca == null || r.klijent_naziv == null || r.vrsta_naziv == null) {
+      return [{ kind: "skip", terminId: r.termin_id ?? "", danaPrije: r.dana_prije ?? -9999, razlog: "nepotpun red" }]
+    }
+    const icsInterni = buildTerminIcs({
+      vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, rok: r.rok_dospijeca, terminId: r.termin_id,
+      lokacija: r.lokacija_naziv, baseUrl: env.NEXT_PUBLIC_APP_URL,
+    })
+    // Firma: ICS BEZ baseUrl → opis priloga nema interni /plan-aktivnosti link (login-zid za firmu).
+    const icsFirma = buildTerminIcs({
+      vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, rok: r.rok_dospijeca, terminId: r.termin_id,
+      lokacija: r.lokacija_naziv,
+    })
+    const subject = reminderSubject({ vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, danaDoRoka: r.dana_do_roka })
+    const prilogInterni = [{ filename: t("prilogNaziv"), content: Buffer.from(icsInterni, "utf-8") }]
+    const prilogFirma = [{ filename: t("prilogNaziv"), content: Buffer.from(icsFirma, "utf-8") }]
+    const out: Outcome[] = []
+
+    // Pomoćna: pošalji jedan kanal + audit po kanalu.
+    const posalji = async (kanal: "interni" | "firma", args: SendArgs): Promise<Outcome> => {
       try {
-        const ics = buildTerminIcs({
-          vrsta: r.vrsta_naziv,
-          klijent: r.klijent_naziv,
-          rok: r.rok_dospijeca,
-          terminId: r.termin_id,
-          lokacija: r.lokacija_naziv,
-          baseUrl: env.NEXT_PUBLIC_APP_URL,
-        })
-        const res = await send({
-          to,
-          subject: reminderSubject({ vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, danaDoRoka: r.dana_do_roka }),
-          html: reminderHtml({
-            klijent: r.klijent_naziv,
-            vrsta: r.vrsta_naziv,
-            rok: r.rok_dospijeca,
-            danaDoRoka: r.dana_do_roka,
-            lokacija: r.lokacija_naziv,
-            terminId: r.termin_id,
-            klijentId: r.klijent_id,
-            baseUrl: env.NEXT_PUBLIC_APP_URL,
-          }),
-          attachments: [{ filename: t("prilogNaziv"), content: Buffer.from(ics, "utf-8") }],
-        })
-        // Dry-run ILI produkcija bez RESEND_API_KEY (sendEmail tad vrati dryRun): NE upisuj audit.
-        // Inače bi „lažno poslat" red kasnije blokirao stvarno slanje (idempotencija) čim se ključ doda.
-        if (res.dryRun) {
-          return { kind: "sent", terminId: r.termin_id, danaPrije: r.dana_prije, to, resendId: res.id, dryRun: true }
-        }
+        const res = await send(args)
+        const primaoci = [...(args.to ?? []), ...(args.bcc ?? [])]
+        if (res.dryRun) return { kind: "sent", terminId: r.termin_id!, danaPrije: r.dana_prije!, to: primaoci, resendId: res.id, dryRun: true }
         const { error: insErr } = await supabase.from("podsjetnici").insert({
-          termin_id: r.termin_id,
-          dana_prije: r.dana_prije,
-          poslat_na: to,
-          resend_id: res.id,
+          termin_id: r.termin_id!, dana_prije: r.dana_prije!, kanal, poslat_na: primaoci, resend_id: res.id,
         })
         if (insErr) {
-          if (/duplicate|unique/i.test(insErr.message)) {
-            return { kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "vec poslat" }
-          }
-          // send je uspio ali audit nije → at-least-once (moguć duplikat u sljedećem run-u).
-          return { kind: "err", terminId: r.termin_id, danaPrije: r.dana_prije, message: insErr.message }
+          if (/duplicate|unique/i.test(insErr.message)) return { kind: "skip", terminId: r.termin_id!, danaPrije: r.dana_prije!, razlog: `vec poslat (${kanal})` }
+          return { kind: "err", terminId: r.termin_id!, danaPrije: r.dana_prije!, message: insErr.message }
         }
-        return { kind: "sent", terminId: r.termin_id, danaPrije: r.dana_prije, to, resendId: res.id, dryRun: false }
+        return { kind: "sent", terminId: r.termin_id!, danaPrije: r.dana_prije!, to: primaoci, resendId: res.id, dryRun: false }
       } catch (e) {
-        return {
-          kind: "err",
-          terminId: r.termin_id,
-          danaPrije: r.dana_prije,
-          message: e instanceof Error ? e.message : String(e),
-        }
+        return { kind: "err", terminId: r.termin_id!, danaPrije: r.dana_prije!, message: e instanceof Error ? e.message : String(e) }
       }
+    }
+
+    // Kanal 1: interni (radnici/admini/base) — mejl sa dugmadima.
+    const interni = recipientsForKlijent(recipientIndex, r.klijent_id, base)
+    if (interni.length > 0) {
+      out.push(await posalji("interni", {
+        to: interni, subject, attachments: prilogInterni,
+        html: reminderHtml({ klijent: r.klijent_naziv, vrsta: r.vrsta_naziv, rok: r.rok_dospijeca, danaDoRoka: r.dana_do_roka, lokacija: r.lokacija_naziv, terminId: r.termin_id, klijentId: r.klijent_id, baseUrl: env.NEXT_PUBLIC_APP_URL }),
+      }))
+    }
+    // Kanal 2: firma (Krug 2) — mejl bez dugmadi, TEHPRO brend, adrese u BCC.
+    const firma = firmaRecipientsForKlijent(recipientIndex, r.klijent_id)
+    if (firma.length > 0) {
+      out.push(await posalji("firma", {
+        to: [fromAddr], bcc: firma, subject, attachments: prilogFirma,
+        html: reminderHtmlFirma({ klijent: r.klijent_naziv, vrsta: r.vrsta_naziv, rok: r.rok_dospijeca, danaDoRoka: r.dana_do_roka, lokacija: r.lokacija_naziv, brand }),
+      }))
+    }
+    if (out.length === 0) return [{ kind: "skip", terminId: r.termin_id, danaPrije: r.dana_prije, razlog: "nema primalaca" }]
+    return out
   }
 
   // Throttling: cap po run-u (RPC sortira najhitnije prvo) + slanje u grupama radi Resend rate-limita.
@@ -161,7 +153,7 @@ export async function runReminders(
   for (let i = 0; i < toProcess.length; i += batchSize) {
     const batch = toProcess.slice(i, i + batchSize)
     // eslint-disable-next-line no-await-in-loop -- throttling: namjerno sekvencijalne grupe radi Resend rate-limita
-    const batchOut = await Promise.all(batch.map(processRow))
+    const batchOut = (await Promise.all(batch.map(processRow))).flat()
     outcomes.push(...batchOut)
     if (delayMs > 0 && i + batchSize < toProcess.length) {
       // eslint-disable-next-line no-await-in-loop -- pauza između grupa (rate-limit)

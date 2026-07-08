@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml } from "./templates"
+import { reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml, reminderHtmlFirma } from "./templates"
 
 describe("escapeHtml", () => {
   it("escape-uje HTML meta znakove", () => {
@@ -100,5 +100,29 @@ describe("en lokal", () => {
     expect(html).toContain("Open client")
     expect(html).toContain("UPCOMING")
     expect(html).toContain('<html lang="en">')
+  })
+})
+
+describe("reminderHtmlFirma", () => {
+  const brand = { name: "TEHPRO", tagline: "ZNR i ZOP", email: "info@tehpro.ba", phone: "+387 51 000 000" }
+  const base = { klijent: "Drina Komerc d.o.o.", vrsta: "Ispitivanje hidrantske mreže", rok: "2026-07-18", danaDoRoka: 10, lokacija: "Centralni magacin", brand }
+
+  it("NE sadrži interne linkove ka aplikaciji", () => {
+    const html = reminderHtmlFirma(base)
+    expect(html).not.toContain("/plan-aktivnosti")
+    expect(html).not.toContain("/klijenti/")
+    expect(html).not.toContain("Otvori termin")
+  })
+  it("prikazuje firmin brend i kontakt (ne APP_NAME)", () => {
+    const html = reminderHtmlFirma(base)
+    expect(html).toContain("TEHPRO")
+    expect(html).toContain("ZNR i ZOP")
+    expect(html).toContain("info@tehpro.ba")
+  })
+  it("prikazuje osnovne podatke roka", () => {
+    const html = reminderHtmlFirma(base)
+    expect(html).toContain("Drina Komerc d.o.o.")
+    expect(html).toContain("Ispitivanje hidrantske mreže")
+    expect(html).toContain("Centralni magacin")
   })
 })

@@ -487,6 +487,7 @@ export type Database = {
         Row: {
           dana_prije: number
           id: string
+          kanal: string
           poslat_at: string
           poslat_na: string[]
           resend_id: string | null
@@ -495,6 +496,7 @@ export type Database = {
         Insert: {
           dana_prije: number
           id?: string
+          kanal?: string
           poslat_at?: string
           poslat_na: string[]
           resend_id?: string | null
@@ -503,6 +505,7 @@ export type Database = {
         Update: {
           dana_prije?: number
           id?: string
+          kanal?: string
           poslat_at?: string
           poslat_na?: string[]
           resend_id?: string | null

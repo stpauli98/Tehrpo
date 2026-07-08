@@ -255,6 +255,10 @@
         "label": "Dokumente",
         "info": "Alle mit dem Kunden verknüpften Dokumente — manuell hinzugefügte Dateien und KI-generierte Protokolle. Die Spalte Quelle zeigt, ob ein Dokument hochgeladen oder von der KI erstellt wurde."
       },
+      "podsjetnici": {
+        "label": "Erinnerungen",
+        "info": "Versand von Erinnerungen an diese Firma (Umschalter + Adressen) und Zuweisung der Mitarbeiter, die für die Firma zuständig sind."
+      },
       "profil": {
         "label": "Profil",
         "info": "Die Definition wiederkehrender Prüfungen für den Kunden: welche Art von Prüfung, an welchem Standort und in welchem Intervall durchgeführt wird. Aus diesen Einträgen werden automatisch Termine erzeugt. „Letztes Mal” ist die letzte tatsächliche Durchführung, „Nächste Frist” ist das Fälligkeitsdatum des aktiven Termins."
@@ -436,6 +440,27 @@
       "dialogOpis": "Entfernt den Eintrag aus dem Profil. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
       "potvrdi": "Entfernen",
       "confirmPending": "Wird gelöscht…"
+    },
+    "podsjetnici": {
+      "sekcijaSlanje": "Versand an die Firma",
+      "sekcijaDodjela": "Zugewiesene Mitarbeiter",
+      "saljiNaslov": "Erinnerungen an diese Firma senden",
+      "saljiOpis": "Funktioniert nur, wenn der globale Versand an Firmen in den Einstellungen aktiviert ist.",
+      "adreseNaslov": "E-Mail-Adressen der Firma",
+      "nemaAdresa": "Keine Adressen.",
+      "adresaPlaceholder": "email@firma.com",
+      "dodaj": "Hinzufügen",
+      "ukloniAdresu": "{email} entfernen",
+      "emailNeispravan": "Ungültige E-Mail-Adresse.",
+      "spaseno": "Gespeichert."
+    },
+    "dodjelaRadnika": {
+      "naslov": "Mitarbeiter dieser Firma",
+      "opis": "Ausgewählte Mitarbeiter haben Zugriff auf die Firma und erhalten deren Erinnerungen.",
+      "nemaRadnika": "Keine aktiven Mitarbeiter.",
+      "spasi": "Speichern",
+      "snimam": "Wird gespeichert…",
+      "spaseno": "Zuweisung gespeichert."
     }
   },
   "termini": {
@@ -784,6 +809,25 @@
       "saljem": "Wird gesendet…",
       "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Zurückgestellt: {odgodjeno} · Fehler: {greske}"
     },
+    "vrijemeSlanja": {
+      "naslov": "Sendezeit",
+      "opis": "Erinnerungen werden zur ersten Stunde ab der gewählten gesendet, einmal täglich.",
+      "zona": "Ortszeit (Wien)"
+    },
+    "saljiKlijentima": {
+      "naslov": "Erinnerungen auch an Firmen senden",
+      "upozorenje": "Aktiviert = E-Mails verlassen TehPro (an Kunden). Nur einzeln aktivierte Firmen mit hinterlegten Adressen erhalten sie."
+    },
+    "koStaPrima": {
+      "naslov": "Wer erhält was",
+      "opis": "Übersicht: für jede Firma welche Mitarbeiter und welche Firmenadressen die Erinnerung erhalten.",
+      "firma": "Firma",
+      "radnici": "Zugewiesene Mitarbeiter",
+      "firmaPrima": "Firma erhält?",
+      "adrese": "Firmenadressen",
+      "da": "Ja",
+      "ne": "Nein"
+    },
     "reminderForm": {
       "naDan": "am Tag",
       "dana": "{count, plural, =1 {# Tag} other {# Tage}}",
@@ -825,7 +869,9 @@
       "podsjetniciToggleGreska": "Fehler beim Speichern der Erinnerungseinstellung.",
       "samoAdmin": "Nur ein Administrator kann Erinnerungen ausführen.",
       "pokreniNijeKonfigurisan": "CRON_SECRET ist auf diesem Deployment nicht konfiguriert.",
-      "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen."
+      "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen.",
+      "vrijemeSatNeispravan": "Stunde muss eine ganze Zahl 0–23 sein.",
+      "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen."
     }
   },
   "asistent": {

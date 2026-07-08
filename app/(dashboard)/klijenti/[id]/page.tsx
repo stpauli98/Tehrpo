@@ -16,6 +16,7 @@ import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload
 import { ObrisiDokumentButton } from "@/components/domain/ObrisiDokumentButton"
 import { DodajProvjeruButton } from "@/components/domain/DodajProvjeruButton"
 import { IdKartaTab } from "@/components/domain/IdKartaTab"
+import { KlijentPodsjetniciTab } from "@/components/domain/KlijentPodsjetniciTab"
 import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
 import { formatDatum, addMjeseci } from "@/lib/date"
@@ -26,7 +27,7 @@ type TerminViewRow = Database["public"]["Views"]["termini_view"]["Row"]
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
 
-const VALID_TABS = ["id-karta", "termini", "lokacije", "kontakti", "dokumenti", "profil"]
+const VALID_TABS = ["id-karta", "termini", "lokacije", "kontakti", "dokumenti", "podsjetnici", "profil"]
 
 export default async function KlijentDetailPage({
   params,
@@ -346,6 +347,8 @@ export default async function KlijentDetailPage({
       )}
 
       {tab === "lokacije" && <LokacijeTab klijentId={id} lokacije={lokacije} />}
+
+      {tab === "podsjetnici" && <KlijentPodsjetniciTab klijentId={id} />}
 
       {tab === "profil" && (
         <ProfilTab klijentId={id} stavke={profilStavke} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />

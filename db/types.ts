@@ -266,6 +266,7 @@ export type Database = {
           naziv: string
           pib: string | null
           podsjetnik_emails: string[]
+          salji_podsjetnik_klijentu: boolean
           sifra_djelatnosti: string | null
           telefon: string | null
           tip_odnosa: string | null
@@ -282,6 +283,7 @@ export type Database = {
           naziv: string
           pib?: string | null
           podsjetnik_emails?: string[]
+          salji_podsjetnik_klijentu?: boolean
           sifra_djelatnosti?: string | null
           telefon?: string | null
           tip_odnosa?: string | null
@@ -298,6 +300,7 @@ export type Database = {
           naziv?: string
           pib?: string | null
           podsjetnik_emails?: string[]
+          salji_podsjetnik_klijentu?: boolean
           sifra_djelatnosti?: string | null
           telefon?: string | null
           tip_odnosa?: string | null
@@ -527,19 +530,28 @@ export type Database = {
           dana_prije: number[]
           id: number
           podsjetnici_aktivni: boolean
+          salji_klijentima: boolean
           updated_at: string
+          vrijeme_slanja_sat: number
+          zadnje_slanje_datum: string | null
         }
         Insert: {
           dana_prije?: number[]
           id?: number
           podsjetnici_aktivni?: boolean
+          salji_klijentima?: boolean
           updated_at?: string
+          vrijeme_slanja_sat?: number
+          zadnje_slanje_datum?: string | null
         }
         Update: {
           dana_prije?: number[]
           id?: number
           podsjetnici_aktivni?: boolean
+          salji_klijentima?: boolean
           updated_at?: string
+          vrijeme_slanja_sat?: number
+          zadnje_slanje_datum?: string | null
         }
         Relationships: []
       }

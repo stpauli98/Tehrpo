@@ -156,7 +156,7 @@ export async function createVrsta(
 
 // ─── Admin: upravljanje korisnicima ──────────────────────────────────────────
 
-async function zahtijevajAdmina() {
+export async function zahtijevajAdmina() {
   const k = await getTrenutniKorisnik()
   if (!k || k.uloga !== "admin") throw new Error(t("samoAdministrator"))
   return k
@@ -390,6 +390,40 @@ export async function updatePodsjetniciAktivni(
     .update({ podsjetnici_aktivni: aktivni })
     .eq("id", 1)
   if (error) return { ok: false, message: t("podsjetniciToggleGreska") }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+// ─── Vrijeme slanja (lokalni sat Europe/Vienna) ─────────────────────────────
+
+export async function updateVrijemeSlanja(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const raw = String(formData.get("vrijeme_slanja_sat") ?? "")
+  const sat = Number(raw)
+  if (!Number.isInteger(sat) || sat < 0 || sat > 23) {
+    return { ok: false, message: t("vrijemeSatNeispravan") }
+  }
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("postavke").update({ vrijeme_slanja_sat: sat }).eq("id", 1)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+// ─── Globalni Krug-2 prekidač: slanje podsjetnika i firmama ──────────────────
+
+export async function updateSaljiKlijentima(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const salji = formData.get("salji") === "on"
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("postavke").update({ salji_klijentima: salji }).eq("id", 1)
+  if (error) return { ok: false, message: t("saljiKlijentimaGreska") }
   revalidatePath("/postavke")
   return { ok: true }
 }

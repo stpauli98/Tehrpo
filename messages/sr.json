@@ -255,6 +255,10 @@
         "label": "Dokumenti",
         "info": "Svi dokumenti vezani za klijenta — ručno dodati fajlovi i AI-generisani zapisnici. Kolona Izvor pokazuje da li je dokument nastao uploadom ili ga je generisao AI."
       },
+      "podsjetnici": {
+        "label": "Podsjetnici",
+        "info": "Slanje podsjetnika ovoj firmi (uključi + adrese) i dodjela radnika koji rade na firmi."
+      },
       "profil": {
         "label": "Profil",
         "info": "Definicija ponavljajućih provjera za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
@@ -436,6 +440,27 @@
       "dialogOpis": "Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).",
       "potvrdi": "Ukloni",
       "confirmPending": "Brišem…"
+    },
+    "podsjetnici": {
+      "sekcijaSlanje": "Slanje firmi",
+      "sekcijaDodjela": "Dodijeljeni radnici",
+      "saljiNaslov": "Šalji podsjetnike ovoj firmi",
+      "saljiOpis": "Radi samo ako je u Postavkama uključeno globalno slanje firmama.",
+      "adreseNaslov": "Email adrese firme",
+      "nemaAdresa": "Nema adresa.",
+      "adresaPlaceholder": "email@firma.com",
+      "dodaj": "Dodaj",
+      "ukloniAdresu": "Ukloni {email}",
+      "emailNeispravan": "Neispravna email adresa.",
+      "spaseno": "Sačuvano."
+    },
+    "dodjelaRadnika": {
+      "naslov": "Radnici na firmi",
+      "opis": "Izabrani radnici imaju pristup firmi i primaju njene podsjetnike.",
+      "nemaRadnika": "Nema aktivnih radnika.",
+      "spasi": "Spasi",
+      "snimam": "Snimam…",
+      "spaseno": "Dodjela sačuvana."
     }
   },
   "termini": {
@@ -784,6 +809,25 @@
       "saljem": "Šaljem…",
       "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Odgođeno: {odgodjeno} · Greške: {greske}"
     },
+    "vrijemeSlanja": {
+      "naslov": "Vrijeme slanja",
+      "opis": "Podsjetnici se šalju u prvom satu na/nakon izabranog, jednom dnevno.",
+      "zona": "po lokalnom vremenu (Beč)"
+    },
+    "saljiKlijentima": {
+      "naslov": "Šalji podsjetnike i firmama",
+      "upozorenje": "Uključeno = mailovi izlaze van TehPro-a (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
+    },
+    "koStaPrima": {
+      "naslov": "Ko šta prima",
+      "opis": "Pregled: za svaku firmu koji radnici i koje adrese firme dobijaju podsjetnik.",
+      "firma": "Firma",
+      "radnici": "Dodijeljeni radnici",
+      "firmaPrima": "Firma prima?",
+      "adrese": "Adrese firme",
+      "da": "Da",
+      "ne": "Ne"
+    },
     "reminderForm": {
       "naDan": "na dan",
       "dana": "{count, plural, =1 {# dan} other {# dana}}",
@@ -825,7 +869,9 @@
       "podsjetniciToggleGreska": "Greška pri snimanju postavke podsjetnika.",
       "samoAdmin": "Samo administrator može pokrenuti podsjetnike.",
       "pokreniNijeKonfigurisan": "CRON_SECRET nije konfigurisan na ovom deploymentu.",
-      "pokreniGreska": "Pokretanje podsjetnika nije uspjelo."
+      "pokreniGreska": "Pokretanje podsjetnika nije uspjelo.",
+      "vrijemeSatNeispravan": "Sat mora biti cijeli broj 0–23.",
+      "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama."
     }
   },
   "asistent": {

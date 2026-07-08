@@ -9,8 +9,8 @@
 Tri nove admin-kontrolisane mogućnosti za sistem email podsjetnika, sve sinhronizovane
 sa postojećom dodjelom radnik↔firma:
 
-1. **Podesivo vrijeme slanja** — admin bira sat (0–23, lokalno vrijeme Europe/Sarajevo)
-   od kojeg instanca šalje dnevne podsjetnike. Trenutno je fiksno 06:00 UTC (Vercel cron).
+1. **Podesivo vrijeme slanja** — admin bira sat (0–23, lokalno vrijeme Europe/Vienna, „bečko")
+   od kojeg instanca šalje dnevne podsjetnike. Default je 08:00. Trenutno je fiksno 06:00 UTC (Vercel cron).
 2. **Slanje firmama (Krug 2)** — admin može uključiti slanje podsjetnika i firmama
    (klijentima), globalno + per-firma. Do sada se klijentu NIKAD nije slalo.
 3. **Upravljanje dodjelom radnik↔firma sa obje strane** + pregled „ko šta prima".
@@ -35,7 +35,7 @@ Svaka instanca čita/piše isključivo svoju bazu; ova tri podešavanja su per-i
   (`cronAuth.ts`); GET poštuje flag `postavke.podsjetnici_aktivni` (gate: `gating.ts`),
   POST uvijek radi (ručno/„Pokreni sada"/e2e). Vercel cron ulazi preko GET-a.
 - **Vercel cron:** `vercel.json` → `{"path": "/api/cron/reminders", "schedule": "0 6 * * *"}`
-  (06:00 UTC = 07:00 zimi / 08:00 ljeti po Europe/Sarajevo). Napomena: CLAUDE.md tvrdnja
+  (06:00 UTC = 07:00 zimi / 08:00 ljeti po Europe/Vienna). Napomena: CLAUDE.md tvrdnja
   „no crons array yet" je ZASTARJELA — cron JE ožičen. Vercel tim je na **Hobby planu** →
   cron je ograničen na **jednom dnevno** (hourly nije moguć bez nadogradnje na Pro).
 - **Postavke tabela** (single-row, id=1): `dana_prije int[]`, `podsjetnici_aktivni bool`,
@@ -62,7 +62,7 @@ Svaka instanca čita/piše isključivo svoju bazu; ova tri podešavanja su per-i
 |---|---|
 | Krug 2 — gdje živi prekidač | **Globalni + per-firma**: email firmi ide samo ako su OBA `true` |
 | Adrese firme | **`klijenti.podsjetnik_emails`** (eksplicitna lista, kolona već postoji) |
-| Granularnost/TZ vremena | **Puni sat, lokalna zona (Europe/Sarajevo)** |
+| Granularnost/TZ vremena | **Puni sat, lokalna zona (Europe/Vienna, „bečko"); default 08:00** |
 | Semantika sata | **„šalji u prvom satu ≥ izabranog, najviše jednom dnevno"** (ne tačna jednakost) |
 | Dodjele — šta fali | **Dodjela sa strane firme** (admin-only) + **pregled „ko šta prima"** |
 | Mehanizam sata | **GitHub Actions** (hourly, UTC) okida cron rutu; gate u aplikaciji |
@@ -76,7 +76,7 @@ Nova migracija `supabase/migrations/2026070713xxxx_podsjetnici_v2.sql`:
 ```sql
 -- postavke: sat slanja + „poslato danas" marker + globalni Krug-2 prekidač
 alter table postavke
-  add column vrijeme_slanja_sat  smallint not null default 6,
+  add column vrijeme_slanja_sat  smallint not null default 8,
   add column zadnje_slanje_datum date,                     -- lokalni datum zadnjeg auto-runa (nullable)
   add column salji_klijentima    boolean  not null default false;
 alter table postavke
@@ -87,11 +87,11 @@ alter table klijenti
   add column salji_podsjetnik_klijentu boolean not null default false;
 ```
 
-- `vrijeme_slanja_sat default 6` = „ne šalji prije 06:00 po lokalnom vremenu (Sarajevo)".
-  **Napomena o ponašanju:** stari sistem je slao u 06:00 **UTC** (= 07/08 lokalno). Novi
-  default (06:00 **lokalno**) NIJE isti trenutak — efektivno najranije slanje pomjera se
-  ~1–2h ranije i po lokalnom je satu (svjesna posljedica lokalne semantike, ne „očuvano
-  ponašanje"). Vrijednost je admin-podesiva, pa instanca može odabrati bilo koji sat.
+- `vrijeme_slanja_sat default 8` = „ne šalji prije 08:00 po lokalnom vremenu (Beč, Europe/Vienna)".
+  **Napomena o ponašanju:** stari sistem je slao u 06:00 **UTC** (= 07h zimi / 08h ljeti lokalno).
+  Novi default (08:00 **lokalno** = 07:00 UTC zimi / 06:00 UTC ljeti) je blizu dosadašnjeg
+  jutarnjeg termina, ali je vezan za lokalni sat (svjesna posljedica lokalne semantike).
+  Vrijednost je admin-podesiva, pa instanca može odabrati bilo koji sat 0–23.
 - `zadnje_slanje_datum` (nullable) — lokalni datum kad je auto-run zadnji put prošao gate;
   osigurava „najviše jednom dnevno" (vidi §2).
 - `salji_klijentima default false` i `salji_podsjetnik_klijentu default false` — Krug 2 je
@@ -123,7 +123,7 @@ kada tačno poslati je u aplikaciji.
 
 **Gate** (`app/api/cron/reminders/route.ts`, samo GET grana). GET radi punu obradu ako:
 1. `postavke.podsjetnici_aktivni = true`, **I**
-2. lokalni sat (Europe/Sarajevo) **≥** `vrijeme_slanja_sat`, **I**
+2. lokalni sat (Europe/Vienna) **≥** `vrijeme_slanja_sat`, **I**
 3. `zadnje_slanje_datum` **nije** današnji lokalni datum (nije već slato danas).
 
 Nakon **uspješnog** runa (bez greške) postavlja `zadnje_slanje_datum = <današnji lokalni datum>`.
@@ -134,7 +134,7 @@ Ako uslov nije ispunjen → `{ ok: true, skipped: "<razlog>" }` (`izvan_sata` / 
 Novi helperi u `lib/reminders/gating.ts` (čisti, `now`+TZ se ubacuju — bez `Date.now()`):
 
 ```ts
-export function lokalniSatIDatum(now: Date, timeZone = "Europe/Sarajevo"): { sat: number; datum: string } {
+export function lokalniSatIDatum(now: Date, timeZone = "Europe/Vienna"): { sat: number; datum: string } {
   const p = new Intl.DateTimeFormat("en-CA", {
     timeZone, hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit",
   }).formatToParts(now)
@@ -144,7 +144,7 @@ export function lokalniSatIDatum(now: Date, timeZone = "Europe/Sarajevo"): { sat
 }
 
 /** Treba li auto-run slati sada: sat dostignut i danas još nije slato. */
-export function trebaSlatiSada(vrijemeSat: number, zadnjeSlanjeDatum: string | null, now: Date, timeZone = "Europe/Sarajevo"): boolean {
+export function trebaSlatiSada(vrijemeSat: number, zadnjeSlanjeDatum: string | null, now: Date, timeZone = "Europe/Vienna"): boolean {
   const { sat, datum } = lokalniSatIDatum(now, timeZone)
   return sat >= vrijemeSat && zadnjeSlanjeDatum !== datum
 }
@@ -158,9 +158,13 @@ export function trebaSlatiSada(vrijemeSat: number, zadnjeSlanjeDatum: string | n
   preskočeni sat, sljedeći tik (npr. 03) je ≥ 02 i danas nije slato → šalje se istog dana.
   Nema tihog preskoka. (Fall-back ponovljeni sat: „jednom dnevno" spriječi dupli run;
   idempotencija je dodatni štit.)
-- **Vercel dnevni cron postaje STVARNA rezerva:** 06:00 UTC = 07/08 lokalno ≥ 6 (default) i,
-  ako GH Actions nije poslao tog jutra, prolazi gate i šalje; ako je GH već poslao,
-  `zadnje_slanje_datum = danas` ga preskoči. Fail-safe bez DST-kalkulacije.
+- **Vercel dnevni cron kao rezerva:** primarni okidač je GH Actions (svaki sat), koji uvijek
+  pogodi ≥ izabrani sat. Vercel dnevni cron je sekundarna rezerva za slučaj da GH Actions
+  padne cijeli dan. **Da bi rezerva radila cijele godine uz default 8, `vercel.json` cron se
+  pomjera na `0 8 * * *`** (08:00 UTC = 09h zimi / 10h ljeti lokalno, oba ≥ 8). Sa postojećih
+  `0 6 * * *` (07h zimi / 08h ljeti) prolazila bi samo ljeti. Kad GH Actions već pošalje,
+  `zadnje_slanje_datum = danas` preskoči Vercel run. (Napomena: dnevni Vercel cron ne može biti
+  pouzdana rezerva ako admin izabere kasni sat > 9 — tada se oslanjamo na GH Actions + catch-up.)
 
 **Preostali rizici:**
 - **Dupli run u istoj minuti** (GH + Vercel prije nego iko upiše datum): idempotencija
@@ -197,7 +201,7 @@ Throttling, cap, idempotencija, dry-run bez ključa — nepromijenjeno.
 
 **A) Postavke → Email podsjetnici** (admin; `postavke_wr = je_admin()` + `zahtijevajAdmina()` guard):
 - **Vrijeme slanja** — `Select` 0–23 („07:00"…), napomena „šalje se u prvom satu ≥ izabranog,
-  po lokalnom vremenu (Sarajevo)". Akcija `updateVrijemeSlanja(sat)` — SSR klijent, `zahtijevajAdmina()`.
+  po lokalnom vremenu (Beč)". Akcija `updateVrijemeSlanja(sat)` — SSR klijent, `zahtijevajAdmina()`.
 - **Globalni prekidač „Šalji podsjetnike i firmama"** (`salji_klijentima`) uz upozorenje da
   mailovi izlaze van TehPro-a. Akcija `updateSaljiKlijentima(bool)` — SSR klijent, `zahtijevajAdmina()`.
 
@@ -267,8 +271,9 @@ Tab ima dvije zone sa **različitim pravom pristupa** — RLS to nalaže, pa se 
    (`fqtqkehjidkzeasiegnq`) prije pokretanja** (svjestan PROD upis).
 5. **Deploy koda + GH Actions ZAJEDNO:** engine + gate + UI se deployuju, a GH Actions workflow
    + Secrets se ožiče u istom prozoru, tako da hourly okidač postoji čim gate stupi na snagu.
-   (I da GH Actions kasni, Vercel 06:00 UTC = 07/08 lokalno ≥ 6 prolazi „≥ + jednom dnevno"
-   gate, pa ne postoji prozor u kojem ništa ne šalje.)
+   (I da GH Actions kasni, Vercel dnevni cron — pomjeren na `0 8 * * *` — prolazi „≥ + jednom
+   dnevno" gate, pa ne postoji prozor u kojem ništa ne šalje.)
+   **Pomjeriti `vercel.json` cron sa `0 6 * * *` na `0 8 * * *`** (vidi §2 rezerva).
 6. Verifikacija: `Pokreni sada` (dry) po instanci; potvrda da gate propušta na/nakon izabranog
    sata i tačno jednom dnevno.
 7. `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, ciljani e2e — sve zeleno prije merge-a.
@@ -291,6 +296,7 @@ Review (6 dimenzija, verifikacija svakog nalaza protiv koda) → 19 potvrđenih.
 - **RLS/pristup na tabu firme:** dodjela radnika je admin-only (service-role + `zahtijevajAdmina`),
   per-firma toggle/adrese operater-put (SSR + `klijenti_upd`); `kk_wr` se ne dira.
 - **„Ko šta prima"** = `KorisniciTab` obrazac (paralelni select), bez novog view-a/RPC-a.
-- **Default 6** = 06:00 lokalno (ne „očuvano" 06:00 UTC) — prose ispravljen.
+- **Default 8** = 08:00 lokalno po Europe/Vienna (Beč), po izboru korisnika; Vercel dnevni
+  cron se pomjera na `0 8 * * *` da rezerva radi cijele godine (07h zimi < 8 na starih `0 6`).
 - **E2E izolacija:** `dryRun:true` + restauracija dijeljenog single-row-a i eksternih prekidača.
 - **CLAUDE.md** „no crons array yet" je zastarjela (cron je ožičen) — repo-doc follow-up, van speca.

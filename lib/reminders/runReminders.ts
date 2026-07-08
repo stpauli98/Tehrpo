@@ -90,12 +90,18 @@ export async function runReminders(
         r.rok_dospijeca == null || r.klijent_naziv == null || r.vrsta_naziv == null) {
       return [{ kind: "skip", terminId: r.termin_id ?? "", danaPrije: r.dana_prije ?? -9999, razlog: "nepotpun red" }]
     }
-    const ics = buildTerminIcs({
+    const icsInterni = buildTerminIcs({
       vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, rok: r.rok_dospijeca, terminId: r.termin_id,
       lokacija: r.lokacija_naziv, baseUrl: env.NEXT_PUBLIC_APP_URL,
     })
+    // Firma: ICS BEZ baseUrl → opis priloga nema interni /plan-aktivnosti link (login-zid za firmu).
+    const icsFirma = buildTerminIcs({
+      vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, rok: r.rok_dospijeca, terminId: r.termin_id,
+      lokacija: r.lokacija_naziv,
+    })
     const subject = reminderSubject({ vrsta: r.vrsta_naziv, klijent: r.klijent_naziv, danaDoRoka: r.dana_do_roka })
-    const prilog = [{ filename: t("prilogNaziv"), content: Buffer.from(ics, "utf-8") }]
+    const prilogInterni = [{ filename: t("prilogNaziv"), content: Buffer.from(icsInterni, "utf-8") }]
+    const prilogFirma = [{ filename: t("prilogNaziv"), content: Buffer.from(icsFirma, "utf-8") }]
     const out: Outcome[] = []
 
     // Pomoćna: pošalji jedan kanal + audit po kanalu.
@@ -121,7 +127,7 @@ export async function runReminders(
     const interni = recipientsForKlijent(recipientIndex, r.klijent_id, base)
     if (interni.length > 0) {
       out.push(await posalji("interni", {
-        to: interni, subject, attachments: prilog,
+        to: interni, subject, attachments: prilogInterni,
         html: reminderHtml({ klijent: r.klijent_naziv, vrsta: r.vrsta_naziv, rok: r.rok_dospijeca, danaDoRoka: r.dana_do_roka, lokacija: r.lokacija_naziv, terminId: r.termin_id, klijentId: r.klijent_id, baseUrl: env.NEXT_PUBLIC_APP_URL }),
       }))
     }
@@ -129,7 +135,7 @@ export async function runReminders(
     const firma = firmaRecipientsForKlijent(recipientIndex, r.klijent_id)
     if (firma.length > 0) {
       out.push(await posalji("firma", {
-        to: [fromAddr], bcc: firma, subject, attachments: prilog,
+        to: [fromAddr], bcc: firma, subject, attachments: prilogFirma,
         html: reminderHtmlFirma({ klijent: r.klijent_naziv, vrsta: r.vrsta_naziv, rok: r.rok_dospijeca, danaDoRoka: r.dana_do_roka, lokacija: r.lokacija_naziv, brand }),
       }))
     }

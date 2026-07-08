@@ -145,6 +145,10 @@ describe("runReminders", () => {
     expect(interni!.to).not.toContain("firma@klijent.com")
     const firmin = sends.find((s) => (s.bcc ?? []).includes("firma@klijent.com"))
     expect(firmin).toBeTruthy()
+    // Firmin ICS prilog NE smije sadržati interni /plan-aktivnosti link (login-zid za firmu).
+    const firminIcs = firmin!.attachments![0]!.content.toString("utf-8")
+    expect(firminIcs).not.toContain("plan-aktivnosti")
+    expect(firminIcs).not.toContain("/klijenti/")
   })
 
   it("šalje DVA kanala kad je firma primalac (interni + firma)", async () => {

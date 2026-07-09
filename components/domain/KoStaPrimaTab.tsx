@@ -19,7 +19,7 @@ export async function KoStaPrimaTab() {
   const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, prima_podsjetnike, aktivan").order("ime"),
-    supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu").order("naziv"),
+    supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
     supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac"),
   ])
@@ -35,6 +35,16 @@ export async function KoStaPrimaTab() {
     const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
     set.add(email)
     adreseByKlijent.set(ko.klijent_id, set)
+  }
+  // Ad-hoc „čiste" adrese (nisu kontakti) — u isti Set (dedup s kontakt-adresama je automatski).
+  for (const k of klijentiRes.data ?? []) {
+    const set = adreseByKlijent.get(k.id) ?? new Set<string>()
+    for (const raw of k.podsjetnik_emails ?? []) {
+      const email = (raw ?? "").trim().toLowerCase()
+      if (!EMAIL_RE.test(email)) continue
+      set.add(email)
+    }
+    if (set.size > 0) adreseByKlijent.set(k.id, set)
   }
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
   const primaZa = (id: string) => {

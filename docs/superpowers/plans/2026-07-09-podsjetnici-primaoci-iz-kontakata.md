@@ -61,7 +61,7 @@ where ko.klijent_id = k.id
 
 -- 2b) orphan mejl (nema kontakta) → napravi kontakt (ime=mejl, može se preimenovati)
 insert into kontakt_osobe (klijent_id, ime, email, podsjetnik_primalac)
-select k.id, lower(btrim(e)), lower(btrim(e)), true
+select distinct k.id, lower(btrim(e)), lower(btrim(e)), true
 from klijenti k
 cross join lateral unnest(k.podsjetnik_emails) e
 where btrim(e) <> ''

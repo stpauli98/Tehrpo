@@ -325,6 +325,7 @@ export type Database = {
           id: string
           ime: string
           klijent_id: string
+          podsjetnik_primalac: boolean
           telefon: string | null
         }
         Insert: {
@@ -334,6 +335,7 @@ export type Database = {
           id?: string
           ime: string
           klijent_id: string
+          podsjetnik_primalac?: boolean
           telefon?: string | null
         }
         Update: {
@@ -343,6 +345,7 @@ export type Database = {
           id?: string
           ime?: string
           klijent_id?: string
+          podsjetnik_primalac?: boolean
           telefon?: string | null
         }
         Relationships: [

@@ -1,48 +1,61 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { X, Plus } from "lucide-react"
 import { toast } from "sonner"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { updateKlijentPodsjetnici } from "@/app/(dashboard)/klijenti/[id]/actions"
+import {
+  updateKlijentSaljiPodsjetnik,
+  updateKontaktPodsjetnikPrimalac,
+} from "@/app/(dashboard)/klijenti/[id]/actions"
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+type KontaktZaPodsjetnik = {
+  id: string
+  ime: string
+  funkcija: string | null
+  email: string | null
+  podsjetnik_primalac: boolean
+}
 
 export function KlijentPodsjetniciForm({
-  klijentId, salji, emails,
-}: { klijentId: string; salji: boolean; emails: string[] }) {
+  klijentId, salji, kontakti,
+}: { klijentId: string; salji: boolean; kontakti: KontaktZaPodsjetnik[] }) {
   const t = useTranslations("klijenti.podsjetnici")
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [saljiState, setSalji] = useState(salji)
-  const [lista, setLista] = useState<string[]>(emails)
-  const [nova, setNova] = useState("")
-  const [greska, setGreska] = useState<string | null>(null)
+  const [izabrani, setIzabrani] = useState<Set<string>>(
+    () => new Set(kontakti.filter((k) => k.podsjetnik_primalac).map((k) => k.id)),
+  )
 
-  function spasi(nextSalji: boolean, nextLista: string[]) {
+  function toggleSalji(next: boolean) {
+    setSalji(next)
     startTransition(async () => {
-      const res = await updateKlijentPodsjetnici(klijentId, nextSalji, nextLista)
+      const res = await updateKlijentSaljiPodsjetnik(klijentId, next)
       if (res.ok) { toast.success(t("spaseno")); router.refresh() }
-      else toast.error(res.message)
+      else { setSalji(!next); toast.error(res.message) }
     })
   }
 
-  function dodaj() {
-    const e = nova.trim().toLowerCase()
-    if (!EMAIL_RE.test(e)) { setGreska(t("emailNeispravan")); return }
-    if (lista.includes(e)) { setNova(""); return }
-    setGreska(null)
-    const next = [...lista, e]
-    setLista(next); setNova("")
-    spasi(saljiState, next)
-  }
-
-  function ukloni(e: string) {
-    const next = lista.filter((x) => x !== e)
-    setLista(next); spasi(saljiState, next)
+  function toggleKontakt(kontaktId: string, next: boolean) {
+    setIzabrani((prev) => {
+      const kopija = new Set(prev)
+      if (next) kopija.add(kontaktId); else kopija.delete(kontaktId)
+      return kopija
+    })
+    startTransition(async () => {
+      const res = await updateKontaktPodsjetnikPrimalac(kontaktId, klijentId, next)
+      if (res.ok) { toast.success(t("spaseno")); router.refresh() }
+      else {
+        setIzabrani((prev) => {
+          const kopija = new Set(prev)
+          if (next) kopija.delete(kontaktId); else kopija.add(kontaktId)
+          return kopija
+        })
+        toast.error(res.message)
+      }
+    })
   }
 
   return (
@@ -54,7 +67,7 @@ export function KlijentPodsjetniciForm({
           disabled={pending}
           data-testid="klijent-salji-toggle"
           className="mt-0.5 h-4 w-4 cursor-pointer accent-brand disabled:opacity-50"
-          onChange={(e) => { setSalji(e.target.checked); spasi(e.target.checked, lista) }}
+          onChange={(e) => toggleSalji(e.target.checked)}
         />
         <span>
           <span className="block text-sm font-medium">{t("saljiNaslov")}</span>
@@ -63,30 +76,56 @@ export function KlijentPodsjetniciForm({
       </label>
 
       <div>
-        <p className="mb-2 text-sm font-medium">{t("adreseNaslov")}</p>
-        <div className="flex flex-wrap gap-2">
-          {lista.map((e) => (
-            <span key={e} data-testid={`klijent-email-${e}`}
-              className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white py-1 pl-3 pr-1.5 text-sm text-slate-600">
-              {e}
-              <button type="button" onClick={() => ukloni(e)} disabled={pending}
-                aria-label={t("ukloniAdresu", { email: e })}
-                className="rounded-full p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-                <X className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            </span>
-          ))}
-          {lista.length === 0 && <span className="text-sm text-slate-400">{t("nemaAdresa")}</span>}
-        </div>
-        <div className="mt-2 flex items-center gap-2">
-          <Input type="email" value={nova} onChange={(e) => setNova(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); dodaj() } }}
-            placeholder={t("adresaPlaceholder")} className="w-64" data-testid="klijent-email-input" />
-          <Button type="button" variant="outline" size="sm" onClick={dodaj} disabled={pending} data-testid="klijent-email-add">
-            <Plus className="h-4 w-4" aria-hidden /> {t("dodaj")}
-          </Button>
-        </div>
-        {greska && <p className="mt-1 text-sm text-red-600" role="alert">{greska}</p>}
+        <p className="mb-2 text-sm font-medium">{t("primaociNaslov")}</p>
+        {kontakti.length === 0 ? (
+          <p className="text-sm text-slate-500" data-testid="klijent-primaoci-prazno">
+            {t("nemaKontakata")}{" "}
+            <Link href={`/klijenti/${klijentId}?tab=kontakti`} className="font-medium text-brand hover:underline">
+              {t("dodajKontaktLink")}
+            </Link>
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {kontakti.map((k) => {
+              const imaEmail = !!(k.email && k.email.trim())
+              return (
+                <li
+                  key={k.id}
+                  data-testid={`klijent-primalac-red-${k.id}`}
+                  className="flex items-start gap-3 rounded-lg border border-slate-200 px-3 py-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={izabrani.has(k.id)}
+                    disabled={pending || !imaEmail}
+                    data-testid={`klijent-primalac-${k.id}`}
+                    className="mt-0.5 h-4 w-4 cursor-pointer accent-brand disabled:cursor-not-allowed disabled:opacity-40"
+                    onChange={(e) => toggleKontakt(k.id, e.target.checked)}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {k.ime}
+                      {k.funkcija && <span className="font-normal text-slate-500"> · {k.funkcija}</span>}
+                    </span>
+                    {imaEmail ? (
+                      <span className="block truncate text-sm text-slate-500">{k.email}</span>
+                    ) : (
+                      <span
+                        className="block text-sm text-amber-600"
+                        data-testid={`klijent-primalac-nema-email-${k.id}`}
+                      >
+                        {t("nemaEmail")}{" "}
+                        <Link href={`/klijenti/${klijentId}?tab=kontakti`} className="underline">
+                          {t("dodajEmailLink")}
+                        </Link>
+                      </span>
+                    )}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
     </div>
   )

@@ -265,7 +265,6 @@ export type Database = {
           napomena: string | null
           naziv: string
           pib: string | null
-          podsjetnik_emails: string[]
           salji_podsjetnik_klijentu: boolean
           sifra_djelatnosti: string | null
           telefon: string | null
@@ -282,7 +281,6 @@ export type Database = {
           napomena?: string | null
           naziv: string
           pib?: string | null
-          podsjetnik_emails?: string[]
           salji_podsjetnik_klijentu?: boolean
           sifra_djelatnosti?: string | null
           telefon?: string | null
@@ -299,7 +297,6 @@ export type Database = {
           napomena?: string | null
           naziv?: string
           pib?: string | null
-          podsjetnik_emails?: string[]
           salji_podsjetnik_klijentu?: boolean
           sifra_djelatnosti?: string | null
           telefon?: string | null

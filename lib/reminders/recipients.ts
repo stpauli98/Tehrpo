@@ -34,6 +34,7 @@ export type KorisnikRow = {
 export type KlijentReminderRow = {
   id: string
   salji_podsjetnik_klijentu: boolean
+  podsjetnik_emails?: string[]
 }
 
 export type KontaktPrimalacRow = {
@@ -86,6 +87,18 @@ export function buildRecipientIndex(
       const arr = klijentEmailsByKlijent.get(ko.klijent_id) ?? []
       arr.push(email)
       klijentEmailsByKlijent.set(ko.klijent_id, arr)
+    }
+    // Ad-hoc „čiste" adrese firme (nisu kontakti). firmaRecipientsForKlijent kasnije
+    // lowercase-uje/dedupira, pa preklapanje s mejlom flagovanog kontakta nije problem.
+    for (const k of klijenti) {
+      if (!firmaUkljucena.has(k.id)) continue
+      for (const raw of k.podsjetnik_emails ?? []) {
+        const email = (raw ?? "").trim()
+        if (!EMAIL_RE.test(email)) continue
+        const arr = klijentEmailsByKlijent.get(k.id) ?? []
+        arr.push(email)
+        klijentEmailsByKlijent.set(k.id, arr)
+      }
     }
   }
   return { adminEmails, assignedByKlijent, klijentEmailsByKlijent }

@@ -113,4 +113,46 @@ describe("razdvajanje kanala (firmine adrese iz kontakata)", () => {
       [{ klijent_id: "K1", email: "nijemejl", podsjetnik_primalac: true }], true)
     expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
   })
+  it("podsjetnik_emails (ad-hoc) se dodaju firminom kanalu uz flagovane kontakte", () => {
+    const idx = buildRecipientIndex(
+      kor, dodjele,
+      [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["adhoc@firma.ba"] }],
+      kontakti, // firma@drina.ba (flagovan)
+      true,
+    )
+    expect(firmaRecipientsForKlijent(idx, "K1").sort()).toEqual(["adhoc@firma.ba", "firma@drina.ba"])
+  })
+  it("ad-hoc mejl jednak flagovanom kontaktu → dedup (jednom)", () => {
+    const idx = buildRecipientIndex(
+      kor, dodjele,
+      [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["FIRMA@drina.ba"] }],
+      kontakti,
+      true,
+    )
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual(["firma@drina.ba"])
+  })
+  it("global isključen → ni ad-hoc ne ide", () => {
+    const idx = buildRecipientIndex(
+      kor, dodjele,
+      [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["adhoc@firma.ba"] }],
+      [], false,
+    )
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
+  it("per-firma isključen → ni ad-hoc ne ide", () => {
+    const idx = buildRecipientIndex(
+      kor, dodjele,
+      [{ id: "K1", salji_podsjetnik_klijentu: false, podsjetnik_emails: ["adhoc@firma.ba"] }],
+      [], true,
+    )
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
+  it("nevalidan ad-hoc mejl se odbacuje", () => {
+    const idx = buildRecipientIndex(
+      kor, dodjele,
+      [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["nijemejl"] }],
+      [], true,
+    )
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
 })

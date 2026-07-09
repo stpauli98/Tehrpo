@@ -86,9 +86,13 @@ test.describe("Podsjetnici v2", () => {
     }
   })
 
-  test("tab firme: per-firma toggle + dodavanje/uklanjanje adrese", async ({ page }) => {
+  test("tab firme: per-firma toggle slanja se perzistira", async ({ page }) => {
+    // Napomena: ranije je ovaj test dodavao/uklanjao adresu primaoca preko chip email
+    // UI-ja (input polje za unos adrese + dugme za dodavanje + chip prikaz) — taj UI je
+    // uklonjen (Task 5). Primaoci se sad biraju čekiranjem kontakata firme
+    // (klijent-primalac-*), pokriveno u tests/e2e/24-podsjetnici-primaoci.spec.ts. Ovdje
+    // ostaje samo per-firma toggle slanja.
     const naziv = "E2E-TMP PODSJETNICI-V2 " + Date.now()
-    const email = "e2e-firma-podsjetnici@example.com"
     const kid = await insertKlijent(naziv)
     try {
       await page.goto(`/klijenti/${kid}?tab=podsjetnici`)
@@ -100,23 +104,13 @@ test.describe("Podsjetnici v2", () => {
       await expect(saljiToggle).toBeChecked()
       await expect(saljiToggle).toBeEnabled()
 
-      await page.getByTestId("klijent-email-input").fill(email)
-      await page.getByTestId("klijent-email-add").click()
-      await expect(page.getByTestId(`klijent-email-${email}`)).toBeVisible()
-      await expect(page.getByTestId("klijent-email-add")).toBeEnabled()
-
-      // Reload — potvrdi da je i toggle i adresa stvarno perzistirana u DB (SSR fetch), ne
-      // samo lokalni React state.
+      // Reload — potvrdi da je toggle stvarno perzistiran u DB (SSR fetch), ne samo lokalni
+      // React state.
       await page.reload()
       await expect(page.getByTestId("tab-podsjetnici-content")).toBeVisible()
       await expect(page.getByTestId("klijent-salji-toggle")).toBeChecked()
-      await expect(page.getByTestId(`klijent-email-${email}`)).toBeVisible()
 
-      // Ukloni adresu (chip → X dugme unutra)
-      await page.getByTestId(`klijent-email-${email}`).getByRole("button").click()
-      await expect(page.getByTestId(`klijent-email-${email}`)).toHaveCount(0)
-
-      // Restore: isključi slanje (izolacija zahtijeva salji=false, prazna lista adresa)
+      // Restore: isključi slanje (izolacija)
       await saljiToggle.click()
       await expect(saljiToggle).not.toBeChecked()
       await expect(saljiToggle).toBeEnabled()
@@ -124,7 +118,6 @@ test.describe("Podsjetnici v2", () => {
       await page.reload()
       await expect(page.getByTestId("tab-podsjetnici-content")).toBeVisible()
       await expect(page.getByTestId("klijent-salji-toggle")).not.toBeChecked()
-      await expect(page.getByTestId(`klijent-email-${email}`)).toHaveCount(0)
     } finally {
       // Throwaway klijent — brisanje uklanja i eventualno zaostalo stanje ako je gornji blok pukao.
       await deleteKlijentByNaziv(naziv)

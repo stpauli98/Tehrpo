@@ -15,15 +15,27 @@ export async function KoStaPrimaTab() {
   const t = await getTranslations("postavke.koStaPrima")
   const tSalji = await getTranslations("postavke.saljiKlijentima")
   const supabase = await createServerSupabaseClient()
-  const [postRes, korisniciRes, klijentiRes, dodjeleRes] = await Promise.all([
+  const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, prima_podsjetnike, aktivan").order("ime"),
-    supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
+    supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
+    supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac"),
   ])
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  // klijent_id → validne adrese flagovanih kontakata
+  const adreseByKlijent = new Map<string, string[]>()
+  for (const ko of kontaktiRes.data ?? []) {
+    if (!ko.podsjetnik_primalac) continue
+    const email = (ko.email ?? "").trim()
+    if (!EMAIL_RE.test(email)) continue
+    const arr = adreseByKlijent.get(ko.klijent_id) ?? []
+    arr.push(email)
+    adreseByKlijent.set(ko.klijent_id, arr)
+  }
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
   const primaZa = (id: string) => {
     const k = korisnici.find((k) => k.id === id)
@@ -36,7 +48,7 @@ export async function KoStaPrimaTab() {
       .map((d) => d.korisnik_id)
       .filter((uid) => primaZa(uid))
       .map((uid) => imeZa(uid))
-    const adrese = k.podsjetnik_emails ?? []
+    const adrese = adreseByKlijent.get(k.id) ?? []
     const firmaPrima = saljiGlobalno && k.salji_podsjetnik_klijentu && adrese.length > 0
     // Precedencija: globalni prekidač je nadređen; zatim po-firma flag; zatim adrese.
     const razlog: Razlog | null = firmaPrima

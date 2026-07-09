@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { norm, filtrirajKontakte, mozeAdHoc, adHocZaPrikaz, dodajAdHoc, ukloniAdHoc } from "./primaociPicker"
+import { norm, filtrirajKontakte, mozeAdHoc, adHocZaPrikaz } from "./primaociPicker"
 
 const K = (id: string, ime: string, email: string | null) => ({ id, ime, funkcija: null, email })
 
@@ -36,17 +36,5 @@ describe("mozeAdHoc", () => {
 describe("adHocZaPrikaz", () => {
   it("izuzima adrese koje su već mejl flagovanog kontakta; dedup", () => {
     expect(adHocZaPrikaz(["a@f.ba", "A@f.ba", "b@f.ba"], ["b@f.ba"])).toEqual(["a@f.ba"])
-  })
-})
-
-describe("dodajAdHoc / ukloniAdHoc", () => {
-  it("dodaje normalizovano; odbija duplikat/kontakt/nevalidno", () => {
-    expect(dodajAdHoc([], " Novi@F.ba ", [])).toEqual({ ok: true, list: ["novi@f.ba"] })
-    expect(dodajAdHoc(["x@f.ba"], "X@f.ba", [])).toEqual({ ok: false, razlog: "postoji" })
-    expect(dodajAdHoc([], "sef@f.ba", ["sef@f.ba"])).toEqual({ ok: false, razlog: "kontakt" })
-    expect(dodajAdHoc([], "nijemejl", [])).toEqual({ ok: false, razlog: "nevalidan" })
-  })
-  it("uklanja case-insensitive", () => {
-    expect(ukloniAdHoc(["a@f.ba", "b@f.ba"], "A@f.ba")).toEqual(["b@f.ba"])
   })
 })

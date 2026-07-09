@@ -45,22 +45,3 @@ export function adHocZaPrikaz(adHocEmails: string[], flaggedContactEmails: strin
   }
   return out
 }
-
-export type DodajRezultat =
-  | { ok: true; list: string[] }
-  | { ok: false; razlog: "nevalidan" | "postoji" | "kontakt" }
-
-/** Dodaj ad-hoc adresu u listu (normalizovano). */
-export function dodajAdHoc(current: string[], raw: string, contactEmails: string[]): DodajRezultat {
-  const e = norm(raw)
-  if (!EMAIL_RE.test(e)) return { ok: false, razlog: "nevalidan" }
-  if (current.some((x) => norm(x) === e)) return { ok: false, razlog: "postoji" }
-  if (contactEmails.some((c) => norm(c) === e)) return { ok: false, razlog: "kontakt" }
-  return { ok: true, list: [...current, e] }
-}
-
-/** Ukloni ad-hoc adresu (case-insensitive). */
-export function ukloniAdHoc(current: string[], raw: string): string[] {
-  const e = norm(raw)
-  return current.filter((x) => norm(x) !== e)
-}

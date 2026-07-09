@@ -63,38 +63,54 @@ describe("buildRecipientIndex + recipientsForKlijent", () => {
   })
 })
 
-describe("razdvajanje kanala", () => {
-  it("recipientsForKlijent (interni) NE uključuje firmine adrese", () => {
-    const kor = [
-      { id: "admin1", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: true },
-      { id: "op1", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true },
-    ]
-    const dodjele = [{ korisnik_id: "op1", klijent_id: "K1" }]
-    const klijenti = [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@drina.ba"] }]
-    const idx = buildRecipientIndex(kor, dodjele, klijenti, true)
+describe("razdvajanje kanala (firmine adrese iz kontakata)", () => {
+  const kor = [
+    { id: "admin1", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: true },
+    { id: "op1", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true },
+  ]
+  const dodjele = [{ korisnik_id: "op1", klijent_id: "K1" }]
+  const klijenti = [{ id: "K1", salji_podsjetnik_klijentu: true }]
+  const kontakti = [{ klijent_id: "K1", email: "firma@drina.ba", podsjetnik_primalac: true }]
+
+  it("interni NE uključuje firmine adrese", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti, kontakti, true)
     const to = recipientsForKlijent(idx, "K1", [])
     expect(to).toContain("radnik@tehpro.test")
     expect(to).toContain("admin@tehpro.test")
     expect(to).not.toContain("firma@drina.ba")
   })
-  it("firmaRecipientsForKlijent vraća SAMO firmine adrese", () => {
-    const kor = [
-      { id: "admin1", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: true },
-      { id: "op1", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true },
-    ]
-    const dodjele = [{ korisnik_id: "op1", klijent_id: "K1" }]
-    const klijenti = [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@drina.ba"] }]
-    const idx = buildRecipientIndex(kor, dodjele, klijenti, true)
+  it("firmaRecipientsForKlijent vraća SAMO mejlove flagovanih kontakata", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti, kontakti, true)
     expect(firmaRecipientsForKlijent(idx, "K1")).toEqual(["firma@drina.ba"])
   })
-  it("firma prazna kad je global prekidač isključen", () => {
-    const kor = [
-      { id: "admin1", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: true },
-      { id: "op1", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true },
-    ]
-    const dodjele = [{ korisnik_id: "op1", klijent_id: "K1" }]
-    const klijenti = [{ id: "K1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@drina.ba"] }]
-    const idx = buildRecipientIndex(kor, dodjele, klijenti, false)
+  it("global prekidač isključen → firma prazna", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti, kontakti, false)
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
+  it("per-firma flag isključen → firma prazna", () => {
+    const idx = buildRecipientIndex(kor, dodjele, [{ id: "K1", salji_podsjetnik_klijentu: false }], kontakti, true)
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
+  it("kontakt bez podsjetnik_primalac se ignoriše", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti,
+      [{ klijent_id: "K1", email: "firma@drina.ba", podsjetnik_primalac: false }], true)
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
+  it("flagovan kontakt bez emaila se ignoriše (nema praznog primaoca)", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti,
+      [{ klijent_id: "K1", email: null, podsjetnik_primalac: true }], true)
+    expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
+  })
+  it("dva flagovana kontakta iste firme → obje adrese", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti, [
+      { klijent_id: "K1", email: "a@firma.ba", podsjetnik_primalac: true },
+      { klijent_id: "K1", email: "b@firma.ba", podsjetnik_primalac: true },
+    ], true)
+    expect(firmaRecipientsForKlijent(idx, "K1").sort()).toEqual(["a@firma.ba", "b@firma.ba"])
+  })
+  it("nevalidan mejl kontakta se odbacuje", () => {
+    const idx = buildRecipientIndex(kor, dodjele, klijenti,
+      [{ klijent_id: "K1", email: "nijemejl", podsjetnik_primalac: true }], true)
     expect(firmaRecipientsForKlijent(idx, "K1")).toEqual([])
   })
 })

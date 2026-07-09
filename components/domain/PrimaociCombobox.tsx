@@ -68,7 +68,7 @@ export function PrimaociCombobox({
 
   function dodajKontakt(id: string) {
     setIzabraniIds((p) => new Set(p).add(id))
-    setQ(""); setOpen(false)
+    setQ(""); setOpen(false); setHi(0)
     startTransition(async () => {
       const res = await updateKontaktPodsjetnikPrimalac(id, klijentId, true)
       if (res.ok) { router.refresh() }
@@ -86,23 +86,22 @@ export function PrimaociCombobox({
   }
 
   function dodajEmail(email: string) {
-    const prethodni = adHoc
-    setAdHoc((p) => [...p, email.trim().toLowerCase()])
-    setQ(""); setOpen(false)
+    const norm = email.trim().toLowerCase()
+    setAdHoc((p) => [...p, norm])
+    setQ(""); setOpen(false); setHi(0)
     startTransition(async () => {
       const res = await dodajPodsjetnikEmail(klijentId, email)
       if (res.ok) { router.refresh() }
-      else { setAdHoc(prethodni); toast.error(res.message) }
+      else { setAdHoc((p) => p.filter((e) => e.toLowerCase() !== norm)); toast.error(res.message) }
     })
   }
 
   function ukloniEmail(email: string) {
-    const prethodni = adHoc
     setAdHoc((p) => p.filter((e) => e.toLowerCase() !== email.toLowerCase()))
     startTransition(async () => {
       const res = await ukloniPodsjetnikEmail(klijentId, email)
       if (res.ok) { router.refresh() }
-      else { setAdHoc(prethodni); toast.error(res.message) }
+      else { setAdHoc((p) => (p.some((e) => e.toLowerCase() === email.toLowerCase()) ? p : [...p, email])); toast.error(res.message) }
     })
   }
 
@@ -115,7 +114,7 @@ export function PrimaociCombobox({
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setHi((h) => Math.min(h + 1, Math.max(0, brojOpcija - 1))) }
     else if (e.key === "ArrowUp") { e.preventDefault(); setHi((h) => Math.max(h - 1, 0)) }
-    else if (e.key === "Enter") { e.preventDefault(); izaberiHighlight() }
+    else if (e.key === "Enter") { if (!open) return; e.preventDefault(); izaberiHighlight() }
     else if (e.key === "Escape") { setOpen(false) }
   }
 
@@ -166,7 +165,7 @@ export function PrimaociCombobox({
           placeholder={t("comboPlaceholder")}
           value={q} disabled={pending}
           onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0) }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => { setOpen(true); setHi(0) }}
           onKeyDown={onKeyDown}
         />
         {open && (opcije.length > 0 || nudiAdHoc || q.trim() !== "") && (

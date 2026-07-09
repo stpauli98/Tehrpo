@@ -10,12 +10,13 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
   const jeAdmin = ja?.uloga === "admin"
   const supabase = await createServerSupabaseClient()
   const [klRes, kontaktiRes, radniciRes, dodjeleRes] = await Promise.all([
-    supabase.from("klijenti").select("salji_podsjetnik_klijentu").eq("id", klijentId).maybeSingle(),
+    supabase.from("klijenti").select("salji_podsjetnik_klijentu, podsjetnik_emails").eq("id", klijentId).maybeSingle(),
     supabase.from("kontakt_osobe").select("id, ime, funkcija, email, podsjetnik_primalac").eq("klijent_id", klijentId).order("ime"),
     jeAdmin ? supabase.from("korisnici").select("id, ime").eq("aktivan", true).order("ime") : Promise.resolve({ data: [] }),
     jeAdmin ? supabase.from("korisnik_klijent").select("korisnik_id").eq("klijent_id", klijentId) : Promise.resolve({ data: [] }),
   ])
   const salji = klRes.data?.salji_podsjetnik_klijentu ?? false
+  const adHocEmails = klRes.data?.podsjetnik_emails ?? []
   const kontakti = (kontaktiRes.data ?? []).map((k) => ({
     id: k.id, ime: k.ime, funkcija: k.funkcija, email: k.email, podsjetnik_primalac: k.podsjetnik_primalac,
   }))
@@ -26,7 +27,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
     <div className="space-y-8" data-testid="tab-podsjetnici-content">
       <section>
         <h2 className="mb-3 text-lg font-medium">{t("sekcijaSlanje")}</h2>
-        <KlijentPodsjetniciForm klijentId={klijentId} salji={salji} kontakti={kontakti} />
+        <KlijentPodsjetniciForm klijentId={klijentId} salji={salji} kontakti={kontakti} adHocEmails={adHocEmails} />
       </section>
       {jeAdmin && (
         <section>

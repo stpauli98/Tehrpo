@@ -67,12 +67,19 @@ export async function runReminders(
   if (kkErr) throw new Error(`Greška pri čitanju dodjela (korisnik_klijent): ${kkErr.message}`)
   const { data: klijentiZaSlanje, error: klErr } = await supabase
     .from("klijenti")
-    .select("id, salji_podsjetnik_klijentu, podsjetnik_emails")
+    .select("id, salji_podsjetnik_klijentu")
   if (klErr) throw new Error(`Greška pri čitanju klijenata (Krug 2): ${klErr.message}`)
+  // Firmine adrese dolaze iz flagovanih kontakata (jedan izvor istine = kontakt_osobe).
+  // PostgREST ~1000-red limit: sigurno na trenutnoj skali; ako kontakti narastu dodaj .range()/count.
+  const { data: kontaktiPrimaoci, error: kontErr } = await supabase
+    .from("kontakt_osobe")
+    .select("klijent_id, email, podsjetnik_primalac")
+  if (kontErr) throw new Error(`Greška pri čitanju kontakata (Krug 2): ${kontErr.message}`)
   const recipientIndex = buildRecipientIndex(
     korisnici ?? [],
     dodjele ?? [],
     klijentiZaSlanje ?? [],
+    kontaktiPrimaoci ?? [],
     saljiKlijentima,
   )
   if (

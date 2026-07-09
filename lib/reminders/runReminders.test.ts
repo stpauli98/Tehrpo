@@ -16,7 +16,8 @@ type DueRow = {
 }
 
 type KorRow = { id: string; email: string; uloga: string; aktivan: boolean; prima_podsjetnike: boolean }
-type KlRow = { id: string; salji_podsjetnik_klijentu: boolean; podsjetnik_emails: string[] | null }
+type KlRow = { id: string; salji_podsjetnik_klijentu: boolean }
+type KontaktRow = { klijent_id: string; email: string | null; podsjetnik_primalac: boolean }
 
 function makeFake(opts: {
   danaPrije?: number[]
@@ -24,6 +25,7 @@ function makeFake(opts: {
   korisnici?: KorRow[]
   kk?: { korisnik_id: string; klijent_id: string }[]
   klijenti?: KlRow[]
+  kontakti?: KontaktRow[]
   dueRows?: DueRow[]
   korisniciError?: string
   kkError?: string
@@ -43,6 +45,9 @@ function makeFake(opts: {
       }
       if (table === "klijenti") {
         return { select: async () => (opts.klijentiError ? { data: null, error: { message: opts.klijentiError } } : { data: opts.klijenti ?? [], error: null }) }
+      }
+      if (table === "kontakt_osobe") {
+        return { select: async () => ({ data: opts.kontakti ?? [], error: null }) }
       }
       if (table === "podsjetnici") {
         return { insert: async (row: Record<string, unknown>) => { inserts.push(row); return { error: null } } }
@@ -135,7 +140,8 @@ describe("runReminders", () => {
     const { supabase } = makeFake({
       saljiKlijentima: true,
       korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
-      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@klijent.com"] }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true }],
+      kontakti: [{ klijent_id: "k1", email: "firma@klijent.com", podsjetnik_primalac: true }],
       dueRows: [baseRow], // baseRow.klijent_id === "k1"
     })
     await runReminders(supabase, { send, delayMs: 0 })
@@ -158,7 +164,8 @@ describe("runReminders", () => {
       saljiKlijentima: true,
       korisnici: [{ id: "a", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true }],
       kk: [{ korisnik_id: "a", klijent_id: "k1" }],
-      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@drina.ba"] }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true }],
+      kontakti: [{ klijent_id: "k1", email: "firma@drina.ba", podsjetnik_primalac: true }],
       dueRows: [baseRow], // baseRow.klijent_id === "k1"
     })
     await runReminders(supabase, { send })
@@ -177,7 +184,8 @@ describe("runReminders", () => {
     const { supabase } = makeFake({
       saljiKlijentima: true,
       korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
-      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: false, podsjetnik_emails: null }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: false }],
+      kontakti: [{ klijent_id: "k1", email: "firma@klijent.com", podsjetnik_primalac: true }],
       dueRows: [baseRow],
     })
     await runReminders(supabase, { send, delayMs: 0 })
@@ -192,7 +200,8 @@ describe("runReminders", () => {
     const { supabase } = makeFake({
       saljiKlijentima: false,
       korisnici: [{ id: "a", email: "admin@tehpro.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
-      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@klijent.com"] }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true }],
+      kontakti: [{ klijent_id: "k1", email: "firma@klijent.com", podsjetnik_primalac: true }],
       dueRows: [baseRow],
     })
     await runReminders(supabase, { send, delayMs: 0 })

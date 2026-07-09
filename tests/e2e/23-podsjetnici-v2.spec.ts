@@ -95,6 +95,9 @@ test.describe("Podsjetnici v2", () => {
     const naziv = "E2E-TMP PODSJETNICI-V2 " + Date.now()
     const kid = await insertKlijent(naziv)
     try {
+      // Gate: per-firma prekidač je vidljiv samo kad je globalno slanje firmama uključeno.
+      await setPostavkeV2({ salji_klijentima: true })
+
       await page.goto(`/klijenti/${kid}?tab=podsjetnici`)
       await expect(page.getByTestId("tab-podsjetnici-content")).toBeVisible()
 
@@ -119,6 +122,8 @@ test.describe("Podsjetnici v2", () => {
       await expect(page.getByTestId("tab-podsjetnici-content")).toBeVisible()
       await expect(page.getByTestId("klijent-salji-toggle")).not.toBeChecked()
     } finally {
+      // Izolacija: vrati globalno slanje na false (DEMO default; global true = živi Resend).
+      await setPostavkeV2({ salji_klijentima: false })
       // Throwaway klijent — brisanje uklanja i eventualno zaostalo stanje ako je gornji blok pukao.
       await deleteKlijentByNaziv(naziv)
     }

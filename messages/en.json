@@ -453,6 +453,8 @@
       "ukloniPrimaoca": "Remove recipient",
       "nemaKontakata": "No company contacts.",
       "dodajKontaktLink": "Add contact →",
+      "globalnoIskljuceno": "Sending to companies is turned off globally in Settings.",
+      "otvoriPostavke": "Open Settings →",
       "spaseno": "Saved."
     },
     "dodjelaRadnika": {

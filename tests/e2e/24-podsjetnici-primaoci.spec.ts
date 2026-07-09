@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { insertKlijent, deleteKlijentByNaziv } from "./db"
+import { insertKlijent, deleteKlijentByNaziv, setPostavkeV2 } from "./db"
 
 // Podsjetnici → primaoci: combobox bira sačuvani kontakt ILI dodaje ad-hoc „čistu" adresu
 // (Task 7 je zamijenio checklist-primalaca ovim combobox UI-jem).
@@ -14,6 +14,10 @@ test.describe("Podsjetnici — combobox primalaca (kontakti + ad-hoc)", () => {
     const kid = await insertKlijent(naziv)
     const adHoc = `adhoc-${Date.now()}@example.com`
     try {
+      // Gate: sekcija „Slanje firmi" (toggle + combobox) se prikazuje samo kad je globalno
+      // slanje firmama uključeno u Postavkama. Uključi ga za trajanje testa.
+      await setPostavkeV2({ salji_klijentima: true })
+
       // 1) Kreiraj jedan kontakt SA mejlom.
       await page.goto(`/klijenti/${kid}?tab=kontakti`)
       await expect(page.getByTestId("tab-kontakti-content")).toBeVisible()
@@ -56,6 +60,8 @@ test.describe("Podsjetnici — combobox primalaca (kontakti + ad-hoc)", () => {
       await page.getByTestId(`ukloni-adhoc-${adHoc}`).click()
       await expect(page.getByTestId("primalac-adhoc")).toHaveCount(0)
     } finally {
+      // Izolacija: vrati globalno slanje na false (DEMO default; global true = živi Resend).
+      await setPostavkeV2({ salji_klijentima: false })
       await deleteKlijentByNaziv(naziv)
     }
   })

@@ -623,9 +623,11 @@ git commit -m "refactor(klijenti): ukloni ručno polje podsjetnik_emails iz edit
 
 - [ ] **Step 1: Izmijeni fetch i računanje**
 
-Zamijeni `Promise.all` blok (linije 18–23) — u `klijenti` select ukloni `podsjetnik_emails`, dodaj `kontakt_osobe` fetch:
+Zamijeni `Promise.all` blok (linije 18–23) — u `klijenti` select ukloni `podsjetnik_emails`, dodaj `kontakt_osobe` fetch. Uvezi kanonski `EMAIL_RE` iz `@/lib/reminders/recipients` umjesto lokalne definicije, i lowercase+dedupe adrese po klijentu (`Map<string, Set<string>>`) da se pregled poklapa s onim što engine (`firmaRecipientsForKlijent`) stvarno šalje:
 
 ```tsx
+import { EMAIL_RE } from "@/lib/reminders/recipients"
+// …
   const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, prima_podsjetnike, aktivan").order("ime"),
@@ -636,24 +638,23 @@ Zamijeni `Promise.all` blok (linije 18–23) — u `klijenti` select ukloni `pod
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  // klijent_id → validne adrese flagovanih kontakata
-  const adreseByKlijent = new Map<string, string[]>()
+  // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
+  const adreseByKlijent = new Map<string, Set<string>>()
   for (const ko of kontaktiRes.data ?? []) {
     if (!ko.podsjetnik_primalac) continue
-    const email = (ko.email ?? "").trim()
+    const email = (ko.email ?? "").trim().toLowerCase()
     if (!EMAIL_RE.test(email)) continue
-    const arr = adreseByKlijent.get(ko.klijent_id) ?? []
-    arr.push(email)
-    adreseByKlijent.set(ko.klijent_id, arr)
+    const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
+    set.add(email)
+    adreseByKlijent.set(ko.klijent_id, set)
   }
 ```
 
 Zatim u `.map((k) => {…})` (linija 33–50) zamijeni `const adrese = k.podsjetnik_emails ?? []` sa:
 ```tsx
-    const adrese = adreseByKlijent.get(k.id) ?? []
+    const adrese = [...(adreseByKlijent.get(k.id) ?? [])]
 ```
-(`firmaPrima` i `razlog` logika ostaju identični — koriste `adrese.length`.)
+(`firmaPrima` i `razlog` logika ostaju identični — koriste `adrese.length`, koji je sada deduped broj.)
 
 - [ ] **Step 2: Lint + typecheck**
 

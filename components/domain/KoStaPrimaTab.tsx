@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react"
 import { getTranslations } from "next-intl/server"
+import { EMAIL_RE } from "@/lib/reminders/recipients"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { CollapsibleSection } from "./CollapsibleSection"
 
@@ -25,16 +26,15 @@ export async function KoStaPrimaTab() {
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  // klijent_id → validne adrese flagovanih kontakata
-  const adreseByKlijent = new Map<string, string[]>()
+  // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
+  const adreseByKlijent = new Map<string, Set<string>>()
   for (const ko of kontaktiRes.data ?? []) {
     if (!ko.podsjetnik_primalac) continue
-    const email = (ko.email ?? "").trim()
+    const email = (ko.email ?? "").trim().toLowerCase()
     if (!EMAIL_RE.test(email)) continue
-    const arr = adreseByKlijent.get(ko.klijent_id) ?? []
-    arr.push(email)
-    adreseByKlijent.set(ko.klijent_id, arr)
+    const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
+    set.add(email)
+    adreseByKlijent.set(ko.klijent_id, set)
   }
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
   const primaZa = (id: string) => {
@@ -48,7 +48,7 @@ export async function KoStaPrimaTab() {
       .map((d) => d.korisnik_id)
       .filter((uid) => primaZa(uid))
       .map((uid) => imeZa(uid))
-    const adrese = adreseByKlijent.get(k.id) ?? []
+    const adrese = [...(adreseByKlijent.get(k.id) ?? [])]
     const firmaPrima = saljiGlobalno && k.salji_podsjetnik_klijentu && adrese.length > 0
     // Precedencija: globalni prekidač je nadređen; zatim po-firma flag; zatim adrese.
     const razlog: Razlog | null = firmaPrima

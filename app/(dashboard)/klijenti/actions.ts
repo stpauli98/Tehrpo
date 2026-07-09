@@ -4,7 +4,6 @@ import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { parseEmailList, EMAIL_RE } from "@/lib/reminders/recipients"
 import { addMjeseci } from "@/lib/date"
 import { friendlyDbError } from "@/lib/db-errors"
 import { validUgovorDatumi } from "@/lib/ugovori"
@@ -83,7 +82,6 @@ const updateKlijentSchema = z.object({
   id: z.string().uuid(),
   ...klijentObavezniFields,
   napomena: optionalText(2000),
-  podsjetnik_emails: z.string().max(2000).optional(),
   tip_odnosa: z
     .union([z.enum(["ugovor", "ponuda"]), z.literal("none"), z.literal(""), z.null()])
     .transform((v) => (v === "none" || v === "" ? null : v))
@@ -104,16 +102,6 @@ export async function updateKlijent(
   const patch: KlijentiUpdate = { updated_at: new Date().toISOString() }
   if (formData.has("naziv") && f.naziv) patch.naziv = f.naziv
   if (formData.has("napomena")) patch.napomena = f.napomena ?? null
-  if (formData.has("podsjetnik_emails")) {
-    // Neispravne stavke se odbijaju odmah (ranije su se tiho spremale u bazu,
-    // a filtrirale tek pri slanju podsjetnika).
-    const lista = parseEmailList(f.podsjetnik_emails ?? "")
-    const losi = lista.filter((e) => !EMAIL_RE.test(e))
-    if (losi.length > 0) {
-      return { ok: false, errors: { podsjetnik_emails: [t("primaociNeispravanEmail", { lista: losi.join(", ") })] } }
-    }
-    patch.podsjetnik_emails = lista
-  }
   if (formData.has("tip_odnosa")) {
     patch.tip_odnosa = f.tip_odnosa ?? null
   }

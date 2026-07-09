@@ -23,14 +23,14 @@ import {
 
 const initial: ActionResult = { ok: true }
 
-// Minimalni prop type — edit forma treba samo id/naziv/napomena/podsjetnik_emails (ne created_at/updated_at),
+// Minimalni prop type — edit forma treba samo id/naziv/napomena/... (ne created_at/updated_at),
 // pa nema rekonstrukcije iz nullable klijenti_view sa `!` asercijama.
 export function KlijentEditForm({
   klijent,
   korisnici,
 }: {
   klijent: {
-    id: string; naziv: string; napomena: string | null; podsjetnik_emails: string[]; tip_odnosa?: string | null
+    id: string; naziv: string; napomena: string | null; tip_odnosa?: string | null
     adresa?: string | null; pib?: string | null; maticni_broj?: string | null; sifra_djelatnosti?: string | null
     telefon?: string | null; email?: string | null; zaduzeni_tehpro_id?: string | null
   }
@@ -149,19 +149,6 @@ export function KlijentEditForm({
               </SelectContent>
             </Select>
           </div>
-
-          <label className="block text-sm">
-            <span className="text-slate-600">{t("primaociLabel")}</span>
-            <Input
-              name="podsjetnik_emails"
-              defaultValue={klijent.podsjetnik_emails.join(", ")}
-              placeholder={t("primaociPlaceholder")}
-              data-testid="edit-klijent-primaoci"
-            />
-            {state.ok === false && state.errors?.podsjetnik_emails && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.podsjetnik_emails[0]}</p>
-            )}
-          </label>
 
           <div className="space-y-1">
             <span className="block text-sm text-slate-600">{t("tipOdnosaLabel")}</span>

@@ -59,6 +59,10 @@ test.describe("Podsjetnici — izbor primalaca iz kontakata", () => {
       await expect(cbSaMejlom).not.toBeChecked()
       await cbSaMejlom.check()
       await expect(cbSaMejlom).toBeChecked()
+      // Sačekaj da useTransition završi (checkbox se disable-uje dok traje server action) prije
+      // reload-a — inače reload može pretrčati in-flight upis i test lažno prođe na optimističkom
+      // lokalnom stanju umjesto na stvarnom DB round-tripu (isti obrazac kao 23-podsjetnici-v2.spec.ts).
+      await expect(cbSaMejlom).toBeEnabled()
 
       // 3) Reload — potvrdi da je izbor stvarno perzistiran u DB (SSR fetch), ne samo lokalni
       // React state.

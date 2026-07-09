@@ -16,7 +16,7 @@ type DueRow = {
 }
 
 type KorRow = { id: string; email: string; uloga: string; aktivan: boolean; prima_podsjetnike: boolean }
-type KlRow = { id: string; salji_podsjetnik_klijentu: boolean }
+type KlRow = { id: string; salji_podsjetnik_klijentu: boolean; podsjetnik_emails?: string[] }
 type KontaktRow = { klijent_id: string; email: string | null; podsjetnik_primalac: boolean }
 
 function makeFake(opts: {
@@ -44,7 +44,21 @@ function makeFake(opts: {
         return { select: async () => (opts.kkError ? { data: null, error: { message: opts.kkError } } : { data: opts.kk ?? [], error: null }) }
       }
       if (table === "klijenti") {
-        return { select: async () => (opts.klijentiError ? { data: null, error: { message: opts.klijentiError } } : { data: opts.klijenti ?? [], error: null }) }
+        return {
+          // Namjerno "prunuje" polja po zatraženim kolonama (za razliku od ostalih grana) —
+          // ovaj test dokazuje da produkcijski select STVARNO mora tražiti podsjetnik_emails,
+          // ne samo da tip dozvoljava to polje.
+          select: async (cols: string) => {
+            if (opts.klijentiError) return { data: null, error: { message: opts.klijentiError } }
+            const fields = cols.split(",").map((c) => c.trim())
+            const pruned = (opts.klijenti ?? []).map((row) => {
+              const out: Record<string, unknown> = {}
+              for (const f of fields) if (f in row) out[f] = (row as unknown as Record<string, unknown>)[f]
+              return out
+            })
+            return { data: pruned, error: null }
+          },
+        }
       }
       if (table === "kontakt_osobe") {
         return { select: async () => ({ data: opts.kontakti ?? [], error: null }) }
@@ -155,6 +169,20 @@ describe("runReminders", () => {
     const firminIcs = firmin!.attachments![0]!.content.toString("utf-8")
     expect(firminIcs).not.toContain("plan-aktivnosti")
     expect(firminIcs).not.toContain("/klijenti/")
+  })
+
+  it("Krug 2: podsjetnik_emails (ad-hoc) idu u firmin bcc kanal", async () => {
+    const sent: SendArgs[] = []
+    const send = async (a: SendArgs): Promise<SendResult> => { sent.push(a); return { id: "x", dryRun: true } }
+    const { supabase } = makeFake({
+      saljiKlijentima: true,
+      korisnici: [{ id: "a", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
+      klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["adhoc@firma.ba"] }],
+      dueRows: [baseRow], // baseRow.klijent_id === "k1"
+    })
+    await runReminders(supabase, { send })
+    const firmin = sent.find((s) => (s.bcc ?? []).includes("adhoc@firma.ba"))
+    expect(firmin).toBeTruthy()
   })
 
   it("šalje DVA kanala kad je firma primalac (interni + firma)", async () => {

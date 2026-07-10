@@ -733,6 +733,22 @@
   },
   "postavke": {
     "naslov": "Postavke",
+    "mojNalog": {
+      "naslov": "Moj nalog",
+      "opis": "Promijeni svoju lozinku.",
+      "trenutna": "Trenutna lozinka",
+      "nova": "Nova lozinka (min 8)",
+      "potvrda": "Potvrdi novu lozinku",
+      "dugme": "Promijeni lozinku",
+      "uToku": "Mijenjam…",
+      "uspjeh": "Lozinka je promijenjena.",
+      "greske": {
+        "minDuzina": "Nova lozinka mora imati bar 8 znakova.",
+        "nePoklapaju": "Lozinke se ne poklapaju.",
+        "trenutnaPogresna": "Trenutna lozinka nije tačna.",
+        "opsta": "Nije moguće promijeniti lozinku."
+      }
+    },
     "reminders": {
       "naslov": "Email podsjetnici",
       "opis": "Koliko dana prije roka dospijeća se šalje podsjetnik. Sistem dnevno provjerava termine."

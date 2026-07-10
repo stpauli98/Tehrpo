@@ -733,6 +733,22 @@
   },
   "postavke": {
     "naslov": "Settings",
+    "mojNalog": {
+      "naslov": "My account",
+      "opis": "Change your password.",
+      "trenutna": "Current password",
+      "nova": "New password (min 8)",
+      "potvrda": "Confirm new password",
+      "dugme": "Change password",
+      "uToku": "Changing…",
+      "uspjeh": "Password changed.",
+      "greske": {
+        "minDuzina": "New password must be at least 8 characters.",
+        "nePoklapaju": "Passwords do not match.",
+        "trenutnaPogresna": "Current password is incorrect.",
+        "opsta": "Could not change the password."
+      }
+    },
     "reminders": {
       "naslov": "Email reminders",
       "opis": "How many days before the due date a reminder is sent. The system checks appointments daily."

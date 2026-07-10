@@ -1,14 +1,6 @@
 "use client"
 import { useTranslations } from "next-intl"
-import { STATUS_ORDER, type DerivedStatus } from "@/lib/termini"
-
-const BOJE: Record<DerivedStatus, string> = {
-  izvrseno: "bg-green-100",
-  planirano: "bg-blue-50",
-  zakazano: "bg-cyan-50",
-  kasni: "bg-red-100",
-  otkazano: "bg-slate-100",
-}
+import { STATUS_BADGE_CLASS, STATUS_ORDER } from "@/lib/termini"
 
 export function MatrixLegenda() {
   const t = useTranslations("plan.legenda")
@@ -27,7 +19,7 @@ export function MatrixLegenda() {
       <span className="mx-1 inline-block h-3 w-px bg-slate-200" />
       {STATUS_ORDER.map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
-          <span className={`inline-block h-3 w-3 rounded ${BOJE[s]} ring-1 ring-inset ring-black/5`} />
+          <span className={`inline-block h-3 w-3 rounded ${STATUS_BADGE_CLASS[s]}`} />
           {tStatus(s)}
         </span>
       ))}

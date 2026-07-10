@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import type { DerivedStatus } from "@/lib/termini"
+import { STATUS_BADGE_CLASS } from "@/lib/termini"
 import { href as localizedHref } from "@/i18n/routes"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import type { MatrixRow, MatrixColumn, MatrixCell } from "@/lib/matrix"
@@ -14,15 +14,6 @@ function withParam(search: string, key: string, value: string): string {
   const p = new URLSearchParams(search)
   p.set(key, value)
   return p.toString()
-}
-
-// boja ćelije po izvedenom statusu (mockup cell-done/plan/late)
-const CELL_CLASS: Record<DerivedStatus, string> = {
-  izvrseno: "bg-green-100 text-green-800 hover:bg-green-200",
-  planirano: "bg-blue-50 text-blue-800 hover:bg-blue-100",
-  zakazano: "bg-cyan-50 text-cyan-800 hover:bg-cyan-100",
-  kasni: "bg-red-100 text-red-800 hover:bg-red-200",
-  otkazano: "bg-slate-100 text-slate-500 hover:bg-slate-200",
 }
 
 // Sadržaj ćelije po statusu (§7.2 C: ✓ za izvršeno, ! za kasni).
@@ -117,8 +108,8 @@ export function MatrixGrid({
                         data-status={cell.status}
                         title={cell.brojUCeliji > 1 ? t("viseTerminaTitle") : undefined}
                         className={cn(
-                          "inline-block w-full rounded px-1.5 py-1 tabular-nums",
-                          CELL_CLASS[cell.status],
+                          "inline-block w-full rounded px-1.5 py-1 tabular-nums transition-colors hover:brightness-95",
+                          STATUS_BADGE_CLASS[cell.status],
                           FOCUS_RING,
                         )}
                       >

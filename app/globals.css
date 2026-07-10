@@ -9,11 +9,7 @@
   --color-brand-dark: #1e40af;
   --color-brand-light: #dbeafe;
 
-  --color-status-planirano: #3b82f6;
-  --color-status-zakazano: #06b6d4;
-  --color-status-izvrseno: #16a34a;
   --color-status-kasni: #dc2626;
-  --color-status-otkazano: #64748b;
 
   --font-family-sans: var(--font-sans, "Inter", system-ui, sans-serif);
 }

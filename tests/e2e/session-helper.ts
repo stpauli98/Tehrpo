@@ -5,16 +5,28 @@
 import { readFileSync } from "node:fs"
 import type { BrowserContext } from "@playwright/test"
 
-function envVar(key: string): string {
-  if (process.env[key]) return process.env[key] as string
+function fromFile(file: string, key: string): string {
   let content = ""
   try {
-    content = readFileSync(".env.local", "utf8")
+    content = readFileSync(file, "utf8")
   } catch {
     return ""
   }
   const line = content.split("\n").find((l) => l.trimStart().startsWith(`${key}=`))
   return line ? line.slice(line.indexOf("=") + 1).trim() : ""
+}
+
+// Ista precedenca kao auth.setup.ts / db.ts: process.env > .env.development.local (DEMO)
+// > .env.local (PROD). Dev server (app pod testom) radi protiv .env.development.local —
+// ako ovaj helper padne nazad SAMO na .env.local, prijava ide na PROD projekt dok je
+// korisnik kreiran (preko db.ts) na DEMO → "Invalid login credentials".
+function envVar(key: string): string {
+  return (
+    process.env[key] ||
+    fromFile(".env.development.local", key) ||
+    fromFile(".env.local", key) ||
+    ""
+  )
 }
 
 const SUPABASE_URL = envVar("NEXT_PUBLIC_SUPABASE_URL")

@@ -733,6 +733,22 @@
   },
   "postavke": {
     "naslov": "Einstellungen",
+    "mojNalog": {
+      "naslov": "Mein Konto",
+      "opis": "Ändere dein Passwort.",
+      "trenutna": "Aktuelles Passwort",
+      "nova": "Neues Passwort (min. 8)",
+      "potvrda": "Neues Passwort bestätigen",
+      "dugme": "Passwort ändern",
+      "uToku": "Wird geändert…",
+      "uspjeh": "Passwort geändert.",
+      "greske": {
+        "minDuzina": "Das neue Passwort muss mindestens 8 Zeichen haben.",
+        "nePoklapaju": "Passwörter stimmen nicht überein.",
+        "trenutnaPogresna": "Aktuelles Passwort ist falsch.",
+        "opsta": "Passwort konnte nicht geändert werden."
+      }
+    },
     "reminders": {
       "naslov": "E-Mail-Erinnerungen",
       "opis": "Wie viele Tage vor dem Fälligkeitstermin eine Erinnerung gesendet wird. Das System prüft die Termine täglich."
@@ -770,6 +786,9 @@
     "korisnikAkcije": {
       "aria": "Aktionen",
       "testEmail": "Test-E-Mail senden",
+      "posaljiReset": "Passwort-Reset senden",
+      "resetPoslat": "Reset-Link an {email} gesendet",
+      "resetGreska": "Reset konnte nicht gesendet werden.",
       "deaktivirajKorisnika": "Benutzer deaktivieren",
       "aktivirajKorisnika": "Benutzer aktivieren",
       "greskaSlanja": "Fehler beim Senden.",

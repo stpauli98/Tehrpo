@@ -7,6 +7,7 @@ import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { validirajNovuLozinku } from "@/lib/auth/lozinka"
 import { revalidateVrste } from "@/lib/cache"
 import { sendEmail } from "@/lib/email/resend"
 import { testEmailSubject, testEmailHtml } from "@/lib/email/templates"
@@ -15,6 +16,9 @@ import { getMessages } from "@/i18n/messages"
 import { env } from "@/lib/env"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "postavke.actions" })
+// Dedikovan translator za poruke greške vezane za "Moj nalog" (promjena lozinke) —
+// ključevi žive pod postavke.mojNalog.greske.*, odvojeno od postavke.actions.
+const tMoj = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "postavke.mojNalog" })
 
 export type ActionResult =
   | { ok: true; danaPrije?: number[] }
@@ -470,4 +474,35 @@ export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
     odgodjeno: data.deferred ?? 0,
     greske: data.errors?.length ?? 0,
   }
+}
+
+// ─── Lozinka: samostalna promjena + admin reset ──────────────────────────────
+
+/** Prijavljeni korisnik mijenja svoju lozinku (traži trenutnu radi re-autentifikacije). */
+export async function promijeniLozinku(trenutna: string, nova: string, potvrda: string): Promise<ActionResult> {
+  const v = validirajNovuLozinku(nova, potvrda)
+  if (!v.ok) {
+    return { ok: false, message: v.razlog === "min" ? tMoj("greske.minDuzina") : tMoj("greske.nePoklapaju") }
+  }
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return { ok: false, message: tMoj("greske.opsta") }
+  const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: trenutna })
+  if (authErr) return { ok: false, message: tMoj("greske.trenutnaPogresna") }
+  const { error } = await supabase.auth.updateUser({ password: nova })
+  if (error) return { ok: false, message: tMoj("greske.opsta") }
+  return { ok: true }
+}
+
+/** Admin okine reset-email za korisnika (ne postavlja/ne vidi lozinku). */
+export async function posaljiResetKorisniku(email: string): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const origin = (await headers()).get("origin") ?? ""
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/confirm` })
+  if (error) {
+    console.error("[posaljiResetKorisniku]", error.message)
+    return { ok: false }
+  }
+  return { ok: true }
 }

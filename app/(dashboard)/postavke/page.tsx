@@ -11,6 +11,7 @@ import { VrstePregledaTabela } from "@/components/domain/VrstePregledaTabela"
 import { KorisniciTab } from "@/components/domain/KorisniciTab"
 import { KoStaPrimaTab } from "@/components/domain/KoStaPrimaTab"
 import { CollapsibleSection } from "@/components/domain/CollapsibleSection"
+import { MojNalogSekcija } from "@/components/domain/MojNalogSekcija"
 
 export default async function PostavkePage() {
   const t = await getTranslations("postavke")
@@ -37,6 +38,8 @@ export default async function PostavkePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
+
+      <MojNalogSekcija />
 
       {jeAdminKor && (
         <CollapsibleSection

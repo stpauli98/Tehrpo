@@ -189,6 +189,15 @@ export async function ensureOperater(email: string, lozinka: string, ime: string
   if (error) throw new Error(`ensureOperater upsert: ${error.message}`)
   return id
 }
+/** Obriši auth korisnika + korisnici red po emailu (čišćenje throwaway naloga). */
+export async function deleteKorisnikByEmail(email: string): Promise<void> {
+  const { data: list } = await db.auth.admin.listUsers()
+  const u = list?.users.find((x) => x.email?.toLowerCase() === email.toLowerCase())
+  if (!u) return
+  await db.from("korisnici").delete().eq("id", u.id)
+  await db.auth.admin.deleteUser(u.id)
+}
+
 export async function assignKlijent(korisnikId: string, klijentId: string): Promise<void> {
   const { error } = await db.from("korisnik_klijent").upsert({ korisnik_id: korisnikId, klijent_id: klijentId })
   if (error) throw new Error(`assignKlijent(${korisnikId},${klijentId}): ${error.message}`)

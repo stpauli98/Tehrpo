@@ -561,6 +561,45 @@ export type Database = {
         }
         Relationships: []
       }
+      termin_zakazano_obavijest: {
+        Row: {
+          created_at: string
+          datum_zakazan: string
+          id: string
+          poslat_na: string[]
+          termin_id: string
+        }
+        Insert: {
+          created_at?: string
+          datum_zakazan: string
+          id?: string
+          poslat_na?: string[]
+          termin_id: string
+        }
+        Update: {
+          created_at?: string
+          datum_zakazan?: string
+          id?: string
+          poslat_na?: string[]
+          termin_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "termin_zakazano_obavijest_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termin_zakazano_obavijest_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       termini: {
         Row: {
           created_at: string
@@ -756,6 +795,7 @@ export type Database = {
         Row: {
           created_at: string | null
           datum_izvrsenja: string | null
+          datum_prikaza: string | null
           datum_zadnjeg: string | null
           datum_zakazan: string | null
           id: string | null
@@ -855,6 +895,10 @@ export type Database = {
       ukloni_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }
         Returns: undefined
+      }
+      zabiljezi_zakazano_obavijest: {
+        Args: { p_base: string[]; p_datum_zakazan: string; p_termin_id: string }
+        Returns: string[]
       }
     }
     Enums: {

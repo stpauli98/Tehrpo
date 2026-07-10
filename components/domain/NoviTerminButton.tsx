@@ -24,6 +24,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { createTermin, type ActionResult } from "@/app/(dashboard)/termini/actions"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 type Opt = { id: string; naziv: string }
 const initial: ActionResult = { ok: true }
@@ -47,6 +48,7 @@ export function NoviTerminButton({
   const [lokacijaId, setLokacijaId] = useState("")
   const [state, action, pending] = useActionState(createTermin, initial)
   const submitted = useRef(false)
+  const mozeUrediti = useMozeUrediti()
 
   const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
 
@@ -82,6 +84,8 @@ export function NoviTerminButton({
       router.refresh()
     }
   }, [state, pending, router, queryClient])
+
+  if (!mozeUrediti) return null
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

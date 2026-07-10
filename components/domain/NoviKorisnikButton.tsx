@@ -59,7 +59,11 @@ export function NoviKorisnikButton() {
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.lozinka[0]}</p>
             )}
           </div>
-          <Select name="uloga" defaultValue="operater">
+          <Select
+            name="uloga"
+            defaultValue="operater"
+            items={{ operater: tu("operater"), pregled: tu("pregled"), admin: tu("admin") }}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>

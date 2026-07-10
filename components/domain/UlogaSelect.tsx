@@ -26,9 +26,14 @@ export function UlogaSelect({
   const tu = useTranslations("postavke.uloge")
   const router = useRouter()
   const [pending, start] = useTransition()
+  // Base UI Select.Value renders the raw stored value umjesto prevedenog labela dok se
+  // popup barem jednom ne otvori, OSIM ako Select.Root dobije `items` mapu — vidi
+  // VrijemeSlanjaForm.tsx za isti obrazac.
+  const ulogaItems = Object.fromEntries(ULOGE.map((v) => [v, tu(v)]))
 
   return (
     <Select
+      items={ulogaItems}
       defaultValue={uloga}
       disabled={pending || jeJa}
       onValueChange={(v) => {

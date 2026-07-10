@@ -7,6 +7,9 @@ import { kreirajKorisnika, type ActionResult } from "@/app/(dashboard)/postavke/
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 
 const initial: ActionResult = { ok: true }
 
@@ -56,11 +59,16 @@ export function NoviKorisnikButton() {
               <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.lozinka[0]}</p>
             )}
           </div>
-          <select name="uloga" defaultValue="operater" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-            <option value="operater">{tu("operater")}</option>
-            <option value="pregled">{tu("pregled")}</option>
-            <option value="admin">{tu("admin")}</option>
-          </select>
+          <Select name="uloga" defaultValue="operater">
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="operater">{tu("operater")}</SelectItem>
+              <SelectItem value="pregled">{tu("pregled")}</SelectItem>
+              <SelectItem value="admin">{tu("admin")}</SelectItem>
+            </SelectContent>
+          </Select>
           {state.ok === false && state.message && (
             <p className="text-sm text-status-kasni" role="alert">{state.message}</p>
           )}

@@ -59,3 +59,55 @@ test.describe("Validacija datuma izvršenja", () => {
     }
   })
 })
+
+test.describe("Zakazani datum — pozicioniranje i upozorenje", () => {
+  test("kalendar prikazuje termin na zakazanom danu, ne na roku", async ({ page }) => {
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    const vrsta = await firstVrstaSaIntervalom()
+    // rok 13., zakazan 20. istog (budućeg) mjeseca — oba u istom prikazu mjeseca
+    const now = new Date()
+    const g = now.getUTCFullYear()
+    const m = String(now.getUTCMonth() + 1).padStart(2, "0")
+    const rok = `${g}-${m}-13`
+    const zakazan = `${g}-${m}-20`
+    try {
+      const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta.id, rok })
+      await zakaziTermin(tid, zakazan)
+
+      await page.goto(`/plan-aktivnosti?view=kalendar&godina=${g}&mjesec=${Number(m)}`)
+      // Klik na dan 20 (zakazan) → sidebar sadrži termin; dan 13 (rok) ga NE sadrži.
+      await page.goto(`/plan-aktivnosti?view=kalendar&godina=${g}&mjesec=${Number(m)}&dan=${zakazan}`)
+      const sidebar = page.getByTestId("plan-sidebar")
+      await expect(sidebar).toContainText(naziv)
+
+      await page.goto(`/plan-aktivnosti?view=kalendar&godina=${g}&mjesec=${Number(m)}&dan=${rok}`)
+      await expect(page.getByTestId("plan-sidebar")).not.toContainText(naziv)
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+
+  test("uređivanje datuma zakazanog poslije roka prikazuje upozorenje", async ({ page }) => {
+    const naziv = "E2E-TMP " + Date.now()
+    const kid = await insertKlijent(naziv)
+    const vrsta = await firstVrstaSaIntervalom()
+    const juce = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+    const sutra = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
+    try {
+      const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta.id, rok: juce })
+
+      await page.goto(`/plan-aktivnosti?view=lista&klijent_id=${kid}&mjesec=svi&status=svi&selected=${tid}`)
+      await expect(page.getByTestId("termin-sheet")).toBeVisible()
+
+      await page.getByTestId("edit-datum-zakazan").fill(sutra)
+      const up = page.getByTestId("zakazano-poslije-roka")
+      await expect(up).toBeVisible()
+      await expect(up).toContainText("poslije roka")
+    } finally {
+      await deleteTerminiByKlijent(kid)
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+})

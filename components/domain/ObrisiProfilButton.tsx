@@ -10,6 +10,7 @@ import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { deleteProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -17,6 +18,7 @@ export function ObrisiProfilButton({ id }: { id: string }) {
   const t = useTranslations("klijenti.obrisiProfil")
   const tc = useTranslations("common")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [state, action, pending] = useActionState(deleteProfilProvjere, initial)
   const submitted = useRef(false)
   useEffect(() => {
@@ -25,6 +27,8 @@ export function ObrisiProfilButton({ id }: { id: string }) {
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   return (
     <Dialog>

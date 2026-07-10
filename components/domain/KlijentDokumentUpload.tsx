@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { uploadKlijentDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
 import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -23,6 +24,7 @@ function formatBytes(n: number): string {
 export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   const t = useTranslations("klijenti.dokumentUpload")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [state, action, pending] = useActionState(uploadKlijentDokumentAction, initial)
   const fileRef = useRef<HTMLInputElement>(null)
   const prev = useRef(state)
@@ -70,6 +72,8 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
     setFile(null)
     setGreska(null)
   }
+
+  if (!mozeUrediti) return null
 
   return (
     <form

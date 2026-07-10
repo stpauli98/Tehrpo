@@ -141,6 +141,17 @@ export async function insertKlijent(naziv: string): Promise<string> {
   return data.id as string
 }
 
+/** Ubaci kontakt osobu za klijenta; vrati id. */
+export async function insertKontakt(klijentId: string, ime: string, email?: string): Promise<string> {
+  const { data, error } = await db
+    .from("kontakt_osobe")
+    .insert({ klijent_id: klijentId, ime, email: email ?? null })
+    .select("id")
+    .single()
+  if (error) throw new Error(`insertKontakt(${klijentId}, ${ime}): ${error.message}`)
+  return data.id as string
+}
+
 /** Ubaci lokaciju za klijenta; vrati id. (Profil provjere zahtijevaju lokaciju.) */
 export async function insertLokacija(klijentId: string, naziv = "E2E Lokacija"): Promise<string> {
   const { data, error } = await db.from("lokacije").insert({ klijent_id: klijentId, naziv }).select("id").single()
@@ -189,6 +200,26 @@ export async function ensureOperater(email: string, lozinka: string, ime: string
   if (error) throw new Error(`ensureOperater upsert: ${error.message}`)
   return id
 }
+
+/** Nađi/kreiraj korisnika date uloge sa fiksnom lozinkom; vrati id. */
+export async function ensureKorisnik(
+  email: string,
+  lozinka: string,
+  ime: string,
+  uloga: "admin" | "operater" | "pregled",
+): Promise<string> {
+  const { data: list } = await db.auth.admin.listUsers()
+  let id = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())?.id
+  if (!id) {
+    const { data, error } = await db.auth.admin.createUser({ email, password: lozinka, email_confirm: true })
+    if (error) throw error
+    id = data.user.id
+  }
+  const { error } = await db.from("korisnici").upsert({ id, ime, email, uloga, aktivan: true }, { onConflict: "id" })
+  if (error) throw new Error(`ensureKorisnik upsert: ${error.message}`)
+  return id
+}
+
 /** Obriši auth korisnika + korisnici red po emailu (čišćenje throwaway naloga). */
 export async function deleteKorisnikByEmail(email: string): Promise<void> {
   const { data: list } = await db.auth.admin.listUsers()

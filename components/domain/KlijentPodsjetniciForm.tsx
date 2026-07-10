@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { updateKlijentSaljiPodsjetnik } from "@/app/(dashboard)/klijenti/[id]/actions"
 import { PrimaociCombobox, type KontaktZaPodsjetnik } from "./PrimaociCombobox"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 export function KlijentPodsjetniciForm({
   klijentId, salji, kontakti, adHocEmails,
@@ -17,6 +18,7 @@ export function KlijentPodsjetniciForm({
 }) {
   const t = useTranslations("klijenti.podsjetnici")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [pending, startTransition] = useTransition()
   const [saljiState, setSalji] = useState(salji)
 
@@ -35,10 +37,10 @@ export function KlijentPodsjetniciForm({
         <input
           type="checkbox"
           checked={saljiState}
-          disabled={pending}
+          disabled={pending || !mozeUrediti}
           data-testid="klijent-salji-toggle"
           className="mt-0.5 h-4 w-4 cursor-pointer accent-brand disabled:opacity-50"
-          onChange={(e) => toggleSalji(e.target.checked)}
+          onChange={mozeUrediti ? (e) => toggleSalji(e.target.checked) : undefined}
         />
         <span>
           <span className="block text-sm font-medium">{t("saljiNaslov")}</span>

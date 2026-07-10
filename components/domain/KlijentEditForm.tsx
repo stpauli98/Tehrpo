@@ -20,6 +20,7 @@ import { updateKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/act
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -42,6 +43,7 @@ export function KlijentEditForm({
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(updateKlijent, initial)
   const submitted = useRef(false)
+  const mozeUrediti = useMozeUrediti()
 
   // items mapa (value→label) za base-ui SelectValue — prikaz IMENA radnika kad je
   // select zatvoren (bez nje base-ui prikaže sirovu vrijednost = UUID).
@@ -58,6 +60,8 @@ export function KlijentEditForm({
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

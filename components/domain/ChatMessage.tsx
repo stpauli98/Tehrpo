@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { snimiZapisnik, type ActionResult } from "@/app/(dashboard)/asistent/actions"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 export type ProposalData = {
   terminId: string; klijent: string; vrsta: string; datum: string; nalaz: string; zakljucak: string
@@ -17,6 +18,7 @@ const initial: ActionResult = { ok: true }
 function ZapisnikProposal({ p }: { p: ProposalData }) {
   const t = useTranslations("asistent.chatMessage.proposal")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [state, action, pending] = useActionState(snimiZapisnik, initial)
   const prev = useRef(state)
   useEffect(() => {
@@ -32,20 +34,22 @@ function ZapisnikProposal({ p }: { p: ProposalData }) {
       <p className="text-xs uppercase tracking-wide text-slate-400">{t("naslov", { klijent: p.klijent, vrsta: p.vrsta })}</p>
       <p className="mt-1 text-sm"><span className="font-medium">{t("nalaz")}</span> {p.nalaz}</p>
       <p className="mt-1 text-sm"><span className="font-medium">{t("zakljucak")}</span> {p.zakljucak}</p>
-      <form action={action} className="mt-2">
-        <input type="hidden" name="termin_id" value={p.terminId} />
-        <input type="hidden" name="nalaz" value={p.nalaz} />
-        <input type="hidden" name="zakljucak" value={p.zakljucak} />
-        <Button type="submit" disabled={pending} data-testid="snimi-zapisnik">
-          {pending ? t("snimam") : t("snimi")}
-        </Button>
-        {state.ok === false && state.message && (
-          <span className="ml-2 text-xs text-red-600" role="alert">{state.message}</span>
-        )}
-        {snimljeno && (
-          <span className="ml-2 text-xs text-green-600" data-testid="zapisnik-snimljen">{t("snimljeno")}</span>
-        )}
-      </form>
+      {mozeUrediti && (
+        <form action={action} className="mt-2">
+          <input type="hidden" name="termin_id" value={p.terminId} />
+          <input type="hidden" name="nalaz" value={p.nalaz} />
+          <input type="hidden" name="zakljucak" value={p.zakljucak} />
+          <Button type="submit" disabled={pending} data-testid="snimi-zapisnik">
+            {pending ? t("snimam") : t("snimi")}
+          </Button>
+          {state.ok === false && state.message && (
+            <span className="ml-2 text-xs text-red-600" role="alert">{state.message}</span>
+          )}
+          {snimljeno && (
+            <span className="ml-2 text-xs text-green-600" data-testid="zapisnik-snimljen">{t("snimljeno")}</span>
+          )}
+        </form>
+      )}
     </div>
   )
 }

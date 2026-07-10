@@ -332,7 +332,10 @@
       "aktivan": "active",
       "neaktivan": "inactive",
       "obrisiAriaLabel": "Delete contract",
-      "obilazMjesecno": " · {count} visits/mo."
+      "obilazMjesecno": " · {count} visits/mo.",
+      "vazenjeMjeseci": " · duration {count} mo.",
+      "autoObnavljanjeDa": " · auto-renewal",
+      "autoObnavljanjeNe": " · no auto-renewal"
     },
     "tipOdnosa": {
       "ugovor": "under contract",

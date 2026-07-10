@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createKontakt, updateKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
 const initial: ActionResult = { ok: true }
@@ -20,6 +21,7 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
   const t = useTranslations("klijenti.kontaktSheet")
   const tc = useTranslations("common")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const isEdit = !!kontakt
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(isEdit ? updateKontakt : createKontakt, initial)
@@ -35,6 +37,8 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
   useEffect(() => {
     if (submitted.current && !pending && state.ok) { submitted.current = false; setOpen(false); router.refresh() }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   const trigger = isEdit
     ? <Button variant="outline" size="icon-sm" data-testid={`uredi-kontakt-${kontakt.id}`} aria-label={t("uredi")} className="group/tt relative"><Pencil className="h-4 w-4" aria-hidden /><Tooltip>{t("uredi")}</Tooltip></Button>

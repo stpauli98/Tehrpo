@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createUgovor, updateUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
 const initial: ActionResult = { ok: true }
@@ -20,6 +21,7 @@ export function UgovorSheet({ klijentId, ugovor }: { klijentId: string; ugovor?:
   const t = useTranslations("klijenti.ugovorSheet")
   const tc = useTranslations("common")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const isEdit = !!ugovor
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(isEdit ? updateUgovor : createUgovor, initial)
@@ -32,6 +34,8 @@ export function UgovorSheet({ klijentId, ugovor }: { klijentId: string; ugovor?:
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   const trigger = isEdit
     ? <Button variant="outline" size="icon-sm" data-testid={`uredi-ugovor-${ugovor.id}`} aria-label={t("uredi")} className="group/tt relative"><Pencil className="h-4 w-4" aria-hidden /><Tooltip>{t("uredi")}</Tooltip></Button>

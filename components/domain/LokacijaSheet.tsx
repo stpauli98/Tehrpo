@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createLokacija, updateLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 
@@ -33,6 +34,7 @@ export function LokacijaSheet({
   const t = useTranslations("klijenti.lokacijaSheet")
   const tc = useTranslations("common")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const isEdit = !!lokacija
 
   const FIELDS: readonly [string, string, boolean][] = [
@@ -58,6 +60,8 @@ export function LokacijaSheet({
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   const trigger = isEdit ? (
     <Button variant="outline" size="icon-sm" data-testid={`uredi-lokaciju-${lokacija.id}`} aria-label={t("uredi")} className="group/tt relative">

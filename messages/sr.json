@@ -332,7 +332,10 @@
       "aktivan": "aktivan",
       "neaktivan": "neaktivan",
       "obrisiAriaLabel": "Obriši ugovor",
-      "obilazMjesecno": " · {count} obilaz./mj."
+      "obilazMjesecno": " · {count} obilaz./mj.",
+      "vazenjeMjeseci": " · važenje {count} mj.",
+      "autoObnavljanjeDa": " · automatsko obnavljanje",
+      "autoObnavljanjeNe": " · bez automatskog obnavljanja"
     },
     "tipOdnosa": {
       "ugovor": "po ugovoru",

@@ -17,6 +17,7 @@ import {
   mozeAdHoc,
   adHocZaPrikaz,
 } from "@/lib/podsjetnici/primaociPicker"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 export type KontaktZaPodsjetnik = {
   id: string
@@ -37,6 +38,7 @@ export function PrimaociCombobox({
 }) {
   const t = useTranslations("klijenti.podsjetnici")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [pending, startTransition] = useTransition()
   const [q, setQ] = useState("")
   const [open, setOpen] = useState(false)
@@ -131,29 +133,34 @@ export function PrimaociCombobox({
         {izabraniKontakti.map((k) => (
           <Badge key={k.id} variant="secondary" className="gap-1" data-testid={`primalac-kontakt-${k.id}`}>
             <span className="truncate">{k.ime} · {k.email}</span>
-            <button
-              type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
-              data-testid={`ukloni-kontakt-${k.id}`}
-              className="ml-0.5 rounded hover:bg-slate-300/60 disabled:opacity-50"
-              onClick={() => ukloniKontakt(k.id)}
-            ><X className="h-3 w-3" /></button>
+            {mozeUrediti && (
+              <button
+                type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
+                data-testid={`ukloni-kontakt-${k.id}`}
+                className="ml-0.5 rounded hover:bg-slate-300/60 disabled:opacity-50"
+                onClick={() => ukloniKontakt(k.id)}
+              ><X className="h-3 w-3" /></button>
+            )}
           </Badge>
         ))}
         {adHocPrikaz.map((email) => (
           <Badge key={email} variant="outline" className="gap-1" data-testid="primalac-adhoc">
             <span className="truncate">{email}</span>
             <span className="text-xs text-slate-400">⟨{t("tagJednokratno")}⟩</span>
-            <button
-              type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
-              data-testid={`ukloni-adhoc-${email}`}
-              className="ml-0.5 rounded hover:bg-slate-200 disabled:opacity-50"
-              onClick={() => ukloniEmail(email)}
-            ><X className="h-3 w-3" /></button>
+            {mozeUrediti && (
+              <button
+                type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
+                data-testid={`ukloni-adhoc-${email}`}
+                className="ml-0.5 rounded hover:bg-slate-200 disabled:opacity-50"
+                onClick={() => ukloniEmail(email)}
+              ><X className="h-3 w-3" /></button>
+            )}
           </Badge>
         ))}
       </div>
 
-      {/* Combobox */}
+      {/* Combobox — dodavanje primalaca; skriveno za pregled (read-only) */}
+      {mozeUrediti && (
       <div
         ref={rootRef} className="relative"
         onBlur={(e) => { if (!rootRef.current?.contains(e.relatedTarget as Node)) setOpen(false) }}
@@ -203,6 +210,7 @@ export function PrimaociCombobox({
           </ul>
         )}
       </div>
+      )}
 
       {kontakti.length === 0 && (
         <p className="mt-2 text-sm text-slate-500">

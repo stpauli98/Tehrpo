@@ -10,6 +10,7 @@ import { UgovorSheet } from "@/components/domain/UgovorSheet"
 import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
 import { deleteUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { formatDatum } from "@/lib/date"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
 
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
@@ -18,6 +19,7 @@ const initial: ActionResult = { ok: true }
 export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ugovori: UgovorRow[]; info?: string }) {
   const t = useTranslations("klijenti.ugovori")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [delState, delAction, delPending] = useActionState(deleteUgovor, initial)
   const prev = useRef(delState)
   useEffect(() => {
@@ -53,19 +55,24 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
                 </span>
                 <span className="flex items-center gap-2">
                   <UgovorSheet klijentId={klijentId} ugovor={u} />
-                  <form action={delAction}>
-                    <input type="hidden" name="id" value={u.id} />
-                    <input type="hidden" name="klijent_id" value={klijentId} />
-                    <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-ugovor-${u.id}`}>
-                      <Trash2 className="w-4 h-4 text-red-500" aria-hidden />
-                    </Button>
-                  </form>
+                  {mozeUrediti && (
+                    <form action={delAction}>
+                      <input type="hidden" name="id" value={u.id} />
+                      <input type="hidden" name="klijent_id" value={klijentId} />
+                      <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-ugovor-${u.id}`}>
+                        <Trash2 className="w-4 h-4 text-red-500" aria-hidden />
+                      </Button>
+                    </form>
+                  )}
                 </span>
               </div>
               <div className="mt-1 text-slate-500">
                 {u.datum_potpisivanja ? formatDatum(u.datum_potpisivanja) : "—"} → {u.datum_isteka ? formatDatum(u.datum_isteka) : "—"}
                 {u.broj_obilazaka_mjesecno != null && t("obilazMjesecno", { count: u.broj_obilazaka_mjesecno })}
+                {u.vazenje_mjeseci != null && t("vazenjeMjeseci", { count: u.vazenje_mjeseci })}
+                {u.automatsko_obnavljanje ? t("autoObnavljanjeDa") : t("autoObnavljanjeNe")}
               </div>
+              {u.napomena && <p className="mt-1 text-slate-500">{u.napomena}</p>}
             </li>
           ))}
         />

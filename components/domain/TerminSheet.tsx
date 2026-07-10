@@ -25,6 +25,7 @@ import {
 import type { TerminRow } from "@/components/domain/TerminiTable"
 import { DokumentiSekcija } from "@/components/domain/DokumentiSekcija"
 import type { Database } from "@/db/types"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -48,6 +49,9 @@ export function TerminSheet({
   const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)
   const [izvrDatum, setIzvrDatum] = useState(todayIso())
   const [otkazArmed, setOtkazArmed] = useState(false)
+  // Mixed component (read detalji + write akcije) — NE sakrivati čitanje, gejtovati samo
+  // write-kontrole (v. docs/superpowers/specs/2026-07-10-pregled-readonly-design.md).
+  const mozeUrediti = useMozeUrediti()
 
   // Toast potvrda + TanStack Query invalidacija kad akcija prijeđe iz pending u uspjeh
   const prevUpdPending = useRef(updatePending)
@@ -135,6 +139,7 @@ export function TerminSheet({
                   type="date"
                   name="datum_zakazan"
                   defaultValue={termin.datum_zakazan ?? ""}
+                  disabled={!mozeUrediti}
                   data-testid="edit-datum-zakazan"
                 />
               </label>
@@ -145,6 +150,7 @@ export function TerminSheet({
                     type="date"
                     name="datum_izvrsenja"
                     defaultValue={termin.datum_izvrsenja ?? ""}
+                    disabled={!mozeUrediti}
                     data-testid="edit-datum-izvrsenja"
                   />
                 </label>
@@ -155,6 +161,7 @@ export function TerminSheet({
                   name="zaduzeni"
                   defaultValue={termin.zaduzeni ?? ""}
                   placeholder={t("placeholderZaduzeni")}
+                  disabled={!mozeUrediti}
                   data-testid="edit-zaduzeni"
                 />
               </label>
@@ -163,6 +170,7 @@ export function TerminSheet({
                 <Input
                   name="napomena"
                   defaultValue={termin.napomena ?? ""}
+                  disabled={!mozeUrediti}
                   data-testid="edit-napomena"
                 />
               </label>
@@ -172,13 +180,16 @@ export function TerminSheet({
                 {updateState.message}
               </p>
             )}
-            <Button type="submit" disabled={updatePending} data-testid="edit-save">
-              {updatePending ? t("spremam") : t("spremiIzmjene")}
-            </Button>
+            {mozeUrediti && (
+              <Button type="submit" disabled={updatePending} data-testid="edit-save">
+                {updatePending ? t("spremam") : t("spremiIzmjene")}
+              </Button>
+            )}
           </form>
 
-          {/* Akcije — Označi izvršeno + Otkaži, jedno pored drugog */}
-          {termin.status !== "izvrseno" && (
+          {/* Akcije — Označi izvršeno + Otkaži, jedno pored drugog. Čisto write (nema
+              nezavisnog read sadržaja), pa se cijela sekcija gejtuje za pregled. */}
+          {mozeUrediti && termin.status !== "izvrseno" && (
             <section className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("akcijeNaslov")}</p>
               <div className="grid grid-cols-2 gap-3 items-start">

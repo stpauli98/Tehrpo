@@ -332,7 +332,10 @@
       "aktivan": "aktiv",
       "neaktivan": "inaktiv",
       "obrisiAriaLabel": "Vertrag löschen",
-      "obilazMjesecno": " · {count} Begehungen/Mon."
+      "obilazMjesecno": " · {count} Begehungen/Mon.",
+      "vazenjeMjeseci": " · Laufzeit {count} Mon.",
+      "autoObnavljanjeDa": " · automatische Verlängerung",
+      "autoObnavljanjeNe": " · keine automatische Verlängerung"
     },
     "tipOdnosa": {
       "ugovor": "per Vertrag",

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { deleteLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -23,6 +24,7 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(deleteLokacija, initial)
   const submitted = useRef(false)
+  const mozeUrediti = useMozeUrediti()
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
@@ -30,6 +32,8 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   return (
     <Dialog>

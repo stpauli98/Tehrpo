@@ -16,6 +16,7 @@ import {
 import { createProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { APP_NAME } from "@/lib/brand"
 import { href } from "@/i18n/routes"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -31,6 +32,7 @@ export function DodajProvjeruButton({
   const router = useRouter()
   const t = useTranslations("termini.dodajProvjeru")
   const tc = useTranslations("common")
+  const mozeUrediti = useMozeUrediti()
   const [open, setOpen] = useState(false)
   const [vrstaId, setVrstaId] = useState("")
   const [lokId, setLokId] = useState("")
@@ -55,6 +57,8 @@ export function DodajProvjeruButton({
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

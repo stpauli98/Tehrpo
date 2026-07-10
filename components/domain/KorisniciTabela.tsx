@@ -123,7 +123,7 @@ export function KorisniciTabela({
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
-                    <KorisnikAkcije korisnikId={k.id} aktivan={k.aktivan} jeJa={jeJa} />
+                    <KorisnikAkcije korisnikId={k.id} email={k.email} aktivan={k.aktivan} jeJa={jeJa} />
                   </td>
                 </tr>
               )

@@ -786,6 +786,9 @@
     "korisnikAkcije": {
       "aria": "Actions",
       "testEmail": "Send test email",
+      "posaljiReset": "Send password reset",
+      "resetPoslat": "Reset link sent to {email}",
+      "resetGreska": "Failed to send reset.",
       "deaktivirajKorisnika": "Deactivate user",
       "aktivirajKorisnika": "Activate user",
       "greskaSlanja": "Error sending.",

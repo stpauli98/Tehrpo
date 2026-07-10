@@ -786,6 +786,9 @@
     "korisnikAkcije": {
       "aria": "Akcije",
       "testEmail": "Pošalji test email",
+      "posaljiReset": "Pošalji reset lozinke",
+      "resetPoslat": "Reset link poslat na {email}",
+      "resetGreska": "Slanje reseta nije uspjelo.",
       "deaktivirajKorisnika": "Deaktiviraj korisnika",
       "aktivirajKorisnika": "Aktiviraj korisnika",
       "greskaSlanja": "Greška pri slanju.",

@@ -4,7 +4,7 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { MoreHorizontal, Send, UserX, UserCheck } from "lucide-react"
+import { MoreHorizontal, Send, UserX, UserCheck, KeyRound } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,14 +12,16 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { posaljiTestniEmail, postaviAktivan } from "@/app/(dashboard)/postavke/actions"
+import { posaljiTestniEmail, postaviAktivan, posaljiResetKorisniku } from "@/app/(dashboard)/postavke/actions"
 
 export function KorisnikAkcije({
   korisnikId,
+  email,
   aktivan,
   jeJa,
 }: {
   korisnikId: string
+  email: string
   aktivan: boolean
   jeJa: boolean
 }) {
@@ -48,6 +50,14 @@ export function KorisnikAkcije({
     })
   }
 
+  function posaljiReset() {
+    start(async () => {
+      const r = await posaljiResetKorisniku(email)
+      if (r.ok) toast.success(t("resetPoslat", { email }))
+      else toast.error(r.message ?? t("resetGreska"))
+    })
+  }
+
   function toggleAktivan() {
     start(async () => {
       const r = await postaviAktivan(korisnikId, !aktivan)
@@ -72,6 +82,9 @@ export function KorisnikAkcije({
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem onClick={testEmail} data-testid={`test-email-${korisnikId}`}>
           <Send /> {t("testEmail")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={posaljiReset} data-testid={`posalji-reset-${korisnikId}`}>
+          <KeyRound /> {t("posaljiReset")}
         </DropdownMenuItem>
         <DropdownMenuItem
           variant={aktivan ? "destructive" : "default"}

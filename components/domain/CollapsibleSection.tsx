@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import { ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export function CollapsibleSection({
   title,
@@ -26,9 +26,10 @@ export function CollapsibleSection({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="flex flex-1 items-center gap-2 text-left"
+          className={cn("flex flex-1 items-center gap-2 rounded-md text-left", FOCUS_RING)}
         >
           <ChevronDown
+            aria-hidden
             className={cn(
               "size-4 shrink-0 text-slate-400 transition-transform",
               open ? "" : "-rotate-90",

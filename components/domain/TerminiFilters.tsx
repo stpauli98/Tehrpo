@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 import { currentYear, monthName } from "@/lib/date"
 import { href } from "@/i18n/routes"
@@ -127,9 +127,11 @@ export function TerminiFilters({
             type="button"
             data-testid={`status-pill-${o.value}`}
             data-active={status === o.value}
+            aria-pressed={status === o.value}
             onClick={() => setStatus(o.value)}
             className={cn(
               "px-3 py-1 rounded-full text-sm border transition",
+              FOCUS_RING,
               status === o.value
                 ? "bg-slate-900 text-white border-slate-900"
                 : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"

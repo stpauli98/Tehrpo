@@ -4,7 +4,7 @@ import { AlertTriangle } from "lucide-react"
 import { formatDatum } from "@/lib/date"
 import { rokRelativnaOznaka } from "@/lib/hitno"
 import type { HitnoKasniItem } from "@/lib/termini"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 
 const TONE: Record<"danger" | "warning", string> = {
@@ -41,7 +41,10 @@ export async function HitnoKasniList({
                 <Link
                   href={href(`/plan-aktivnosti?view=lista&selected=${item.id}&mjesec=svi`)}
                   data-testid="hitno-kasni-row"
-                  className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
+                  className={cn(
+                    "flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded",
+                    FOCUS_RING,
+                  )}
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{item.klijent_naziv}</span>
@@ -66,7 +69,7 @@ export async function HitnoKasniList({
         <Link
           href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")}
           data-testid="hitno-kasni-footer"
-          className="mt-3 inline-block text-xs text-brand hover:underline"
+          className={cn("mt-3 inline-block rounded-sm text-xs text-brand hover:underline", FOCUS_RING)}
         >
           {t("footer", { count: ukupnoKasni })}
         </Link>

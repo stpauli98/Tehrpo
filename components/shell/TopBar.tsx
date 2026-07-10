@@ -4,6 +4,7 @@ import { odjaviSe } from "@/app/(dashboard)/odjava/actions"
 import type { TrenutniKorisnik } from "@/lib/auth/current-user"
 import { APP_NAME, APP_TAGLINE, APP_INITIAL } from "@/lib/brand"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export async function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }) {
   const t = await getTranslations("shell.topBar")
@@ -24,7 +25,10 @@ export async function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }
           <button
             type="submit"
             aria-label={t("odjava")}
-            className="group/tt relative inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className={cn(
+              "group/tt relative inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900",
+              FOCUS_RING,
+            )}
           >
             <LogOut className="h-[18px] w-[18px]" aria-hidden />
             <Tooltip>{t("odjava")}</Tooltip>

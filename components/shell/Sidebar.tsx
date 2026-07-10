@@ -14,7 +14,7 @@ import {
   Settings,
   ChevronsLeft,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 
 const NAV_ITEMS = [
@@ -33,6 +33,7 @@ const MIN_WIDTH = 64          // skupljeno — samo ikonice
 const MAX_WIDTH = 264
 const DEFAULT_WIDTH = 224
 const COLLAPSE_THRESHOLD = 140 // ispod ove širine se ponaša kao skupljeno i snapuje na MIN
+const RESIZE_STEP = 16         // korak za resize sa tastature (strelice)
 const STORAGE_KEY = "tehpro:sidebar-width"
 
 export function Sidebar() {
@@ -104,6 +105,22 @@ export function Sidebar() {
     setWidth((w) => (w < COLLAPSE_THRESHOLD ? lastExpandedRef.current || DEFAULT_WIDTH : MIN_WIDTH))
   }, [])
 
+  // Resize sa tastature dok je ručica fokusirana: strelice mijenjaju širinu, Enter/Space skuplja/proširuje.
+  const onHandleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault()
+        const delta = e.key === "ArrowLeft" ? -RESIZE_STEP : RESIZE_STEP
+        setAnimating(false) // koraci bez tranzicije → odzivno na držanje tipke
+        setWidth((w) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w + delta)))
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault()
+        toggle()
+      }
+    },
+    [toggle],
+  )
+
   const renderItem = ({ href, labelKey, icon: Icon }: { href: string; labelKey: string; icon: typeof Settings }) => {
     const active = pathname.startsWith(href)
     const label = t(labelKey)
@@ -116,6 +133,7 @@ export function Sidebar() {
         aria-current={active ? "page" : undefined}
         className={cn(
           "group/item relative flex h-10 items-center rounded-lg text-sm transition-colors",
+          FOCUS_RING,
           collapsed ? "justify-center px-0" : "gap-3 px-3",
           active
             ? "bg-brand text-white"
@@ -159,6 +177,7 @@ export function Sidebar() {
             aria-label={collapsed ? tSidebar("prosiriNavigaciju") : tSidebar("skupiNavigaciju")}
             className={cn(
               "group/item relative flex h-9 items-center rounded-lg text-xs text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600",
+              FOCUS_RING,
               collapsed ? "justify-center px-0" : "gap-3 px-3",
             )}
           >
@@ -175,12 +194,18 @@ export function Sidebar() {
       <div
         onMouseDown={startResize}
         onDoubleClick={toggle}
+        onKeyDown={onHandleKeyDown}
         role="separator"
         aria-orientation="vertical"
+        aria-label={tSidebar("resizeHint")}
+        aria-valuenow={width}
+        aria-valuemin={MIN_WIDTH}
+        aria-valuemax={MAX_WIDTH}
+        tabIndex={0}
         title={tSidebar("resizeHint")}
-        className="group/handle absolute -right-1.5 top-0 z-10 flex h-full w-3 cursor-ew-resize items-center justify-center"
+        className="group/handle absolute -right-1.5 top-0 z-10 flex h-full w-3 cursor-ew-resize items-center justify-center outline-none"
       >
-        <span className="h-12 w-1 rounded-full bg-slate-200 transition-colors group-hover/handle:bg-brand" />
+        <span className="h-12 w-1 rounded-full bg-slate-200 transition-all group-hover/handle:bg-brand group-focus-visible/handle:h-16 group-focus-visible/handle:w-1.5 group-focus-visible/handle:bg-brand" />
       </div>
     </nav>
   )

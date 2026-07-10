@@ -136,8 +136,11 @@ begin
 end;
 $$;
 
--- 4) DEFINER + PUBLIC execute = svaki ulogovani (ili anon sa važećim termin UUID-om)
---    mogao bi enumerisati interne email-ove, preduhitriti claim ili ubaciti audit šum.
---    Server akcija poziva RPC kao 'authenticated' — samo tu ulogu i puštamo.
+-- 4) DEFINER + execute = svaki ulogovani (ili anon sa važećim termin UUID-om) mogao bi
+--    enumerisati interne email-ove, preduhitriti claim ili ubaciti audit šum. Scope-guard
+--    (ima_pristup_klijentu) je primarna zaštita; ovo je defense-in-depth na nivou grant-a.
+--    Supabase dodjeljuje execute DIREKTNO anon roli (ne preko PUBLIC), pa se mora revoke-ati
+--    i 'anon' eksplicitno — samo 'from public' ne skida anon. Server akcija poziva kao 'authenticated'.
 revoke execute on function zabiljezi_zakazano_obavijest(uuid, date, text[]) from public;
+revoke execute on function zabiljezi_zakazano_obavijest(uuid, date, text[]) from anon;
 grant execute on function zabiljezi_zakazano_obavijest(uuid, date, text[]) to authenticated;

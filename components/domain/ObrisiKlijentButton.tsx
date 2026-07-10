@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { deleteKlijent } from "@/app/(dashboard)/klijenti/actions"
 import { useState } from "react"
 import { href } from "@/i18n/routes"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 export function ObrisiKlijentButton({
   klijentId,
@@ -29,6 +30,8 @@ export function ObrisiKlijentButton({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const mozeUrediti = useMozeUrediti()
+  if (!mozeUrediti) return null
 
   // Klijent sa terminima se NE može obrisati (FK RESTRICT) — disable + objašnjenje
   if (brojTermina > 0) {

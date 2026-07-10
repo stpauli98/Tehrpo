@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -26,6 +27,7 @@ export function NoviKlijentButton() {
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(createKlijent, initial)
   const submitted = useRef(false)
+  const mozeUrediti = useMozeUrediti()
 
   // Zatvori dialog TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).
@@ -36,6 +38,8 @@ export function NoviKlijentButton() {
       router.refresh()
     }
   }, [state, pending, router])
+
+  if (!mozeUrediti) return null
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

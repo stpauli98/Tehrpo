@@ -10,6 +10,12 @@ import {
 
 const initial: ActionResult = { ok: true }
 const SATI = Array.from({ length: 24 }, (_, i) => i)
+// Base UI Select.Value renders the raw stored value (npr. "9") umjesto formatiranog labela
+// dok se popup barem jednom ne otvori, OSIM ako Select.Root dobije `items` mapu — tada
+// zna prikazati "09:00" i prije prve interakcije (npr. odmah nakon reload-a).
+const SAT_ITEMS: Record<string, string> = Object.fromEntries(
+  SATI.map((s) => [String(s), `${String(s).padStart(2, "0")}:00`])
+)
 
 export function VrijemeSlanjaForm({ vrijemeSat }: { vrijemeSat: number }) {
   const t = useTranslations("postavke.vrijemeSlanja")
@@ -33,6 +39,7 @@ export function VrijemeSlanjaForm({ vrijemeSat }: { vrijemeSat: number }) {
         <Select
           id="vrijeme_slanja_sat"
           name="vrijeme_slanja_sat"
+          items={SAT_ITEMS}
           defaultValue={String(vrijemeSat)}
           disabled={pending}
           // Base UI's Select.Root calls onValueChange BEFORE it commits the new value to its

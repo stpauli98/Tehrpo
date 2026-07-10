@@ -25,6 +25,18 @@ export async function posaljiZakazanoNakonRoka(
 ): Promise<ZakazanoObavijestResult> {
   const send = deps.send ?? sendEmail
   try {
+    // Prvo pročitaj podatke za email (prije claim-a: ako čitanje padne, ne palimo
+    // idempotencijski slot u termin_zakazano_obavijest).
+    const { data: row, error: rowErr } = await supabase
+      .from("termini_view")
+      .select("klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca")
+      .eq("id", args.terminId)
+      .maybeSingle()
+    if (rowErr || !row?.klijent_naziv || !row.vrsta_naziv || !row.rok_dospijeca) {
+      return { poslato: false, razlog: "greska", message: rowErr?.message ?? "nepotpun termin" }
+    }
+
+    // Atomski claim + interni primaoci (SECURITY DEFINER RPC, bypass caller RLS).
     const base = parseEmailList(env.REMINDER_TO)
     const { data: primaociData, error: rpcErr } = await supabase.rpc("zabiljezi_zakazano_obavijest", {
       p_termin_id: args.terminId,
@@ -35,15 +47,7 @@ export async function posaljiZakazanoNakonRoka(
     const to = (primaociData ?? []) as string[]
     if (to.length === 0) return { poslato: false, razlog: "preskoceno" }
 
-    const { data: row, error: rowErr } = await supabase
-      .from("termini_view")
-      .select("klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca")
-      .eq("id", args.terminId)
-      .maybeSingle()
-    if (rowErr || !row?.klijent_naziv || !row.vrsta_naziv || !row.rok_dospijeca) {
-      return { poslato: false, razlog: "greska", message: rowErr?.message ?? "nepotpun termin" }
-    }
-
+    // Pošalji (best-effort; send() može baciti — catch normalizuje na greska).
     const res = await send({
       to,
       subject: zakazanoNakonRokaSubject({ vrsta: row.vrsta_naziv, klijent: row.klijent_naziv }),

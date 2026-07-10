@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl"
 import { X, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { updatePostavke, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 
 const initial: ActionResult = { ok: true }
@@ -99,7 +99,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                   onClick={() => toggle(n)}
                   aria-pressed={active}
                   data-testid={`reminder-preset-${n}`}
-                  className="cursor-pointer"
+                  className={cn("cursor-pointer rounded-sm", FOCUS_RING)}
                 >
                   {labelFor(n)}
                 </button>
@@ -113,6 +113,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                     active
                       ? "text-white/80 hover:bg-white/20 hover:text-white"
                       : "text-slate-400 hover:bg-slate-100 hover:text-slate-700",
+                    FOCUS_RING,
                   )}
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />

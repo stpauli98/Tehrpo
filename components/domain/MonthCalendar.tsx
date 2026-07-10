@@ -6,7 +6,7 @@ import type { CalDay } from "@/lib/calendar"
 import { STATUS_DOT_CLASS, type DerivedStatus } from "@/lib/termini"
 import { APP_LOCALE } from "@/lib/locale"
 import { href } from "@/i18n/routes"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export type DayTermin = {
   id: string
@@ -102,7 +102,7 @@ export function MonthCalendar({
                 data-date={c.date}
                 data-selected={isSelected}
                 aria-label={t("danAriaLabel", { broj: c.day })}
-                className="absolute inset-0"
+                className={cn("absolute inset-0", FOCUS_RING)}
               />
               {/* Sloj sadržaja: broj dana + termini (klikovi prolaze do pozadine osim na linkovima) */}
               <div className="relative pointer-events-none p-1.5 text-left align-top">
@@ -124,7 +124,10 @@ export function MonthCalendar({
                       href={terminHref(termin.id)}
                       data-testid="cell-termin"
                       data-status={termin.status}
-                      className="pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-slate-600 hover:bg-slate-100"
+                      className={cn(
+                        "pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-slate-600 hover:bg-slate-100",
+                        FOCUS_RING,
+                      )}
                     >
                       <span
                         className={cn(
@@ -142,7 +145,10 @@ export function MonthCalendar({
                     <Link
                       href={dayHref(c.date)}
                       data-testid="cell-vise"
-                      className="pointer-events-auto block text-[10px] text-brand font-medium hover:underline"
+                      className={cn(
+                        "pointer-events-auto block rounded-sm text-[10px] text-brand font-medium hover:underline",
+                        FOCUS_RING,
+                      )}
                     >
                       {t("jos", { count: termini.length - 3 })}
                     </Link>

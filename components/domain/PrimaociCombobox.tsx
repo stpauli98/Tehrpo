@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { X, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import {
   updateKontaktPodsjetnikPrimalac,
   dodajPodsjetnikEmail,
@@ -137,9 +138,9 @@ export function PrimaociCombobox({
               <button
                 type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
                 data-testid={`ukloni-kontakt-${k.id}`}
-                className="ml-0.5 rounded hover:bg-slate-300/60 disabled:opacity-50"
+                className={cn("ml-0.5 rounded hover:bg-slate-300/60 disabled:opacity-50", FOCUS_RING)}
                 onClick={() => ukloniKontakt(k.id)}
-              ><X className="h-3 w-3" /></button>
+              ><X className="h-3 w-3" aria-hidden /></button>
             )}
           </Badge>
         ))}
@@ -151,9 +152,9 @@ export function PrimaociCombobox({
               <button
                 type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
                 data-testid={`ukloni-adhoc-${email}`}
-                className="ml-0.5 rounded hover:bg-slate-200 disabled:opacity-50"
+                className={cn("ml-0.5 rounded hover:bg-slate-200 disabled:opacity-50", FOCUS_RING)}
                 onClick={() => ukloniEmail(email)}
-              ><X className="h-3 w-3" /></button>
+              ><X className="h-3 w-3" aria-hidden /></button>
             )}
           </Badge>
         ))}
@@ -168,7 +169,7 @@ export function PrimaociCombobox({
         <input
           type="text" role="combobox" aria-expanded={open} aria-controls="primaoci-lista"
           data-testid="primaoci-combobox-input"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand"
+          className={cn("w-full rounded-lg border border-slate-200 px-3 py-2 text-sm", FOCUS_RING)}
           placeholder={t("comboPlaceholder")}
           value={q} disabled={pending}
           onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0) }}
@@ -184,7 +185,11 @@ export function PrimaociCombobox({
               <li key={o.id} role="option" aria-selected={hi === i}>
                 <button
                   type="button" data-testid={`opcija-kontakt-${o.id}`}
-                  className={`flex w-full flex-col px-3 py-1.5 text-left text-sm hover:bg-slate-50 ${hi === i ? "bg-slate-50" : ""}`}
+                  className={cn(
+                    "flex w-full flex-col px-3 py-1.5 text-left text-sm hover:bg-slate-50",
+                    hi === i && "bg-slate-50",
+                    FOCUS_RING,
+                  )}
                   onMouseEnter={() => setHi(i)} onClick={() => dodajKontakt(o.id)}
                 >
                   <span className="font-medium">{o.ime}{o.funkcija && <span className="font-normal text-slate-500"> · {o.funkcija}</span>}</span>
@@ -196,10 +201,14 @@ export function PrimaociCombobox({
               <li role="option" aria-selected={hi === opcije.length}>
                 <button
                   type="button" data-testid="opcija-adhoc"
-                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-brand hover:bg-slate-50 ${hi === opcije.length ? "bg-slate-50" : ""}`}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-brand hover:bg-slate-50",
+                    hi === opcije.length && "bg-slate-50",
+                    FOCUS_RING,
+                  )}
                   onMouseEnter={() => setHi(opcije.length)} onClick={() => dodajEmail(q)}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
                   {t("dodajJednokratni", { email: q.trim().toLowerCase() })}
                 </button>
               </li>
@@ -215,7 +224,10 @@ export function PrimaociCombobox({
       {kontakti.length === 0 && (
         <p className="mt-2 text-sm text-slate-500">
           {t("nemaKontakata")}{" "}
-          <Link href={`/klijenti/${klijentId}?tab=kontakti`} className="font-medium text-brand hover:underline">
+          <Link
+            href={`/klijenti/${klijentId}?tab=kontakti`}
+            className={cn("rounded-sm font-medium text-brand hover:underline", FOCUS_RING)}
+          >
             {t("dodajKontaktLink")}
           </Link>
         </p>

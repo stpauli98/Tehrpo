@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import type { DerivedStatus } from "@/lib/termini"
 import { href as localizedHref } from "@/i18n/routes"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import type { MatrixRow, MatrixColumn, MatrixCell } from "@/lib/matrix"
 
 // Re-export types for consumers that reference them from this module
@@ -119,6 +119,7 @@ export function MatrixGrid({
                         className={cn(
                           "inline-block w-full rounded px-1.5 py-1 tabular-nums",
                           CELL_CLASS[cell.status],
+                          FOCUS_RING,
                         )}
                       >
                         {cellLabel(cell)}

@@ -34,7 +34,13 @@ export type KorisnikRow = {
 export type KlijentReminderRow = {
   id: string
   salji_podsjetnik_klijentu: boolean
-  podsjetnik_emails: string[] | null
+  podsjetnik_emails?: string[]
+}
+
+export type KontaktPrimalacRow = {
+  klijent_id: string
+  email: string | null
+  podsjetnik_primalac: boolean
 }
 
 export type RecipientIndex = {
@@ -43,11 +49,12 @@ export type RecipientIndex = {
   klijentEmailsByKlijent: Map<string, string[]>
 }
 
-/** Indeks primalaca: admini + dodijeljeni (interni) + firmine adrese (Krug 2, samo ako je uključeno). */
+/** Indeks primalaca: admini + dodijeljeni (interni) + firmine adrese (Krug 2, iz flagovanih kontakata). */
 export function buildRecipientIndex(
   korisnici: KorisnikRow[],
   dodjele: { korisnik_id: string; klijent_id: string }[],
   klijenti: KlijentReminderRow[] = [],
+  kontakti: KontaktPrimalacRow[] = [],
   saljiKlijentima = false,
 ): RecipientIndex {
   const eligibleEmail = new Map<string, string>() // id → email (aktivan + prima_podsjetnike)
@@ -65,13 +72,33 @@ export function buildRecipientIndex(
     arr.push(email)
     assignedByKlijent.set(d.klijent_id, arr)
   }
-  // Krug 2: firmine adrese samo kad je globalni prekidač uključen I firma per-firma uključena.
+  // Krug 2: firmine adrese = mejlovi flagovanih kontakata, samo kad je globalni prekidač
+  // uključen I firma per-firma uključena. firmaRecipientsForKlijent kasnije lowercase-uje/dedupira.
   const klijentEmailsByKlijent = new Map<string, string[]>()
   if (saljiKlijentima) {
+    const firmaUkljucena = new Set<string>()
     for (const k of klijenti) {
-      if (!k.salji_podsjetnik_klijentu) continue
-      const emails = (k.podsjetnik_emails ?? []).filter((e) => EMAIL_RE.test(e.trim()))
-      if (emails.length > 0) klijentEmailsByKlijent.set(k.id, emails)
+      if (k.salji_podsjetnik_klijentu) firmaUkljucena.add(k.id)
+    }
+    for (const ko of kontakti) {
+      if (!ko.podsjetnik_primalac || !firmaUkljucena.has(ko.klijent_id)) continue
+      const email = (ko.email ?? "").trim()
+      if (!EMAIL_RE.test(email)) continue
+      const arr = klijentEmailsByKlijent.get(ko.klijent_id) ?? []
+      arr.push(email)
+      klijentEmailsByKlijent.set(ko.klijent_id, arr)
+    }
+    // Ad-hoc „čiste" adrese firme (nisu kontakti). firmaRecipientsForKlijent kasnije
+    // lowercase-uje/dedupira, pa preklapanje s mejlom flagovanog kontakta nije problem.
+    for (const k of klijenti) {
+      if (!firmaUkljucena.has(k.id)) continue
+      for (const raw of k.podsjetnik_emails ?? []) {
+        const email = (raw ?? "").trim()
+        if (!EMAIL_RE.test(email)) continue
+        const arr = klijentEmailsByKlijent.get(k.id) ?? []
+        arr.push(email)
+        klijentEmailsByKlijent.set(k.id, arr)
+      }
     }
   }
   return { adminEmails, assignedByKlijent, klijentEmailsByKlijent }

@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react"
 import { getTranslations } from "next-intl/server"
+import { EMAIL_RE } from "@/lib/reminders/recipients"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { CollapsibleSection } from "./CollapsibleSection"
 
@@ -15,15 +16,36 @@ export async function KoStaPrimaTab() {
   const t = await getTranslations("postavke.koStaPrima")
   const tSalji = await getTranslations("postavke.saljiKlijentima")
   const supabase = await createServerSupabaseClient()
-  const [postRes, korisniciRes, klijentiRes, dodjeleRes] = await Promise.all([
+  const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, prima_podsjetnike, aktivan").order("ime"),
     supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
+    supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac"),
   ])
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
+  // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
+  const adreseByKlijent = new Map<string, Set<string>>()
+  for (const ko of kontaktiRes.data ?? []) {
+    if (!ko.podsjetnik_primalac) continue
+    const email = (ko.email ?? "").trim().toLowerCase()
+    if (!EMAIL_RE.test(email)) continue
+    const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
+    set.add(email)
+    adreseByKlijent.set(ko.klijent_id, set)
+  }
+  // Ad-hoc „čiste" adrese (nisu kontakti) — u isti Set (dedup s kontakt-adresama je automatski).
+  for (const k of klijentiRes.data ?? []) {
+    const set = adreseByKlijent.get(k.id) ?? new Set<string>()
+    for (const raw of k.podsjetnik_emails ?? []) {
+      const email = (raw ?? "").trim().toLowerCase()
+      if (!EMAIL_RE.test(email)) continue
+      set.add(email)
+    }
+    if (set.size > 0) adreseByKlijent.set(k.id, set)
+  }
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
   const primaZa = (id: string) => {
     const k = korisnici.find((k) => k.id === id)
@@ -36,7 +58,7 @@ export async function KoStaPrimaTab() {
       .map((d) => d.korisnik_id)
       .filter((uid) => primaZa(uid))
       .map((uid) => imeZa(uid))
-    const adrese = k.podsjetnik_emails ?? []
+    const adrese = [...(adreseByKlijent.get(k.id) ?? [])]
     const firmaPrima = saljiGlobalno && k.salji_podsjetnik_klijentu && adrese.length > 0
     // Precedencija: globalni prekidač je nadređen; zatim po-firma flag; zatim adrese.
     const razlog: Razlog | null = firmaPrima

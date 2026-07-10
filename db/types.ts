@@ -325,6 +325,7 @@ export type Database = {
           id: string
           ime: string
           klijent_id: string
+          podsjetnik_primalac: boolean
           telefon: string | null
         }
         Insert: {
@@ -334,6 +335,7 @@ export type Database = {
           id?: string
           ime: string
           klijent_id: string
+          podsjetnik_primalac?: boolean
           telefon?: string | null
         }
         Update: {
@@ -343,6 +345,7 @@ export type Database = {
           id?: string
           ime?: string
           klijent_id?: string
+          podsjetnik_primalac?: boolean
           telefon?: string | null
         }
         Relationships: [
@@ -807,6 +810,10 @@ export type Database = {
       }
     }
     Functions: {
+      dodaj_podsjetnik_email: {
+        Args: { p_email: string; p_klijent_id: string }
+        Returns: string
+      }
       get_due_podsjetnici: {
         Args: { dana_prije_arr: number[] }
         Returns: {
@@ -845,6 +852,10 @@ export type Database = {
       je_pregled: { Args: never; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      ukloni_podsjetnik_email: {
+        Args: { p_email: string; p_klijent_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       chat_uloga: "user" | "assistant"

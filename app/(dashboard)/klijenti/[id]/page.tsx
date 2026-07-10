@@ -44,13 +44,13 @@ export default async function KlijentDetailPage({
 
   const supabase = await createServerSupabaseClient()
   // Čitamo iz klijenti_view OD POČETKA (daje naziv/napomena + broj_termina za T6 delete guard).
-  // klijenti_view ne izlaže podsjetnik_emails, pa dodajemo 4. fetch direktno iz klijenti tabele.
+  // klijenti_view ne izlaže sva polja edit-forme, pa dodajemo 4. fetch direktno iz klijenti tabele.
   // 4 paralelna fetch-a = fan-out, nije N+1.
   const [klijentRes, terminiRes, lokacijeRes, primaociRes] = await Promise.all([
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("termini_view").select("*").eq("klijent_id", id).order("rok_dospijeca", { ascending: true }),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
-    supabase.from("klijenti").select("podsjetnik_emails, tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id").eq("id", id).maybeSingle(),
+    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id").eq("id", id).maybeSingle(),
   ])
 
   const klijent = klijentRes.data
@@ -153,7 +153,6 @@ export default async function KlijentDetailPage({
               id: klijent.id,
               naziv: klijent.naziv,
               napomena: klijent.napomena ?? null,
-              podsjetnik_emails: primaociRes.data?.podsjetnik_emails ?? [],
               tip_odnosa: primaociRes.data?.tip_odnosa ?? null,
               adresa: primaociRes.data?.adresa ?? null,
               pib: primaociRes.data?.pib ?? null,

@@ -6,22 +6,63 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { zahtijevajAdmina } from "@/app/(dashboard)/postavke/actions"
 import type { ActionResult } from "@/app/(dashboard)/klijenti/actions"
 
-const EMAIL_RE_KL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-/** Per-firma: uključi/isključi slanje firmi + adrese. SSR klijent → RLS klijenti_upd (operater sa pristupom smije). */
-export async function updateKlijentPodsjetnici(
+/** Per-firma: uključi/isključi slanje podsjetnika firmi. SSR → RLS klijenti_upd (operater sa pristupom smije). */
+export async function updateKlijentSaljiPodsjetnik(
   klijentId: string,
   salji: boolean,
-  emails: string[],
 ): Promise<ActionResult> {
-  const cist = Array.from(
-    new Set(emails.map((e) => e.trim().toLowerCase()).filter((e) => EMAIL_RE_KL.test(e))),
-  )
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase
     .from("klijenti")
-    .update({ salji_podsjetnik_klijentu: salji, podsjetnik_emails: cist })
+    .update({ salji_podsjetnik_klijentu: salji })
     .eq("id", klijentId)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijentId}`)
+  return { ok: true }
+}
+
+/** Označi/odznači kontakt kao primaoca firminih podsjetnika. SSR → RLS kontakt_osobe (ima_pristup_klijentu). */
+export async function updateKontaktPodsjetnikPrimalac(
+  kontaktId: string,
+  klijentId: string,
+  primalac: boolean,
+): Promise<ActionResult> {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("kontakt_osobe")
+    .update({ podsjetnik_primalac: primalac })
+    .eq("id", kontaktId)
+    .eq("klijent_id", klijentId)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath(`/klijenti/${klijentId}`)
+  return { ok: true }
+}
+
+/** Dodaj ad-hoc „čistu" adresu (nije kontakt) u firmine primaoce. SSR → RPC dodaj_podsjetnik_email (RLS klijenti_upd). */
+export async function dodajPodsjetnikEmail(klijentId: string, email: string): Promise<ActionResult> {
+  const supabase = await createServerSupabaseClient()
+  const { data: status, error } = await supabase.rpc("dodaj_podsjetnik_email", {
+    p_klijent_id: klijentId, p_email: email,
+  })
+  if (error) return { ok: false, message: error.message }
+  if (status !== "ok") {
+    const msg =
+      status === "nevalidan" ? "Nevažeća email adresa."
+      : status === "postoji" ? "Adresa je već dodata."
+      : status === "kontakt" ? "Adresa je već primalac kao kontakt."
+      : "Nije moguće dodati adresu."
+    return { ok: false, message: msg }
+  }
+  revalidatePath(`/klijenti/${klijentId}`)
+  return { ok: true }
+}
+
+/** Ukloni ad-hoc adresu iz firminih primalaca. SSR → RPC ukloni_podsjetnik_email (RLS klijenti_upd). */
+export async function ukloniPodsjetnikEmail(klijentId: string, email: string): Promise<ActionResult> {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.rpc("ukloni_podsjetnik_email", {
+    p_klijent_id: klijentId, p_email: email,
+  })
   if (error) return { ok: false, message: error.message }
   revalidatePath(`/klijenti/${klijentId}`)
   return { ok: true }

@@ -28,7 +28,7 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
             "px-3 py-1 rounded-full text-sm border transition",
             FOCUS_RING,
             current === v
-              ? "bg-slate-900 text-white border-slate-900"
+              ? "bg-brand text-white border-brand"
               : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50",
           )}
         >

@@ -70,7 +70,7 @@ export function PrikazToolbar({
           className={cn(
             "px-3 py-1 text-sm rounded-md transition-colors",
             FOCUS_RING,
-            mode === "klijent" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+            mode === "klijent" ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-100"
           )}
         >
           {t("modKlijent")}
@@ -83,7 +83,7 @@ export function PrikazToolbar({
           className={cn(
             "px-3 py-1 text-sm rounded-md transition-colors",
             FOCUS_RING,
-            mode === "mjesec" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+            mode === "mjesec" ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-100"
           )}
         >
           {t("modMjesec")}

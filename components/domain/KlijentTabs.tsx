@@ -26,13 +26,21 @@ export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klije
     >
       <TabsList variant="line">
         {TABS.map((tab, i) => (
-          <TabsTrigger key={tab.value} value={tab.value} data-testid={`tab-${tab.value}`}>
+          <TabsTrigger
+            key={tab.value}
+            value={tab.value}
+            data-testid={`tab-${tab.value}`}
+            title={t(`${tab.labelKey}.info`)}
+          >
             {t(`${tab.labelKey}.label`)}
-            {/* Zadnji (najdesniji) tab: desno poravnanje — na 1024px bi mu bubble prešao desnu ivicu main-a */}
+            {/* Zadnji (najdesniji) tab: desno poravnanje — na 1024px bi mu bubble prešao desnu ivicu main-a.
+                dekorativno: ikona ostaje aria-hidden da ne pravi zaseban tab-stop niti zagadi accessible
+                name TabsTrigger dugmeta — tekst je izložen kroz `title` na samom dugmetu iznad. */}
             <InfoIkona
               tekst={t(`${tab.labelKey}.info`)}
               testId={`info-tab-${tab.value}`}
               strana={i === TABS.length - 1 ? "desno" : undefined}
+              dekorativno
             />
           </TabsTrigger>
         ))}

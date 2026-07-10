@@ -159,7 +159,7 @@ export function Sidebar() {
       onTransitionEnd={() => setAnimating(false)}
       className={cn(
         "relative my-3 ml-3 shrink-0",
-        animating && "transition-[width] duration-300 ease-out",
+        animating && "transition-[width] duration-300 ease-out motion-reduce:transition-none",
       )}
     >
       <div className="flex h-full flex-col gap-1 rounded-2xl border border-slate-200 bg-white/70 p-2 shadow-sm backdrop-blur">

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { STATUS_BADGE_CLASS } from "@/lib/termini"
+import { STATUS_CELL_CLASS } from "@/lib/termini"
 import { href as localizedHref } from "@/i18n/routes"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import type { MatrixRow, MatrixColumn, MatrixCell } from "@/lib/matrix"
@@ -108,8 +108,8 @@ export function MatrixGrid({
                         data-status={cell.status}
                         title={cell.brojUCeliji > 1 ? t("viseTerminaTitle") : undefined}
                         className={cn(
-                          "inline-block w-full rounded px-1.5 py-1 tabular-nums transition-colors hover:brightness-95",
-                          STATUS_BADGE_CLASS[cell.status],
+                          "inline-block w-full rounded px-1.5 py-1 tabular-nums",
+                          STATUS_CELL_CLASS[cell.status],
                           FOCUS_RING,
                         )}
                       >

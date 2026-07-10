@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { KontaktSheet } from "@/components/domain/KontaktSheet"
 import { deleteKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
 
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
@@ -32,6 +33,7 @@ export function KontaktiKlijentList({
 }) {
   const t = useTranslations("klijenti.kontaktiFirme")
   const router = useRouter()
+  const mozeUrediti = useMozeUrediti()
   const [delState, delAction, delPending] = useActionState(deleteKontakt, initial)
   const prev = useRef(delState)
   const [q, setQ] = useState("")
@@ -85,13 +87,15 @@ export function KontaktiKlijentList({
                 </span>
                 <span className="flex items-center gap-2">
                   <KontaktSheet klijentId={klijentId} kontakt={k} />
-                  <form action={delAction}>
-                    <input type="hidden" name="id" value={k.id} />
-                    <input type="hidden" name="klijent_id" value={klijentId} />
-                    <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-kontakt-${k.id}`}>
-                      <Trash2 className="w-4 h-4 text-red-500" aria-hidden />
-                    </Button>
-                  </form>
+                  {mozeUrediti && (
+                    <form action={delAction}>
+                      <input type="hidden" name="id" value={k.id} />
+                      <input type="hidden" name="klijent_id" value={klijentId} />
+                      <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-kontakt-${k.id}`}>
+                        <Trash2 className="w-4 h-4 text-red-500" aria-hidden />
+                      </Button>
+                    </form>
+                  )}
                 </span>
               </div>
               {(k.telefon || k.email) && (

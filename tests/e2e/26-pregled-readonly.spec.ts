@@ -8,6 +8,7 @@ import {
   ensureKorisnik,
   deleteKorisnikByEmail,
   insertKlijent,
+  insertKontakt,
   assignKlijent,
   deleteKlijentByNaziv,
 } from "./db"
@@ -22,7 +23,9 @@ test.describe("pregled — read-only UX", () => {
     const email = `e2e-pregled-${Date.now()}@tehpro.test`
     const naziv = "E2E-TMP PREGLED " + Date.now()
     const kid = await insertKlijent(naziv)
+    const kontaktIme = "E2E Kontakt " + Date.now()
     try {
+      await insertKontakt(kid, kontaktIme, "e2e-kontakt@example.com")
       const uid = await ensureKorisnik(email, LOZINKA, "E2E Pregled", "pregled")
       await assignKlijent(uid, kid)
       await injectSessionFor(context, email, LOZINKA)
@@ -45,6 +48,11 @@ test.describe("pregled — read-only UX", () => {
       await expect(page.getByTestId("novi-kontakt-btn")).toHaveCount(0)
       // Naziv (header) ostaje vidljiv i na ovom tabu — potvrda da čitanje i dalje radi.
       await expect(page.getByTestId("klijent-naziv")).toHaveText(naziv)
+
+      // 4) Inline "obriši kontakt" dugme (forma unutar KontaktiKlijentList) — SAKRIVENO,
+      // dok je sam kontakt (čitanje) i dalje vidljiv na listi.
+      await expect(page.getByText(kontaktIme)).toBeVisible()
+      await expect(page.getByTestId(/^obrisi-kontakt-/)).toHaveCount(0)
     } finally {
       await deleteKlijentByNaziv(naziv)
       await deleteKorisnikByEmail(email)

@@ -15,7 +15,7 @@ import {
   type ActionResult,
 } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
-import { jeAdmin } from "@/lib/auth/roles"
+import { jeAdmin, mozeUrediti } from "@/lib/auth/roles"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -36,6 +36,8 @@ export function DokumentiSekcija({
   const uloga = useUloga()
   // Brisanje dokumenata je admin-only (server akcija to i nameće).
   const mozeBrisati = uloga !== null && jeAdmin(uloga)
+  // Upload/generisanje zapisnika su operater+admin (pregled je read-only).
+  const mozeUredjivati = uloga !== null && mozeUrediti(uloga)
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)
   const [genState, genAction, genPending] = useActionState(generateZapisnikAction, initial)
   const [delState, delAction, delPending] = useActionState(deleteDokumentAction, initial)
@@ -76,39 +78,43 @@ export function DokumentiSekcija({
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {izvrsen ? (
-          <form action={genAction}>
-            <input type="hidden" name="termin_id" value={terminId} />
-            <Button type="submit" variant="default" disabled={genPending} data-testid="generisi-zapisnik">
-              <Sparkles className="w-4 h-4" aria-hidden /> {genPending ? t("generisem") : t("generisiZapisnik")}
-            </Button>
-          </form>
+          mozeUredjivati && (
+            <form action={genAction}>
+              <input type="hidden" name="termin_id" value={terminId} />
+              <Button type="submit" variant="default" disabled={genPending} data-testid="generisi-zapisnik">
+                <Sparkles className="w-4 h-4" aria-hidden /> {genPending ? t("generisem") : t("generisiZapisnik")}
+              </Button>
+            </form>
+          )
         ) : (
           <p className="text-xs text-slate-400" data-testid="zapisnik-nedostupan">
             {t("zapisnikNedostupan")}
           </p>
         )}
 
-        <form action={uploadAction} className="flex min-w-0 items-center gap-2">
-          <input type="hidden" name="termin_id" value={terminId} />
-          <input
-            ref={fileRef}
-            type="file"
-            name="file"
-            accept=".docx,.pdf,image/png,image/jpeg,image/webp"
-            data-testid="dokument-file"
-            className="min-w-0 max-w-full text-sm"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file && file.size > MAX_MB * 1024 * 1024) {
-                toast.error(t("fajlPrevelik", { max: MAX_MB }))
-                e.target.value = ""
-              }
-            }}
-          />
-          <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
-            {uploadPending ? t("saljem") : t("uploadDugme")}
-          </Button>
-        </form>
+        {mozeUredjivati && (
+          <form action={uploadAction} className="flex min-w-0 items-center gap-2">
+            <input type="hidden" name="termin_id" value={terminId} />
+            <input
+              ref={fileRef}
+              type="file"
+              name="file"
+              accept=".docx,.pdf,image/png,image/jpeg,image/webp"
+              data-testid="dokument-file"
+              className="min-w-0 max-w-full text-sm"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file && file.size > MAX_MB * 1024 * 1024) {
+                  toast.error(t("fajlPrevelik", { max: MAX_MB }))
+                  e.target.value = ""
+                }
+              }}
+            />
+            <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
+              {uploadPending ? t("saljem") : t("uploadDugme")}
+            </Button>
+          </form>
+        )}
       </div>
 
       {greska && (

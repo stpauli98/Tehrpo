@@ -141,6 +141,17 @@ export async function insertKlijent(naziv: string): Promise<string> {
   return data.id as string
 }
 
+/** Ubaci kontakt osobu za klijenta; vrati id. */
+export async function insertKontakt(klijentId: string, ime: string, email?: string): Promise<string> {
+  const { data, error } = await db
+    .from("kontakt_osobe")
+    .insert({ klijent_id: klijentId, ime, email: email ?? null })
+    .select("id")
+    .single()
+  if (error) throw new Error(`insertKontakt(${klijentId}, ${ime}): ${error.message}`)
+  return data.id as string
+}
+
 /** Ubaci lokaciju za klijenta; vrati id. (Profil provjere zahtijevaju lokaciju.) */
 export async function insertLokacija(klijentId: string, naziv = "E2E Lokacija"): Promise<string> {
   const { data, error } = await db.from("lokacije").insert({ klijent_id: klijentId, naziv }).select("id").single()

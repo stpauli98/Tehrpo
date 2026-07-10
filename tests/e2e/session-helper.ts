@@ -5,16 +5,28 @@
 import { readFileSync } from "node:fs"
 import type { BrowserContext } from "@playwright/test"
 
-function envVar(key: string): string {
-  if (process.env[key]) return process.env[key] as string
+function fromFile(file: string, key: string): string {
   let content = ""
   try {
-    content = readFileSync(".env.local", "utf8")
+    content = readFileSync(file, "utf8")
   } catch {
     return ""
   }
   const line = content.split("\n").find((l) => l.trimStart().startsWith(`${key}=`))
   return line ? line.slice(line.indexOf("=") + 1).trim() : ""
+}
+
+// Ista precedenca kao db.ts/Next dev/auth.setup: process.env > .env.development.local > .env.local.
+// KRITIČNO: dev server (app pod testom) radi protiv .env.development.local (DEMO projekt). Ovaj
+// helper MORA logovati se protiv ISTOG projekta — inače "Supabase login failed" (nalog kreiran
+// na DEMO preko db.ts, ali login pokušan na PROD preko ovog helpera).
+function envVar(key: string): string {
+  return (
+    process.env[key] ||
+    fromFile(".env.development.local", key) ||
+    fromFile(".env.local", key) ||
+    ""
+  )
 }
 
 const SUPABASE_URL = envVar("NEXT_PUBLIC_SUPABASE_URL")

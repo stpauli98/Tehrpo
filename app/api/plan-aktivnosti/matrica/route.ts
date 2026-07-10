@@ -18,10 +18,10 @@ import { monthRange, currentYear, todayIso } from "@/lib/date"
  *   }
  *
  * Branch "mode=mjesec" — termini columns:
- *   id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, status_izvedeni
+ *   id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, datum_prikaza, status_izvedeni
  *
  * Branch "mode=klijent" (klijent provided) — termini columns:
- *   id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, status_izvedeni
+ *   id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, datum_prikaza, status_izvedeni
  *   (ordered by vrsta_naziv)
  *
  * If mode="klijent" and no klijent param → termini: []
@@ -56,19 +56,19 @@ export async function GET(req: NextRequest) {
     const { from: od, to: doIso } = monthRange(godina, mjesec)
     const { data, error } = await supabase
       .from("termini_view")
-      .select("id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, status_izvedeni")
-      .gte("rok_dospijeca", od)
-      .lte("rok_dospijeca", doIso)
+      .select("id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, datum_prikaza, status_izvedeni")
+      .gte("datum_prikaza", od)
+      .lte("datum_prikaza", doIso)
     if (error) return NextResponse.json({ error }, { status: 400 })
     termini = data ?? []
   } else if (klijentId) {
     // Godišnja matrica jednog klijenta — kolone su 12 mjeseci
     const { data, error } = await supabase
       .from("termini_view")
-      .select("id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, status_izvedeni")
+      .select("id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, datum_prikaza, status_izvedeni")
       .eq("klijent_id", klijentId)
-      .gte("rok_dospijeca", `${godina}-01-01`)
-      .lte("rok_dospijeca", `${godina}-12-31`)
+      .gte("datum_prikaza", `${godina}-01-01`)
+      .lte("datum_prikaza", `${godina}-12-31`)
       .order("vrsta_naziv")
     if (error) return NextResponse.json({ error }, { status: 400 })
     termini = data ?? []

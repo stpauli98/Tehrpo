@@ -472,7 +472,7 @@
   "termini": {
     "tabela": {
       "kolone": {
-        "datumRoka": "Due date",
+        "datumRoka": "Date",
         "klijent": "Client",
         "lokacija": "Location",
         "vrsta": "Type",
@@ -482,7 +482,8 @@
       },
       "prazno": "No appointments for the selected filters.",
       "samoPracenje": "Tracking only",
-      "detalji": "Details"
+      "detalji": "Details",
+      "rokKratko": "due {datum}"
     },
     "filteri": {
       "sveFirme": "All companies",

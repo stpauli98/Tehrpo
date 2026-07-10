@@ -472,7 +472,7 @@
   "termini": {
     "tabela": {
       "kolone": {
-        "datumRoka": "Datum roka",
+        "datumRoka": "Datum",
         "klijent": "Klijent",
         "lokacija": "Lokacija",
         "vrsta": "Vrsta",
@@ -482,7 +482,8 @@
       },
       "prazno": "Nema termina za zadane filtere.",
       "samoPracenje": "Samo praćenje",
-      "detalji": "Detalji"
+      "detalji": "Detalji",
+      "rokKratko": "rok {datum}"
     },
     "filteri": {
       "sveFirme": "Sve firme",

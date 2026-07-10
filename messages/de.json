@@ -472,7 +472,7 @@
   "termini": {
     "tabela": {
       "kolone": {
-        "datumRoka": "Fälligkeitsdatum",
+        "datumRoka": "Datum",
         "klijent": "Kunde",
         "lokacija": "Standort",
         "vrsta": "Art",
@@ -482,7 +482,8 @@
       },
       "prazno": "Keine Termine für die gewählten Filter.",
       "samoPracenje": "Nur Verfolgung",
-      "detalji": "Details"
+      "detalji": "Details",
+      "rokKratko": "Frist {datum}"
     },
     "filteri": {
       "sveFirme": "Alle Firmen",

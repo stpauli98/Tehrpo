@@ -528,6 +528,9 @@
       "zakPrefix": "gepl. {datum}",
       "zakazanoFallback": "geplant"
     },
+    "zakazanoUpozorenje": {
+      "poslijeRoka": "⚠ {dana, plural, one {# Tag} other {# Tage}} nach der Frist geplant ({rok}). Erlaubt — eine Benachrichtigung wird gesendet."
+    },
     "noviTermin": {
       "dugme": "Neuer Termin",
       "poljeKlijent": "Kunde *",

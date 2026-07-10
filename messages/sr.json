@@ -528,6 +528,9 @@
       "zakPrefix": "zak. {datum}",
       "zakazanoFallback": "zakazano"
     },
+    "zakazanoUpozorenje": {
+      "poslijeRoka": "⚠ Zakazano {dana, plural, =1 {# dan} other {# dana}} poslije roka ({rok}). Dozvoljeno — biće poslano obavještenje."
+    },
     "noviTermin": {
       "dugme": "Novi termin",
       "poljeKlijent": "Klijent *",

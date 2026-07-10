@@ -528,6 +528,9 @@
       "zakPrefix": "sched. {datum}",
       "zakazanoFallback": "scheduled"
     },
+    "zakazanoUpozorenje": {
+      "poslijeRoka": "⚠ Scheduled {dana, plural, one {# day} other {# days}} after the due date ({rok}). Allowed — a notice will be sent."
+    },
     "noviTermin": {
       "dugme": "New appointment",
       "poljeKlijent": "Client *",

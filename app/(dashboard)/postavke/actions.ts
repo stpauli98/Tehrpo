@@ -500,6 +500,9 @@ export async function posaljiResetKorisniku(email: string): Promise<ActionResult
   const origin = (await headers()).get("origin") ?? ""
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/confirm` })
-  if (error) return { ok: false, message: error.message }
+  if (error) {
+    console.error("[posaljiResetKorisniku]", error.message)
+    return { ok: false }
+  }
   return { ok: true }
 }

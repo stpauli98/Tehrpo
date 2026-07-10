@@ -65,7 +65,10 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
               <div className="mt-1 text-slate-500">
                 {u.datum_potpisivanja ? formatDatum(u.datum_potpisivanja) : "—"} → {u.datum_isteka ? formatDatum(u.datum_isteka) : "—"}
                 {u.broj_obilazaka_mjesecno != null && t("obilazMjesecno", { count: u.broj_obilazaka_mjesecno })}
+                {u.vazenje_mjeseci != null && t("vazenjeMjeseci", { count: u.vazenje_mjeseci })}
+                {u.automatsko_obnavljanje ? t("autoObnavljanjeDa") : t("autoObnavljanjeNe")}
               </div>
+              {u.napomena && <p className="mt-1 text-slate-500">{u.napomena}</p>}
             </li>
           ))}
         />

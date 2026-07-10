@@ -30,4 +30,7 @@ describe("danaPoslijeRoka", () => {
   it("0 kad su isti", () => {
     expect(danaPoslijeRoka("2026-07-13", "2026-07-13")).toBe(0)
   })
+  it("negativan broj kad je zakazan PRIJE roka", () => {
+    expect(danaPoslijeRoka("2026-07-15", "2026-07-13")).toBe(-2)
+  })
 })

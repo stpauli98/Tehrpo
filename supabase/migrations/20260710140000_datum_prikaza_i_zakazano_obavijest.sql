@@ -69,7 +69,8 @@ create table if not exists termin_zakazano_obavijest (
   unique (termin_id, datum_zakazan)
 );
 alter table termin_zakazano_obavijest enable row level security;
--- Namjerno bez policy-a: čita/piše isključivo DEFINER RPC ispod (kao audit_log obrazac).
+-- Namjerno BEZ ijedne policy-a (ni admin-read, za razliku od audit_log): čita/piše
+-- isključivo DEFINER RPC ispod, koji sam provjerava ima_pristup_klijentu().
 
 -- 3) Atomski claim + računanje internih primalaca (bypass caller RLS: DEFINER).
 --    Vraća listu primalaca za slanje; prazan niz = ne šalji (već poslato / nema primalaca).
@@ -91,6 +92,12 @@ declare
 begin
   select klijent_id into v_klijent from termini where id = p_termin_id;
   if v_klijent is null then
+    return '{}';
+  end if;
+
+  -- Scope guard: DEFINER bypass-uje RLS, pa moramo ručno provjeriti da pozivalac
+  -- ima pristup ovom klijentu (isti helper kao RLS policije; čita auth.uid()).
+  if not ima_pristup_klijentu(v_klijent) then
     return '{}';
   end if;
 
@@ -128,3 +135,9 @@ begin
   return v_primaoci;
 end;
 $$;
+
+-- 4) DEFINER + PUBLIC execute = svaki ulogovani (ili anon sa važećim termin UUID-om)
+--    mogao bi enumerisati interne email-ove, preduhitriti claim ili ubaciti audit šum.
+--    Server akcija poziva RPC kao 'authenticated' — samo tu ulogu i puštamo.
+revoke execute on function zabiljezi_zakazano_obavijest(uuid, date, text[]) from public;
+grant execute on function zabiljezi_zakazano_obavijest(uuid, date, text[]) to authenticated;

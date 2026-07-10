@@ -981,6 +981,17 @@
     "ics": {
       "opis": "Erinnerung an die Frist.",
       "detalji": "Details: {url}"
+    },
+    "zakazanoNakonRoka": {
+      "predmet": "Nach Frist geplant — {vrsta} · {klijent}",
+      "znacka": "Nach Frist geplant",
+      "uvod": "Diese Aktivität wurde nach ihrer Frist geplant.",
+      "poljeRok": "Frist",
+      "poljeZakazan": "Geplant für",
+      "poljeVrsta": "Leistung",
+      "poljeKlijent": "Kunde",
+      "poljeLokacija": "Standort",
+      "napomena": "Eine Planung nach der Frist ist erlaubt; dies ist eine automatische Benachrichtigung an die Zuständigen."
     }
   },
   "izvoz": {

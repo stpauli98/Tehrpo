@@ -189,3 +189,55 @@ export function reminderHtmlFirma(args: {
   </table>
 </body></html>`
 }
+
+export function zakazanoNakonRokaSubject(
+  args: { vrsta: string; klijent: string },
+  locale: Locale = APP_LOCALE,
+): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.zakazanoNakonRoka" })
+  return t("predmet", { vrsta: args.vrsta, klijent: args.klijent })
+}
+
+export function zakazanoNakonRokaHtml(args: {
+  klijent: string
+  vrsta: string
+  rok: string
+  zakazan: string
+  lokacija?: string | null
+}, locale: Locale = APP_LOCALE): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.zakazanoNakonRoka" })
+  const boja = "#dc2626"
+  const rok = formatDatum(args.rok, locale)
+  const zakazan = formatDatum(args.zakazan, locale)
+  const lokRed = args.lokacija
+    ? `<tr><td style="padding:4px 0;color:#64748b">${t("poljeLokacija")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.lokacija)}</td></tr>`
+    : ""
+  return `<!doctype html>
+<html lang="${htmlLang(locale)}"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
+        <tr><td style="background:${boja};padding:16px 24px">
+          <table role="presentation" width="100%"><tr>
+            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(APP_NAME)}</td>
+            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">${t("znacka")}</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:24px">
+          <span style="display:inline-block;background:${boja};color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">${t("znacka")}</span>
+          <p style="margin:12px 0 0;font-size:15px">${t("uvod")}</p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
+            <tr><td style="padding:8px 0;color:#64748b">${t("poljeRok")}</td><td style="padding:8px 0;text-align:right">${rok}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b">${t("poljeZakazan")}</td><td style="padding:4px 0;text-align:right;font-weight:bold">${zakazan}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b">${t("poljeVrsta")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.vrsta)}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b">${t("poljeKlijent")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.klijent)}</td></tr>
+            ${lokRed}
+          </table>
+          <p style="margin:16px 0 0;font-size:13px;color:#64748b">${t("napomena")}</p>
+        </td></tr>
+        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`
+}

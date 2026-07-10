@@ -981,6 +981,17 @@
     "ics": {
       "opis": "Deadline reminder.",
       "detalji": "Details: {url}"
+    },
+    "zakazanoNakonRoka": {
+      "predmet": "Scheduled after due date — {vrsta} · {klijent}",
+      "znacka": "Scheduled after due date",
+      "uvod": "This activity was scheduled after its due date.",
+      "poljeRok": "Due date",
+      "poljeZakazan": "Scheduled for",
+      "poljeVrsta": "Service",
+      "poljeKlijent": "Client",
+      "poljeLokacija": "Location",
+      "napomena": "Scheduling after the due date is allowed; this is an automatic notice to the assignees."
     }
   },
   "izvoz": {

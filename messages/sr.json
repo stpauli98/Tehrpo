@@ -981,6 +981,17 @@
     "ics": {
       "opis": "Podsjetnik o roku.",
       "detalji": "Detalji: {url}"
+    },
+    "zakazanoNakonRoka": {
+      "predmet": "Zakazano poslije roka — {vrsta} · {klijent}",
+      "znacka": "Zakazano poslije roka",
+      "uvod": "Termin je zakazan nakon roka dospijeća.",
+      "poljeRok": "Rok dospijeća",
+      "poljeZakazan": "Zakazano za",
+      "poljeVrsta": "Vrsta",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija",
+      "napomena": "Zakazivanje poslije roka je dozvoljeno; ovo je automatska obavijest zaduženima."
     }
   },
   "izvoz": {

@@ -472,7 +472,7 @@
   "termini": {
     "tabela": {
       "kolone": {
-        "datumRoka": "Fälligkeitsdatum",
+        "datumRoka": "Datum",
         "klijent": "Kunde",
         "lokacija": "Standort",
         "vrsta": "Art",
@@ -482,7 +482,8 @@
       },
       "prazno": "Keine Termine für die gewählten Filter.",
       "samoPracenje": "Nur Verfolgung",
-      "detalji": "Details"
+      "detalji": "Details",
+      "rokKratko": "Frist {datum}"
     },
     "filteri": {
       "sveFirme": "Alle Firmen",
@@ -526,6 +527,9 @@
     "statusBadge": {
       "zakPrefix": "gepl. {datum}",
       "zakazanoFallback": "geplant"
+    },
+    "zakazanoUpozorenje": {
+      "poslijeRoka": "⚠ {dana, plural, one {# Tag} other {# Tage}} nach der Frist geplant ({rok}). Erlaubt — eine Benachrichtigung wird gesendet."
     },
     "noviTermin": {
       "dugme": "Neuer Termin",
@@ -980,6 +984,17 @@
     "ics": {
       "opis": "Erinnerung an die Frist.",
       "detalji": "Details: {url}"
+    },
+    "zakazanoNakonRoka": {
+      "predmet": "Nach Frist geplant — {vrsta} · {klijent}",
+      "znacka": "Nach Frist geplant",
+      "uvod": "Diese Aktivität wurde nach ihrer Frist geplant.",
+      "poljeRok": "Frist",
+      "poljeZakazan": "Geplant für",
+      "poljeVrsta": "Leistung",
+      "poljeKlijent": "Kunde",
+      "poljeLokacija": "Standort",
+      "napomena": "Eine Planung nach der Frist ist erlaubt; dies ist eine automatische Benachrichtigung an die Zuständigen."
     }
   },
   "izvoz": {

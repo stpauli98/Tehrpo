@@ -5,6 +5,8 @@ import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { friendlyDbError } from "@/lib/db-errors"
 import { todayIso } from "@/lib/date"
+import { jeZakazanoPoslijeRoka } from "@/lib/plan-datum"
+import { posaljiZakazanoNakonRoka } from "@/lib/reminders/zakazanoNakonRoka"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 import type { Database } from "@/db/types"
@@ -55,13 +57,17 @@ export async function updateTermin(
 
   const supabase = await createServerSupabaseClient()
 
-  // Sinhronizuj status sa "Datum zakazan": planirano ↔ zakazano
-  // (ne diramo izvrseno/otkazano; kasni je izvedeni status, raw je planirano/zakazano)
-  if (formData.has("datum_zakazan") && !fields.status) {
+  // Sinhronizuj status sa "Datum zakazan": planirano ↔ zakazano; usput dohvati rok
+  // (treba za detekciju zakazano-poslije-roka nakon upisa).
+  let rokDospijeca: string | null = null
+  if (formData.has("datum_zakazan")) {
     const { data: cur } = await supabase
-      .from("termini").select("status").eq("id", id).maybeSingle()
-    if (cur?.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
-    else if (cur?.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
+      .from("termini").select("status, rok_dospijeca").eq("id", id).maybeSingle()
+    rokDospijeca = cur?.rok_dospijeca ?? null
+    if (!fields.status) {
+      if (cur?.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
+      else if (cur?.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
+    }
   }
 
   if (Object.keys(patch).length === 0) return { ok: true }
@@ -69,6 +75,15 @@ export async function updateTermin(
   const { error } = await supabase.from("termini").update(patch).eq("id", id)
 
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  // Best-effort: obavijest kad je zakazano poslije roka. Ne obara čuvanje.
+  const noviZakazan = patch.datum_zakazan
+  if (typeof noviZakazan === "string" && jeZakazanoPoslijeRoka(rokDospijeca, noviZakazan)) {
+    const obav = await posaljiZakazanoNakonRoka(supabase, { terminId: id, datumZakazan: noviZakazan })
+    if (obav.razlog === "greska") {
+      console.warn(`[zakazano-nakon-roka] obavijest nije poslana (termin ${id}): ${obav.message ?? "nepoznata greška"}`)
+    }
+  }
 
   return { ok: true }
 }
@@ -136,7 +151,7 @@ export async function createTermin(
     return { ok: false, message: t("terminVecPostoji") }
   }
 
-  const { error } = await supabase.from("termini").insert({
+  const { data: novi, error } = await supabase.from("termini").insert({
     klijent_id,
     vrsta_provjere_id,
     lokacija_id: lokacija_id ?? null,
@@ -144,9 +159,17 @@ export async function createTermin(
     datum_zakazan: datum_zakazan ?? null,
     zaduzeni: zaduzeni ?? null,
     status: datum_zakazan ? "zakazano" : "planirano",
-  })
+  }).select("id").single()
 
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  // Best-effort: obavijest kad je zakazano poslije roka. Ne obara kreiranje.
+  if (datum_zakazan && novi?.id && jeZakazanoPoslijeRoka(rok_dospijeca, datum_zakazan)) {
+    const obav = await posaljiZakazanoNakonRoka(supabase, { terminId: novi.id, datumZakazan: datum_zakazan })
+    if (obav.razlog === "greska") {
+      console.warn(`[zakazano-nakon-roka] obavijest nije poslana (termin ${novi.id}): ${obav.message ?? "nepoznata greška"}`)
+    }
+  }
 
   return { ok: true }
 }

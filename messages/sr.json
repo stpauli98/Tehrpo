@@ -472,7 +472,7 @@
   "termini": {
     "tabela": {
       "kolone": {
-        "datumRoka": "Datum roka",
+        "datumRoka": "Datum",
         "klijent": "Klijent",
         "lokacija": "Lokacija",
         "vrsta": "Vrsta",
@@ -482,7 +482,8 @@
       },
       "prazno": "Nema termina za zadane filtere.",
       "samoPracenje": "Samo praćenje",
-      "detalji": "Detalji"
+      "detalji": "Detalji",
+      "rokKratko": "rok {datum}"
     },
     "filteri": {
       "sveFirme": "Sve firme",
@@ -526,6 +527,9 @@
     "statusBadge": {
       "zakPrefix": "zak. {datum}",
       "zakazanoFallback": "zakazano"
+    },
+    "zakazanoUpozorenje": {
+      "poslijeRoka": "⚠ Zakazano {dana, plural, =1 {# dan} other {# dana}} poslije roka ({rok}). Dozvoljeno — biće poslano obavještenje."
     },
     "noviTermin": {
       "dugme": "Novi termin",
@@ -980,6 +984,17 @@
     "ics": {
       "opis": "Podsjetnik o roku.",
       "detalji": "Detalji: {url}"
+    },
+    "zakazanoNakonRoka": {
+      "predmet": "Zakazano poslije roka — {vrsta} · {klijent}",
+      "znacka": "Zakazano poslije roka",
+      "uvod": "Termin je zakazan nakon roka dospijeća.",
+      "poljeRok": "Rok dospijeća",
+      "poljeZakazan": "Zakazano za",
+      "poljeVrsta": "Vrsta",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija",
+      "napomena": "Zakazivanje poslije roka je dozvoljeno; ovo je automatska obavijest zaduženima."
     }
   },
   "izvoz": {

@@ -55,8 +55,8 @@ export function KalendarView() {
 
   const terminiByDan = new Map<string, DayTermin[]>()
   for (const termin of termini) {
-    if (!termin.id || !termin.rok_dospijeca) continue
-    const dan = termin.rok_dospijeca.slice(0, 10)
+    if (!termin.id || !termin.datum_prikaza) continue
+    const dan = termin.datum_prikaza.slice(0, 10)
     const arr = terminiByDan.get(dan) ?? []
     arr.push({
       id: termin.id,
@@ -71,7 +71,7 @@ export function KalendarView() {
 
   // ?dan sidebar
   const danTermini = selectedDan
-    ? termini.filter((termin) => (termin.rok_dospijeca ?? "").slice(0, 10) === selectedDan)
+    ? termini.filter((termin) => (termin.datum_prikaza ?? "").slice(0, 10) === selectedDan)
     : []
 
   // ?selected TerminSheet

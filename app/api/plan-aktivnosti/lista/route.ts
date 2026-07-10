@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   let listQuery = supabase
     .from("termini_view")
     .select("*", { count: "exact" })
-    .order("rok_dospijeca", { ascending: true })
+    .order("datum_prikaza", { ascending: true })
 
   listQuery = applyPlanFilteri(listQuery, f)
 

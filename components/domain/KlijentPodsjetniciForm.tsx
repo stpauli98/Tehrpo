@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { updateKlijentSaljiPodsjetnik } from "@/app/(dashboard)/klijenti/[id]/actions"
 import { PrimaociCombobox, type KontaktZaPodsjetnik } from "./PrimaociCombobox"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export function KlijentPodsjetniciForm({
   klijentId, salji, kontakti, adHocEmails,
@@ -34,13 +35,12 @@ export function KlijentPodsjetniciForm({
   return (
     <div className="max-w-xl space-y-4" data-testid="klijent-podsjetnici-form">
       <label className="flex items-start gap-3">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={saljiState}
           disabled={pending || !mozeUrediti}
           data-testid="klijent-salji-toggle"
-          className="mt-0.5 h-4 w-4 cursor-pointer accent-brand disabled:opacity-50"
-          onChange={mozeUrediti ? (e) => toggleSalji(e.target.checked) : undefined}
+          className="mt-0.5"
+          onCheckedChange={(next) => toggleSalji(next)}
         />
         <span>
           <span className="block text-sm font-medium">{t("saljiNaslov")}</span>

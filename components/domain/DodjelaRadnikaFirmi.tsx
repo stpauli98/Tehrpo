@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { postaviDodjeleZaKlijenta } from "@/app/(dashboard)/klijenti/[id]/actions"
 
 export function DodjelaRadnikaFirmi({
@@ -40,8 +41,11 @@ export function DodjelaRadnikaFirmi({
       <div className="space-y-1">
         {radnici.map((r) => (
           <label key={r.id} className="flex items-center gap-2 text-sm" data-testid={`radnik-${r.id}`}>
-            <input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)}
-              className="h-4 w-4 cursor-pointer accent-brand" />
+            <Checkbox
+              checked={sel.has(r.id)}
+              onCheckedChange={() => toggle(r.id)}
+              aria-label={t("checkboxAriaLabel", { ime: r.ime })}
+            />
             {r.ime}
           </label>
         ))}

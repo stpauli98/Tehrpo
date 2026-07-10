@@ -421,7 +421,8 @@
       "brojac": "{count} izabrano",
       "submitPending": "Snimam…",
       "toastSuccess": "Firme dodijeljene.",
-      "toastErrorFallback": "Greška."
+      "toastErrorFallback": "Greška.",
+      "checkboxAriaLabel": "Izaberi firmu {naziv}"
     },
     "profil": {
       "prazno": "Nema provjera u profilu. Dodajte provjeru da generišete termine.",
@@ -466,7 +467,8 @@
       "nemaRadnika": "Nema aktivnih radnika.",
       "spasi": "Spasi",
       "snimam": "Snimam…",
-      "spaseno": "Dodjela sačuvana."
+      "spaseno": "Dodjela sačuvana.",
+      "checkboxAriaLabel": "Izaberi radnika {ime}"
     }
   },
   "termini": {

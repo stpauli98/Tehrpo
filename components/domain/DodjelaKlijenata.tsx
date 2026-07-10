@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { postaviDodjele } from "@/app/(dashboard)/postavke/actions"
 
 export function DodjelaKlijenata({
@@ -97,7 +98,11 @@ export function DodjelaKlijenata({
         <div className="max-h-72 divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-200">
           {filtrirani.map((k) => (
             <label key={k.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50">
-              <input type="checkbox" checked={sel.has(k.id)} onChange={() => toggle(k.id)} />
+              <Checkbox
+                checked={sel.has(k.id)}
+                onCheckedChange={() => toggle(k.id)}
+                aria-label={t("checkboxAriaLabel", { naziv: k.naziv })}
+              />
               {k.naziv}
             </label>
           ))}

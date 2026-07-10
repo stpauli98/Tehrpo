@@ -421,7 +421,8 @@
       "brojac": "{count} selected",
       "submitPending": "Saving…",
       "toastSuccess": "Companies assigned.",
-      "toastErrorFallback": "Error."
+      "toastErrorFallback": "Error.",
+      "checkboxAriaLabel": "Select company {naziv}"
     },
     "profil": {
       "prazno": "No checks in the profile. Add a check to generate appointments.",
@@ -466,7 +467,8 @@
       "nemaRadnika": "No active workers.",
       "spasi": "Save",
       "snimam": "Saving…",
-      "spaseno": "Assignment saved."
+      "spaseno": "Assignment saved.",
+      "checkboxAriaLabel": "Select worker {ime}"
     }
   },
   "termini": {

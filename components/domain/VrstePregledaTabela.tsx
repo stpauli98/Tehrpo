@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { VrstaSheet } from "./VrstaSheet"
 import { postaviVrstaInterval, postaviVrstaAktivna } from "@/app/(dashboard)/postavke/actions"
@@ -28,10 +29,9 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
     <div className="space-y-3" data-testid="vrste-tabela">
       <div className="flex items-center justify-between gap-4 text-sm">
         <label className="flex items-center gap-2 text-slate-600">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={prikaziNeaktivne}
-            onChange={(e) => setPrikaziNeaktivne(e.target.checked)}
+            onCheckedChange={(next) => setPrikaziNeaktivne(next)}
             data-testid="vrste-prikazi-neaktivne"
           />
           {t("prikaziNeaktivne")}{brNeaktivnih > 0 && ` (${brNeaktivnih})`}

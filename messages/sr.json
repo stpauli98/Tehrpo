@@ -1119,7 +1119,10 @@
         "pracenje": "Praćenje"
       },
       "greska": "Greška",
-      "greskaGenerisanje": "Greška pri generisanju fajla: {poruka}"
+      "greskaGenerisanje": "Greška pri generisanju fajla: {poruka}",
+      "raspon": {
+        "nevazeci": "Nevažeći raspon datuma (od mora biti ≤ do)."
+      }
     },
     "zapisnik": {
       "naslov": "ZAPISNIK O IZVRŠENOJ PROVJERI",

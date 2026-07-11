@@ -1119,7 +1119,10 @@
         "pracenje": "Verfolgung"
       },
       "greska": "Fehler",
-      "greskaGenerisanje": "Fehler beim Generieren der Datei: {poruka}"
+      "greskaGenerisanje": "Fehler beim Generieren der Datei: {poruka}",
+      "raspon": {
+        "nevazeci": "Ungültiger Datumsbereich (von muss ≤ bis sein)."
+      }
     },
     "zapisnik": {
       "naslov": "PROTOKOLL ÜBER DIE DURCHGEFÜHRTE PRÜFUNG",

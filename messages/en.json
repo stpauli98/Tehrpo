@@ -1119,7 +1119,10 @@
         "pracenje": "Tracking"
       },
       "greska": "Error",
-      "greskaGenerisanje": "Error generating file: {poruka}"
+      "greskaGenerisanje": "Error generating file: {poruka}",
+      "raspon": {
+        "nevazeci": "Invalid date range (from must be ≤ to)."
+      }
     },
     "zapisnik": {
       "naslov": "RECORD OF COMPLETED INSPECTION",

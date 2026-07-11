@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 import { updateKlijentSaljiPodsjetnik } from "@/app/(dashboard)/klijenti/[id]/actions"
 import { PrimaociCombobox, type KontaktZaPodsjetnik } from "./PrimaociCombobox"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 import { Checkbox } from "@/components/ui/checkbox"
+import { toastRezultat } from "@/components/akcija-toast"
 
 export function KlijentPodsjetniciForm({
   klijentId, salji, kontakti, adHocEmails,
@@ -18,6 +18,7 @@ export function KlijentPodsjetniciForm({
   adHocEmails: string[]
 }) {
   const t = useTranslations("klijenti.podsjetnici")
+  const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const [pending, startTransition] = useTransition()
@@ -26,9 +27,12 @@ export function KlijentPodsjetniciForm({
   function toggleSalji(next: boolean) {
     setSalji(next)
     startTransition(async () => {
-      const res = await updateKlijentSaljiPodsjetnik(klijentId, next)
-      if (res.ok) { toast.success(t("spaseno")); router.refresh() }
-      else { setSalji(!next); toast.error(res.message) }
+      const res = toastRezultat(await updateKlijentSaljiPodsjetnik(klijentId, next), {
+        uspjeh: t("spaseno"),
+        greska: tc("greska"),
+      })
+      if (res.ok) { router.refresh() }
+      else { setSalji(!next) }
     })
   }
 

@@ -1,0 +1,30 @@
+// tests/e2e/30-aktivnost.spec.ts
+// Task 11 verifikacija: admin vidi ekran "Aktivnost" (audit log), operater dobija 404.
+import { test, expect } from "@playwright/test"
+import { injectSessionFor } from "./session-helper"
+import { ensureOperater } from "./db"
+
+const OP_EMAIL = "e2e-operater@tehpro.test"
+const OP_LOZINKA = "E2eOperater2026!"
+const OP_IME = "E2E Operater"
+
+test.beforeAll(async () => {
+  await ensureOperater(OP_EMAIL, OP_LOZINKA, OP_IME)
+})
+
+test("admin vidi ekran Aktivnost", async ({ page }) => {
+  await page.goto("/aktivnost")
+  await expect(page.getByRole("heading", { name: "Aktivnost" })).toBeVisible({ timeout: 30_000 })
+})
+
+test("operater dobija 404 na /aktivnost", async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  try {
+    const opPage = await ctx.newPage()
+    await injectSessionFor(ctx, OP_EMAIL, OP_LOZINKA)
+    await opPage.goto("/aktivnost")
+    await expect(opPage.getByRole("heading", { name: "Aktivnost" })).toHaveCount(0)
+  } finally {
+    await ctx.close()
+  }
+})

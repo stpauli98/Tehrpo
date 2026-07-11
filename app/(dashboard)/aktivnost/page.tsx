@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { dohvatiAktivnost } from "@/lib/queries/aktivnost"
 import { AktivnostFilteri } from "@/components/domain/AktivnostFilteri"
+import { AktivnostSearch } from "@/components/domain/AktivnostSearch"
 import { AktivnostTabela } from "@/components/domain/AktivnostTabela"
 
 const PO_STRANI = 50
@@ -34,7 +35,7 @@ export default async function AktivnostPage({
   })
 
   const straneUkupno = Math.max(1, Math.ceil(ukupno / PO_STRANI))
-  const kljucFiltera = `${jedan(sp.akcija) ?? ""}|${jedan(sp.q) ?? ""}|${od ?? ""}|${doDatum ?? ""}`
+  const kljucFiltera = `${jedan(sp.akcija) ?? ""}|${od ?? ""}|${doDatum ?? ""}`
 
   function stranaHref(n: number) {
     const p = new URLSearchParams()
@@ -53,7 +54,10 @@ export default async function AktivnostPage({
         <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
         <p className="text-sm text-muted-foreground">{t("opis")}</p>
       </div>
-      <AktivnostFilteri key={kljucFiltera} />
+      <div className="flex flex-wrap items-end gap-3">
+        <AktivnostSearch />
+        <AktivnostFilteri key={kljucFiltera} />
+      </div>
       <AktivnostTabela redovi={redovi} />
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{ukupno}</span>

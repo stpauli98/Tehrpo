@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest"
-import { reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml, reminderHtmlFirma } from "./templates"
+import {
+  reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml,
+  reminderHtmlFirma, zakazanoNakonRokaHtml,
+} from "./templates"
 
 describe("escapeHtml", () => {
   it("escape-uje HTML meta znakove", () => {
@@ -124,5 +127,20 @@ describe("reminderHtmlFirma", () => {
     expect(html).toContain("Drina Komerc d.o.o.")
     expect(html).toContain("Ispitivanje hidrantske mreže")
     expect(html).toContain("Centralni magacin")
+  })
+})
+
+describe("osvježeni dijeljeni okvir", () => {
+  const outs = [
+    testEmailHtml({ ime: "X" }),
+    reminderHtml({ klijent: "K", vrsta: "V", rok: "2026-09-15", danaDoRoka: 7, lokacija: null }),
+    reminderHtmlFirma({ klijent: "K", vrsta: "V", rok: "2026-09-15", danaDoRoka: 7, lokacija: null, brand: { name: "B", tagline: "T" } }),
+    zakazanoNakonRokaHtml({ klijent: "K", vrsta: "V", rok: "2026-09-15", zakazan: "2026-09-20", lokacija: null }),
+  ]
+  it("sve četiri poruke dijele osvježenu karticu (radius 12px + sjenka)", () => {
+    for (const html of outs) {
+      expect(html).toContain("border-radius:12px")
+      expect(html).toContain("box-shadow:0 1px 3px rgba(15,23,42,.08)")
+    }
   })
 })

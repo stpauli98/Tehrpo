@@ -34,15 +34,6 @@ export function AktivnostFilteri() {
         </select>
       </label>
       <label className="flex flex-col gap-1 text-xs">
-        {t("filteri.pretraga")}
-        <input
-          className="rounded-md border border-input bg-background px-2 py-1 text-sm"
-          defaultValue={sp.get("q") ?? ""}
-          onBlur={(e) => postavi("q", e.target.value.trim())}
-          placeholder="…"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-xs">
         {t("filteri.od")}
         <input type="date" className="rounded-md border border-input bg-background px-2 py-1 text-sm"
           defaultValue={sp.get("od") ?? ""} onChange={(e) => postavi("od", e.target.value)} />

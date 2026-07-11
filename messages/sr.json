@@ -451,7 +451,7 @@
       "primaociOpis": "Izaberi sačuvani kontakt ili dodaj jednokratnu adresu.",
       "comboPlaceholder": "Ukucaj mejl ili izaberi kontakt",
       "dodajJednokratni": "Dodaj \"{email}\" kao jednokratni",
-      "tagJednokratno": "jednokratno",
+      "tagJednokratno": "⟨jednokratno⟩",
       "nemaPrimalaca": "Nema izabranih primalaca.",
       "nemaRezultata": "Nema kontakata za taj upit.",
       "ukloniPrimaoca": "Ukloni primaoca",

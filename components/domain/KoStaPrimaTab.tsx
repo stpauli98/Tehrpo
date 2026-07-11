@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, ArrowUp } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
@@ -76,13 +76,16 @@ export async function KoStaPrimaTab() {
       {!saljiGlobalno && (
         <div
           data-testid="ksp-global-off-banner"
-          className="mb-3 flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          <span>{t("globalnoIskljucenoBanner", { prekidac: tSalji("naslov") })} ↑</span>
+          <span className="inline-flex items-center gap-1">
+            {t("globalnoIskljucenoBanner", { prekidac: tSalji("naslov") })}
+            <ArrowUp className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          </span>
         </div>
       )}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm" data-testid="ko-sta-prima-tabela">
           <thead>
             <tr className="text-left text-muted-foreground">

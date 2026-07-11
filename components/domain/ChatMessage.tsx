@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { snimiZapisnik, type ActionResult } from "@/app/(dashboard)/asistent/actions"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 export type ProposalData = {
@@ -17,9 +18,11 @@ const initial: ActionResult = { ok: true }
 
 function ZapisnikProposal({ p }: { p: ProposalData }) {
   const t = useTranslations("asistent.chatMessage.proposal")
+  const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const [state, action, pending] = useActionState(snimiZapisnik, initial)
+  useAkcijaToast(state, { uspjeh: t("snimljeno"), greska: tc("greska") })
   const prev = useRef(state)
   useEffect(() => {
     if (state !== prev.current) {
@@ -42,9 +45,6 @@ function ZapisnikProposal({ p }: { p: ProposalData }) {
           <Button type="submit" disabled={pending} data-testid="snimi-zapisnik">
             {pending ? t("snimam") : t("snimi")}
           </Button>
-          {state.ok === false && state.message && (
-            <span className="ml-2 text-xs text-destructive" role="alert">{state.message}</span>
-          )}
           {snimljeno && (
             <span className="ml-2 text-xs text-green-600" data-testid="zapisnik-snimljen">{t("snimljeno")}</span>
           )}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Check, Minus } from "lucide-react"
@@ -101,18 +101,11 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
 function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
   const router = useRouter()
   const t = useTranslations("termini.vrstePregleda")
+  const tc = useTranslations("common")
   const serverVal = vrsta.interval?.toString() ?? ""
   const [val, setVal] = useState(serverVal)
   const [pending, startSave] = useTransition()
-  const [saved, setSaved] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-
-  // "✓ spremljeno" se sakrije nakon 2s.
-  useEffect(() => {
-    if (!saved) return
-    const t = setTimeout(() => setSaved(false), 2000)
-    return () => clearTimeout(t)
-  }, [saved])
 
   function commit() {
     const trimmed = val.trim()
@@ -127,13 +120,11 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
     }
     setErr(null)
     startSave(async () => {
-      const res = await postaviVrstaInterval(vrsta.id, parsed)
-      if (res.ok) {
-        setSaved(true)
-        router.refresh()
-      } else {
-        setErr(res.message ?? t("intervalGreskaFallback"))
-      }
+      const res = toastRezultat(await postaviVrstaInterval(vrsta.id, parsed), {
+        uspjeh: tc("sacuvano"),
+        greska: t("intervalGreskaFallback"),
+      })
+      if (res.ok) router.refresh()
     })
   }
 
@@ -159,7 +150,6 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
       />
       <span className="w-24 text-xs">
         {pending && <span className="text-muted-foreground">…</span>}
-        {!pending && saved && <span className="text-green-600">{t("intervalSpremljeno")}</span>}
         {!pending && err && <span className="text-destructive">{err}</span>}
       </span>
     </div>

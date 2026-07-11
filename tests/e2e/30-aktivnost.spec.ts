@@ -15,6 +15,10 @@ test.beforeAll(async () => {
 test("admin vidi ekran Aktivnost", async ({ page }) => {
   await page.goto("/aktivnost")
   await expect(page.getByRole("heading", { name: "Aktivnost" })).toBeVisible({ timeout: 30_000 })
+  // Klijentski-renderovana filter labela (useTranslations("aktivnost") u AktivnostFilteri).
+  // Hvata MISSING_MESSAGE regresiju: bez namespace-a u CLIENT_NAMESPACES renderuje se
+  // ključ ("filteri.akcija") umjesto prevedene labele.
+  await expect(page.getByText("Tip akcije")).toBeVisible({ timeout: 30_000 })
 })
 
 test("operater dobija 404 na /aktivnost", async ({ browser }) => {

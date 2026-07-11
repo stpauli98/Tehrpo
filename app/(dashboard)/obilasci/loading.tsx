@@ -8,7 +8,7 @@ export default function ObilasciLoading() {
         {[0,1,2].map((i) => <Skeleton key={i} className="h-10 w-36" />)}
       </div>
       {[0,1,2].map((g) => (
-        <div key={g} className="rounded-xl border border-border p-4 space-y-3">
+        <div key={g} className="rounded-xl bg-card p-4 space-y-3 ring-1 ring-foreground/10">
           <Skeleton className="h-6 w-40" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
             {[0,1,2,3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}

@@ -29,6 +29,7 @@
       "klijenti": "Kunden",
       "asistent": "Assistent",
       "zapisnici": "Protokolle",
+      "aktivnost": "Aktivität",
       "postavke": "Einstellungen"
     },
     "sidebar": {
@@ -698,6 +699,39 @@
       "nemaTerminaMjesec": "Keine Termine für den ausgewählten Monat.",
       "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr."
     }
+  },
+  "aktivnost": {
+    "naslov": "Aktivität",
+    "opis": "Übersicht aller Ereignisse in der Anwendung — wer was geändert, geöffnet oder gefiltert hat.",
+    "kolone": {
+      "vrijeme": "Zeit",
+      "korisnik": "Benutzer",
+      "akcija": "Aktion",
+      "cilj": "Ziel",
+      "detalji": "Details"
+    },
+    "akcije": {
+      "INSERT": "Erstellt",
+      "UPDATE": "Geändert",
+      "DELETE": "Gelöscht",
+      "NAVIGATE": "Bildschirm geöffnet",
+      "VIEW": "Datensatz angesehen",
+      "LOGIN": "Anmeldung",
+      "LOGOUT": "Abmeldung",
+      "FILTER": "Gefiltert"
+    },
+    "filteri": {
+      "korisnik": "Benutzer",
+      "akcija": "Aktionstyp",
+      "svi": "Alle",
+      "od": "Von",
+      "do": "Bis",
+      "pretraga": "Suche",
+      "primijeni": "Anwenden",
+      "ocisti": "Zurücksetzen"
+    },
+    "prazno": "Keine erfassten Ereignisse für die ausgewählten Filter.",
+    "sistemski": "System"
   },
   "zapisnici": {
     "naslov": "Protokolle",

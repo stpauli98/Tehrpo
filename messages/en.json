@@ -29,6 +29,7 @@
       "klijenti": "Clients",
       "asistent": "Assistant",
       "zapisnici": "Records",
+      "aktivnost": "Activity",
       "postavke": "Settings"
     },
     "sidebar": {
@@ -698,6 +699,39 @@
       "nemaTerminaMjesec": "No appointments for the selected month.",
       "nemaTerminaGodina": "This client has no appointments in the selected year."
     }
+  },
+  "aktivnost": {
+    "naslov": "Activity",
+    "opis": "Overview of all events in the application — who changed, opened, or filtered what.",
+    "kolone": {
+      "vrijeme": "Time",
+      "korisnik": "User",
+      "akcija": "Action",
+      "cilj": "Target",
+      "detalji": "Details"
+    },
+    "akcije": {
+      "INSERT": "Created",
+      "UPDATE": "Updated",
+      "DELETE": "Deleted",
+      "NAVIGATE": "Opened screen",
+      "VIEW": "Viewed record",
+      "LOGIN": "Login",
+      "LOGOUT": "Logout",
+      "FILTER": "Filtered"
+    },
+    "filteri": {
+      "korisnik": "User",
+      "akcija": "Action type",
+      "svi": "All",
+      "od": "From",
+      "do": "To",
+      "pretraga": "Search",
+      "primijeni": "Apply",
+      "ocisti": "Clear"
+    },
+    "prazno": "No recorded events for the selected filters.",
+    "sistemski": "System"
   },
   "zapisnici": {
     "naslov": "Records",

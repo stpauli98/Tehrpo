@@ -11,11 +11,13 @@ import {
   Users,
   Bot,
   FileText,
+  ScrollText,
   Settings,
   ChevronsLeft,
 } from "lucide-react"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
+import { useUloga } from "@/providers/korisnik-provider"
 
 const NAV_ITEMS = [
   { href: href("/pregled"),         labelKey: "pregled",         icon: LayoutDashboard },
@@ -24,6 +26,7 @@ const NAV_ITEMS = [
   { href: href("/klijenti"),        labelKey: "klijenti",        icon: Users },
   { href: href("/asistent"),        labelKey: "asistent",        icon: Bot },
   { href: href("/zapisnici"),       labelKey: "zapisnici",       icon: FileText },
+  { href: href("/aktivnost"),       labelKey: "aktivnost",       icon: ScrollText },
 ] as const
 
 // Postavke se prikvačuje na dno (kao zadnji li:last-child u originalu).
@@ -38,6 +41,7 @@ const STORAGE_KEY = "tehpro:sidebar-width"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const uloga = useUloga()
   const t = useTranslations("shell.nav")
   const tSidebar = useTranslations("shell.sidebar")
   const navRef = useRef<HTMLElement>(null)
@@ -48,6 +52,10 @@ export function Sidebar() {
   const [animating, setAnimating] = useState(false)
 
   const collapsed = width < COLLAPSE_THRESHOLD
+
+  let navItems: (typeof NAV_ITEMS)[number][] = [...NAV_ITEMS]
+  if (uloga === "pregled") navItems = navItems.filter((i) => i.href !== href("/asistent"))
+  if (uloga !== "admin") navItems = navItems.filter((i) => i.href !== href("/aktivnost"))
 
   // Učitaj zapamćenu širinu nakon mounta. Početni render (server i klijent) koristi
   // DEFAULT_WIDTH pa nema hydration mismatch-a; perzistirana širina se primjenjuje tek
@@ -164,7 +172,7 @@ export function Sidebar() {
     >
       <div className="flex h-full flex-col gap-1 rounded-2xl border border-border bg-card/70 p-2 shadow-sm backdrop-blur">
         <ul className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <li key={item.href}>{renderItem(item)}</li>
           ))}
         </ul>

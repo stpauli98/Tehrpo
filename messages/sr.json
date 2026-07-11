@@ -29,6 +29,7 @@
       "klijenti": "Klijenti",
       "asistent": "Asistent",
       "zapisnici": "Zapisnici",
+      "aktivnost": "Aktivnost",
       "postavke": "Postavke"
     },
     "sidebar": {
@@ -698,6 +699,39 @@
       "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
       "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
     }
+  },
+  "aktivnost": {
+    "naslov": "Aktivnost",
+    "opis": "Pregled svih događaja u aplikaciji — ko je šta promijenio, otvorio ili filtrirao.",
+    "kolone": {
+      "vrijeme": "Vrijeme",
+      "korisnik": "Korisnik",
+      "akcija": "Akcija",
+      "cilj": "Cilj",
+      "detalji": "Detalji"
+    },
+    "akcije": {
+      "INSERT": "Kreirano",
+      "UPDATE": "Izmijenjeno",
+      "DELETE": "Obrisano",
+      "NAVIGATE": "Otvorio ekran",
+      "VIEW": "Pogledao zapis",
+      "LOGIN": "Prijava",
+      "LOGOUT": "Odjava",
+      "FILTER": "Filtrirao"
+    },
+    "filteri": {
+      "korisnik": "Korisnik",
+      "akcija": "Tip akcije",
+      "svi": "Svi",
+      "od": "Od",
+      "do": "Do",
+      "pretraga": "Pretraga",
+      "primijeni": "Primijeni",
+      "ocisti": "Očisti"
+    },
+    "prazno": "Nema zabilježenih događaja za odabrane filtere.",
+    "sistemski": "Sistem"
   },
   "zapisnici": {
     "naslov": "Zapisnici",

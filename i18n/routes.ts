@@ -14,6 +14,7 @@ export const ROUTE_MAP: Record<string, { en: string; de: string }> = {
   "obilasci": { en: "visits", de: "begehungen" },
   "plan-aktivnosti": { en: "activity-plan", de: "aktivitaetsplan" },
   "zapisnici": { en: "records", de: "protokolle" },
+  "aktivnost": { en: "activity", de: "aktivitaet" },
   "dokumenti": { en: "documents", de: "dokumente" },
   "pregled": { en: "overview", de: "uebersicht" },
   "prikaz": { en: "view", de: "ansicht" },

@@ -3,6 +3,15 @@ import { getTranslations } from "next-intl/server"
 import { monthName } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { href } from "@/i18n/routes"
+import { STATUS_DOT_CLASS } from "@/lib/termini"
+
+// Boje segmenata čitaju se iz jedinog izvora status-boja (STATUS_DOT_CLASS):
+// izvrseno=zelena, kasni=crvena, u planu=planirano/plava.
+const CHART_BOJE = {
+  izvrseno: STATUS_DOT_CLASS.izvrseno,
+  kasni: STATUS_DOT_CLASS.kasni,
+  uPlanu: STATUS_DOT_CLASS.planirano,
+} as const
 
 export type OpterecenjeRow = {
   mjesec: number
@@ -53,9 +62,9 @@ export async function OpterecenjeChart({
           <p className="text-xs text-muted-foreground">{t("podnaslov")}</p>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <LegendaStavka boja="bg-emerald-500" tekst={t("legenda.izvrseno")} />
-          <LegendaStavka boja="bg-rose-500" tekst={t("legenda.kasni")} />
-          <LegendaStavka boja="bg-sky-400" tekst={t("legenda.uPlanu")} />
+          <LegendaStavka boja={CHART_BOJE.izvrseno} tekst={t("legenda.izvrseno")} />
+          <LegendaStavka boja={CHART_BOJE.kasni} tekst={t("legenda.kasni")} />
+          <LegendaStavka boja={CHART_BOJE.uPlanu} tekst={t("legenda.uPlanu")} />
         </div>
       </div>
 
@@ -91,9 +100,9 @@ export async function OpterecenjeChart({
                 title={t("barTitle", { naziv, count: m.ukupno })}
               >
                 {/* stacked: izvrseno (zeleno) → kasni (crveno) → u_planu (plavo, na vrhu) */}
-                <div className="w-full bg-emerald-500" style={{ flexGrow: m.izvrseno }} />
-                <div className="w-full bg-rose-500" style={{ flexGrow: m.kasni }} />
-                <div className="w-full bg-sky-400" style={{ flexGrow: m.u_planu }} />
+                <div className={cn("w-full", CHART_BOJE.izvrseno)} style={{ flexGrow: m.izvrseno }} />
+                <div className={cn("w-full", CHART_BOJE.kasni)} style={{ flexGrow: m.kasni }} />
+                <div className={cn("w-full", CHART_BOJE.uPlanu)} style={{ flexGrow: m.u_planu }} />
               </div>
             )
             const common = "group flex h-full flex-1 items-end"

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/domain/StatusBadge"
 import { groupByGrad, type ObilazakItem } from "@/lib/obilasci"
 import { periodRange, currentYear, todayIso, formatDatum } from "@/lib/date"
 import { href } from "@/i18n/routes"
+import { FOCUS_RING } from "@/lib/utils"
 
 export default async function ObilasciPage({
   searchParams,
@@ -67,13 +68,13 @@ export default async function ObilasciPage({
       {grupe.length === 0 ? (
         <div
           data-testid="obilasci-empty"
-          className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
+          className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10"
         >
           {t("prazno")}
         </div>
       ) : (
         grupe.map((g) => (
-          <section key={g.grad} data-testid="obilasci-grupa" className="rounded-xl border border-border p-4">
+          <section key={g.grad} data-testid="obilasci-grupa" className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="w-4 h-4 text-destructive" aria-hidden />
               <h2 className="font-semibold">
@@ -86,7 +87,7 @@ export default async function ObilasciPage({
                   key={termin.id}
                   href={href(`/plan-aktivnosti?view=lista&klijent_id=${termin.klijent_id}&mjesec=svi`)}
                   data-testid="obilasci-card"
-                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2 hover:bg-muted"
+                  className={`flex items-center justify-between rounded-lg border border-border px-3 py-2 transition-colors hover:bg-muted ${FOCUS_RING}`}
                 >
                   <span>
                     <span className="font-medium">{termin.klijent_naziv}</span>

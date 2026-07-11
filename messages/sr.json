@@ -648,7 +648,8 @@
       "gradSvi": "Svi gradovi",
       "gradBez": "Bez grada",
       "placeholderMjesec": "Mjesec",
-      "placeholderKvartal": "Kvartal"
+      "placeholderKvartal": "Kvartal",
+      "kvartalLabel": "Q{broj}"
     }
   },
   "plan": {

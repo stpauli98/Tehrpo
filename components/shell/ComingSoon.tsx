@@ -18,7 +18,7 @@ export async function ComingSoon({
       <h1 className="text-2xl font-semibold">{naslov}</h1>
       <div
         data-testid="coming-soon"
-        className="flex flex-col items-center rounded-xl border border-border p-10 text-center"
+        className="flex flex-col items-center rounded-xl bg-card p-10 text-center ring-1 ring-foreground/10"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-light text-brand">
           <Icon className="h-6 w-6" aria-hidden />

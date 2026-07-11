@@ -648,7 +648,8 @@
       "gradSvi": "Alle Städte",
       "gradBez": "Ohne Stadt",
       "placeholderMjesec": "Monat",
-      "placeholderKvartal": "Quartal"
+      "placeholderKvartal": "Quartal",
+      "kvartalLabel": "Q{broj}"
     }
   },
   "plan": {

@@ -53,7 +53,9 @@ export function ObilasciToolbar({
   const mjesecItems: Record<string, string> = Object.fromEntries(
     MJESEC_NAZIVI.map((label, i) => [String(i + 1), label])
   )
-  const kvartalItems: Record<string, string> = { "1": "Q1", "2": "Q2", "3": "Q3", "4": "Q4" }
+  const kvartalItems: Record<string, string> = Object.fromEntries(
+    [1, 2, 3, 4].map((q) => [String(q), t("kvartalLabel", { broj: q })])
+  )
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(sp.toString())
@@ -124,7 +126,7 @@ export function ObilasciToolbar({
           </SelectTrigger>
           <SelectContent>
             {[1, 2, 3, 4].map((q) => (
-              <SelectItem key={q} value={String(q)}>{`Q${q}`}</SelectItem>
+              <SelectItem key={q} value={String(q)}>{t("kvartalLabel", { broj: q })}</SelectItem>
             ))}
           </SelectContent>
         </Select>

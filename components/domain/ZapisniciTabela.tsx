@@ -50,7 +50,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border">
+      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm" data-testid="pregled-tabela">
           <thead className="bg-muted">
             <tr>

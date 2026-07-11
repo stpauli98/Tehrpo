@@ -19,6 +19,15 @@ function opisDetalja(red: AktivnostRed): string {
   return JSON.stringify(d)
 }
 
+function ciljLabel(r: AktivnostRed): string {
+  const naziv =
+    r.cilj_ime && r.cilj_klijent && r.cilj_ime !== r.cilj_klijent
+      ? `${r.cilj_ime} (${r.cilj_klijent})`
+      : (r.cilj_ime ?? r.cilj_klijent ?? (r.entitet_id ? `#${r.entitet_id}` : null))
+  if (!r.entitet) return naziv ?? "—"
+  return naziv ? `${r.entitet} · ${naziv}` : r.entitet
+}
+
 export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
   const t = await getTranslations("aktivnost")
   if (redovi.length === 0) {
@@ -44,9 +53,7 @@ export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
               </td>
               <td className="px-3 py-2">{r.korisnik_ime ?? t("sistemski")}</td>
               <td className="px-3 py-2">{t(`akcije.${r.akcija}` as never)}</td>
-              <td className="px-3 py-2">
-                {r.entitet ?? "—"}{r.entitet_id ? ` #${r.entitet_id}` : ""}
-              </td>
+              <td className="px-3 py-2">{ciljLabel(r)}</td>
               <td className="px-3 py-2 text-muted-foreground">{opisDetalja(r)}</td>
             </tr>
           ))}

@@ -23,6 +23,8 @@ export interface AktivnostRed {
   staro: unknown
   novo: unknown
   detalji: unknown
+  cilj_ime: string | null
+  cilj_klijent: string | null
   ukupno: number
 }
 

@@ -784,6 +784,8 @@ export type Database = {
       aktivnost_view: {
         Row: {
           akcija: string | null
+          cilj_ime: string | null
+          cilj_klijent: string | null
           detalji: Json | null
           entitet: string | null
           entitet_id: string | null
@@ -897,6 +899,8 @@ export type Database = {
         }
         Returns: {
           akcija: string
+          cilj_ime: string
+          cilj_klijent: string
           detalji: Json
           entitet: string
           entitet_id: string
@@ -949,6 +953,7 @@ export type Database = {
       obrisi_stare_dogadjaje: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      tekst_u_uuid: { Args: { t: string }; Returns: string }
       ukloni_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }
         Returns: undefined

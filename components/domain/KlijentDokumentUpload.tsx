@@ -9,6 +9,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { uploadKlijentDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
 import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -26,9 +27,11 @@ function formatBytes(n: number): string {
 
 export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   const t = useTranslations("klijenti.dokumentUpload")
+  const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const [state, action, pending] = useActionState(uploadKlijentDokumentAction, initial)
+  useAkcijaToast(state, { uspjeh: t("uspjeh"), greska: tc("greska") })
   const fileRef = useRef<HTMLInputElement>(null)
   const prev = useRef(state)
   const [dragging, setDragging] = useState(false)

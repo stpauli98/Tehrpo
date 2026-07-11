@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { createUgovor, updateUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -27,6 +28,7 @@ export function UgovorSheet({ klijentId, ugovor }: { klijentId: string; ugovor?:
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(isEdit ? updateUgovor : createUgovor, initial)
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {

@@ -3,15 +3,16 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { postaviDodjeleZaKlijenta } from "@/app/(dashboard)/klijenti/[id]/actions"
+import { toastRezultat } from "@/components/akcija-toast"
 
 export function DodjelaRadnikaFirmi({
   klijentId, radnici, izabrani,
 }: { klijentId: string; radnici: { id: string; ime: string }[]; izabrani: string[] }) {
   const t = useTranslations("klijenti.dodjelaRadnika")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [sel, setSel] = useState<Set<string>>(new Set(izabrani))
@@ -26,9 +27,11 @@ export function DodjelaRadnikaFirmi({
 
   function spasi() {
     startTransition(async () => {
-      const res = await postaviDodjeleZaKlijenta(klijentId, [...sel])
-      if (res.ok) { toast.success(t("spaseno")); router.refresh() }
-      else toast.error(res.message)
+      const res = toastRezultat(await postaviDodjeleZaKlijenta(klijentId, [...sel]), {
+        uspjeh: t("spaseno"),
+        greska: tc("greska"),
+      })
+      if (res.ok) router.refresh()
     })
   }
 

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { createProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { APP_NAME } from "@/lib/brand"
 import { href } from "@/i18n/routes"
@@ -40,6 +41,7 @@ export function DodajProvjeruButton({
   const [nacin, setNacin] = useState<"izvrsava" | "pracenje">("izvrsava")
   const [state, action, pending] = useActionState(createProfilProvjere, initial)
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   const vrstaItems: Record<string, string> = Object.fromEntries(vrste.map((v) => [v.id, v.naziv]))
   const lokItems: Record<string, string> = Object.fromEntries(lokacije.map((l) => [l.id, l.naziv]))

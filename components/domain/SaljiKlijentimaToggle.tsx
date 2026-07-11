@@ -4,13 +4,16 @@ import { useActionState, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { updateSaljiKlijentima, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useAkcijaToast } from "@/components/akcija-toast"
 
 const initial: ActionResult = { ok: true }
 
 export function SaljiKlijentimaToggle({ salji }: { salji: boolean }) {
   const t = useTranslations("postavke.saljiKlijentima")
+  const tc = useTranslations("common")
   const formRef = useRef<HTMLFormElement>(null)
   const [state, action, pending] = useActionState(updateSaljiKlijentima, initial)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
   // "trenutno" = vrijednost prikazana korisniku; "verzija" forsira REMOUNT Checkbox-a
   // (svjež defaultChecked) — OBA se mijenjaju ISKLJUČIVO ZAJEDNO (nikad "trenutno" samo),
   // nakon SVAKOG završenog round-trip-a (uspjeh ILI neuspjeh). Klik samo bilježi namjeru

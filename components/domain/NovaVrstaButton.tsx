@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { createVrsta, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 
 const initial: ActionResult = { ok: true }
@@ -26,6 +27,7 @@ export function NovaVrstaButton() {
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(createVrsta, initial)
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {

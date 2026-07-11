@@ -9,6 +9,7 @@ import {
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 
@@ -21,6 +22,7 @@ export function ObrisiProfilButton({ id }: { id: string }) {
   const mozeUrediti = useMozeUrediti()
   const [state, action, pending] = useActionState(deleteProfilProvjere, initial)
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("obrisano"), greska: tc("greska") })
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
       submitted.current = false

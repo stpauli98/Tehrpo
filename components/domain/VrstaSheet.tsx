@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useAkcijaToast, toastRezultat } from "@/components/akcija-toast"
 import { updateVrsta, postaviVrstaAktivna, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 
 const initial: ActionResult = { ok: true }
@@ -27,6 +28,7 @@ export function VrstaSheet({
   const [state, action, pending] = useActionState(updateVrsta, initial)
   const submitted = useRef(false)
   const [togglePending, startToggle] = useTransition()
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) { submitted.current = false; setOpen(false); router.refresh() }
@@ -78,7 +80,14 @@ export function VrstaSheet({
             disabled={togglePending}
             data-testid="vrsta-toggle-aktivna"
             className={vrsta.aktivna ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-green-700 border-green-200 hover:bg-green-50"}
-            onClick={() => startToggle(async () => { await postaviVrstaAktivna(vrsta.id, !vrsta.aktivna); router.refresh() })}
+            onClick={() => startToggle(async () => {
+              const next = !vrsta.aktivna
+              toastRezultat(await postaviVrstaAktivna(vrsta.id, next), {
+                uspjeh: next ? t("aktiviranaUspjeh") : t("deaktiviranaUspjeh"),
+                greska: tc("greska"),
+              })
+              router.refresh()
+            })}
           >
             {vrsta.aktivna ? t("deaktiviraj") : t("aktiviraj")}
           </Button>

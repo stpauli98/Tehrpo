@@ -24,6 +24,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { createTermin, type ActionResult } from "@/app/(dashboard)/termini/actions"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 import { jeZakazanoPoslijeRoka, danaPoslijeRoka } from "@/lib/plan-datum"
 import { formatDatum } from "@/lib/date"
@@ -54,6 +55,7 @@ export function NoviTerminButton({
   const [state, action, pending] = useActionState(createTermin, initial)
   const submitted = useRef(false)
   const mozeUrediti = useMozeUrediti()
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
 

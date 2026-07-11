@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
@@ -35,6 +36,17 @@ export default async function AktivnostPage({
   const straneUkupno = Math.max(1, Math.ceil(ukupno / PO_STRANI))
   const kljucFiltera = `${jedan(sp.akcija) ?? ""}|${jedan(sp.q) ?? ""}|${od ?? ""}|${doDatum ?? ""}`
 
+  function stranaHref(n: number) {
+    const p = new URLSearchParams()
+    const a = jedan(sp.akcija); if (a) p.set("akcija", a)
+    const q = jedan(sp.q); if (q) p.set("q", q)
+    if (od) p.set("od", od)
+    if (doDatum) p.set("do", doDatum)
+    if (n > 1) p.set("strana", String(n))
+    const qs = p.toString()
+    return qs ? `?${qs}` : "?"
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -45,7 +57,15 @@ export default async function AktivnostPage({
       <AktivnostTabela redovi={redovi} />
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{ukupno}</span>
-        <span>{strana} / {straneUkupno}</span>
+        <div className="flex items-center gap-3">
+          {strana > 1
+            ? <Link href={stranaHref(strana - 1)} className="rounded-md border border-input px-3 py-1 hover:bg-muted">‹</Link>
+            : <span className="rounded-md border border-input px-3 py-1 opacity-40" aria-disabled="true">‹</span>}
+          <span>{strana} / {straneUkupno}</span>
+          {strana < straneUkupno
+            ? <Link href={stranaHref(strana + 1)} className="rounded-md border border-input px-3 py-1 hover:bg-muted">›</Link>
+            : <span className="rounded-md border border-input px-3 py-1 opacity-40" aria-disabled="true">›</span>}
+        </div>
       </div>
     </div>
   )

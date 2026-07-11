@@ -33,7 +33,7 @@ export function parseIzvozParams(sp: URLSearchParams): IzvozParams {
     case "raspon": {
       const od = sp.get("od")
       const doD = sp.get("do")
-      if (!validRaspon(od, doD)) return { ok: false, greska: "raspon" }
+      if (!od || !doD || !validRaspon(od, doD)) return { ok: false, greska: "raspon" }
       period = { mod: "raspon", od, do: doD }
       break
     }

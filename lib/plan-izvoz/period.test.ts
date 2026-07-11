@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { validRaspon, izvozPeriodRange, izvozPeriodLabel, type IzvozPeriod } from "./period"
+import { validRaspon, izvozPeriodRange, izvozPeriodLabel } from "./period"
 
 describe("validRaspon", () => {
   it("oba ISO i od<=do → true", () => {

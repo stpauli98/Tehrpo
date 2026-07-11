@@ -8,6 +8,7 @@ import { FileText, Sparkles, Trash2, Download } from "lucide-react"
 import { toast } from "sonner"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import {
   uploadDokumentAction,
   generateZapisnikAction,
@@ -31,6 +32,7 @@ export function DokumentiSekcija({
   izvrsen: boolean
 }) {
   const t = useTranslations("dokumenti")
+  const tc = useTranslations("common")
   const router = useRouter()
   const queryClient = useQueryClient()
   const uloga = useUloga()
@@ -41,6 +43,9 @@ export function DokumentiSekcija({
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)
   const [genState, genAction, genPending] = useActionState(generateZapisnikAction, initial)
   const [delState, delAction, delPending] = useActionState(deleteDokumentAction, initial)
+  useAkcijaToast(uploadState, { uspjeh: t("uploadUspjeh"), greska: tc("greska") })
+  useAkcijaToast(genState, { uspjeh: t("zapisnikUspjeh"), greska: tc("greska") })
+  useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
   const fileRef = useRef<HTMLInputElement>(null)
   const MAX_MB = 10
 

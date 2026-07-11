@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { UgovorSheet } from "@/components/domain/UgovorSheet"
 import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { formatDatum } from "@/lib/date"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -18,6 +19,7 @@ const initial: ActionResult = { ok: true }
 
 export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ugovori: UgovorRow[]; info?: string }) {
   const t = useTranslations("klijenti.ugovori")
+  const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const [delState, delAction, delPending] = useActionState(deleteUgovor, initial)
@@ -25,6 +27,7 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
   useEffect(() => {
     if (delState !== prev.current) { prev.current = delState; if (delState.ok) router.refresh() }
   }, [delState, router])
+  useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
 
   return (
     <div className="space-y-3" data-testid="ugovori-sekcija">

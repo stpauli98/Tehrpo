@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { VrstaSheet } from "./VrstaSheet"
+import { toastRezultat } from "@/components/akcija-toast"
 import { postaviVrstaInterval, postaviVrstaAktivna } from "@/app/(dashboard)/postavke/actions"
 
 type Vrsta = {
@@ -168,6 +169,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
 function StatusPill({ vrsta }: { vrsta: Vrsta }) {
   const router = useRouter()
   const t = useTranslations("termini.vrstePregleda")
+  const tc = useTranslations("common")
   const [pending, startToggle] = useTransition()
 
   return (
@@ -178,7 +180,11 @@ function StatusPill({ vrsta }: { vrsta: Vrsta }) {
       title={vrsta.aktivna ? t("klikDeaktivacija") : t("klikAktivacija")}
       onClick={() =>
         startToggle(async () => {
-          await postaviVrstaAktivna(vrsta.id, !vrsta.aktivna)
+          const next = !vrsta.aktivna
+          toastRezultat(await postaviVrstaAktivna(vrsta.id, next), {
+            uspjeh: next ? t("aktiviranaUspjeh") : t("deaktiviranaUspjeh"),
+            greska: tc("greska"),
+          })
           router.refresh()
         })
       }

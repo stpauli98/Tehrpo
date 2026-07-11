@@ -232,7 +232,8 @@
         "ponuda": "Per Angebot"
       },
       "submitPending": "Wird gespeichert…",
-      "submit": "Änderungen speichern"
+      "submit": "Änderungen speichern",
+      "uspjeh": "Kunde gespeichert"
     },
     "tabs": {
       "idKarta": {
@@ -277,7 +278,8 @@
       "poljeEmail": "E-Mail *",
       "poljeNapomena": "Notiz",
       "submitPending": "Wird erstellt…",
-      "submit": "Kunde erstellen"
+      "submit": "Kunde erstellen",
+      "uspjeh": "Kunde erstellt"
     },
     "obrisi": {
       "disabledTitle": "Der Kunde hat Termine und kann nicht gelöscht werden",
@@ -413,7 +415,8 @@
       "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
       "tipDokumentaLabel": "Dokumenttyp",
       "submitPending": "Wird hochgeladen…",
-      "submit": "Dokument hinzufügen"
+      "submit": "Dokument hinzufügen",
+      "uspjeh": "Dokument hinzugefügt"
     },
     "dodjelaKlijenata": {
       "dugme": "Firmen ({count})",
@@ -596,7 +599,9 @@
       "spremam": "Speichere…",
       "spremiIzmjene": "Änderungen speichern",
       "deaktiviraj": "Deaktivieren",
-      "aktiviraj": "Aktivieren"
+      "aktiviraj": "Aktivieren",
+      "aktiviranaUspjeh": "Art aktiviert",
+      "deaktiviranaUspjeh": "Art deaktiviert"
     },
     "vrstePregleda": {
       "prikaziNeaktivne": "Auch inaktive anzeigen",
@@ -617,7 +622,9 @@
       "klikDeaktivacija": "Klicken zum Deaktivieren",
       "klikAktivacija": "Klicken zum Aktivieren",
       "aktivna": "Aktiv",
-      "neaktivna": "Inaktiv"
+      "neaktivna": "Inaktiv",
+      "aktiviranaUspjeh": "Art aktiviert",
+      "deaktiviranaUspjeh": "Art deaktiviert"
     },
     "actions": {
       "datumNeispravan": "Ungültiges Datum",
@@ -745,7 +752,9 @@
     "prazno": "Keine Dokumente für diesen Termin.",
     "preuzmi": "Herunterladen",
     "obrisiDokument": "Dokument löschen",
-    "aiOznaka": "KI"
+    "aiOznaka": "KI",
+    "uploadUspjeh": "Dokument hinzugefügt",
+    "zapisnikUspjeh": "Protokoll erstellt"
   },
   "postavke": {
     "naslov": "Einstellungen",

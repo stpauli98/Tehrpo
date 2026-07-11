@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { createKontakt, updateKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -26,6 +27,7 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(isEdit ? updateKontakt : createKontakt, initial)
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   const FIELDS: readonly [string, string, boolean][] = [
     ["ime", t("poljeIme"), true],

@@ -232,7 +232,8 @@
         "ponuda": "Under offer"
       },
       "submitPending": "Saving…",
-      "submit": "Save changes"
+      "submit": "Save changes",
+      "uspjeh": "Client saved"
     },
     "tabs": {
       "idKarta": {
@@ -277,7 +278,8 @@
       "poljeEmail": "Email *",
       "poljeNapomena": "Note",
       "submitPending": "Creating…",
-      "submit": "Create client"
+      "submit": "Create client",
+      "uspjeh": "Client created"
     },
     "obrisi": {
       "disabledTitle": "The client has appointments and cannot be deleted",
@@ -413,7 +415,8 @@
       "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
       "tipDokumentaLabel": "Document type",
       "submitPending": "Uploading…",
-      "submit": "Add document"
+      "submit": "Add document",
+      "uspjeh": "Document added"
     },
     "dodjelaKlijenata": {
       "dugme": "Companies ({count})",
@@ -596,7 +599,9 @@
       "spremam": "Saving…",
       "spremiIzmjene": "Save changes",
       "deaktiviraj": "Deactivate",
-      "aktiviraj": "Activate"
+      "aktiviraj": "Activate",
+      "aktiviranaUspjeh": "Type activated",
+      "deaktiviranaUspjeh": "Type deactivated"
     },
     "vrstePregleda": {
       "prikaziNeaktivne": "Show inactive too",
@@ -617,7 +622,9 @@
       "klikDeaktivacija": "Click to deactivate",
       "klikAktivacija": "Click to activate",
       "aktivna": "Active",
-      "neaktivna": "Inactive"
+      "neaktivna": "Inactive",
+      "aktiviranaUspjeh": "Type activated",
+      "deaktiviranaUspjeh": "Type deactivated"
     },
     "actions": {
       "datumNeispravan": "Invalid date",
@@ -745,7 +752,9 @@
     "prazno": "No documents for this appointment.",
     "preuzmi": "Download",
     "obrisiDokument": "Delete document",
-    "aiOznaka": "AI"
+    "aiOznaka": "AI",
+    "uploadUspjeh": "Document added",
+    "zapisnikUspjeh": "Record generated"
   },
   "postavke": {
     "naslov": "Settings",

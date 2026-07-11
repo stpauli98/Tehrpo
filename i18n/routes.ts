@@ -34,3 +34,17 @@ export function localizeHref(path: string, locale: Locale = APP_LOCALE): string 
 }
 
 export const href = (path: string) => localizeHref(path)
+
+// Inverzija ROUTE_MAP za jezik deploymenta: lokalizovan segment → fizički (sr izvor istine).
+// Na sr = prazna mapa (rute su fizičke). Tablni nazivi (nisu u ROUTE_MAP) ostaju isti.
+const REVERSE_ROUTE: Record<string, string> =
+  APP_LOCALE === "sr"
+    ? {}
+    : Object.fromEntries(
+        Object.entries(ROUTE_MAP).map(([fizicki, prevodi]) => [prevodi[APP_LOCALE as "en" | "de"], fizicki]),
+      )
+
+/** Lokalizovan segment rute → fizički (sr) segment. Nepoznat/tablni naziv ostaje nepromijenjen. */
+export function delokalizujSegment(seg: string): string {
+  return REVERSE_ROUTE[seg] ?? seg
+}

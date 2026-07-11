@@ -777,6 +777,26 @@
       "broj_ugovora": "Vertragsnummer",
       "datum_od": "Datum von",
       "datum_do": "Datum bis"
+    },
+    "ekrani": {
+      "pregled": "Übersicht",
+      "klijenti": "Kunden",
+      "termini": "Termine",
+      "plan-aktivnosti": "Aktivitätsplan",
+      "obilasci": "Begehungen",
+      "zapisnici": "Protokolle",
+      "dokumenti": "Dokumente",
+      "postavke": "Einstellungen",
+      "aktivnost": "Aktivität",
+      "prikaz": "Ansicht",
+      "asistent": "Assistent",
+      "lokacije": "Standorte",
+      "vrste_provjera": "Prüfungsarten",
+      "korisnici": "Benutzer",
+      "korisnik_klijent": "Kundenzuordnung",
+      "klijent_provjere": "Kundenprüfungen",
+      "kontakt_osobe": "Kontaktpersonen",
+      "ugovori": "Verträge"
     }
   },
   "zapisnici": {

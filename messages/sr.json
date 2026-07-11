@@ -777,6 +777,26 @@
       "broj_ugovora": "Broj ugovora",
       "datum_od": "Datum od",
       "datum_do": "Datum do"
+    },
+    "ekrani": {
+      "pregled": "Pregled",
+      "klijenti": "Klijenti",
+      "termini": "Termini",
+      "plan-aktivnosti": "Plan aktivnosti",
+      "obilasci": "Obilasci",
+      "zapisnici": "Zapisnici",
+      "dokumenti": "Dokumenti",
+      "postavke": "Postavke",
+      "aktivnost": "Aktivnost",
+      "prikaz": "Prikaz",
+      "asistent": "Asistent",
+      "lokacije": "Lokacije",
+      "vrste_provjera": "Vrste provjera",
+      "korisnici": "Korisnici",
+      "korisnik_klijent": "Dodjela klijenta",
+      "klijent_provjere": "Provjere klijenta",
+      "kontakt_osobe": "Kontakt osobe",
+      "ugovori": "Ugovori"
     }
   },
   "zapisnici": {

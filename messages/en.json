@@ -42,7 +42,9 @@
       "resizeHint": "Drag to resize · double-click to collapse"
     },
     "topBar": {
-      "odjava": "Sign out"
+      "odjava": "Sign out",
+      "korisnickiMeni": "Account menu",
+      "prijavljenKao": "Signed in as"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — coming soon"

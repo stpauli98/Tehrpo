@@ -42,7 +42,9 @@
       "resizeHint": "Ziehen zum Anpassen der Breite · Doppelklick zum Einklappen"
     },
     "topBar": {
-      "odjava": "Abmelden"
+      "odjava": "Abmelden",
+      "korisnickiMeni": "Kontomenü",
+      "prijavljenKao": "Angemeldet als"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — demnächst"

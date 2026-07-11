@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parsePlanFilteri, mjesecRange, applyPlanFilteri, type PlanFilteri } from "./plan-filteri"
+import { parsePlanFilteri, mjesecRange, applyPlanFilteri, applyPlanFilteriBezDatuma, type PlanFilteri } from "./plan-filteri"
 import { currentYear } from "./date"
 
 function mockQ() {
@@ -71,5 +71,22 @@ describe("mjesecRange", () => {
   })
   it("'svi' → null (bez datumskog opsega)", () => {
     expect(mjesecRange(base("svi"))).toBeNull()
+  })
+})
+
+describe("applyPlanFilteriBezDatuma", () => {
+  const base: PlanFilteri = { status: "svi", q: "", klijentId: "", lokacijaId: "", vrstaId: "", mjesec: "7", godina: 2026, nacin: "svi" }
+  function mockQ() {
+    const calls: [string, unknown][] = []
+    const q: Record<string, (...a: unknown[]) => unknown> = {}
+    for (const m of ["eq", "or", "gte", "lte"]) q[m] = (...a: unknown[]) => { calls.push([m, a]); return q }
+    return { q, calls }
+  }
+  it("primjenjuje ne-datumske filtere ali NIKAD gte/lte (čak i uz mjesec=7)", () => {
+    const { q, calls } = mockQ()
+    applyPlanFilteriBezDatuma(q as never, { ...base, status: "kasni", klijentId: "K1" })
+    expect(calls).toContainEqual(["eq", ["status_izvedeni", "kasni"]])
+    expect(calls).toContainEqual(["eq", ["klijent_id", "K1"]])
+    expect(calls.some(([m]) => m === "gte" || m === "lte")).toBe(false)
   })
 })

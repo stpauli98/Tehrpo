@@ -670,8 +670,29 @@
   "plan": {
     "naslov": "Aktivitätsplan",
     "izvoz": {
-      "excel": "Excel-Export",
-      "pdf": "PDF-Export"
+      "preuzmi": "Herunterladen",
+      "naslovModala": "Bericht herunterladen",
+      "format": "Format",
+      "formatPdf": "PDF",
+      "formatExcel": "Excel",
+      "period": "Zeitraum",
+      "periodOvajMjesec": "Dieser Monat",
+      "periodGodina": "Ganzes Jahr",
+      "periodMjesec": "Bestimmter Monat",
+      "periodRaspon": "Benutzerdefinierter Bereich",
+      "periodSvi": "Alle (ohne Zeitlimit)",
+      "od": "Von",
+      "do": "Bis",
+      "opseg": "Umfang",
+      "opsegSve": "Alle Aktivitäten",
+      "opsegFiltrirano": "Nur aktuell gefiltert",
+      "filteriPrimijenjeni": "Seitenfilter werden angewendet",
+      "nemaFiltera": "Keine aktiven Seitenfilter",
+      "prilagodi": "Anpassen",
+      "sakrij": "Ausblenden",
+      "brojAktivnosti": "{broj} Aktivitäten werden exportiert",
+      "racunam": "Wird berechnet…",
+      "greskaBroj": "Anzahl derzeit nicht verfügbar"
     },
     "viewSwitcher": {
       "kalendar": "Kalender",
@@ -1141,7 +1162,10 @@
         "pracenje": "Verfolgung"
       },
       "greska": "Fehler",
-      "greskaGenerisanje": "Fehler beim Generieren der Datei: {poruka}"
+      "greskaGenerisanje": "Fehler beim Generieren der Datei: {poruka}",
+      "raspon": {
+        "nevazeci": "Ungültiger Datumsbereich (von muss ≤ bis sein)."
+      }
     },
     "zapisnik": {
       "naslov": "PROTOKOLL ÜBER DIE DURCHGEFÜHRTE PRÜFUNG",

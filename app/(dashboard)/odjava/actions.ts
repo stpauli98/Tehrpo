@@ -5,6 +5,9 @@ import { href } from "@/i18n/routes"
 
 export async function odjaviSe() {
   const supabase = await createServerSupabaseClient()
+  await supabase.rpc("zabiljezi_dogadjaje", {
+    p_dogadjaji: [{ akcija: "LOGOUT", entitet: null, entitet_id: null, detalji: null }],
+  })
   await supabase.auth.signOut()
   redirect(href("/prijava"))
 }

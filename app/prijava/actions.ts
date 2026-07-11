@@ -26,6 +26,9 @@ export async function prijaviSe(_prev: ActionResult, formData: FormData): Promis
     password: parsed.data.lozinka,
   })
   if (error) return { ok: false, message: t("prijava.greske.pogresnoUneseno") }
+  await supabase.rpc("zabiljezi_dogadjaje", {
+    p_dogadjaji: [{ akcija: "LOGIN", entitet: null, entitet_id: null, detalji: null }],
+  })
   revalidatePath("/", "layout")
   redirect(href("/pregled"))
 }

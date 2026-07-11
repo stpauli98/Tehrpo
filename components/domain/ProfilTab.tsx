@@ -23,18 +23,20 @@ export async function ProfilTab({
   stavke,
   vrste,
   lokacije,
+  admini,
 }: {
   klijentId: string
   stavke: ProfilStavka[]
   vrste: { id: string; naziv: string; interval: number | null }[]
   lokacije: { id: string; naziv: string }[]
+  admini: { ime: string; email: string }[]
 }) {
   const t = await getTranslations("klijenti.profil")
   const kolone = [t("kolone.vrsta"), t("kolone.lokacija"), t("kolone.interval"), t("kolone.zadnjiPut"), t("kolone.sljedeciRok"), ""]
   return (
     <div data-testid="tab-profil-content" className="space-y-4">
       <div className="flex justify-end">
-        <DodajProvjeruButton klijentId={klijentId} vrste={vrste} lokacije={lokacije} />
+        <DodajProvjeruButton klijentId={klijentId} vrste={vrste} lokacije={lokacije} admini={admini} />
       </div>
       {stavke.length === 0 ? (
         <div className="rounded-xl border border-border p-8 text-center text-sm text-muted-foreground">

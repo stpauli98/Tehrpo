@@ -146,7 +146,7 @@ export function MatricaView() {
       ) : (
         <div
           data-testid="prikaz-empty"
-          className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
+          className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
         >
           {emptyMessage}
         </div>

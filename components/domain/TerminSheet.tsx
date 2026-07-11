@@ -111,11 +111,11 @@ export function TerminSheet({
             <span>{termin.klijent_naziv ?? t("naslovFallback")}</span>
             <StatusBadge status={termin.status_izvedeni} stvarniStatus={termin.status} datumZakazan={termin.datum_zakazan} />
           </DialogTitle>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             {termin.vrsta_naziv ?? "—"}
             {termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
           </p>
-          <p className="text-xs text-slate-400">{t("rok", { datum: formatDatum(termin.rok_dospijeca) })}</p>
+          <p className="text-xs text-muted-foreground">{t("rok", { datum: formatDatum(termin.rok_dospijeca) })}</p>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -131,10 +131,10 @@ export function TerminSheet({
             data-testid="termin-edit-form"
           >
             <input type="hidden" name="id" value={termin.id ?? ""} />
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("detaljiNaslov")}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("detaljiNaslov")}</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm">
-                <span className="text-slate-600">{t("poljeDatumZakazan")}</span>
+                <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
                 <Input
                   type="date"
                   name="datum_zakazan"
@@ -145,7 +145,7 @@ export function TerminSheet({
               </label>
               {termin.status === "izvrseno" && (
                 <label className="block text-sm">
-                  <span className="text-slate-600">{t("poljeDatumIzvrsenja")}</span>
+                  <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>
                   <Input
                     type="date"
                     name="datum_izvrsenja"
@@ -156,7 +156,7 @@ export function TerminSheet({
                 </label>
               )}
               <label className="block text-sm">
-                <span className="text-slate-600">{t("poljeZaduzeni")}</span>
+                <span className="text-muted-foreground">{t("poljeZaduzeni")}</span>
                 <Input
                   name="zaduzeni"
                   defaultValue={termin.zaduzeni ?? ""}
@@ -166,7 +166,7 @@ export function TerminSheet({
                 />
               </label>
               <label className="block text-sm col-span-2">
-                <span className="text-slate-600">{t("poljeNapomena")}</span>
+                <span className="text-muted-foreground">{t("poljeNapomena")}</span>
                 <Input
                   name="napomena"
                   defaultValue={termin.napomena ?? ""}
@@ -176,7 +176,7 @@ export function TerminSheet({
               </label>
             </div>
             {updateState.ok === false && updateState.message && (
-              <p className="text-sm text-red-600" role="alert">
+              <p className="text-sm text-destructive" role="alert">
                 {updateState.message}
               </p>
             )}
@@ -191,11 +191,11 @@ export function TerminSheet({
               nezavisnog read sadržaja), pa se cijela sekcija gejtuje za pregled. */}
           {mozeUrediti && termin.status !== "izvrseno" && (
             <section className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("akcijeNaslov")}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("akcijeNaslov")}</p>
               <div className="grid grid-cols-2 gap-3 items-start">
                 <form
                   action={markAction}
-                  className="space-y-2 rounded-lg border border-slate-200 p-3"
+                  className="space-y-2 rounded-lg border border-border p-3"
                   data-testid="mark-done-form"
                 >
                   <p className="text-sm font-medium">{t("oznaciKaoIzvrseno")}</p>
@@ -208,7 +208,7 @@ export function TerminSheet({
                     data-testid="mark-datum"
                   />
                   {markState.ok === false && markState.message && (
-                    <p className="text-sm text-red-600" role="alert">
+                    <p className="text-sm text-destructive" role="alert">
                       {markState.message}
                     </p>
                   )}
@@ -221,7 +221,7 @@ export function TerminSheet({
                   >
                     {markPending ? t("oznacavam") : t("oznaciIzvrseno")}
                   </Button>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {t("autoCiklus")}
                   </p>
                 </form>
@@ -230,20 +230,20 @@ export function TerminSheet({
                 {termin.status !== "otkazano" && (
                   <form
                     action={otkazAction}
-                    className="space-y-2 rounded-lg border border-slate-200 p-3"
+                    className="space-y-2 rounded-lg border border-border p-3"
                     data-testid="otkazi-form"
                   >
                     <p className="text-sm font-medium">{t("otkaziTermin")}</p>
                     <input type="hidden" name="id" value={termin.id ?? ""} />
                     {otkazState.ok === false && otkazState.message && (
-                      <p className="text-sm text-red-600" role="alert">{otkazState.message}</p>
+                      <p className="text-sm text-destructive" role="alert">{otkazState.message}</p>
                     )}
                     {!otkazArmed ? (
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setOtkazArmed(true)}
-                        className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                        className="w-full text-destructive border-destructive/30 hover:bg-destructive/20"
                         data-testid="otkazi-arm"
                       >
                         {t("otkaziTermin")}
@@ -254,7 +254,7 @@ export function TerminSheet({
                           type="submit"
                           variant="outline"
                           disabled={otkazPending}
-                          className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                          className="w-full text-destructive border-destructive/30 hover:bg-destructive/20"
                           data-testid="otkazi-submit"
                         >
                           {otkazPending ? t("otkazujem") : t("potvrdiOtkazivanje")}
@@ -275,9 +275,9 @@ export function TerminSheet({
 
           {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
           <section data-testid="sheet-istorija">
-            <p className="text-xs uppercase tracking-wide text-slate-400">{t("istorijaNaslov")}</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("istorijaNaslov")}</p>
             {istorija.length === 0 ? (
-              <p className="mt-1 text-sm text-slate-500">{t("istorijaPrazno")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("istorijaPrazno")}</p>
             ) : (
               <ul className="mt-2 space-y-1">
                 {istorija.map((h) => (
@@ -285,7 +285,7 @@ export function TerminSheet({
                     key={h.id ?? ""}
                     className="flex items-center justify-between text-sm"
                   >
-                    <span className="text-slate-600">{h.vrsta_naziv ?? "—"}</span>
+                    <span className="text-muted-foreground">{h.vrsta_naziv ?? "—"}</span>
                     <span className="text-green-600 tabular-nums">
                       {formatDatum(h.datum_izvrsenja)} ✓
                     </span>

@@ -134,7 +134,7 @@ export function TerminiFilters({
               FOCUS_RING,
               status === o.value
                 ? "bg-brand text-white border-brand"
-                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+                : "bg-card text-muted-foreground border-border hover:bg-muted"
             )}
           >
             {o.value === "svi" ? t("svi") : tStatus(o.value)}

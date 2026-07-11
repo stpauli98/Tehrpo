@@ -20,7 +20,7 @@ export function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <section className="rounded-xl border border-slate-200">
+    <section className="rounded-xl border border-border">
       <div className="flex items-center justify-between gap-4 px-4 py-3">
         <button
           type="button"
@@ -31,7 +31,7 @@ export function CollapsibleSection({
           <ChevronDown
             aria-hidden
             className={cn(
-              "size-4 shrink-0 text-slate-400 transition-transform",
+              "size-4 shrink-0 text-muted-foreground transition-transform",
               open ? "" : "-rotate-90",
             )}
           />
@@ -40,8 +40,8 @@ export function CollapsibleSection({
         {action}
       </div>
       {open && (
-        <div className="border-t border-slate-100 p-4">
-          {description && <p className="mb-4 text-sm text-slate-500">{description}</p>}
+        <div className="border-t border-border p-4">
+          {description && <p className="mb-4 text-sm text-muted-foreground">{description}</p>}
           {children}
         </div>
       )}

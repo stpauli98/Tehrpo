@@ -44,7 +44,7 @@ export function InfoIkona({
         data-testid={testId}
         className={cn("group/info relative inline-flex items-center", className)}
       >
-        <Info className="size-3.5 text-slate-400 transition-colors group-hover/info:text-slate-600" />
+        <Info className="size-3.5 text-muted-foreground transition-colors group-hover/info:text-foreground" />
         {tooltip}
       </span>
     )
@@ -59,7 +59,7 @@ export function InfoIkona({
     >
       <Info
         aria-hidden
-        className="size-3.5 text-slate-400 transition-colors group-hover/info:text-slate-600 group-focus-visible/info:text-slate-600"
+        className="size-3.5 text-muted-foreground transition-colors group-hover/info:text-foreground group-focus-visible/info:text-foreground"
       />
       {tooltip}
     </button>

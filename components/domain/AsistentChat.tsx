@@ -87,11 +87,11 @@ export function AsistentChat({
     <div className="flex h-[calc(100vh-10rem)] flex-col">
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-2" data-testid="chat-poruke">
         {poruke.length === 0 && (
-          <p className="text-sm text-slate-500">{t("prazno")}</p>
+          <p className="text-sm text-muted-foreground">{t("prazno")}</p>
         )}
         {poruke.map((p, i) => <ChatMessage key={i} poruka={p} />)}
       </div>
-      <div className="space-y-2 border-t border-slate-200 pt-3">
+      <div className="space-y-2 border-t border-border pt-3">
         {poruke.length === 0 && <SuggestedPills onPick={send} />}
         <ChatInput disabled={busy} onSend={send} />
       </div>

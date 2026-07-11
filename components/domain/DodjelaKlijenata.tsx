@@ -84,7 +84,7 @@ export function DodjelaKlijenata({
           <DialogTitle>{t("naslov")}</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           {t("opis")}
         </p>
 
@@ -95,9 +95,9 @@ export function DodjelaKlijenata({
           data-testid={`dodjela-pretraga-${korisnikId}`}
         />
 
-        <div className="max-h-72 divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-200">
+        <div className="max-h-72 divide-y divide-border overflow-auto rounded-lg border border-border">
           {filtrirani.map((k) => (
-            <label key={k.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50">
+            <label key={k.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted">
               <Checkbox
                 checked={sel.has(k.id)}
                 onCheckedChange={() => toggle(k.id)}
@@ -107,12 +107,12 @@ export function DodjelaKlijenata({
             </label>
           ))}
           {filtrirani.length === 0 && (
-            <p className="px-3 py-4 text-center text-sm text-slate-400">{t("prazno")}</p>
+            <p className="px-3 py-4 text-center text-sm text-muted-foreground">{t("prazno")}</p>
           )}
         </div>
 
         <DialogFooter className="justify-between">
-          <span className="text-xs text-slate-500" data-testid={`dodjela-brojac-${korisnikId}`}>
+          <span className="text-xs text-muted-foreground" data-testid={`dodjela-brojac-${korisnikId}`}>
             {t("brojac", { count: sel.size })}
           </span>
           <div className="flex gap-2">

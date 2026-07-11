@@ -9,14 +9,14 @@ export function MatrixLegenda() {
   return (
     <div
       data-testid="matrix-legenda"
-      className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500"
+      className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
     >
-      <span className="font-medium text-slate-600">{t("naslov")}</span>
+      <span className="font-medium text-foreground">{t("naslov")}</span>
       <span>{tMatrix("izvrseno")}</span>
       <span>{tMatrix("kasni")}</span>
       <span>{tMatrix("viseTermina")}</span>
       <span>{tMatrix("nemaTermina")}</span>
-      <span className="mx-1 inline-block h-3 w-px bg-slate-200" />
+      <span className="mx-1 inline-block h-3 w-px bg-border" />
       {STATUS_ORDER.map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
           <span className={`inline-block h-3 w-3 rounded ${STATUS_CELL_CLASS[s]} ring-1 ring-inset ring-black/5`} />

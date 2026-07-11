@@ -30,17 +30,17 @@ export function MojNalogForm() {
   return (
     <form onSubmit={submit} className="max-w-sm space-y-3" data-testid="moj-nalog-form">
       <label className="block space-y-1">
-        <span className="text-sm text-slate-600">{t("trenutna")}</span>
+        <span className="text-sm text-muted-foreground">{t("trenutna")}</span>
         <Input type="password" autoComplete="current-password" required value={trenutna}
           onChange={(e) => setTrenutna(e.target.value)} data-testid="loz-trenutna" />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm text-slate-600">{t("nova")}</span>
+        <span className="text-sm text-muted-foreground">{t("nova")}</span>
         <Input type="password" autoComplete="new-password" required value={nova}
           onChange={(e) => setNova(e.target.value)} data-testid="loz-nova" />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm text-slate-600">{t("potvrda")}</span>
+        <span className="text-sm text-muted-foreground">{t("potvrda")}</span>
         <Input type="password" autoComplete="new-password" required value={potvrda}
           onChange={(e) => setPotvrda(e.target.value)} data-testid="loz-potvrda" />
       </label>

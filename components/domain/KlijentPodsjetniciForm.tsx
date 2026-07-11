@@ -44,7 +44,7 @@ export function KlijentPodsjetniciForm({
         />
         <span>
           <span className="block text-sm font-medium">{t("saljiNaslov")}</span>
-          <span className="block text-sm text-slate-500">{t("saljiOpis")}</span>
+          <span className="block text-sm text-muted-foreground">{t("saljiOpis")}</span>
         </span>
       </label>
 

@@ -48,11 +48,11 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
         <DialogHeader>
           <DialogTitle>{t("dialogNaslov")}</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           {t("dialogOpis")}
         </p>
         {state.ok === false && state.message && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {state.message}
           </p>
         )}

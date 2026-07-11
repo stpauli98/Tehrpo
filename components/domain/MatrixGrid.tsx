@@ -47,22 +47,22 @@ export function MatrixGrid({
     return (
       <div
         data-testid="matrix-empty"
-        className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
+        className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
       >
         {emptyMessage ?? t("prazno")}
       </div>
     )
   }
   return (
-    <div className="rounded-xl border border-slate-200 overflow-x-auto">
+    <div className="rounded-xl border border-border overflow-x-auto">
       <table
         className={cn("text-xs border-collapse", fillWidth && "w-full table-fixed")}
         data-testid="prikaz-matrix"
       >
-        <thead className="bg-slate-50">
+        <thead className="bg-muted">
           <tr>
             <th className={cn(
-              "sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left font-medium text-slate-600 border-r border-slate-200",
+              "sticky left-0 z-10 bg-muted px-3 py-2 text-left font-medium text-muted-foreground border-r border-border",
               fillWidth ? "w-[220px]" : "min-w-[220px]",
             )}>
               {t("vrstaHeader")}
@@ -71,7 +71,7 @@ export function MatrixGrid({
               <th
                 key={c.id}
                 className={cn(
-                  "px-2 py-2 text-center font-medium text-slate-500 whitespace-nowrap min-w-[56px]",
+                  "px-2 py-2 text-center font-medium text-muted-foreground whitespace-nowrap min-w-[56px]",
                   c.isCurrent && "ring-2 ring-brand rounded",
                 )}
               >
@@ -82,8 +82,8 @@ export function MatrixGrid({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.rowId} data-testid="matrix-row" className="border-t border-slate-100">
-              <td className="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-700 border-r border-slate-100 min-w-[220px]">
+            <tr key={row.rowId} data-testid="matrix-row" className="border-t border-border">
+              <td className="sticky left-0 z-10 bg-card px-3 py-2 font-medium text-foreground border-r border-border min-w-[220px]">
                 {row.rowLabel}
               </td>
               {columns.map((c) => {

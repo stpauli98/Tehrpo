@@ -61,7 +61,7 @@ export function PrikazToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2" data-testid="prikaz-toolbar" data-pending={pending}>
-      <div className="inline-flex rounded-lg border border-slate-200 p-0.5" data-testid="prikaz-mode-toggle">
+      <div className="inline-flex rounded-lg border border-border p-0.5" data-testid="prikaz-mode-toggle">
         <button
           type="button"
           data-testid="prikaz-mode-klijent"
@@ -70,7 +70,7 @@ export function PrikazToolbar({
           className={cn(
             "px-3 py-1 text-sm rounded-md transition-colors",
             FOCUS_RING,
-            mode === "klijent" ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-100"
+            mode === "klijent" ? "bg-brand text-white" : "text-muted-foreground hover:bg-muted"
           )}
         >
           {t("modKlijent")}
@@ -83,7 +83,7 @@ export function PrikazToolbar({
           className={cn(
             "px-3 py-1 text-sm rounded-md transition-colors",
             FOCUS_RING,
-            mode === "mjesec" ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-100"
+            mode === "mjesec" ? "bg-brand text-white" : "text-muted-foreground hover:bg-muted"
           )}
         >
           {t("modMjesec")}

@@ -33,7 +33,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
         {saljiGlobalno ? (
           <KlijentPodsjetniciForm klijentId={klijentId} salji={salji} kontakti={kontakti} adHocEmails={adHocEmails} />
         ) : (
-          <p className="max-w-xl text-sm text-slate-500" data-testid="podsjetnici-global-off">
+          <p className="max-w-xl text-sm text-muted-foreground" data-testid="podsjetnici-global-off">
             {t("globalnoIskljuceno")}
             {jeAdmin && (
               <>

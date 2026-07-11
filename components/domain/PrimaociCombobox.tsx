@@ -126,11 +126,11 @@ export function PrimaociCombobox({
   return (
     <div className="max-w-xl">
       <p className="mb-1 text-sm font-medium">{t("primaociNaslov")}</p>
-      <p className="mb-2 text-sm text-slate-500">{t("primaociOpis")}</p>
+      <p className="mb-2 text-sm text-muted-foreground">{t("primaociOpis")}</p>
 
       {/* Izabrani primaoci (chipovi) */}
       <div className="mb-2 flex flex-wrap gap-2" data-testid="primaoci-izabrani">
-        {nemaPrimalaca && <span className="text-sm text-slate-400">{t("nemaPrimalaca")}</span>}
+        {nemaPrimalaca && <span className="text-sm text-muted-foreground">{t("nemaPrimalaca")}</span>}
         {izabraniKontakti.map((k) => (
           <Badge key={k.id} variant="secondary" className="gap-1" data-testid={`primalac-kontakt-${k.id}`}>
             <span className="truncate">{k.ime} · {k.email}</span>
@@ -147,7 +147,7 @@ export function PrimaociCombobox({
         {adHocPrikaz.map((email) => (
           <Badge key={email} variant="outline" className="gap-1" data-testid="primalac-adhoc">
             <span className="truncate">{email}</span>
-            <span className="text-xs text-slate-400">⟨{t("tagJednokratno")}⟩</span>
+            <span className="text-xs text-muted-foreground">⟨{t("tagJednokratno")}⟩</span>
             {mozeUrediti && (
               <button
                 type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
@@ -169,7 +169,7 @@ export function PrimaociCombobox({
         <input
           type="text" role="combobox" aria-expanded={open} aria-controls="primaoci-lista"
           data-testid="primaoci-combobox-input"
-          className={cn("w-full rounded-lg border border-slate-200 px-3 py-2 text-sm", FOCUS_RING)}
+          className={cn("w-full rounded-lg border border-border px-3 py-2 text-sm", FOCUS_RING)}
           placeholder={t("comboPlaceholder")}
           value={q} disabled={pending}
           onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0) }}
@@ -179,21 +179,21 @@ export function PrimaociCombobox({
         {open && (opcije.length > 0 || nudiAdHoc || q.trim() !== "") && (
           <ul
             id="primaoci-lista" role="listbox" data-testid="primaoci-lista"
-            className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+            className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-border bg-card py-1 shadow-lg"
           >
             {opcije.map((o, i) => (
               <li key={o.id} role="option" aria-selected={hi === i}>
                 <button
                   type="button" data-testid={`opcija-kontakt-${o.id}`}
                   className={cn(
-                    "flex w-full flex-col px-3 py-1.5 text-left text-sm hover:bg-slate-50",
-                    hi === i && "bg-slate-50",
+                    "flex w-full flex-col px-3 py-1.5 text-left text-sm hover:bg-muted",
+                    hi === i && "bg-muted",
                     FOCUS_RING,
                   )}
                   onMouseEnter={() => setHi(i)} onClick={() => dodajKontakt(o.id)}
                 >
-                  <span className="font-medium">{o.ime}{o.funkcija && <span className="font-normal text-slate-500"> · {o.funkcija}</span>}</span>
-                  <span className="text-slate-500">{o.email}</span>
+                  <span className="font-medium">{o.ime}{o.funkcija && <span className="font-normal text-muted-foreground"> · {o.funkcija}</span>}</span>
+                  <span className="text-muted-foreground">{o.email}</span>
                 </button>
               </li>
             ))}
@@ -202,8 +202,8 @@ export function PrimaociCombobox({
                 <button
                   type="button" data-testid="opcija-adhoc"
                   className={cn(
-                    "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-brand hover:bg-slate-50",
-                    hi === opcije.length && "bg-slate-50",
+                    "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-brand hover:bg-muted",
+                    hi === opcije.length && "bg-muted",
                     FOCUS_RING,
                   )}
                   onMouseEnter={() => setHi(opcije.length)} onClick={() => dodajEmail(q)}
@@ -214,7 +214,7 @@ export function PrimaociCombobox({
               </li>
             )}
             {opcije.length === 0 && !nudiAdHoc && q.trim() !== "" && (
-              <li className="px-3 py-1.5 text-sm text-slate-400" data-testid="primaoci-nema-rezultata">{t("nemaRezultata")}</li>
+              <li className="px-3 py-1.5 text-sm text-muted-foreground" data-testid="primaoci-nema-rezultata">{t("nemaRezultata")}</li>
             )}
           </ul>
         )}
@@ -222,7 +222,7 @@ export function PrimaociCombobox({
       )}
 
       {kontakti.length === 0 && (
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           {t("nemaKontakata")}{" "}
           <Link
             href={`/klijenti/${klijentId}?tab=kontakti`}

@@ -137,7 +137,7 @@ export function Sidebar() {
           collapsed ? "justify-center px-0" : "gap-3 px-3",
           active
             ? "bg-brand text-white"
-            : "text-slate-700 hover:bg-slate-100",
+            : "text-foreground hover:bg-muted",
         )}
       >
         <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
@@ -162,7 +162,7 @@ export function Sidebar() {
         animating && "transition-[width] duration-300 ease-out motion-reduce:transition-none",
       )}
     >
-      <div className="flex h-full flex-col gap-1 rounded-2xl border border-slate-200 bg-white/70 p-2 shadow-sm backdrop-blur">
+      <div className="flex h-full flex-col gap-1 rounded-2xl border border-border bg-card/70 p-2 shadow-sm backdrop-blur">
         <ul className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map((item) => (
             <li key={item.href}>{renderItem(item)}</li>
@@ -176,7 +176,7 @@ export function Sidebar() {
             onClick={toggle}
             aria-label={collapsed ? tSidebar("prosiriNavigaciju") : tSidebar("skupiNavigaciju")}
             className={cn(
-              "group/item relative flex h-9 items-center rounded-lg text-xs text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600",
+              "group/item relative flex h-9 items-center rounded-lg text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground",
               FOCUS_RING,
               collapsed ? "justify-center px-0" : "gap-3 px-3",
             )}

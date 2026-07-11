@@ -38,7 +38,7 @@ export function TerminiTable({
     return (
       <div
         data-testid="termini-empty"
-        className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
+        className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
       >
         {t("prazno")}
       </div>
@@ -46,14 +46,14 @@ export function TerminiTable({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 overflow-hidden">
+    <div className="rounded-xl border border-border overflow-hidden">
       <table className="w-full text-sm" data-testid="termini-table">
-        <thead className="bg-slate-50">
+        <thead className="bg-muted">
           <tr>
             {COL_KEYS.map((c) => (
               <th
                 key={c}
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 whitespace-nowrap"
+                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground whitespace-nowrap"
               >
                 {tKolone(c)}
               </th>
@@ -67,23 +67,23 @@ export function TerminiTable({
               data-testid="termin-row"
               onClick={r.id ? () => router.push(detailHref(r.id!, currentSearch)) : undefined}
               className={cn(
-                "border-t border-slate-100 hover:bg-slate-50",
+                "border-t border-border hover:bg-muted",
                 r.id && "cursor-pointer",
               )}
             >
               <td className="px-3 py-2 whitespace-nowrap tabular-nums">{formatDatum(r.rok_dospijeca)}</td>
-              <td className="px-3 py-2 font-medium text-slate-900">{r.klijent_naziv ?? "—"}</td>
-              <td className="px-3 py-2 text-slate-600">{r.lokacija_naziv ?? "—"}</td>
-              <td className="px-3 py-2 text-slate-600">
+              <td className="px-3 py-2 font-medium text-foreground">{r.klijent_naziv ?? "—"}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.lokacija_naziv ?? "—"}</td>
+              <td className="px-3 py-2 text-muted-foreground">
                 {r.vrsta_naziv ?? "—"}
                 {r.nacin_izvrsenja === "pracenje" && (
-                  <span className="ml-2 rounded border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 align-middle">
+                  <span className="ml-2 rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground align-middle">
                     {t("samoPracenje")}
                   </span>
                 )}
               </td>
               <td className="px-3 py-2"><StatusBadge status={r.status_izvedeni} stvarniStatus={r.status} datumZakazan={r.datum_zakazan} /></td>
-              <td className="px-3 py-2 text-slate-600">{r.zaduzeni ?? "—"}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.zaduzeni ?? "—"}</td>
               <td className="px-3 py-2">
                 {r.id && (
                   <Link

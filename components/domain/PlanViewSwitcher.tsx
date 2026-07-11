@@ -29,7 +29,7 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
             FOCUS_RING,
             current === v
               ? "bg-brand text-white border-brand"
-              : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50",
+              : "bg-card text-muted-foreground border-border hover:bg-muted",
           )}
         >
           {t(v)}

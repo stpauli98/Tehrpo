@@ -74,7 +74,7 @@ export function DokumentiSekcija({
 
   return (
     <section data-testid="sheet-dokumenti">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{t("naslov")}</p>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("naslov")}</p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {izvrsen ? (
@@ -87,7 +87,7 @@ export function DokumentiSekcija({
             </form>
           )
         ) : (
-          <p className="text-xs text-slate-400" data-testid="zapisnik-nedostupan">
+          <p className="text-xs text-muted-foreground" data-testid="zapisnik-nedostupan">
             {t("zapisnikNedostupan")}
           </p>
         )}
@@ -118,23 +118,23 @@ export function DokumentiSekcija({
       </div>
 
       {greska && (
-        <p className="mt-2 text-sm text-red-600" role="alert">
+        <p className="mt-2 text-sm text-destructive" role="alert">
           {greska}
         </p>
       )}
 
       {dokumenti.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">{t("prazno")}</p>
+        <p className="mt-3 text-sm text-muted-foreground">{t("prazno")}</p>
       ) : (
         <ul className="mt-3 space-y-2" data-testid="dokumenti-lista">
           {dokumenti.map((d) => (
             <li
               key={d.id}
               data-testid="dokument-red"
-              className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 p-2 text-sm"
+              className="flex items-center justify-between gap-2 rounded-lg border border-border p-2 text-sm"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <FileText className="w-4 h-4 shrink-0 text-slate-400" aria-hidden />
+                <FileText className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
                 <span className="truncate">{d.naziv}</span>
                 {d.generated_by_ai && (
                   <span data-testid="dokument-ai-badge" className="shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-xs text-brand">{t("aiOznaka")}</span>
@@ -160,7 +160,7 @@ export function DokumentiSekcija({
                       disabled={delPending}
                       data-testid="dokument-delete"
                       aria-label={t("obrisiDokument")}
-                      className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
+                      className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden />
                       <Tooltip>{t("obrisiDokument")}</Tooltip>

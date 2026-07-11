@@ -59,7 +59,7 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
           <input type="hidden" name="klijent_id" value={klijentId} />
           {FIELDS.map(([name, label, req]) => (
             <label key={name} className="block text-sm">
-              <span className="text-slate-600">{label}</span>
+              <span className="text-muted-foreground">{label}</span>
               <Input
                 name={name}
                 required={req}
@@ -69,7 +69,7 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
             </label>
           ))}
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">{state.message}</p>
+            <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
           <Button type="submit" disabled={pending} data-testid="kontakt-submit">
             {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}

@@ -44,19 +44,19 @@ export function NoviKorisnikButton() {
           <div>
             <Input name="ime" placeholder={t("placeholderIme")} required />
             {state.ok === false && state.errors?.ime && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.ime[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.ime[0]}</p>
             )}
           </div>
           <div>
             <Input name="email" type="email" placeholder={t("placeholderEmail")} required />
             {state.ok === false && state.errors?.email && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.email[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.email[0]}</p>
             )}
           </div>
           <div>
             <Input name="lozinka" type="password" placeholder={t("placeholderLozinka")} required minLength={8} />
             {state.ok === false && state.errors?.lozinka && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.lozinka[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.lozinka[0]}</p>
             )}
           </div>
           <Select
@@ -74,7 +74,7 @@ export function NoviKorisnikButton() {
             </SelectContent>
           </Select>
           {state.ok === false && state.message && (
-            <p className="text-sm text-status-kasni" role="alert">{state.message}</p>
+            <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
           <Button type="submit" disabled={pending} className="w-full">{pending ? t("submitPending") : t("submit")}</Button>
         </form>

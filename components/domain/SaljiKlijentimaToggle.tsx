@@ -81,7 +81,7 @@ export function SaljiKlijentimaToggle({ salji }: { salji: boolean }) {
         </div>
       </form>
       {state.ok === false && state.message && (
-        <p className="text-xs text-red-600" role="alert">{state.message}</p>
+        <p className="text-xs text-destructive" role="alert">{state.message}</p>
       )}
     </div>
   )

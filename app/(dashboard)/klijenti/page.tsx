@@ -61,7 +61,7 @@ export default async function KlijentiPage({
 
       <div className="flex-1">
         {rows.length === 0 ? (
-          <div data-testid="klijenti-empty" className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500">
+          <div data-testid="klijenti-empty" className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">
             {t("prazno")}
           </div>
         ) : (
@@ -71,7 +71,7 @@ export default async function KlijentiPage({
         )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-sm text-slate-600" data-testid="klijenti-pagination">
+      <div className="mt-6 flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground" data-testid="klijenti-pagination">
         <span data-testid="klijenti-total">{t("ukupno", { count: total })}</span>
         <Pagination
           pageNum={pageNum}

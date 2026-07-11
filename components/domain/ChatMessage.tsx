@@ -30,8 +30,8 @@ function ZapisnikProposal({ p }: { p: ProposalData }) {
   // `state !== initial` → form was submitted at least once; `state.ok` → it succeeded
   const snimljeno = state !== initial && state.ok
   return (
-    <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3" data-testid="zapisnik-proposal">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{t("naslov", { klijent: p.klijent, vrsta: p.vrsta })}</p>
+    <div className="mt-2 rounded-lg border border-border bg-card p-3" data-testid="zapisnik-proposal">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("naslov", { klijent: p.klijent, vrsta: p.vrsta })}</p>
       <p className="mt-1 text-sm"><span className="font-medium">{t("nalaz")}</span> {p.nalaz}</p>
       <p className="mt-1 text-sm"><span className="font-medium">{t("zakljucak")}</span> {p.zakljucak}</p>
       {mozeUrediti && (
@@ -43,7 +43,7 @@ function ZapisnikProposal({ p }: { p: ProposalData }) {
             {pending ? t("snimam") : t("snimi")}
           </Button>
           {state.ok === false && state.message && (
-            <span className="ml-2 text-xs text-red-600" role="alert">{state.message}</span>
+            <span className="ml-2 text-xs text-destructive" role="alert">{state.message}</span>
           )}
           {snimljeno && (
             <span className="ml-2 text-xs text-green-600" data-testid="zapisnik-snimljen">{t("snimljeno")}</span>
@@ -59,9 +59,9 @@ export function ChatMessage({ poruka }: { poruka: UiPoruka }) {
   const isUser = poruka.role === "user"
   return (
     <div className={isUser ? "flex justify-end" : "flex justify-start"} data-testid={`msg-${poruka.role}`}>
-      <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isUser ? "bg-brand text-white" : "bg-brand-light text-slate-800"}`}>
+      <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isUser ? "bg-brand text-white" : "bg-brand-light text-foreground"}`}>
         {poruka.tools && poruka.tools.length > 0 && (
-          <p className="mb-1 text-xs italic text-slate-500" data-testid="tool-indikator">
+          <p className="mb-1 text-xs italic text-muted-foreground" data-testid="tool-indikator">
             {t("alati", { lista: poruka.tools.join(", ") })}
           </p>
         )}

@@ -65,11 +65,11 @@ export function MonthCalendar({
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-slate-200"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border"
       data-testid="plan-grid"
     >
       {/* Day-of-week header */}
-      <div className="grid grid-cols-7 bg-slate-50 text-xs font-medium text-slate-500">
+      <div className="grid grid-cols-7 bg-muted text-xs font-medium text-muted-foreground">
         {DANI.map((d) => (
           <div key={d} className="px-2 py-2 text-center">
             {d}
@@ -88,11 +88,11 @@ export function MonthCalendar({
             <div
               key={c.date}
               className={cn(
-                "relative min-h-[84px] border-t border-l border-slate-100 transition",
-                !c.inMonth && "bg-slate-50/50 text-slate-300",
+                "relative min-h-[84px] border-t border-l border-border transition",
+                !c.inMonth && "bg-muted/50 text-slate-300",
                 isSelected
                   ? "ring-2 ring-inset ring-brand bg-brand-light/30"
-                  : "hover:bg-slate-50",
+                  : "hover:bg-muted",
               )}
             >
               {/* Pozadinski sloj: klik na cijeli dan → ?dan sidebar */}
@@ -125,7 +125,7 @@ export function MonthCalendar({
                       data-testid="cell-termin"
                       data-status={termin.status}
                       className={cn(
-                        "pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-slate-600 hover:bg-slate-100",
+                        "pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-muted-foreground hover:bg-muted",
                         FOCUS_RING,
                       )}
                     >

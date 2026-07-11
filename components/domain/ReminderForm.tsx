@@ -76,9 +76,9 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
       <input type="hidden" name="dana_prije" value={hiddenValue} />
 
       <div>
-        <p className="mb-2 text-sm text-slate-600">
+        <p className="mb-2 text-sm text-muted-foreground">
           {t("uputstvo")}{" "}
-          <span className="text-slate-400">{t("uputstvoUklanjanje")}</span>
+          <span className="text-muted-foreground">{t("uputstvoUklanjanje")}</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {opcije.map((n) => {
@@ -91,7 +91,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                   "inline-flex items-center gap-1 rounded-full border py-1 pl-3 pr-1.5 text-sm transition-colors",
                   active
                     ? "border-brand bg-brand text-white shadow-sm"
-                    : "border-slate-300 bg-white text-slate-600",
+                    : "border-border bg-card text-muted-foreground",
                 )}
               >
                 <button
@@ -112,7 +112,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                     "rounded-full p-0.5 transition-colors",
                     active
                       ? "text-white/80 hover:bg-white/20 hover:text-white"
-                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-700",
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     FOCUS_RING,
                   )}
                 >
@@ -143,13 +143,13 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
             className="w-28"
             data-testid="reminder-custom-input"
           />
-          <span className="text-sm text-slate-500">{t("danaPrije")}</span>
+          <span className="text-sm text-muted-foreground">{t("danaPrije")}</span>
           <Button type="button" variant="outline" size="sm" onClick={dodaj} data-testid="reminder-custom-add">
             <Plus className="h-4 w-4" aria-hidden /> {t("dodaj")}
           </Button>
         </div>
         {customError && (
-          <p className="mt-1 text-sm text-red-600" role="alert">
+          <p className="mt-1 text-sm text-destructive" role="alert">
             {customError}
           </p>
         )}
@@ -162,7 +162,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
       )}
 
       {state.ok === false && (state.message || state.errors?.dana_prije?.[0]) && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {state.message ?? state.errors?.dana_prije?.[0]}
         </p>
       )}

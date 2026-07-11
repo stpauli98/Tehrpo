@@ -36,7 +36,7 @@ export function DodjelaRadnikaFirmi({
     <div className="max-w-xl space-y-3" data-testid="dodjela-radnika">
       <div>
         <p className="text-sm font-medium">{t("naslov")}</p>
-        <p className="text-sm text-slate-500">{t("opis")}</p>
+        <p className="text-sm text-muted-foreground">{t("opis")}</p>
       </div>
       <div className="space-y-1">
         {radnici.map((r) => (
@@ -49,7 +49,7 @@ export function DodjelaRadnikaFirmi({
             {r.ime}
           </label>
         ))}
-        {radnici.length === 0 && <p className="text-sm text-slate-400">{t("nemaRadnika")}</p>}
+        {radnici.length === 0 && <p className="text-sm text-muted-foreground">{t("nemaRadnika")}</p>}
       </div>
       <Button type="button" size="sm" onClick={spasi} disabled={pending} data-testid="dodjela-radnika-spasi">
         {pending ? t("snimam") : t("spasi")}

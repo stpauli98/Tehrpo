@@ -62,7 +62,7 @@ export default async function PregledPage({
       <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
 
       {dokumenti.length === 0 ? (
-        <div data-testid="pregled-prazno" className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500">
+        <div data-testid="pregled-prazno" className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">
           {t("prazno")}
         </div>
       ) : (

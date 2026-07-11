@@ -126,30 +126,30 @@ export function KalendarView() {
           currentSearch={currentSearch}
         />
         {selectedDan && (
-          <aside data-testid="plan-sidebar" className="rounded-xl border border-slate-200 p-4 h-fit">
+          <aside data-testid="plan-sidebar" className="rounded-xl border border-border p-4 h-fit">
             <p className="font-medium" data-testid="plan-sidebar-datum">
               {formatDatum(selectedDan)}
             </p>
             {danTermini.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">{t("nemaTerminaZaDan")}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t("nemaTerminaZaDan")}</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {danTermini.map((termin) => (
                   <li
                     key={termin.id ?? ""}
                     data-testid="sidebar-termin"
-                    className="text-sm border-b border-slate-100 pb-2"
+                    className="text-sm border-b border-border pb-2"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-slate-800 truncate">
+                      <span className="font-medium text-foreground truncate">
                         {termin.klijent_naziv ?? "—"}
                         {termin.lokacija_naziv ? (
-                          <span className="text-slate-400"> · {termin.lokacija_naziv}</span>
+                          <span className="text-muted-foreground"> · {termin.lokacija_naziv}</span>
                         ) : null}
                       </span>
                       <StatusBadge status={termin.status_izvedeni} />
                     </div>
-                    <p className="text-slate-500">{termin.vrsta_naziv ?? "—"}</p>
+                    <p className="text-muted-foreground">{termin.vrsta_naziv ?? "—"}</p>
                     {termin.id && (
                       <Link
                         href={detailHref(termin.id)}

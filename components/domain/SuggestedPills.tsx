@@ -15,7 +15,7 @@ export function SuggestedPills({ onPick }: { onPick: (q: string) => void }) {
           onClick={() => onPick(p)}
           data-testid="suggested-pill"
           className={cn(
-            "rounded-full border border-slate-300 bg-white px-3 py-1 text-sm text-slate-600 hover:bg-slate-50",
+            "rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground hover:bg-muted",
             FOCUS_RING,
           )}
         >

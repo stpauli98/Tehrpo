@@ -34,7 +34,7 @@ export function StatusBadge({
   return (
     <span className="inline-flex items-center gap-1.5">
       {badge}
-      <span data-testid="status-zakazan-hint" className="whitespace-nowrap text-xs text-slate-500">
+      <span data-testid="status-zakazan-hint" className="whitespace-nowrap text-xs text-muted-foreground">
         {datumZakazan ? tSheet("zakPrefix", { datum: formatDatum(datumZakazan) }) : tSheet("zakazanoFallback")}
       </span>
     </span>

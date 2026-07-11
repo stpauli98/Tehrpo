@@ -34,7 +34,7 @@ export function VrijemeSlanjaForm({ vrijemeSat }: { vrijemeSat: number }) {
   return (
     <form ref={formRef} action={action} className="max-w-xl space-y-2" data-testid="vrijeme-slanja-form">
       <label htmlFor="vrijeme_slanja_sat" className="text-sm font-medium">{t("naslov")}</label>
-      <p className="text-sm text-slate-500">{t("opis")}</p>
+      <p className="text-sm text-muted-foreground">{t("opis")}</p>
       <div className="flex items-center gap-2">
         <Select
           id="vrijeme_slanja_sat"
@@ -59,10 +59,10 @@ export function VrijemeSlanjaForm({ vrijemeSat }: { vrijemeSat: number }) {
             ))}
           </SelectContent>
         </Select>
-        <span className="text-sm text-slate-400">{t("zona")}</span>
+        <span className="text-sm text-muted-foreground">{t("zona")}</span>
       </div>
       {state.ok === false && state.message && (
-        <p className="text-sm text-red-600" role="alert">{state.message}</p>
+        <p className="text-sm text-destructive" role="alert">{state.message}</p>
       )}
     </form>
   )

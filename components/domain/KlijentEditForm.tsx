@@ -95,7 +95,7 @@ export function KlijentEditForm({
           <input type="hidden" name="id" value={klijent.id} />
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNaziv")}</span>
+            <span className="text-muted-foreground">{t("poljeNaziv")}</span>
             <Input
               name="naziv"
               required
@@ -103,12 +103,12 @@ export function KlijentEditForm({
               data-testid="edit-klijent-naziv"
             />
             {state.ok === false && state.errors?.naziv && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.naziv[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.naziv[0]}</p>
             )}
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNapomena")}</span>
+            <span className="text-muted-foreground">{t("poljeNapomena")}</span>
             <Input
               name="napomena"
               defaultValue={klijent.napomena ?? ""}
@@ -125,7 +125,7 @@ export function KlijentEditForm({
             ["sifra_djelatnosti", t("polja.sifraDjelatnosti"), false],
           ] as const).map(([name, label, obavezno]) => (
             <label key={name} className="block text-sm">
-              <span className="text-slate-600">{label}</span>
+              <span className="text-muted-foreground">{label}</span>
               <Input
                 name={name}
                 type={name === "email" ? "email" : "text"}
@@ -134,13 +134,13 @@ export function KlijentEditForm({
                 data-testid={`edit-klijent-${name}`}
               />
               {state.ok === false && state.errors?.[name] && (
-                <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors[name]![0]}</p>
+                <p className="text-sm text-destructive mt-1" role="alert">{state.errors[name]![0]}</p>
               )}
             </label>
           ))}
 
           <div className="space-y-1">
-            <span className="block text-sm text-slate-600">{t("zaduzenaOsoba", { appName: APP_NAME })}</span>
+            <span className="block text-sm text-muted-foreground">{t("zaduzenaOsoba", { appName: APP_NAME })}</span>
             <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"} items={zaduzeniItems}>
               <SelectTrigger data-testid="edit-klijent-zaduzeni" className="w-full">
                 <SelectValue placeholder={nijePostavljeno} />
@@ -155,7 +155,7 @@ export function KlijentEditForm({
           </div>
 
           <div className="space-y-1">
-            <span className="block text-sm text-slate-600">{t("tipOdnosaLabel")}</span>
+            <span className="block text-sm text-muted-foreground">{t("tipOdnosaLabel")}</span>
             <Select
               name="tip_odnosa"
               defaultValue={klijent.tip_odnosa ?? "none"}
@@ -172,7 +172,7 @@ export function KlijentEditForm({
           </div>
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {state.message}
             </p>
           )}

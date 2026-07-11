@@ -109,11 +109,11 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
         />
         <div>
           <p className="text-sm font-medium">{t("naslov")}</p>
-          <p className="text-sm text-slate-500">{t("opis")}</p>
+          <p className="text-sm text-muted-foreground">{t("opis")}</p>
         </div>
       </form>
       {toggleState.ok === false && toggleState.message && (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {toggleState.message}
         </p>
       )}
@@ -153,7 +153,7 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
         <p
           data-testid="pokreni-rezultat"
           role={rezultat.ok ? undefined : "alert"}
-          className={rezultat.ok ? "text-sm text-slate-600" : "text-sm text-red-600"}
+          className={rezultat.ok ? "text-sm text-muted-foreground" : "text-sm text-destructive"}
         >
           {rezultat.ok
             ? t("rezultat", {

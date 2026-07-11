@@ -46,17 +46,22 @@ test.describe("Podsjetnici v2", () => {
     try {
       await page.goto("/postavke")
       await otvoriPodsjetnike(page)
-      const select = page.getByTestId("vrijeme-slanja-select")
-      await expect(select).toBeVisible()
+      // Base UI Select (isti obrazac kao 07-temelj.spec.ts:30-33 i 14-plan-dorada.spec.ts:31-32):
+      // testid je na SelectTrigger (button), ne na native <select> — otvori preko klika i
+      // izaberi opciju preko role=option; provjera vrijednosti ide preko prikazanog teksta
+      // (SelectValue), ne preko toHaveValue() koji radi samo na native <select>.
+      const trigger = page.getByTestId("vrijeme-slanja-select")
+      await expect(trigger).toBeVisible()
 
-      await select.selectOption("9")
+      await trigger.click()
+      await page.getByRole("option", { name: "09:00", exact: true }).click()
       // Select se disable-uje dok je server akcija pending (isti obrazac kao ostali
       // testovi u ovoj datoteci) — sačekaj da se vrati enabled prije reload-a.
-      await expect(select).toBeEnabled()
+      await expect(trigger).toBeEnabled()
 
       await page.reload()
       await otvoriPodsjetnike(page)
-      await expect(page.getByTestId("vrijeme-slanja-select")).toHaveValue("9")
+      await expect(page.getByTestId("vrijeme-slanja-select")).toContainText("09:00")
     } finally {
       // Restore direktno u DB (pouzdanije od ponovnog UI round-trip-a ako je gornji
       // blok pukao na pola) — vrati na vrijednost pročitanu PRIJE mutacije.

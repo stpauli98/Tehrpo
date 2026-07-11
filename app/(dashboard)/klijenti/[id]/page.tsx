@@ -123,7 +123,7 @@ export default async function KlijentDetailPage({
     <div className="space-y-6">
       <Link
         href={href("/klijenti")}
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         data-testid="nazad-klijenti"
       >
         <ChevronLeft className="w-4 h-4" aria-hidden /> {t("nazad")}
@@ -144,7 +144,7 @@ export default async function KlijentDetailPage({
               </h1>
               <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
             </div>
-            {klijent.napomena && <p className="mt-1 text-sm text-slate-500">{klijent.napomena}</p>}
+            {klijent.napomena && <p className="mt-1 text-sm text-muted-foreground">{klijent.napomena}</p>}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -193,14 +193,14 @@ export default async function KlijentDetailPage({
           <div className="flex justify-end">
             <DodajProvjeruButton klijentId={id} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />
           </div>
-          <div className="rounded-xl border border-slate-200 overflow-hidden">
+          <div className="rounded-xl border border-border overflow-hidden">
           {termini.length === 0 ? (
-            <div className="p-8 text-center text-sm text-slate-500">
+            <div className="p-8 text-center text-sm text-muted-foreground">
               {t("terminiTab.prazno")}
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-muted">
                 <tr>
                   {[
                     t("terminiTab.kolone.datumRoka"),
@@ -211,7 +211,7 @@ export default async function KlijentDetailPage({
                   ].map((c) => (
                     <th
                       key={c}
-                      className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500"
+                      className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground"
                     >
                       {c}
                     </th>
@@ -220,14 +220,14 @@ export default async function KlijentDetailPage({
               </thead>
               <tbody>
                 {termini.map((term) => (
-                  <tr key={term.id ?? ""} className="border-t border-slate-100">
+                  <tr key={term.id ?? ""} className="border-t border-border">
                     <td className="px-3 py-2 tabular-nums whitespace-nowrap">{formatDatum(term.rok_dospijeca)}</td>
-                    <td className="px-3 py-2 text-slate-600">{term.vrsta_naziv ?? "—"}</td>
-                    <td className="px-3 py-2 text-slate-600">{term.lokacija_naziv ?? "—"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{term.vrsta_naziv ?? "—"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{term.lokacija_naziv ?? "—"}</td>
                     <td className="px-3 py-2">
                       <StatusBadge status={term.status_izvedeni} stvarniStatus={term.status} datumZakazan={term.datum_zakazan} />
                     </td>
-                    <td className="px-3 py-2 text-slate-600">{term.zaduzeni ?? "—"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{term.zaduzeni ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -241,7 +241,7 @@ export default async function KlijentDetailPage({
         <div data-testid="tab-kontakti-content" className="space-y-5">
           <KontaktHighlighter targetId={highlight} />
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <KontaktiKlijentList
               klijentId={id}
               kontakti={kontakti}
@@ -251,10 +251,10 @@ export default async function KlijentDetailPage({
           </section>
 
           {lokacije.some((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-slate-400" aria-hidden />
-                <h3 className="text-sm font-semibold text-slate-700">{t("kontaktiTab.naslovLokacije")}</h3>
+                <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden />
+                <h3 className="text-sm font-semibold text-foreground">{t("kontaktiTab.naslovLokacije")}</h3>
                 <InfoIkona
                   tekst={t("kontaktiTab.infoLokacije")}
                   testId="info-sekcija-kontakti-lokacija"
@@ -268,12 +268,12 @@ export default async function KlijentDetailPage({
                         key={l.id}
                         id={`kontakt-${l.id}`}
                         data-testid="kontakt-lokacija-card"
-                        className="scroll-mt-24 rounded-xl border border-slate-200 p-3 text-sm"
+                        className="scroll-mt-24 rounded-xl border border-border p-3 text-sm"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium">
                             {l.kontakt_osoba ?? "—"}
-                            <span className="font-normal text-slate-400"> · {l.naziv}</span>
+                            <span className="font-normal text-muted-foreground"> · {l.naziv}</span>
                           </span>
                           <Link
                             href={href(`/klijenti/${id}?tab=lokacije`)}
@@ -283,7 +283,7 @@ export default async function KlijentDetailPage({
                           </Link>
                         </div>
                         {(l.kontakt_telefon || l.kontakt_email) && (
-                          <div className="mt-1 text-slate-500">
+                          <div className="mt-1 text-muted-foreground">
                             {[l.kontakt_telefon, l.kontakt_email].filter(Boolean).join(" · ")}
                           </div>
                         )}
@@ -300,11 +300,11 @@ export default async function KlijentDetailPage({
         <div data-testid="tab-dokumenti-content" className="space-y-3">
           <KlijentDokumentUpload klijentId={id} />
           {dokumenti.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500">{t("dokumentiTab.prazno")}</div>
+            <div className="rounded-xl border border-border p-8 text-center text-sm text-muted-foreground">{t("dokumentiTab.prazno")}</div>
           ) : (
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50">
+                <thead className="bg-muted">
                   <tr>
                     {[
                       t("dokumentiTab.kolone.naziv"),
@@ -313,7 +313,7 @@ export default async function KlijentDetailPage({
                       t("dokumentiTab.kolone.datum"),
                       "",
                     ].map((c) => (
-                      <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         {c}
                       </th>
                     ))}
@@ -321,11 +321,11 @@ export default async function KlijentDetailPage({
                 </thead>
                 <tbody>
                   {dokumenti.map((d) => (
-                    <tr key={d.id} className="border-t border-slate-100">
+                    <tr key={d.id} className="border-t border-border">
                       <td className="px-3 py-2">{d.naziv}</td>
-                      <td className="px-3 py-2 text-slate-500">{d.tip}</td>
-                      <td className="px-3 py-2 text-slate-500">{d.generated_by_ai ? t("dokumentiTab.izvorAi") : t("dokumentiTab.izvorUpload")}</td>
-                      <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{d.tip}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{d.generated_by_ai ? t("dokumentiTab.izvorAi") : t("dokumentiTab.izvorUpload")}</td>
+                      <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
                       <td className="px-3 py-2">
                         <span className="flex items-center justify-end gap-1">
                           <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label={t("dokumentiTab.preuzmi")}>

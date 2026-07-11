@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { createUgovor, updateUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -56,42 +57,42 @@ export function UgovorSheet({ klijentId, ugovor }: { klijentId: string; ugovor?:
           <input type="hidden" name="klijent_id" value={klijentId} />
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeZavodniBroj")}</span>
+            <span className="text-muted-foreground">{t("poljeZavodniBroj")}</span>
             <Input name="zavodni_broj" defaultValue={ugovor?.zavodni_broj ?? ""} data-testid="ugovor-zavodni" />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljeDatumPotpisivanja")}</span>
+              <span className="text-muted-foreground">{t("poljeDatumPotpisivanja")}</span>
               <Input type="date" name="datum_potpisivanja" defaultValue={ugovor?.datum_potpisivanja ?? ""} data-testid="ugovor-potpis" />
             </label>
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljeDatumIsteka")}</span>
+              <span className="text-muted-foreground">{t("poljeDatumIsteka")}</span>
               <Input type="date" name="datum_isteka" defaultValue={ugovor?.datum_isteka ?? ""} data-testid="ugovor-istek" />
             </label>
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljeVazenje")}</span>
+              <span className="text-muted-foreground">{t("poljeVazenje")}</span>
               <Input type="number" min={1} max={600} name="vazenje_mjeseci" defaultValue={ugovor?.vazenje_mjeseci ?? ""} data-testid="ugovor-vazenje" />
             </label>
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljeObilasci")}</span>
+              <span className="text-muted-foreground">{t("poljeObilasci")}</span>
               <Input type="number" min={0} max={31} name="broj_obilazaka_mjesecno" defaultValue={ugovor?.broj_obilazaka_mjesecno ?? ""} data-testid="ugovor-obilasci" />
             </label>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="automatsko_obnavljanje" defaultChecked={ugovor?.automatsko_obnavljanje ?? false} data-testid="ugovor-auto" />
-            <span className="text-slate-600">{t("poljeAutoObnavljanje")}</span>
+            <Checkbox name="automatsko_obnavljanje" value="on" defaultChecked={ugovor?.automatsko_obnavljanje ?? false} data-testid="ugovor-auto" />
+            <span className="text-muted-foreground">{t("poljeAutoObnavljanje")}</span>
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="aktivan" defaultChecked={ugovor?.aktivan ?? true} data-testid="ugovor-aktivan" />
-            <span className="text-slate-600">{t("poljeAktivan")}</span>
+            <Checkbox name="aktivan" value="on" defaultChecked={ugovor?.aktivan ?? true} data-testid="ugovor-aktivan" />
+            <span className="text-muted-foreground">{t("poljeAktivan")}</span>
           </label>
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNapomena")}</span>
+            <span className="text-muted-foreground">{t("poljeNapomena")}</span>
             <Input name="napomena" defaultValue={ugovor?.napomena ?? ""} data-testid="ugovor-napomena" />
           </label>
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">{state.message}</p>
+            <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
           <Button type="submit" disabled={pending} data-testid="ugovor-submit">
             {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}

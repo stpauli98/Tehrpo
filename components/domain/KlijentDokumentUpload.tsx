@@ -79,7 +79,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
     <form
       action={action}
       data-testid="klijent-dok-upload"
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
     >
       <input type="hidden" name="klijent_id" value={klijentId} />
 
@@ -107,30 +107,30 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
           "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center outline-none transition-colors focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/30",
           dragging
             ? "border-brand bg-brand/5"
-            : "border-slate-300 bg-slate-50 hover:border-brand/60 hover:bg-slate-100",
+            : "border-border bg-muted hover:border-brand/60 hover:bg-muted",
         )}
       >
-        <UploadCloud className={cn("h-9 w-9", dragging ? "text-brand" : "text-slate-400")} aria-hidden />
+        <UploadCloud className={cn("h-9 w-9", dragging ? "text-brand" : "text-muted-foreground")} aria-hidden />
         {file ? (
           <div className="flex items-center gap-2 text-sm">
             <FileText className="h-4 w-4 text-brand" aria-hidden />
-            <span className="font-medium text-slate-800">{file.name}</span>
-            <span className="text-slate-400">({formatBytes(file.size)})</span>
+            <span className="font-medium text-foreground">{file.name}</span>
+            <span className="text-muted-foreground">({formatBytes(file.size)})</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); ocisti() }}
               aria-label={t("ukloniFajlAriaLabel")}
-              className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-slate-200 hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>
           </div>
         ) : (
           <>
-            <p className="text-sm font-medium text-slate-700">
+            <p className="text-sm font-medium text-foreground">
               {t("prevuciDokument")} <span className="text-brand">{t("klikniZaOdabir")}</span>
             </p>
-            <p className="text-xs text-slate-400">{t("formatiHint")}</p>
+            <p className="text-xs text-muted-foreground">{t("formatiHint")}</p>
           </>
         )}
       </div>
@@ -147,11 +147,11 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <label className="block text-sm">
-          <span className="text-slate-600">{t("tipDokumentaLabel")}</span>
+          <span className="text-muted-foreground">{t("tipDokumentaLabel")}</span>
           <select
             name="tip"
             defaultValue="ugovor"
-            className="mt-1 block rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="mt-1 block rounded-md border border-border px-2 py-1.5 text-sm"
             data-testid="klijent-dok-tip"
           >
             {DOKUMENT_TIPOVI.map((tip) => <option key={tip} value={tip}>{t(`tipovi.${tip}`)}</option>)}
@@ -163,7 +163,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
       </div>
 
       {(greska || (state.ok === false && state.message)) && (
-        <p className="w-full text-sm text-red-600" role="alert">{greska ?? (state.ok === false ? state.message : "")}</p>
+        <p className="w-full text-sm text-destructive" role="alert">{greska ?? (state.ok === false ? state.message : "")}</p>
       )}
     </form>
   )

@@ -49,10 +49,10 @@ export async function OpterecenjeChart({
     <div data-testid="opterecenje-chart">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-slate-800">{t("naslov")}</p>
-          <p className="text-xs text-slate-400">{t("podnaslov")}</p>
+          <p className="text-sm font-semibold text-foreground">{t("naslov")}</p>
+          <p className="text-xs text-muted-foreground">{t("podnaslov")}</p>
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <LegendaStavka boja="bg-emerald-500" tekst={t("legenda.izvrseno")} />
           <LegendaStavka boja="bg-rose-500" tekst={t("legenda.kasni")} />
           <LegendaStavka boja="bg-sky-400" tekst={t("legenda.uPlanu")} />
@@ -67,7 +67,7 @@ export async function OpterecenjeChart({
               key={p}
               className={cn(
                 "absolute inset-x-0 border-t",
-                p === 100 ? "border-slate-200" : "border-dashed border-slate-100",
+                p === 100 ? "border-border" : "border-dashed border-border",
               )}
               style={{ top: `${p}%` }}
             />
@@ -105,7 +105,7 @@ export async function OpterecenjeChart({
                 data-mjesec={m.mjesec}
                 data-ukupno={m.ukupno}
                 aria-label={t("barAriaLabel", { naziv, count: m.ukupno })}
-                className={cn(common, "cursor-pointer rounded-md transition-colors hover:bg-slate-100/60")}
+                className={cn(common, "cursor-pointer rounded-md transition-colors hover:bg-muted/60")}
               >
                 {bar}
               </Link>
@@ -133,7 +133,7 @@ export async function OpterecenjeChart({
               key={m.mjesec}
               className={cn(
                 "flex-1 text-center text-[11px] capitalize",
-                currentMonth === m.mjesec ? "font-semibold text-brand" : "text-slate-400",
+                currentMonth === m.mjesec ? "font-semibold text-brand" : "text-muted-foreground",
               )}
             >
               {naziv.slice(0, 3)}

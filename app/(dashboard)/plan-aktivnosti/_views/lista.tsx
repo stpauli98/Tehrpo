@@ -116,7 +116,7 @@ export function ListaView() {
       <TerminiTable rows={rows} currentSearch={currentSearch} />
 
       <div
-        className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 text-sm text-slate-600"
+        className="mt-auto flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground"
         data-testid="termini-pagination"
       >
         <span data-testid="termini-total">{t("ukupnoRezultata", { count: total })}</span>

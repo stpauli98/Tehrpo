@@ -4,11 +4,11 @@ import { AlertTriangle } from "lucide-react"
 import { formatDatum } from "@/lib/date"
 import { rokRelativnaOznaka } from "@/lib/hitno"
 import type { HitnoKasniItem } from "@/lib/termini"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 
 const TONE: Record<"danger" | "warning", string> = {
-  danger: "text-red-600",
+  danger: "text-destructive",
   warning: "text-amber-600",
 }
 
@@ -23,17 +23,17 @@ export async function HitnoKasniList({
 }) {
   const t = await getTranslations("pregled.hitnoKasni")
   return (
-    <div className="rounded-xl border border-slate-200 p-4" data-testid="hitno-kasni-list">
+    <div className="rounded-xl border border-border p-4" data-testid="hitno-kasni-list">
       <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="w-4 h-4 text-red-600" aria-hidden />
+        <AlertTriangle className="w-4 h-4 text-destructive" aria-hidden />
         <h2 className="font-semibold">{t("naslov")}</h2>
       </div>
       {items.length === 0 ? (
-        <p data-testid="hitno-kasni-empty" className="text-sm text-slate-500">
+        <p data-testid="hitno-kasni-empty" className="text-sm text-muted-foreground">
           {t("prazno")}
         </p>
       ) : (
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-border">
           {items.map((item) => {
             const oznaka = rokRelativnaOznaka(item.rok_dospijeca, today)
             return (
@@ -41,11 +41,14 @@ export async function HitnoKasniList({
                 <Link
                   href={href(`/plan-aktivnosti?view=lista&selected=${item.id}&mjesec=svi`)}
                   data-testid="hitno-kasni-row"
-                  className="flex items-center justify-between gap-2 py-2 hover:bg-slate-50 -mx-2 px-2 rounded"
+                  className={cn(
+                    "flex items-center justify-between gap-2 py-2 hover:bg-muted -mx-2 px-2 rounded",
+                    FOCUS_RING,
+                  )}
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{item.klijent_naziv}</span>
-                    <span className="block truncate text-xs text-slate-500">
+                    <span className="block truncate text-xs text-muted-foreground">
                       {item.vrsta_naziv}
                       {item.lokacija_naziv ? ` · ${item.lokacija_naziv}` : ""}
                     </span>
@@ -66,7 +69,7 @@ export async function HitnoKasniList({
         <Link
           href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")}
           data-testid="hitno-kasni-footer"
-          className="mt-3 inline-block text-xs text-brand hover:underline"
+          className={cn("mt-3 inline-block rounded-sm text-xs text-brand hover:underline", FOCUS_RING)}
         >
           {t("footer", { count: ukupnoKasni })}
         </Link>

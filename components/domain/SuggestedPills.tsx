@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export function SuggestedPills({ onPick }: { onPick: (q: string) => void }) {
   const t = useTranslations("asistent.suggestedPills")
@@ -13,7 +14,10 @@ export function SuggestedPills({ onPick }: { onPick: (q: string) => void }) {
           type="button"
           onClick={() => onPick(p)}
           data-testid="suggested-pill"
-          className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm text-slate-600 hover:bg-slate-50"
+          className={cn(
+            "rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground hover:bg-muted",
+            FOCUS_RING,
+          )}
         >
           {p}
         </button>

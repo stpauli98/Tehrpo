@@ -85,7 +85,7 @@ export async function KoStaPrimaTab() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm" data-testid="ko-sta-prima-tabela">
           <thead>
-            <tr className="text-left text-slate-500">
+            <tr className="text-left text-muted-foreground">
               <th className="px-3 py-2">{t("firma")}</th>
               <th className="px-3 py-2">{t("radnici")}</th>
               <th className="px-3 py-2">{t("firmaPrima")}</th>
@@ -94,22 +94,22 @@ export async function KoStaPrimaTab() {
           </thead>
           <tbody>
             {redovi.map((r) => (
-              <tr key={r.id} className="border-t border-slate-100" data-testid={`ksp-red-${r.id}`}>
+              <tr key={r.id} className="border-t border-border" data-testid={`ksp-red-${r.id}`}>
                 <td className="px-3 py-2 font-medium">{r.naziv}</td>
                 <td className="px-3 py-2">{r.radnici.length > 0 ? r.radnici.join(", ") : "—"}</td>
                 <td className="px-3 py-2">
                   {r.firmaPrima ? (
                     <span className="text-green-700">{t("da")}</span>
                   ) : (
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                       {t("ne")}
                       {r.razlog && (
-                        <span className="ml-1 text-xs text-slate-400">({t(RAZLOG_KEY[r.razlog])})</span>
+                        <span className="ml-1 text-xs text-muted-foreground">({t(RAZLOG_KEY[r.razlog])})</span>
                       )}
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-slate-600">{r.adrese.length > 0 ? r.adrese.join(", ") : "—"}</td>
+                <td className="px-3 py-2 text-muted-foreground">{r.adrese.length > 0 ? r.adrese.join(", ") : "—"}</td>
               </tr>
             ))}
           </tbody>

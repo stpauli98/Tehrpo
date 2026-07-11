@@ -123,7 +123,7 @@ export function NoviTerminButton({
           data-testid="novi-termin-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeKlijent")}</span>
+            <span className="text-muted-foreground">{t("poljeKlijent")}</span>
             <Select
               value={klijentId}
               onValueChange={(v) => {
@@ -147,7 +147,7 @@ export function NoviTerminButton({
 
           {lokacije.length > 0 && (
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljeLokacija")}</span>
+              <span className="text-muted-foreground">{t("poljeLokacija")}</span>
               <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")} items={lokacijaItems}>
                 <SelectTrigger className="w-full" data-testid="novi-lokacija">
                   <SelectValue placeholder={t("placeholderLokacija")} />
@@ -164,7 +164,7 @@ export function NoviTerminButton({
           )}
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeVrsta")}</span>
+            <span className="text-muted-foreground">{t("poljeVrsta")}</span>
             <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
               <SelectTrigger className="w-full" data-testid="novi-vrsta">
                 <SelectValue placeholder={t("placeholderVrsta")} />
@@ -180,13 +180,13 @@ export function NoviTerminButton({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeRok")}</span>
+            <span className="text-muted-foreground">{t("poljeRok")}</span>
             <Input type="date" name="rok_dospijeca" required value={rok}
               onChange={(e) => setRok(e.target.value)} data-testid="novi-rok" />
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeDatumZakazan")}</span>
+            <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
             <Input type="date" name="datum_zakazan" value={zakazan}
               onChange={(e) => setZakazan(e.target.value)} data-testid="novi-zakazan" />
           </label>
@@ -197,12 +197,12 @@ export function NoviTerminButton({
           )}
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeZaduzeni")}</span>
+            <span className="text-muted-foreground">{t("poljeZaduzeni")}</span>
             <Input name="zaduzeni" placeholder={t("placeholderZaduzeni")} data-testid="novi-zaduzeni" />
           </label>
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {state.message}
             </p>
           )}

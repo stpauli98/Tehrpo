@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { postaviDodjele } from "@/app/(dashboard)/postavke/actions"
 
 export function DodjelaKlijenata({
@@ -83,7 +84,7 @@ export function DodjelaKlijenata({
           <DialogTitle>{t("naslov")}</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           {t("opis")}
         </p>
 
@@ -94,20 +95,24 @@ export function DodjelaKlijenata({
           data-testid={`dodjela-pretraga-${korisnikId}`}
         />
 
-        <div className="max-h-72 divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-200">
+        <div className="max-h-72 divide-y divide-border overflow-auto rounded-lg border border-border">
           {filtrirani.map((k) => (
-            <label key={k.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50">
-              <input type="checkbox" checked={sel.has(k.id)} onChange={() => toggle(k.id)} />
+            <label key={k.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted">
+              <Checkbox
+                checked={sel.has(k.id)}
+                onCheckedChange={() => toggle(k.id)}
+                aria-label={t("checkboxAriaLabel", { naziv: k.naziv })}
+              />
               {k.naziv}
             </label>
           ))}
           {filtrirani.length === 0 && (
-            <p className="px-3 py-4 text-center text-sm text-slate-400">{t("prazno")}</p>
+            <p className="px-3 py-4 text-center text-sm text-muted-foreground">{t("prazno")}</p>
           )}
         </div>
 
         <DialogFooter className="justify-between">
-          <span className="text-xs text-slate-500" data-testid={`dodjela-brojac-${korisnikId}`}>
+          <span className="text-xs text-muted-foreground" data-testid={`dodjela-brojac-${korisnikId}`}>
             {t("brojac", { count: sel.size })}
           </span>
           <div className="flex gap-2">

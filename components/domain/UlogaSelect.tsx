@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { postaviUlogu } from "@/app/(dashboard)/postavke/actions"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 
 type Uloga = "admin" | "operater" | "pregled"
 
@@ -23,15 +26,18 @@ export function UlogaSelect({
   const tu = useTranslations("postavke.uloge")
   const router = useRouter()
   const [pending, start] = useTransition()
+  // Base UI Select.Value renders the raw stored value umjesto prevedenog labela dok se
+  // popup barem jednom ne otvori, OSIM ako Select.Root dobije `items` mapu — vidi
+  // VrijemeSlanjaForm.tsx za isti obrazac.
+  const ulogaItems = Object.fromEntries(ULOGE.map((v) => [v, tu(v)]))
 
   return (
-    <select
+    <Select
+      items={ulogaItems}
       defaultValue={uloga}
       disabled={pending || jeJa}
-      title={jeJa ? t("vlastitaUlogaTitle") : t("promijeniUlogu")}
-      data-testid={`uloga-select-${korisnikId}`}
-      onChange={(e) => {
-        const next = e.target.value as Uloga
+      onValueChange={(v) => {
+        const next = v as Uloga
         start(async () => {
           const r = await postaviUlogu(korisnikId, next)
           if (r.ok) {
@@ -43,13 +49,21 @@ export function UlogaSelect({
           }
         })
       }}
-      className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 disabled:opacity-50"
     >
-      {ULOGE.map((v) => (
-        <option key={v} value={v}>
-          {tu(v)}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger
+        size="sm"
+        title={jeJa ? t("vlastitaUlogaTitle") : t("promijeniUlogu")}
+        data-testid={`uloga-select-${korisnikId}`}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {ULOGE.map((v) => (
+          <SelectItem key={v} value={v}>
+            {tu(v)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

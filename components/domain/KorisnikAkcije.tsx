@@ -81,10 +81,10 @@ export function KorisnikAkcije({
       />
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem onClick={testEmail} data-testid={`test-email-${korisnikId}`}>
-          <Send /> {t("testEmail")}
+          <Send aria-hidden /> {t("testEmail")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={posaljiReset} data-testid={`posalji-reset-${korisnikId}`}>
-          <KeyRound /> {t("posaljiReset")}
+          <KeyRound aria-hidden /> {t("posaljiReset")}
         </DropdownMenuItem>
         <DropdownMenuItem
           variant={aktivan ? "destructive" : "default"}
@@ -92,7 +92,7 @@ export function KorisnikAkcije({
           onClick={toggleAktivan}
           data-testid={`deaktiviraj-${korisnikId}`}
         >
-          {aktivan ? <UserX /> : <UserCheck />}
+          {aktivan ? <UserX aria-hidden /> : <UserCheck aria-hidden />}
           {aktivan ? t("deaktivirajKorisnika") : t("aktivirajKorisnika")}
         </DropdownMenuItem>
       </DropdownMenuContent>

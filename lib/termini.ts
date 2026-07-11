@@ -66,6 +66,15 @@ export const STATUS_DOT_CLASS: Record<DerivedStatus, string> = {
   otkazano: "bg-slate-400",
 }
 
+/** Jače -100 nijanse s hover-om za gustu status-matricu (skenabilnost). Jedan izvor istine za MatrixGrid + MatrixLegenda. */
+export const STATUS_CELL_CLASS: Record<DerivedStatus, string> = {
+  izvrseno: "bg-green-100 text-green-800 hover:bg-green-200",
+  planirano: "bg-blue-50 text-blue-800 hover:bg-blue-100",
+  zakazano: "bg-cyan-50 text-cyan-800 hover:bg-cyan-100",
+  kasni: "bg-red-100 text-red-800 hover:bg-red-200",
+  otkazano: "bg-slate-100 text-slate-500 hover:bg-slate-200",
+}
+
 /** Redoslijed statusa za legendu/prikaz. */
 export const STATUS_ORDER = ["izvrseno", "planirano", "zakazano", "kasni", "otkazano"] as const
 

@@ -102,7 +102,7 @@ export function LokacijaSheet({
 
           {FIELDS.map(([name, label, req]) => (
             <label key={name} className="block text-sm">
-              <span className="text-slate-600">{label}</span>
+              <span className="text-muted-foreground">{label}</span>
               <Input
                 name={name}
                 required={req}
@@ -117,7 +117,7 @@ export function LokacijaSheet({
           ))}
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {state.message}
             </p>
           )}

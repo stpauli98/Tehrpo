@@ -421,7 +421,8 @@
       "brojac": "{count} ausgewählt",
       "submitPending": "Wird gespeichert…",
       "toastSuccess": "Firmen zugewiesen.",
-      "toastErrorFallback": "Fehler."
+      "toastErrorFallback": "Fehler.",
+      "checkboxAriaLabel": "Firma {naziv} auswählen"
     },
     "profil": {
       "prazno": "Keine Prüfungen im Profil. Fügen Sie eine Prüfung hinzu, um Termine zu erstellen.",
@@ -466,7 +467,8 @@
       "nemaRadnika": "Keine aktiven Mitarbeiter.",
       "spasi": "Speichern",
       "snimam": "Wird gespeichert…",
-      "spaseno": "Zuweisung gespeichert."
+      "spaseno": "Zuweisung gespeichert.",
+      "checkboxAriaLabel": "Mitarbeiter {ime} auswählen"
     }
   },
   "termini": {

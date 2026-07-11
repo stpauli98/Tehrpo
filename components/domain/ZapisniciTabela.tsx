@@ -34,7 +34,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -43,19 +43,19 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
             data-testid="zapisnici-pretraga"
           />
         </div>
-        <span className="shrink-0 text-xs text-slate-400">
+        <span className="shrink-0 text-xs text-muted-foreground">
           {upit === ""
             ? t("brojUkupno", { count: dokumenti.length })
             : t("brojFiltrirano", { prikazano: vidljivi.length, ukupno: dokumenti.length })}
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200">
+      <div className="overflow-hidden rounded-xl border border-border">
         <table className="w-full text-sm" data-testid="pregled-tabela">
-          <thead className="bg-slate-50">
+          <thead className="bg-muted">
             <tr>
               {[t("kolone.klijent"), t("kolone.vrsta"), t("kolone.datum"), t("kolone.akcije")].map((c) => (
-                <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {c}
                 </th>
               ))}
@@ -63,10 +63,10 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
           </thead>
           <tbody>
             {vidljivi.map((d) => (
-              <tr key={d.id} data-testid="pregled-red" className="border-t border-slate-100">
+              <tr key={d.id} data-testid="pregled-red" className="border-t border-border">
                 <td className="px-3 py-2">{d.klijent_naziv ?? "—"}</td>
-                <td className="px-3 py-2 text-slate-600">{d.vrsta_naziv ?? "—"}</td>
-                <td className="px-3 py-2 tabular-nums text-slate-500">{formatDatum(d.uploaded_at)}</td>
+                <td className="px-3 py-2 text-muted-foreground">{d.vrsta_naziv ?? "—"}</td>
+                <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
                     <Link href={href(`/zapisnici?preview=${d.id}`)} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label={t("pregled")}>
@@ -84,7 +84,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
             ))}
             {vidljivi.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-slate-400">
+                <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
                   {t("prazniRezultati", { upit: q })}
                 </td>
               </tr>

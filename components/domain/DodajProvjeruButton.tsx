@@ -66,7 +66,7 @@ export function DodajProvjeruButton({
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="dodaj-provjeru-sheet">
         <DialogHeader><DialogTitle>{t("naslov")}</DialogTitle></DialogHeader>
         {lokacije.length === 0 ? (
-          <p className="text-sm text-slate-600" data-testid="profil-bez-lokacija">
+          <p className="text-sm text-muted-foreground" data-testid="profil-bez-lokacija">
             {t("bezLokacijaTekst")}{" "}
             <Link href={href(`/klijenti/${klijentId}?tab=lokacije`)} className="text-brand underline">
               {t("bezLokacijaLink")}
@@ -87,7 +87,7 @@ export function DodajProvjeruButton({
           data-testid="dodaj-provjeru-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeVrsta")}</span>
+            <span className="text-muted-foreground">{t("poljeVrsta")}</span>
             <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
               <SelectTrigger className="w-full" data-testid="profil-vrsta"><SelectValue placeholder={t("placeholderVrsta")} /></SelectTrigger>
               <SelectContent>
@@ -97,7 +97,7 @@ export function DodajProvjeruButton({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeLokacija")}</span>
+            <span className="text-muted-foreground">{t("poljeLokacija")}</span>
             <Select value={lokId} onValueChange={(v) => setLokId(v ?? "")} items={lokItems}>
               <SelectTrigger className="w-full" data-testid="profil-lokacija"><SelectValue placeholder={t("placeholderLokacija")} /></SelectTrigger>
               <SelectContent>
@@ -107,18 +107,18 @@ export function DodajProvjeruButton({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeInterval")}</span>
+            <span className="text-muted-foreground">{t("poljeInterval")}</span>
             <Input value={interval ?? ""} placeholder={t("placeholderVrsta")} disabled readOnly data-testid="profil-interval" />
           </label>
           {vrstaId && !interval && (
-            <p className="text-sm text-status-kasni" role="alert" data-testid="profil-bez-intervala">
+            <p className="text-sm text-destructive" role="alert" data-testid="profil-bez-intervala">
               {t("bezIntervalaTekst")}{" "}
               <Link href={href("/postavke")} className="underline">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
             </p>
           )}
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeRadjenoRanije")}</span>
+            <span className="text-muted-foreground">{t("poljeRadjenoRanije")}</span>
             <Select value={rezim} onValueChange={(v) => setRezim((v as Rezim) ?? "vec_radeno")} items={{ vec_radeno: t("opcijaVecRadeno"), prvi_put: t("opcijaPrviPut") }}>
               <SelectTrigger className="w-full" data-testid="profil-rezim"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -130,18 +130,18 @@ export function DodajProvjeruButton({
 
           {rezim === "vec_radeno" ? (
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljeZadnjiDatum")}</span>
+              <span className="text-muted-foreground">{t("poljeZadnjiDatum")}</span>
               <Input name="zadnji_datum" type="date" required data-testid="profil-zadnji-datum" />
             </label>
           ) : (
             <label className="block text-sm">
-              <span className="text-slate-600">{t("poljePrviRok")}</span>
+              <span className="text-muted-foreground">{t("poljePrviRok")}</span>
               <Input name="prvi_rok" type="date" required data-testid="profil-prvi-rok" />
             </label>
           )}
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNacinIzvrsenja")}</span>
+            <span className="text-muted-foreground">{t("poljeNacinIzvrsenja")}</span>
             <Select value={nacin} onValueChange={(v) => setNacin((v as "izvrsava" | "pracenje") ?? "izvrsava")} items={{ izvrsava: t("nacinIzvrsava", { appName: APP_NAME }), pracenje: t("nacinPracenje") }}>
               <SelectTrigger className="w-full" data-testid="profil-nacin"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -152,7 +152,7 @@ export function DodajProvjeruButton({
           </label>
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">{state.message}</p>
+            <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
 
           <Button type="submit" disabled={pending || !vrstaId || !lokId || !interval} data-testid="profil-submit">

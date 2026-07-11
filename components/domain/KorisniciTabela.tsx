@@ -48,7 +48,7 @@ export function KorisniciTabela({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -57,14 +57,14 @@ export function KorisniciTabela({
             data-testid="korisnici-pretraga"
           />
         </div>
-        <span className="shrink-0 text-xs text-slate-400">
+        <span className="shrink-0 text-xs text-muted-foreground">
           {upit === "" ? t("brojUkupno", { count: korisnici.length }) : t("brojFiltrirano", { prikazano: vidljivi.length, ukupno: korisnici.length })}
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs text-slate-500">
+          <thead className="bg-muted text-left text-xs text-muted-foreground">
             <tr>
               <th className="px-4 py-2 font-medium">{t("kolone.korisnik")}</th>
               <th className="px-4 py-2 font-medium">{t("kolone.uloga")}</th>
@@ -73,18 +73,18 @@ export function KorisniciTabela({
               <th className="w-12 px-4 py-2" aria-label={t("kolone.akcije")} />
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {vidljivi.map((k) => {
               const jeJa = k.id === jaId
               const brFirmi = k.izabrani.length
               return (
-                <tr key={k.id} className={cn(!k.aktivan && "bg-slate-50/60")}>
+                <tr key={k.id} className={cn(!k.aktivan && "bg-muted/60")}>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
                       <span
                         className={cn(
                           "grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold",
-                          k.aktivan ? "bg-brand/10 text-brand" : "bg-slate-200 text-slate-400",
+                          k.aktivan ? "bg-brand/10 text-brand" : "bg-slate-200 text-muted-foreground",
                         )}
                         aria-hidden
                       >
@@ -92,15 +92,15 @@ export function KorisniciTabela({
                       </span>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={cn("truncate font-medium", !k.aktivan && "text-slate-400")}>{k.ime}</span>
-                          {jeJa && <span className="text-[10px] text-slate-400">{t("ti")}</span>}
+                          <span className={cn("truncate font-medium", !k.aktivan && "text-muted-foreground")}>{k.ime}</span>
+                          {jeJa && <span className="text-[10px] text-muted-foreground">{t("ti")}</span>}
                           {!k.aktivan && (
-                            <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                            <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
                               {t("deaktiviran")}
                             </span>
                           )}
                         </div>
-                        <div className="truncate text-xs text-slate-500">{k.email}</div>
+                        <div className="truncate text-xs text-muted-foreground">{k.email}</div>
                       </div>
                     </div>
                   </td>
@@ -112,7 +112,7 @@ export function KorisniciTabela({
                   </td>
                   <td className="px-4 py-2.5">
                     {k.uloga === "admin" ? (
-                      <span className="text-xs text-slate-400" title={t("sveFirmeTitle")}>
+                      <span className="text-xs text-muted-foreground" title={t("sveFirmeTitle")}>
                         {t("sveFirme")}
                       </span>
                     ) : (
@@ -130,7 +130,7 @@ export function KorisniciTabela({
             })}
             {vidljivi.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                   {t("prazno", { upit: q })}
                 </td>
               </tr>

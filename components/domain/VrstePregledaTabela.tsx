@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { VrstaSheet } from "./VrstaSheet"
 import { postaviVrstaInterval, postaviVrstaAktivna } from "@/app/(dashboard)/postavke/actions"
@@ -27,21 +28,20 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
   return (
     <div className="space-y-3" data-testid="vrste-tabela">
       <div className="flex items-center justify-between gap-4 text-sm">
-        <label className="flex items-center gap-2 text-slate-600">
-          <input
-            type="checkbox"
+        <label className="flex items-center gap-2 text-muted-foreground">
+          <Checkbox
             checked={prikaziNeaktivne}
-            onChange={(e) => setPrikaziNeaktivne(e.target.checked)}
+            onCheckedChange={(next) => setPrikaziNeaktivne(next)}
             data-testid="vrste-prikazi-neaktivne"
           />
           {t("prikaziNeaktivne")}{brNeaktivnih > 0 && ` (${brNeaktivnih})`}
         </label>
-        <span className="text-slate-400">{t("brojVrsta", { count: vidljive.length })}</span>
+        <span className="text-muted-foreground">{t("brojVrsta", { count: vidljive.length })}</span>
       </div>
 
-      <div className="max-h-96 overflow-auto rounded-lg border border-slate-200">
+      <div className="max-h-96 overflow-auto rounded-lg border border-border">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-slate-50 text-left text-slate-500">
+          <thead className="sticky top-0 bg-muted text-left text-muted-foreground">
             <tr>
               <th className="px-3 py-2 font-medium">{tKolone("vrsta")}</th>
               <th className="w-44 px-3 py-2 font-medium">{tKolone("interval")}</th>
@@ -52,17 +52,17 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
           </thead>
           <tbody data-testid="vrste-lista">
             {vidljive.map((v) => (
-              <tr key={v.id} className={cn("border-t border-slate-100", !v.aktivna && "bg-slate-50/60")}>
+              <tr key={v.id} className={cn("border-t border-border", !v.aktivna && "bg-muted/60")}>
                 <td className="px-3 py-2">
-                  <div className={cn("font-medium", !v.aktivna && "text-slate-400 line-through")}>{v.naziv}</div>
-                  {v.zakonski_osnov && <div className="text-xs text-slate-400">{v.zakonski_osnov}</div>}
+                  <div className={cn("font-medium", !v.aktivna && "text-muted-foreground line-through")}>{v.naziv}</div>
+                  {v.zakonski_osnov && <div className="text-xs text-muted-foreground">{v.zakonski_osnov}</div>}
                 </td>
                 <td className="px-3 py-2">
                   <IntervalCell vrsta={v} />
                 </td>
                 <td className="px-3 py-2 text-center">
                   {v.vodi_dokumentaciju ? (
-                    <span className="text-slate-500" title={t("vodiDokumentacijuTitle")}>✓</span>
+                    <span className="text-muted-foreground" title={t("vodiDokumentacijuTitle")}>✓</span>
                   ) : (
                     <span className="text-slate-300" title={t("bezDokumentacijeTitle")}>—</span>
                   )}
@@ -77,7 +77,7 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
             ))}
             {vidljive.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-slate-400">
+                <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
                   {t("prazno")}
                 </td>
               </tr>
@@ -152,9 +152,9 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
         data-testid={`interval-${vrsta.id}`}
       />
       <span className="w-24 text-xs">
-        {pending && <span className="text-slate-400">…</span>}
+        {pending && <span className="text-muted-foreground">…</span>}
         {!pending && saved && <span className="text-green-600">{t("intervalSpremljeno")}</span>}
-        {!pending && err && <span className="text-red-600">{err}</span>}
+        {!pending && err && <span className="text-destructive">{err}</span>}
       </span>
     </div>
   )
@@ -181,7 +181,7 @@ function StatusPill({ vrsta }: { vrsta: Vrsta }) {
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50",
         vrsta.aktivna
           ? "bg-green-50 text-green-700 hover:bg-green-100"
-          : "bg-slate-100 text-slate-500 hover:bg-slate-200",
+          : "bg-muted text-muted-foreground hover:bg-slate-200",
       )}
     >
       <span className={cn("h-1.5 w-1.5 rounded-full", vrsta.aktivna ? "bg-green-500" : "bg-slate-400")} />

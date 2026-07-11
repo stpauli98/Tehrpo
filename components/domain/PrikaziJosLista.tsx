@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react"
 import { ChevronDown } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 // Lista koja prikazuje prvih `limit` stavki, a ostatak skriva iza "Prikaži još N".
 // Stavke su gotovi <li> čvorovi (sa svojim key-em) — radi i za server i klijent roditelja.
@@ -34,7 +34,10 @@ export function PrikaziJosLista({
           onClick={() => setExpanded((e) => !e)}
           aria-expanded={expanded}
           data-testid={testId}
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:underline"
+          className={cn(
+            "mt-3 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-brand transition-colors hover:underline",
+            FOCUS_RING,
+          )}
         >
           <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
           {expanded ? t("prikaziManje") : t("prikaziJos", { count: items.length - limit, imenica: imenicaGenitiv })}

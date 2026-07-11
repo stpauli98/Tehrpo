@@ -19,6 +19,7 @@
     "dedup:termini": "tsx --env-file=.env.local scripts/dedup-termini.ts",
     "cleanup:test-data": "tsx --env-file=.env.local scripts/cleanup-test-data.ts",
     "reminders": "tsx --env-file=.env.local scripts/send-reminders.ts",
+    "preview:emails": "tsx --env-file=.env.local scripts/preview-emails.ts",
     "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts",
     "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts",
     "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts",

@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`--webpack` is mandatory for `next dev`.** Turbopack panics with `Next.js package not found` because the project path contains a space (`Ai Forward`). The `dev` script and the Playwright `webServer` both force `next dev --webpack`. Do not switch back to Turbopack unless the project is moved to a space-free path.
 - **Package manager is `pnpm`** (`pnpm-lock.yaml`, `pnpm-workspace.yaml`). Use `pnpm`, not `npm`/`yarn`.
 - **Domain language is Bosnian/Serbian (latinica).** Table names, columns, routes, identifiers, and UI strings are all in the domain language (`klijenti`, `termini`, `obilasci`, `podsjetnici`…). This is intentional — match it.
+- **The cloud DB has two environments — always know which one you're touching.** PROD = ref `fqtqkehjidkzeasiegnq` via `DATABASE_URL` in `.env.local`; DEMO = ref `mtwwotmwrasozmcgqwhc` via `DATABASE_URL_DEMO` in `.env.development.local`. Local dev and E2E run against **DEMO**; real client data lives in **PROD**. Anything reading env must prefer `.env.development.local` (DEMO) over `.env.local` (PROD) — the DEMO-first precedence in `tests/e2e/db.ts` and `tests/e2e/session-helper.ts` exists because getting it backwards writes tests into PROD while the app reads DEMO. Ref-guard before any PROD write. `.env.local` is **not** shell-`source`-able (parse error) — read values with `grep` or `tsx --env-file`.
+- **Merge to `main` = production deploy.** Vercel git-integration auto-deploys `main` to **three** Production projects at once (there is no deploy GitHub Action — `.github/workflows/*` is cron only). Vercel project names are **inverted from role**: `tehpro-demo.nextpixel.dev` (Vercel project `tehpro-demo`) is PROD → `fqtqkehjidkzeasiegnq`; `de.nextpixel.dev` + `demo.nextpixel.dev` are DEMO → `mtwwotmwrasozmcgqwhc`. Branch push = Preview deploy. Don't push `main` casually.
 
 ## Commands
 
@@ -37,7 +39,7 @@ pnpm db:types         # regenerate db/types.ts from the LOCAL DB — AUTO-GENERA
 pnpm db:reset         # supabase db reset (reapply all migrations to local stack)
 pnpm seed             # wipe + repopulate LOCAL DB from ../2026- obilasci...xlsx (needs `supabase start` first)
 pnpm seed:admin <email> <pw> "<ime>"   # create Supabase Auth user + admin korisnici row (idempotent)
-pnpm db:apply-cloud <migration.sql>    # apply ONE migration to the CLOUD DB (raw pg over DATABASE_URL)
+pnpm db:apply-cloud <migration.sql>    # apply ONE migration to CLOUD (raw pg over DATABASE_URL = PROD; ref-guard for DEMO)
 pnpm reminders [-- --dry]              # run the reminder engine locally (same code as the cron route)
 pnpm preview:import   # dry-read the Excel workbook, no DB writes
 ```
@@ -66,6 +68,7 @@ Pick by execution context; this is the most important rule in the codebase:
 - `proxy.ts` is the gate: validates `getUser()`, redirects unauth → `/prijava`. `PUBLIC` allowlist includes `/api/cron` (Bearer `CRON_SECRET`, no cookie). Deactivation check is **fail-open** — signs out only when `korisnici.aktivan === false`; a missing/erroring profile row never revokes the session.
 - `korisnici` table PKs on `auth.users(id)` with `uloga` (`admin|operater|pregled`) + `aktivan`. Use `lib/auth/current-user.ts` `getTrenutniKorisnik()` (React-`cache`d) and `lib/auth/roles.ts` (`jeAdmin`, `mozeUrediti`) — don't re-query.
 - RLS policies key on `SECURITY DEFINER` helpers `ima_pristup_klijentu()` / `je_admin()` / `je_pregled()`; client-scoped tables join through `klijent_id`. `pregled` role is read-only everywhere. Every mutation hits a generic `tg_audit()` trigger → `audit_log` (admin-read only).
+- **`pregled` read-only UX is a client layer *on top of* RLS** (RLS already blocks the writes server-side; this just hides dead buttons). `providers/korisnik-provider.tsx` exposes `useUloga()` and `useMozeUrediti()` (= `mozeUrediti(uloga)`, admin||operater). Gate write controls with `{mozeUrediti && …}`, or `if (!mozeUrediti) return null` **placed after all hook calls** (Rules of Hooks). Hide the write control only — never the read view. When a component mixes read + write (inputs + submit), disable/hide only the write parts.
 - **RLS gotchas:** SQL **views must set `security_invoker=on`** or they bypass RLS. A cloud-only event trigger auto-enables RLS on every new public table, so **a new table with no policy silently returns 0 rows**.
 
 ### Migrations & read models
@@ -91,9 +94,15 @@ External integrations live in `lib/{excel,zapisnik,claude,reminders,email}/` and
 
 **Anthropic model id `claude-sonnet-4-6` is hardcoded in two places** — `lib/claude/chat.ts` and `lib/zapisnik/generate.ts`. Change both together. **Load the `claude-api` skill before editing any Anthropic/Claude code.**
 
+### i18n & branding — same code, many firms/locales (never hard-code either)
+One codebase serves multiple firms and languages; brand and locale are **build-time env flags**, not literals in code.
+- **Locale** (`lib/locale.ts` → `i18n/request.ts`, next-intl): `NEXT_PUBLIC_APP_LOCALE` ∈ `sr|en|de` (default `sr`), fixed per deployment (needs rebuild). Catalogs live in `messages/{sr,en,de}.json`.
+- **Brand** (`lib/brand.ts`): `NEXT_PUBLIC_APP_NAME` / `NEXT_PUBLIC_APP_TAGLINE` (default `"Tehpro"`). Consume `APP_NAME` / `APP_TAGLINE` / `APP_INITIAL` — never a literal firm name. `brand.ts`/`locale.ts` are imported at module level in both client and server code, so they must not pull the whole message catalog (bundle discipline).
+- **next-intl type-checks translator namespaces/keys against the literal JSON union** — referencing a key/namespace that doesn't exist yet is a hard `tsc` error. Add the key to all of `messages/*.json` in the *same* change that uses it, keep `sr`/`en`/`de` at key parity, and do **not** use the ICU `one` plural category for `sr`.
+
 ### Tests & deployment
 - **Unit:** Vitest, node env, `lib/**/*.test.ts` only, pure logic.
-- **E2E:** Playwright, `--workers=1`, chromium + webkit at 1440×900. It boots its own dev server (`--webpack`, with `ZAPISNIK_DRY_RUN=1` + `CHAT_DRY_RUN=1`). `auth.setup.ts` logs in via Supabase REST and hand-encodes the `@supabase/ssr` cookie into `storageState` to avoid hundreds of real logins. **E2E runs against the CLOUD Supabase (not a local stack)** — mutations hit the live DB, so `pnpm cleanup:test-data` purges test junk afterward.
+- **E2E:** Playwright, `--workers=1`, chromium + webkit at 1440×900. It boots its own dev server (`--webpack`, with `ZAPISNIK_DRY_RUN=1` + `CHAT_DRY_RUN=1`). `auth.setup.ts` logs in via Supabase REST and hand-encodes the `@supabase/ssr` cookie into `storageState` to avoid hundreds of real logins. **E2E runs against the cloud DEMO Supabase (not a local stack)** — mutations hit the live DEMO DB (`--workers=1`, since specs share global singleton `postavke` id=1), so `pnpm cleanup:test-data` purges test junk afterward.
 - **Deploy:** Vercel, region `dub1` (`vercel.json`). The reminder cron route exists but `vercel.json` has **no `crons` array yet** — the schedule isn't wired.
 
 ### Conventions enforced by lint

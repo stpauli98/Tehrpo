@@ -836,7 +836,8 @@
       "pokreni": "Jetzt ausführen",
       "potvrda": "Erinnerungen jetzt an alle Empfänger senden?",
       "saljem": "Wird gesendet…",
-      "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Zurückgestellt: {odgodjeno} · Fehler: {greske}"
+      "rezultat": "Gesendet: {poslano} · Übersprungen: {preskoceno} · Zurückgestellt: {odgodjeno} · Fehler: {greske}",
+      "pokreniUpozorenje": "„Jetzt senden“ verschickt Erinnerungen auch bei ausgeschaltetem automatischem Versand."
     },
     "vrijemeSlanja": {
       "naslov": "Sendezeit",
@@ -846,6 +847,10 @@
     "saljiKlijentima": {
       "naslov": "Erinnerungen auch an Firmen senden",
       "upozorenje": "Aktiviert = E-Mails verlassen TehPro (an Kunden). Nur einzeln aktivierte Firmen mit hinterlegten Adressen erhalten sie."
+    },
+    "zakazanoObavijest": {
+      "naslov": "Benachrichtigung bei Terminplanung nach Fälligkeit",
+      "opis": "Wird ein Termin auf ein Datum nach dem Fälligkeitsdatum gelegt, erhalten interne Empfänger eine automatische Benachrichtigung. Das Ausschalten stoppt diese E-Mails."
     },
     "koStaPrima": {
       "naslov": "Wer erhält was",
@@ -904,7 +909,8 @@
       "pokreniNijeKonfigurisan": "CRON_SECRET ist auf diesem Deployment nicht konfiguriert.",
       "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen.",
       "vrijemeSatNeispravan": "Stunde muss eine ganze Zahl 0–23 sein.",
-      "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen."
+      "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen.",
+      "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen."
     }
   },
   "asistent": {

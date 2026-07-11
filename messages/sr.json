@@ -836,7 +836,8 @@
       "pokreni": "Pokreni sada",
       "potvrda": "Poslati podsjetnike svim primaocima odmah?",
       "saljem": "Šaljem…",
-      "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Odgođeno: {odgodjeno} · Greške: {greske}"
+      "rezultat": "Poslano: {poslano} · Preskočeno: {preskoceno} · Odgođeno: {odgodjeno} · Greške: {greske}",
+      "pokreniUpozorenje": "„Pokreni sada“ šalje podsjetnike čak i kad je automatsko slanje isključeno."
     },
     "vrijemeSlanja": {
       "naslov": "Vrijeme slanja",
@@ -846,6 +847,10 @@
     "saljiKlijentima": {
       "naslov": "Šalji podsjetnike i firmama",
       "upozorenje": "Uključeno = mailovi izlaze van TehPro-a (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
+    },
+    "zakazanoObavijest": {
+      "naslov": "Obavijest o zakazivanju poslije roka",
+      "opis": "Kad se termin zakaže na datum poslije roka dospijeća, interni primaoci dobijaju automatsku obavijest. Isključivanje zaustavlja te mejlove."
     },
     "koStaPrima": {
       "naslov": "Ko šta prima",
@@ -904,7 +909,8 @@
       "pokreniNijeKonfigurisan": "CRON_SECRET nije konfigurisan na ovom deploymentu.",
       "pokreniGreska": "Pokretanje podsjetnika nije uspjelo.",
       "vrijemeSatNeispravan": "Sat mora biti cijeli broj 0–23.",
-      "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama."
+      "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama.",
+      "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka."
     }
   },
   "asistent": {

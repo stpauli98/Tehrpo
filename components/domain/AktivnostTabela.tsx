@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import type { AktivnostRed } from "@/lib/queries/aktivnost"
 import { formatDatum } from "@/lib/date"
+import { delokalizujSegment } from "@/i18n/routes"
 
 type T = Awaited<ReturnType<typeof getTranslations<"aktivnost">>>
 
@@ -12,6 +13,12 @@ function prettify(k: string): string {
 function poljeLabel(k: string, t: T): string {
   const key = `polja.${k}`
   return t.has(key as never) ? t(key as never) : prettify(k)
+}
+
+function ekranLabel(seg: string, t: T): string {
+  const fiz = delokalizujSegment(seg)
+  const key = `ekrani.${fiz}`
+  return t.has(key as never) ? t(key as never) : prettify(fiz)
 }
 
 function formatVrijednost(v: unknown, t: T): string {
@@ -38,21 +45,25 @@ function opisDetalja(red: AktivnostRed, t: T): string {
       .map((k) => `${poljeLabel(k, t)}: ${formatVrijednost(staro[k], t)} → ${formatVrijednost(novo[k], t)}`)
     return promjene.join("\n") || "—"
   }
+  if (red.akcija === "NAVIGATE") {
+    return red.entitet ? ekranLabel(red.entitet, t) : "—"
+  }
   const d = red.detalji as Record<string, unknown> | null
   if (!d) return "—"
-  if (d.ekran) return String(d.ekran)
   if (d.filteri) return Object.entries(d.filteri as Record<string, string>)
     .map(([k, v]) => `${poljeLabel(k, t)}: ${v}`).join(", ")
+  if (d.ekran) return ekranLabel(red.entitet ?? String(d.ekran), t)
   return JSON.stringify(d)
 }
 
-function ciljLabel(r: AktivnostRed): string {
+function ciljLabel(r: AktivnostRed, t: T): string {
   const naziv =
     r.cilj_ime && r.cilj_klijent && r.cilj_ime !== r.cilj_klijent
       ? `${r.cilj_ime} (${r.cilj_klijent})`
       : (r.cilj_ime ?? r.cilj_klijent ?? (r.entitet_id ? `#${r.entitet_id}` : null))
-  if (!r.entitet) return naziv ?? "—"
-  return naziv ? `${r.entitet} · ${naziv}` : r.entitet
+  const ent = r.entitet ? ekranLabel(r.entitet, t) : null
+  if (!ent) return naziv ?? "—"
+  return naziv ? `${ent} · ${naziv}` : ent
 }
 
 export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
@@ -80,7 +91,7 @@ export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
               </td>
               <td className="px-3 py-2">{r.korisnik_ime ?? t("sistemski")}</td>
               <td className="px-3 py-2">{t(`akcije.${r.akcija}` as never)}</td>
-              <td className="px-3 py-2">{ciljLabel(r)}</td>
+              <td className="px-3 py-2">{ciljLabel(r, t)}</td>
               <td className="px-3 py-2 text-muted-foreground whitespace-pre-line">{opisDetalja(r, t)}</td>
             </tr>
           ))}

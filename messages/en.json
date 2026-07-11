@@ -777,6 +777,26 @@
       "broj_ugovora": "Contract number",
       "datum_od": "Date from",
       "datum_do": "Date to"
+    },
+    "ekrani": {
+      "pregled": "Overview",
+      "klijenti": "Clients",
+      "termini": "Appointments",
+      "plan-aktivnosti": "Activity plan",
+      "obilasci": "Visits",
+      "zapisnici": "Records",
+      "dokumenti": "Documents",
+      "postavke": "Settings",
+      "aktivnost": "Activity",
+      "prikaz": "View",
+      "asistent": "Assistant",
+      "lokacije": "Locations",
+      "vrste_provjera": "Check types",
+      "korisnici": "Users",
+      "korisnik_klijent": "Client assignment",
+      "klijent_provjere": "Client checks",
+      "kontakt_osobe": "Contact persons",
+      "ugovori": "Contracts"
     }
   },
   "zapisnici": {

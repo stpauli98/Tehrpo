@@ -167,8 +167,9 @@ export async function zahtijevajAdmina() {
 }
 
 // Vrati broj aktivnih administratora (za zaštitu od zaključavanja sistema).
-async function brojAktivnihAdmina(admin: ReturnType<typeof createAdminSupabaseClient>): Promise<number> {
-  const { count } = await admin
+// Prima SSR (RLS) klijent — admin kroz korisnici_sel (je_admin()) vidi sve korisnike.
+async function brojAktivnihAdmina(sb: Awaited<ReturnType<typeof createServerSupabaseClient>>): Promise<number> {
+  const { count } = await sb
     .from("korisnici")
     .select("id", { count: "exact", head: true })
     .eq("uloga", "admin")
@@ -195,7 +196,10 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
     return { ok: false, message: /already|registered|exists/i.test(error?.message ?? "")
       ? t("korisnikEmailPostoji") : (error?.message ?? t("greskaFallback")) }
   }
-  const { error: pErr } = await admin.from("korisnici").insert({
+  // Profil upisuje SSR (RLS) klijent da audit trigger zabilježi ADMINA koji kreira nalog.
+  // (service-role → auth.uid()=NULL → audit bez aktera.) Auth korisnik gore mora ostati service-role.
+  const supabase = await createServerSupabaseClient()
+  const { error: pErr } = await supabase.from("korisnici").insert({
     id: data.user.id, ime: parsed.data.ime, email: parsed.data.email, uloga: parsed.data.uloga, aktivan: true,
   })
   if (pErr) {
@@ -213,15 +217,17 @@ export async function postaviUlogu(korisnikId: string, uloga: "admin"|"operater"
   if (korisnikId === ja.id && uloga !== "admin") {
     return { ok: false, message: t("sebiOduzetiUlogu") }
   }
-  const admin = createAdminSupabaseClient()
+  // SSR (RLS) klijent: korisnici_wr = je_admin() prolazi za admina, a auth.uid() je postavljen
+  // pa audit trigger zabilježi aktera (service-role bi upisao korisnik_id=NULL).
+  const supabase = await createServerSupabaseClient()
   // Zaštita: ne dozvoli da skidanjem admin uloge ostane bez ijednog aktivnog admina.
   if (uloga !== "admin") {
-    const { data: cilj } = await admin.from("korisnici").select("uloga, aktivan").eq("id", korisnikId).maybeSingle()
-    if (cilj?.uloga === "admin" && cilj.aktivan && (await brojAktivnihAdmina(admin)) <= 1) {
+    const { data: cilj } = await supabase.from("korisnici").select("uloga, aktivan").eq("id", korisnikId).maybeSingle()
+    if (cilj?.uloga === "admin" && cilj.aktivan && (await brojAktivnihAdmina(supabase)) <= 1) {
       return { ok: false, message: t("barJedanAdmin") }
     }
   }
-  const { error } = await admin.from("korisnici").update({ uloga }).eq("id", korisnikId)
+  const { error } = await supabase.from("korisnici").update({ uloga }).eq("id", korisnikId)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/postavke")
   return { ok: true }
@@ -232,15 +238,15 @@ export async function postaviAktivan(korisnikId: string, aktivan: boolean): Prom
   if (!aktivan && korisnikId === ja.id) {
     return { ok: false, message: t("deaktivirajVlastitiNalog") }
   }
-  const admin = createAdminSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   // Zaštita: ne dozvoli deaktivaciju zadnjeg aktivnog administratora.
   if (!aktivan) {
-    const { data: cilj } = await admin.from("korisnici").select("uloga").eq("id", korisnikId).maybeSingle()
-    if (cilj?.uloga === "admin" && (await brojAktivnihAdmina(admin)) <= 1) {
+    const { data: cilj } = await supabase.from("korisnici").select("uloga").eq("id", korisnikId).maybeSingle()
+    if (cilj?.uloga === "admin" && (await brojAktivnihAdmina(supabase)) <= 1) {
       return { ok: false, message: t("barJedanAdmin") }
     }
   }
-  const { error } = await admin.from("korisnici").update({ aktivan }).eq("id", korisnikId)
+  const { error } = await supabase.from("korisnici").update({ aktivan }).eq("id", korisnikId)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/postavke")
   return { ok: true }
@@ -281,8 +287,8 @@ function objasniEmailGresku(msg: string): string {
 
 export async function postaviPrimaPodsjetnike(korisnikId: string, prima: boolean): Promise<ActionResult> {
   await zahtijevajAdmina()
-  const admin = createAdminSupabaseClient()
-  const { error } = await admin.from("korisnici").update({ prima_podsjetnike: prima }).eq("id", korisnikId)
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from("korisnici").update({ prima_podsjetnike: prima }).eq("id", korisnikId)
   if (error) return { ok: false, message: error.message }
   revalidatePath("/postavke")
   return { ok: true }
@@ -291,20 +297,22 @@ export async function postaviPrimaPodsjetnike(korisnikId: string, prima: boolean
 /** Postavi tačan skup dodijeljenih klijenata za korisnika (zamijeni postojeće). */
 export async function postaviDodjele(korisnikId: string, klijentIds: string[]): Promise<ActionResult> {
   await zahtijevajAdmina()
-  const admin = createAdminSupabaseClient()
+  // SSR (RLS) klijent: kk_wr = je_admin() prolazi za admina; auth.uid() postavljen → audit hvata aktera
+  // za svaki delete/insert dodjele (service-role bi upisao korisnik_id=NULL).
+  const supabase = await createServerSupabaseClient()
   // Provjeri da svi klijent ID-jevi postoje prije brisanja (atomičnost)
   if (klijentIds.length > 0) {
-    const { data: valid, error: chkErr } = await admin.from("klijenti").select("id").in("id", klijentIds)
+    const { data: valid, error: chkErr } = await supabase.from("klijenti").select("id").in("id", klijentIds)
     if (chkErr) return { ok: false, message: chkErr.message }
     if (!valid || valid.length !== klijentIds.length) {
       return { ok: false, message: t("klijentNepostojeciUDodjeli") }
     }
   }
-  const { error: delErr } = await admin.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
+  const { error: delErr } = await supabase.from("korisnik_klijent").delete().eq("korisnik_id", korisnikId)
   if (delErr) return { ok: false, message: delErr.message }
   if (klijentIds.length > 0) {
     const rows = klijentIds.map((klijent_id) => ({ korisnik_id: korisnikId, klijent_id }))
-    const { error: insErr } = await admin.from("korisnik_klijent").insert(rows)
+    const { error: insErr } = await supabase.from("korisnik_klijent").insert(rows)
     if (insErr) return { ok: false, message: insErr.message }
   }
   revalidatePath("/postavke")

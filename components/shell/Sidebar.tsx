@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
+import { useUloga } from "@/providers/korisnik-provider"
 
 const NAV_ITEMS = [
   { href: href("/pregled"),         labelKey: "pregled",         icon: LayoutDashboard },
@@ -38,6 +39,9 @@ const STORAGE_KEY = "tehpro:sidebar-width"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const uloga = useUloga()
+  // 'pregled' (read-only) ne koristi AI asistenta → sakrij mu cijeli tab (RLS ionako blokira upis).
+  const navItems = uloga === "pregled" ? NAV_ITEMS.filter((i) => i.href !== href("/asistent")) : NAV_ITEMS
   const t = useTranslations("shell.nav")
   const tSidebar = useTranslations("shell.sidebar")
   const navRef = useRef<HTMLElement>(null)
@@ -164,7 +168,7 @@ export function Sidebar() {
     >
       <div className="flex h-full flex-col gap-1 rounded-2xl border border-border bg-card/70 p-2 shadow-sm backdrop-blur">
         <ul className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <li key={item.href}>{renderItem(item)}</li>
           ))}
         </ul>

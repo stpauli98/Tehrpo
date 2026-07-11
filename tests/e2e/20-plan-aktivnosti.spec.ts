@@ -47,3 +47,39 @@ test.describe("Plan aktivnosti — konsolidacija", () => {
     await expect(nav.getByRole("link", { name: "Plan", exact: true })).toHaveCount(0)
   })
 })
+
+test.describe("Plan aktivnosti — izvoz modal", () => {
+  test("otvara modal, default period, Prilagodi otkriva opcije", async ({ page }) => {
+    await page.goto("/plan-aktivnosti")
+    await page.getByTestId("izvoz-trigger").click()
+    await expect(page.getByTestId("izvoz-modal")).toBeVisible()
+    // Prilagodi skriveno na početku
+    await expect(page.getByTestId("izvoz-period")).toHaveCount(0)
+    await page.getByTestId("izvoz-prilagodi").click()
+    await expect(page.getByTestId("izvoz-period")).toBeVisible()
+    await expect(page.getByTestId("izvoz-period-om")).toBeChecked()
+    // Živi broj se prikaže (bilo koji tekst)
+    await expect(page.getByTestId("izvoz-broj")).not.toHaveText("")
+  })
+
+  test("Preuzmi pokreće download (Excel)", async ({ page }) => {
+    await page.goto("/plan-aktivnosti")
+    await page.getByTestId("izvoz-trigger").click()
+    await page.getByTestId("izvoz-format-xlsx").click()
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByTestId("izvoz-preuzmi").click(),
+    ])
+    expect(download.suggestedFilename()).toMatch(/plan-aktivnosti-.*\.xlsx$/)
+  })
+
+  test("prilagođeni raspon: nevažeći datumi drže Preuzmi onemogućen", async ({ page }) => {
+    await page.goto("/plan-aktivnosti")
+    await page.getByTestId("izvoz-trigger").click()
+    await page.getByTestId("izvoz-prilagodi").click()
+    await page.getByTestId("izvoz-period-raspon").check()
+    await page.getByTestId("izvoz-od").fill("2026-07-31")
+    await page.getByTestId("izvoz-do").fill("2026-07-01")
+    await expect(page.getByTestId("izvoz-preuzmi")).toBeDisabled()
+  })
+})

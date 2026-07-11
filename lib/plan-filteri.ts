@@ -40,8 +40,8 @@ export function mjesecRange(f: PlanFilteri): { from: string; to: string } | null
   return null
 }
 
-/** Primjenjuje sve plan-filtere na termini_view upit (DRY: isto za lista i izvoz rutu). */
-export function applyPlanFilteri<
+/** Ne-datumski filteri (status/pretraga/klijent/lokacija/vrsta/nacin). Dijele lista i izvoz. */
+export function applyPlanFilteriBezDatuma<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Q extends PostgrestFilterBuilder<any, any, any, any, any>,
 >(q: Q, f: PlanFilteri): Q {
@@ -55,6 +55,15 @@ export function applyPlanFilteri<
   if (f.lokacijaId) out = out.eq("lokacija_id", f.lokacijaId)
   if (f.vrstaId) out = out.eq("vrsta_provjere_id", f.vrstaId)
   if (f.nacin !== "svi") out = out.eq("nacin_izvrsenja", f.nacin)
+  return out
+}
+
+/** Primjenjuje sve plan-filtere (ne-datumske + mjesec-raspon) na termini_view upit (DRY: lista + izvoz legacy). */
+export function applyPlanFilteri<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Q extends PostgrestFilterBuilder<any, any, any, any, any>,
+>(q: Q, f: PlanFilteri): Q {
+  let out = applyPlanFilteriBezDatuma(q, f)
   const r = mjesecRange(f)
   if (r) out = out.gte("datum_prikaza", r.from).lte("datum_prikaza", r.to)
   return out

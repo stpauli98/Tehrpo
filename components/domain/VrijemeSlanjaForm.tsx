@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { updateVrijemeSlanja, type ActionResult } from "@/app/(dashboard)/postavke/actions"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
@@ -19,8 +20,10 @@ const SAT_ITEMS: Record<string, string> = Object.fromEntries(
 
 export function VrijemeSlanjaForm({ vrijemeSat }: { vrijemeSat: number }) {
   const t = useTranslations("postavke.vrijemeSlanja")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [state, action, pending] = useActionState(updateVrijemeSlanja, initial)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
   const prev = useRef<ActionResult>(initial)
   const formRef = useRef<HTMLFormElement>(null)
 

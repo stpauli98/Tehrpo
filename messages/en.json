@@ -668,8 +668,29 @@
   "plan": {
     "naslov": "Activity plan",
     "izvoz": {
-      "excel": "Export to Excel",
-      "pdf": "Export to PDF"
+      "preuzmi": "Download",
+      "naslovModala": "Download report",
+      "format": "Format",
+      "formatPdf": "PDF",
+      "formatExcel": "Excel",
+      "period": "Period",
+      "periodOvajMjesec": "This month",
+      "periodGodina": "Whole year",
+      "periodMjesec": "Specific month",
+      "periodRaspon": "Custom range",
+      "periodSvi": "All (no time limit)",
+      "od": "From",
+      "do": "To",
+      "opseg": "Scope",
+      "opsegSve": "All activities",
+      "opsegFiltrirano": "Only currently filtered",
+      "filteriPrimijenjeni": "Page filters are applied",
+      "nemaFiltera": "No active page filters",
+      "prilagodi": "Customize",
+      "sakrij": "Hide",
+      "brojAktivnosti": "{broj} activities will be exported",
+      "racunam": "Calculating…",
+      "greskaBroj": "Count currently unavailable"
     },
     "viewSwitcher": {
       "kalendar": "Calendar",

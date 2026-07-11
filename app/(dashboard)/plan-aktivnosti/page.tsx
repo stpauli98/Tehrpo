@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PlanViewSwitcher } from "@/components/domain/PlanViewSwitcher"
-import { PlanIzvozDugmad } from "@/components/domain/PlanIzvozDugmad"
+import { PlanIzvozModal } from "@/components/domain/PlanIzvozModal"
 import { jeValidanView, type PlanView } from "@/lib/plan-view"
 import { ListaView } from "./_views/lista"
 import { KalendarView } from "./_views/kalendar"
@@ -41,7 +41,7 @@ export default async function PlanAktivnostiPage({
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
         <div className="flex items-center gap-3">
-          <Suspense fallback={null}><PlanIzvozDugmad /></Suspense>
+          <Suspense fallback={null}><PlanIzvozModal /></Suspense>
           <PlanViewSwitcher current={view} />
         </div>
       </div>

@@ -668,8 +668,29 @@
   "plan": {
     "naslov": "Plan aktivnosti",
     "izvoz": {
-      "excel": "Izvoz Excel",
-      "pdf": "Izvoz PDF"
+      "preuzmi": "Preuzmi",
+      "naslovModala": "Preuzmi izvještaj",
+      "format": "Format",
+      "formatPdf": "PDF",
+      "formatExcel": "Excel",
+      "period": "Period",
+      "periodOvajMjesec": "Ovaj mjesec",
+      "periodGodina": "Cijela godina",
+      "periodMjesec": "Određeni mjesec",
+      "periodRaspon": "Prilagođeni raspon",
+      "periodSvi": "Sve (bez vremenskog ograničenja)",
+      "od": "Od",
+      "do": "Do",
+      "opseg": "Opseg",
+      "opsegSve": "Sve aktivnosti",
+      "opsegFiltrirano": "Samo trenutno filtrirano",
+      "filteriPrimijenjeni": "Filteri sa stranice su primijenjeni",
+      "nemaFiltera": "Nema aktivnih filtera na stranici",
+      "prilagodi": "Prilagodi",
+      "sakrij": "Sakrij",
+      "brojAktivnosti": "Izvešće se {broj} aktivnosti",
+      "racunam": "Računam…",
+      "greskaBroj": "Broj trenutno nedostupan"
     },
     "viewSwitcher": {
       "kalendar": "Kalendar",

@@ -20,12 +20,52 @@ function htmlLang(locale: Locale): string {
   return locale === "sr" ? "bs" : locale
 }
 
+// ─── Dijeljeni vizuelni okvir (osvježeno) ────────────────────────────────────
+
+/** Ujednačen pill badge. */
+function badge(boja: string, tekst: string): string {
+  return `<span style="display:inline-block;background:${boja};color:#ffffff;font-size:12px;font-weight:bold;padding:5px 12px;border-radius:999px;letter-spacing:.3px">${tekst}</span>`
+}
+
+/** Jedan red tabele "labela → vrijednost" (prvi red ima veći gornji razmak). */
+function poljeRed(labela: string, vrijednost: string, prvi = false): string {
+  const pad = prvi ? "8px" : "4px"
+  return `<tr><td style="padding:${pad} 0;color:#64748b">${labela}</td><td style="padding:${pad} 0;text-align:right">${vrijednost}</td></tr>`
+}
+
+/** Zajednički omot: pozadina → kartica → header → telo → footer. */
+function layoutOmot(a: {
+  accent: string
+  headerNaziv: string
+  headerLabel: string
+  telo: string
+  footer: string
+  locale: Locale
+}): string {
+  return `<!doctype html>
+<html lang="${htmlLang(a.locale)}"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(15,23,42,.08)">
+        <tr><td style="background:${a.accent};padding:18px 24px">
+          <table role="presentation" width="100%"><tr>
+            <td style="color:#ffffff;font-size:16px;font-weight:bold;letter-spacing:.3px">${a.headerNaziv}</td>
+            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">${a.headerLabel}</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:24px">${a.telo}</td></tr>
+        <tr><td style="padding:16px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;color:#64748b;font-size:12px;text-align:center">${a.footer}</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`
+}
+
+// ─── Predmet (subject) ───────────────────────────────────────────────────────
+
 /**
  * Tekst za broj dana do roka: negativan = kašnjenje, 0 = danas, pozitivan = za N dana.
- * Dijeli ICU plural ključeve (`common.rok`) s lib/hitno.ts. Originalna logika ovdje je bila
- * `n === 1 ? "dan" : "dana"` — BEZ sr mod-10 izuzetka (21/31...) koji ima hitno.ts — pa ICU
- * `=1` egzaktni match reprodukuje sr izlaz bajt-identično za SVE brojeve (uklj. 21, 31…),
- * bez potrebe za posebnom sr granom.
+ * Dijeli ICU plural ključeve (`common.rok`) s lib/hitno.ts.
  */
 function danaTekst(d: number, locale: Locale = APP_LOCALE): string {
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "common.rok" })
@@ -49,33 +89,35 @@ export function testEmailSubject(locale: Locale = APP_LOCALE): string {
   return t("predmet", { appName: APP_NAME })
 }
 
+export function zakazanoNakonRokaSubject(
+  args: { vrsta: string; klijent: string },
+  locale: Locale = APP_LOCALE,
+): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.zakazanoNakonRoka" })
+  return t("predmet", { vrsta: args.vrsta, klijent: args.klijent })
+}
+
+// ─── Test email ──────────────────────────────────────────────────────────────
+
 /** Jednostavan brendiran test-email: potvrđuje da primalac dobija mejlove iz sistema. */
 export function testEmailHtml(args: { ime?: string | null }, locale: Locale = APP_LOCALE): string {
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.test" })
   const pozdrav = args.ime ? t("pozdravIme", { ime: escapeHtml(args.ime) }) : t("pozdrav")
-  return `<!doctype html>
-<html lang="${htmlLang(locale)}"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
-    <tr><td align="center">
-      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
-        <tr><td style="background:#2563eb;padding:16px 24px">
-          <table role="presentation" width="100%"><tr>
-            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(APP_NAME)}</td>
-            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">${t("headerLabel")}</td>
-          </tr></table>
-        </td></tr>
-        <tr><td style="padding:24px">
-          <span style="display:inline-block;background:#16a34a;color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">${t("znacka")}</span>
+  const telo = `${badge("#16a34a", t("znacka"))}
           <p style="margin:14px 0 0;font-size:15px">${pozdrav}</p>
           <p style="margin:8px 0 0;font-size:14px;color:#334155">${t("opis")}</p>
-          <p style="margin:16px 0 0;font-size:13px;color:#64748b">${t("napomena")}</p>
-        </td></tr>
-        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`
+          <p style="margin:16px 0 0;font-size:13px;color:#64748b">${t("napomena")}</p>`
+  return layoutOmot({
+    accent: "#2563eb",
+    headerNaziv: escapeHtml(APP_NAME),
+    headerLabel: t("headerLabel"),
+    telo,
+    footer: `${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}`,
+    locale,
+  })
 }
+
+// ─── Podsjetnik (interni + firmin) ───────────────────────────────────────────
 
 export function reminderHtml(args: {
   klijent: string
@@ -91,10 +133,8 @@ export function reminderHtml(args: {
   const rok = formatDatum(args.rok, locale)
   const kasni = args.danaDoRoka < 0
   const boja = kasni ? "#dc2626" : "#2563eb"
-  const badge = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
-  const lokRed = args.lokacija
-    ? `<tr><td style="padding:4px 0;color:#64748b">${t("poljeLokacija")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.lokacija)}</td></tr>`
-    : ""
+  const badgeTekst = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
+  const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
 
   // Dugmad: samo s baseUrl + odgovarajući id. Table-based ("bulletproof") za Outlook.
   const base = args.baseUrl ? args.baseUrl.replace(/\/$/, "") : ""
@@ -114,32 +154,22 @@ export function reminderHtml(args: {
     ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:20px auto 0"><tr>${dugmici}</tr></table>`
     : ""
 
-  return `<!doctype html>
-<html lang="${htmlLang(locale)}"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
-    <tr><td align="center">
-      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
-        <tr><td style="background:${boja};padding:16px 24px">
-          <table role="presentation" width="100%"><tr>
-            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(APP_NAME)}</td>
-            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">${t("headerLabel")}</td>
-          </tr></table>
-        </td></tr>
-        <tr><td style="padding:24px">
-          <span style="display:inline-block;background:${boja};color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">${badge}</span>
+  const telo = `${badge(boja, badgeTekst)}
           <p style="margin:12px 0 0;font-size:15px"><strong>${t("rokDospijeca")}</strong> ${rok}</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
-            <tr><td style="padding:8px 0;color:#64748b">${t("poljeVrsta")}</td><td style="padding:8px 0;text-align:right">${escapeHtml(args.vrsta)}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b">${t("poljeKlijent")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.klijent)}</td></tr>
+            ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta), true)}
+            ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
             ${lokRed}
           </table>
-          ${dugmadBlok}
-        </td></tr>
-        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`
+          ${dugmadBlok}`
+  return layoutOmot({
+    accent: boja,
+    headerNaziv: escapeHtml(APP_NAME),
+    headerLabel: t("headerLabel"),
+    telo,
+    footer: `${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}`,
+    locale,
+  })
 }
 
 /** Firmin (klijentski) podsjetnik — bez internih dugmadi, brend iz FirmBrand. */
@@ -155,48 +185,30 @@ export function reminderHtmlFirma(args: {
   const rok = formatDatum(args.rok, locale)
   const kasni = args.danaDoRoka < 0
   const boja = kasni ? "#dc2626" : "#2563eb"
-  const badge = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
+  const badgeTekst = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
   const b = args.brand
-  const lokRed = args.lokacija
-    ? `<tr><td style="padding:4px 0;color:#64748b">${t("poljeLokacija")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.lokacija)}</td></tr>`
-    : ""
+  const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
   const kontakt = [b.email, b.phone, b.web].filter(Boolean).map((x) => escapeHtml(String(x))).join(" · ")
   const potpis = `${escapeHtml(b.name)} — ${escapeHtml(b.tagline)}${kontakt ? `<br>${kontakt}` : ""}`
 
-  return `<!doctype html>
-<html lang="${htmlLang(locale)}"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
-    <tr><td align="center">
-      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
-        <tr><td style="background:${boja};padding:16px 24px">
-          <table role="presentation" width="100%"><tr>
-            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(b.name)}</td>
-            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">${t("headerLabel")}</td>
-          </tr></table>
-        </td></tr>
-        <tr><td style="padding:24px">
-          <span style="display:inline-block;background:${boja};color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">${badge}</span>
+  const telo = `${badge(boja, badgeTekst)}
           <p style="margin:12px 0 0;font-size:15px"><strong>${t("rokDospijeca")}</strong> ${rok}</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
-            <tr><td style="padding:8px 0;color:#64748b">${t("poljeVrsta")}</td><td style="padding:8px 0;text-align:right">${escapeHtml(args.vrsta)}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b">${t("poljeKlijent")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.klijent)}</td></tr>
+            ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta), true)}
+            ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
             ${lokRed}
-          </table>
-        </td></tr>
-        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${potpis}</td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`
+          </table>`
+  return layoutOmot({
+    accent: boja,
+    headerNaziv: escapeHtml(b.name),
+    headerLabel: t("headerLabel"),
+    telo,
+    footer: potpis,
+    locale,
+  })
 }
 
-export function zakazanoNakonRokaSubject(
-  args: { vrsta: string; klijent: string },
-  locale: Locale = APP_LOCALE,
-): string {
-  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.zakazanoNakonRoka" })
-  return t("predmet", { vrsta: args.vrsta, klijent: args.klijent })
-}
+// ─── Zakazano nakon roka ─────────────────────────────────────────────────────
 
 export function zakazanoNakonRokaHtml(args: {
   klijent: string
@@ -209,35 +221,23 @@ export function zakazanoNakonRokaHtml(args: {
   const boja = "#dc2626"
   const rok = formatDatum(args.rok, locale)
   const zakazan = formatDatum(args.zakazan, locale)
-  const lokRed = args.lokacija
-    ? `<tr><td style="padding:4px 0;color:#64748b">${t("poljeLokacija")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.lokacija)}</td></tr>`
-    : ""
-  return `<!doctype html>
-<html lang="${htmlLang(locale)}"><body style="margin:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 0">
-    <tr><td align="center">
-      <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
-        <tr><td style="background:${boja};padding:16px 24px">
-          <table role="presentation" width="100%"><tr>
-            <td style="color:#ffffff;font-size:16px;font-weight:bold">${escapeHtml(APP_NAME)}</td>
-            <td style="color:#ffffff;font-size:13px;text-align:right;opacity:.85">${t("znacka")}</td>
-          </tr></table>
-        </td></tr>
-        <tr><td style="padding:24px">
-          <span style="display:inline-block;background:${boja};color:#ffffff;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px">${t("znacka")}</span>
+  const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
+  const telo = `${badge(boja, t("znacka"))}
           <p style="margin:12px 0 0;font-size:15px">${t("uvod")}</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
-            <tr><td style="padding:8px 0;color:#64748b">${t("poljeRok")}</td><td style="padding:8px 0;text-align:right">${rok}</td></tr>
+            ${poljeRed(t("poljeRok"), rok, true)}
             <tr><td style="padding:4px 0;color:#64748b">${t("poljeZakazan")}</td><td style="padding:4px 0;text-align:right;font-weight:bold">${zakazan}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b">${t("poljeVrsta")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.vrsta)}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b">${t("poljeKlijent")}</td><td style="padding:4px 0;text-align:right">${escapeHtml(args.klijent)}</td></tr>
+            ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta))}
+            ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
             ${lokRed}
           </table>
-          <p style="margin:16px 0 0;font-size:13px;color:#64748b">${t("napomena")}</p>
-        </td></tr>
-        <tr><td style="padding:16px 24px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center">${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}</td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`
+          <p style="margin:16px 0 0;font-size:13px;color:#64748b">${t("napomena")}</p>`
+  return layoutOmot({
+    accent: boja,
+    headerNaziv: escapeHtml(APP_NAME),
+    headerLabel: t("znacka"),
+    telo,
+    footer: `${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}`,
+    locale,
+  })
 }

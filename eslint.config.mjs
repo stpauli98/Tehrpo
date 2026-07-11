@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Git worktrees žive fizički u repou; ne lintuj njihove kopije (lažne greške iz root lint-a).
+    ".claude/**",
   ]),
   // Tehpro project-wide rules
   {

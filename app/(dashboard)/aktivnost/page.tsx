@@ -33,6 +33,7 @@ export default async function AktivnostPage({
   })
 
   const straneUkupno = Math.max(1, Math.ceil(ukupno / PO_STRANI))
+  const kljucFiltera = `${jedan(sp.akcija) ?? ""}|${jedan(sp.q) ?? ""}|${od ?? ""}|${doDatum ?? ""}`
 
   return (
     <div className="space-y-6">
@@ -40,7 +41,7 @@ export default async function AktivnostPage({
         <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
         <p className="text-sm text-muted-foreground">{t("opis")}</p>
       </div>
-      <AktivnostFilteri />
+      <AktivnostFilteri key={kljucFiltera} />
       <AktivnostTabela redovi={redovi} />
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{ukupno}</span>

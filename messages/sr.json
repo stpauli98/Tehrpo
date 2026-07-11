@@ -42,7 +42,9 @@
       "resizeHint": "Povuci za promjenu širine · dvoklik za skupljanje"
     },
     "topBar": {
-      "odjava": "Odjava"
+      "odjava": "Odjava",
+      "korisnickiMeni": "Korisnički meni",
+      "prijavljenKao": "Prijavljen kao"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — uskoro"

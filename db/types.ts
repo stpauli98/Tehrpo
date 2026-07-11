@@ -37,7 +37,8 @@ export type Database = {
       audit_log: {
         Row: {
           akcija: string
-          entitet: string
+          detalji: Json | null
+          entitet: string | null
           entitet_id: string | null
           id: number
           korisnik_id: string | null
@@ -47,7 +48,8 @@ export type Database = {
         }
         Insert: {
           akcija: string
-          entitet: string
+          detalji?: Json | null
+          entitet?: string | null
           entitet_id?: string | null
           id?: never
           korisnik_id?: string | null
@@ -57,7 +59,8 @@ export type Database = {
         }
         Update: {
           akcija?: string
-          entitet?: string
+          detalji?: Json | null
+          entitet?: string | null
           entitet_id?: string | null
           id?: never
           korisnik_id?: string | null
@@ -81,6 +84,7 @@ export type Database = {
           created_at: string
           id: string
           konverzacija_id: string
+          korisnik_id: string
           sadrzaj: string
           uloga: Database["public"]["Enums"]["chat_uloga"]
         }
@@ -89,6 +93,7 @@ export type Database = {
           created_at?: string
           id?: string
           konverzacija_id: string
+          korisnik_id?: string
           sadrzaj: string
           uloga: Database["public"]["Enums"]["chat_uloga"]
         }
@@ -97,10 +102,19 @@ export type Database = {
           created_at?: string
           id?: string
           konverzacija_id?: string
+          korisnik_id?: string
           sadrzaj?: string
           uloga?: Database["public"]["Enums"]["chat_uloga"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_poruke_korisnik_id_fkey"
+            columns: ["korisnik_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dokumenti: {
         Row: {
@@ -778,6 +792,30 @@ export type Database = {
       }
     }
     Views: {
+      aktivnost_view: {
+        Row: {
+          akcija: string | null
+          detalji: Json | null
+          entitet: string | null
+          entitet_id: string | null
+          id: number | null
+          korisnik_email: string | null
+          korisnik_id: string | null
+          korisnik_ime: string | null
+          novo: Json | null
+          staro: Json | null
+          vrijeme: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_korisnik_id_fkey"
+            columns: ["korisnik_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       klijenti_view: {
         Row: {
           broj_aktivnih: number | null
@@ -857,6 +895,32 @@ export type Database = {
         Args: { p_email: string; p_klijent_id: string }
         Returns: string
       }
+      get_aktivnost: {
+        Args: {
+          p_akcija?: string
+          p_do?: string
+          p_entitet?: string
+          p_korisnik?: string
+          p_limit?: number
+          p_od?: string
+          p_offset?: number
+          p_pretraga?: string
+        }
+        Returns: {
+          akcija: string
+          detalji: Json
+          entitet: string
+          entitet_id: string
+          id: number
+          korisnik_email: string
+          korisnik_id: string
+          korisnik_ime: string
+          novo: Json
+          staro: Json
+          ukupno: number
+          vrijeme: string
+        }[]
+      }
       get_due_podsjetnici: {
         Args: { dana_prije_arr: number[] }
         Returns: {
@@ -893,12 +957,14 @@ export type Database = {
       ima_pristup_klijentu: { Args: { p_klijent_id: string }; Returns: boolean }
       je_admin: { Args: never; Returns: boolean }
       je_pregled: { Args: never; Returns: boolean }
+      obrisi_stare_dogadjaje: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       ukloni_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }
         Returns: undefined
       }
+      zabiljezi_dogadjaje: { Args: { p_dogadjaji: Json }; Returns: undefined }
       zabiljezi_zakazano_obavijest: {
         Args: { p_base: string[]; p_datum_zakazan: string; p_termin_id: string }
         Returns: string[]

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { zahtijevajAdmina } from "@/app/(dashboard)/postavke/actions"
 import type { ActionResult } from "@/app/(dashboard)/klijenti/actions"
 
@@ -74,19 +73,21 @@ export async function postaviDodjeleZaKlijenta(
   korisnikIds: string[],
 ): Promise<ActionResult> {
   await zahtijevajAdmina()
-  const admin = createAdminSupabaseClient()
+  // SSR (RLS) klijent: kk_wr = je_admin() prolazi za admina; auth.uid() postavljen → audit hvata aktera
+  // (service-role bi upisao korisnik_id=NULL).
+  const supabase = await createServerSupabaseClient()
   if (korisnikIds.length > 0) {
-    const { data: valid, error: chkErr } = await admin.from("korisnici").select("id").in("id", korisnikIds)
+    const { data: valid, error: chkErr } = await supabase.from("korisnici").select("id").in("id", korisnikIds)
     if (chkErr) return { ok: false, message: chkErr.message }
     if (!valid || valid.length !== korisnikIds.length) {
       return { ok: false, message: "Nepostojeći korisnik u dodjeli." }
     }
   }
-  const { error: delErr } = await admin.from("korisnik_klijent").delete().eq("klijent_id", klijentId)
+  const { error: delErr } = await supabase.from("korisnik_klijent").delete().eq("klijent_id", klijentId)
   if (delErr) return { ok: false, message: delErr.message }
   if (korisnikIds.length > 0) {
     const rows = korisnikIds.map((korisnik_id) => ({ korisnik_id, klijent_id: klijentId }))
-    const { error: insErr } = await admin.from("korisnik_klijent").insert(rows)
+    const { error: insErr } = await supabase.from("korisnik_klijent").insert(rows)
     if (insErr) return { ok: false, message: insErr.message }
   }
   revalidatePath(`/klijenti/${klijentId}`)

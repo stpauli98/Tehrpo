@@ -56,6 +56,6 @@ export function applyPlanFilteri<
   if (f.vrstaId) out = out.eq("vrsta_provjere_id", f.vrstaId)
   if (f.nacin !== "svi") out = out.eq("nacin_izvrsenja", f.nacin)
   const r = mjesecRange(f)
-  if (r) out = out.gte("rok_dospijeca", r.from).lte("rok_dospijeca", r.to)
+  if (r) out = out.gte("datum_prikaza", r.from).lte("datum_prikaza", r.to)
   return out
 }

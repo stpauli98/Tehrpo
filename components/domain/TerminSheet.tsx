@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { formatDatum, todayIso } from "@/lib/date"
+import { jeZakazanoPoslijeRoka, danaPoslijeRoka } from "@/lib/plan-datum"
 import {
   updateTermin,
   markIzvrseno,
@@ -44,11 +45,13 @@ export function TerminSheet({
   const queryClient = useQueryClient()
   const t = useTranslations("termini.sheet")
   const tc = useTranslations("common")
+  const tz = useTranslations("termini.zakazanoUpozorenje")
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
   const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)
   const [izvrDatum, setIzvrDatum] = useState(todayIso())
   const [otkazArmed, setOtkazArmed] = useState(false)
+  const [zakazanInput, setZakazanInput] = useState(termin.datum_zakazan ?? "")
   // Mixed component (read detalji + write akcije) — NE sakrivati čitanje, gejtovati samo
   // write-kontrole (v. docs/superpowers/specs/2026-07-10-pregled-readonly-design.md).
   const mozeUrediti = useMozeUrediti()
@@ -96,6 +99,11 @@ export function TerminSheet({
     prevOtkazPending.current = otkazPending
   }, [otkazPending, otkazState, queryClient, termin.id, t])
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sinhronizacija lokalnog inputa sa novim terminom (sheet se ne remountuje, samo unutrašnja forma)
+    setZakazanInput(termin.datum_zakazan ?? "")
+  }, [termin.id, termin.datum_zakazan])
+
   function close() {
     router.push(closeHref)
   }
@@ -140,9 +148,22 @@ export function TerminSheet({
                   name="datum_zakazan"
                   defaultValue={termin.datum_zakazan ?? ""}
                   disabled={!mozeUrediti}
+                  onChange={(e) => setZakazanInput(e.target.value)}
                   data-testid="edit-datum-zakazan"
                 />
               </label>
+              {jeZakazanoPoslijeRoka(termin.rok_dospijeca, zakazanInput) && (
+                <p
+                  className="col-span-2 text-xs text-amber-700"
+                  role="status"
+                  data-testid="zakazano-poslije-roka"
+                >
+                  {tz("poslijeRoka", {
+                    dana: danaPoslijeRoka(termin.rok_dospijeca ?? "", zakazanInput),
+                    rok: formatDatum(termin.rok_dospijeca),
+                  })}
+                </p>
+              )}
               {termin.status === "izvrseno" && (
                 <label className="block text-sm">
                   <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>

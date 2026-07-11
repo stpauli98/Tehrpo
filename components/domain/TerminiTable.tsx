@@ -71,7 +71,14 @@ export function TerminiTable({
                 r.id && "cursor-pointer",
               )}
             >
-              <td className="px-3 py-2 whitespace-nowrap tabular-nums">{formatDatum(r.rok_dospijeca)}</td>
+              <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                {formatDatum(r.datum_prikaza)}
+                {r.datum_zakazan && r.datum_zakazan !== r.rok_dospijeca && (
+                  <span className="block text-xs text-muted-foreground">
+                    {t("rokKratko", { datum: formatDatum(r.rok_dospijeca) })}
+                  </span>
+                )}
+              </td>
               <td className="px-3 py-2 font-medium text-foreground">{r.klijent_naziv ?? "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">{r.lokacija_naziv ?? "—"}</td>
               <td className="px-3 py-2 text-muted-foreground">

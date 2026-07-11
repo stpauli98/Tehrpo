@@ -59,13 +59,13 @@ export function MatricaView() {
 
   if (mode === "mjesec") {
     const inputs: MatrixInput[] = termini
-      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.klijent_id && termin.rok_dospijeca)
+      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.klijent_id && termin.datum_prikaza)
       .map((termin) => ({
         id: termin.id!,
         vrstaId: termin.vrsta_provjere_id!,
         vrstaNaziv: termin.vrsta_naziv ?? "—",
         columnKey: termin.klijent_id!,
-        dan: Number(termin.rok_dospijeca!.slice(8, 10)),
+        dan: Number(termin.datum_prikaza!.slice(8, 10)),
         status: toDerivedStatus(termin.status_izvedeni),
       }))
     matrixRows = buildMatrix(inputs)
@@ -73,13 +73,13 @@ export function MatricaView() {
     emptyMessage = t("nemaTerminaMjesec")
   } else if (klijentId) {
     const inputs: MatrixInput[] = termini
-      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.rok_dospijeca)
+      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.datum_prikaza)
       .map((termin) => ({
         id: termin.id!,
         vrstaId: termin.vrsta_provjere_id!,
         vrstaNaziv: termin.vrsta_naziv ?? "—",
-        columnKey: String(Number(termin.rok_dospijeca!.slice(5, 7))),
-        dan: Number(termin.rok_dospijeca!.slice(8, 10)),
+        columnKey: String(Number(termin.datum_prikaza!.slice(5, 7))),
+        dan: Number(termin.datum_prikaza!.slice(8, 10)),
         status: toDerivedStatus(termin.status_izvedeni),
       }))
     matrixRows = buildMatrix(inputs)

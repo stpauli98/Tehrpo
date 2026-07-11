@@ -31,6 +31,12 @@ describe("applyPlanFilteri", () => {
     // Comma is legitimately present as PostgREST OR separator; check only parens are sanitized
     expect(String(firstCall[1])).not.toMatch(/[()]/)
   })
+  it("mjesec-raspon pozicionira po datum_prikaza (ne rok_dospijeca) — mora se poklapati sa kalendar/matrica", () => {
+    const { q, calls } = mockQ()
+    applyPlanFilteri(q as never, { ...base, mjesec: "7" })
+    expect(calls).toContainEqual(["gte", ["datum_prikaza", "2026-07-01"]])
+    expect(calls).toContainEqual(["lte", ["datum_prikaza", "2026-07-31"]])
+  })
 })
 
 describe("parsePlanFilteri", () => {

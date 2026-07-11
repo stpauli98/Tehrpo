@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   const f = parsePlanFilteri(sp)
   const supabase = await createServerSupabaseClient()
 
-  let q = supabase.from("termini_view").select("*").order("rok_dospijeca", { ascending: true })
+  let q = supabase.from("termini_view").select("*").order("datum_prikaza", { ascending: true })
   q = applyPlanFilteri(q, f)
 
   const { data, error } = await q

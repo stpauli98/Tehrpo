@@ -12,7 +12,7 @@ import { monthRange, todayIso } from "@/lib/date"
  * Returns:
  *   {
  *     termini: TerminRow[]  – all columns from termini_view for the month,
- *                             ordered by rok_dospijeca ascending
+ *                             ordered by datum_prikaza ascending
  *   }
  *
  * termini element fields (full termini_view select *):
@@ -34,9 +34,9 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from("termini_view")
     .select("*")
-    .gte("rok_dospijeca", from)
-    .lte("rok_dospijeca", to)
-    .order("rok_dospijeca")
+    .gte("datum_prikaza", from)
+    .lte("datum_prikaza", to)
+    .order("datum_prikaza")
 
   if (error) {
     return NextResponse.json({ error }, { status: 400 })

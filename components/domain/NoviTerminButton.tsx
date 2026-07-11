@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select"
 import { createTermin, type ActionResult } from "@/app/(dashboard)/termini/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { jeZakazanoPoslijeRoka, danaPoslijeRoka } from "@/lib/plan-datum"
+import { formatDatum } from "@/lib/date"
 
 type Opt = { id: string; naziv: string }
 const initial: ActionResult = { ok: true }
@@ -46,6 +48,9 @@ export function NoviTerminButton({
   const [klijentId, setKlijentId] = useState("")
   const [vrstaId, setVrstaId] = useState("")
   const [lokacijaId, setLokacijaId] = useState("")
+  const [rok, setRok] = useState("")
+  const [zakazan, setZakazan] = useState("")
+  const tz = useTranslations("termini.zakazanoUpozorenje")
   const [state, action, pending] = useActionState(createTermin, initial)
   const submitted = useRef(false)
   const mozeUrediti = useMozeUrediti()
@@ -75,6 +80,8 @@ export function NoviTerminButton({
       setKlijentId("")
       setVrstaId("")
       setLokacijaId("")
+      setRok("")
+      setZakazan("")
       void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
       // Novi termin pripada i matrica/kalendar prikazima (rok_dospijeca); ti su keševi
       // perzistentni preko view-switch-a (staleTime 60s), pa ih eksplicitno invalidiraj
@@ -174,13 +181,20 @@ export function NoviTerminButton({
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeRok")}</span>
-            <Input type="date" name="rok_dospijeca" required data-testid="novi-rok" />
+            <Input type="date" name="rok_dospijeca" required value={rok}
+              onChange={(e) => setRok(e.target.value)} data-testid="novi-rok" />
           </label>
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
-            <Input type="date" name="datum_zakazan" data-testid="novi-zakazan" />
+            <Input type="date" name="datum_zakazan" value={zakazan}
+              onChange={(e) => setZakazan(e.target.value)} data-testid="novi-zakazan" />
           </label>
+          {jeZakazanoPoslijeRoka(rok, zakazan) && (
+            <p className="text-xs text-amber-700" role="status" data-testid="zakazano-poslije-roka">
+              {tz("poslijeRoka", { dana: danaPoslijeRoka(rok, zakazan), rok: formatDatum(rok) })}
+            </p>
+          )}
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeZaduzeni")}</span>

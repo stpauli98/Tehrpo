@@ -30,12 +30,14 @@ export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klije
             key={tab.value}
             value={tab.value}
             data-testid={`tab-${tab.value}`}
-            title={t(`${tab.labelKey}.info`)}
+            aria-describedby={`info-tab-desc-${tab.value}`}
           >
             {t(`${tab.labelKey}.label`)}
-            {/* Zadnji (najdesniji) tab: desno poravnanje — na 1024px bi mu bubble prešao desnu ivicu main-a.
-                dekorativno: ikona ostaje aria-hidden da ne pravi zaseban tab-stop niti zagadi accessible
-                name TabsTrigger dugmeta — tekst je izložen kroz `title` na samom dugmetu iznad. */}
+            {/* AT dobija objašnjenje preko aria-describedby → sr-only span (NE native `title`,
+                koji bi se duplirao sa CSS tooltip-om ⓘ ikone). Zadnji tab: desno poravnanje
+                (na 1024px bi bubble prešao desnu ivicu). dekorativno: ikona ostaje aria-hidden
+                da ne pravi zaseban tab-stop niti zagadi accessible name TabsTrigger-a. */}
+            <span id={`info-tab-desc-${tab.value}`} className="sr-only">{t(`${tab.labelKey}.info`)}</span>
             <InfoIkona
               tekst={t(`${tab.labelKey}.info`)}
               testId={`info-tab-${tab.value}`}

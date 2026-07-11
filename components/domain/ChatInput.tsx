@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export function ChatInput({ disabled, onSend }: { disabled: boolean; onSend: (text: string) => void }) {
   const t = useTranslations("asistent.chatInput")
@@ -28,7 +29,7 @@ export function ChatInput({ disabled, onSend }: { disabled: boolean; onSend: (te
         placeholder={t("placeholder")}
         rows={2}
         data-testid="chat-input"
-        className="flex-1 resize-none rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+        className={cn("flex-1 resize-none rounded-lg border border-border px-3 py-2 text-sm", FOCUS_RING)}
       />
       <Button type="submit" size="icon" disabled={disabled} data-testid="chat-send" aria-label={t("posalji")} className="group/tt relative self-end">
         <Send className="h-4 w-4" aria-hidden />

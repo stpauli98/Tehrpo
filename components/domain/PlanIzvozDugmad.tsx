@@ -18,7 +18,7 @@ export function PlanIzvozDugmad() {
   }
   // Ikonica-dugme u stilu sidebar-a; hover tooltip objašnjava akciju (Excel=zeleno, PDF=crveno).
   const klasa =
-    "group/tt relative flex h-9 w-9 items-center justify-center rounded-md border border-border transition-colors"
+    "group/tt relative flex h-9 w-9 items-center justify-center rounded-lg border border-border transition-colors"
   return (
     <div className="flex items-center gap-2">
       <a

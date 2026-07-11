@@ -116,7 +116,7 @@ export function MatrixGrid({
                         {cellLabel(cell)}
                       </Link>
                     ) : (
-                      <span className="text-slate-200">·</span>
+                      <span className="text-muted-foreground/30">·</span>
                     )}
                   </td>
                 )

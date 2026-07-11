@@ -89,7 +89,7 @@ export function MonthCalendar({
               key={c.date}
               className={cn(
                 "relative min-h-[84px] border-t border-l border-border transition",
-                !c.inMonth && "bg-muted/50 text-slate-300",
+                !c.inMonth && "bg-muted/50 text-muted-foreground/50",
                 isSelected
                   ? "ring-2 ring-inset ring-brand bg-brand-light/30"
                   : "hover:bg-muted",

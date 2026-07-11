@@ -838,7 +838,8 @@
       "pokreni": "Run now",
       "potvrda": "Send reminders to all recipients now?",
       "saljem": "Sending…",
-      "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Deferred: {odgodjeno} · Errors: {greske}"
+      "rezultat": "Sent: {poslano} · Skipped: {preskoceno} · Deferred: {odgodjeno} · Errors: {greske}",
+      "pokreniUpozorenje": "“Send now” dispatches reminders even when automatic sending is turned off."
     },
     "vrijemeSlanja": {
       "naslov": "Send time",
@@ -848,6 +849,10 @@
     "saljiKlijentima": {
       "naslov": "Also send reminders to clients",
       "upozorenje": "Enabled = emails leave TehPro (to clients). Only clients individually enabled and with addresses set will receive them."
+    },
+    "zakazanoObavijest": {
+      "naslov": "After-deadline scheduling notice",
+      "opis": "When an activity is scheduled for a date after its due date, internal recipients get an automatic notice. Turning this off stops those emails."
     },
     "koStaPrima": {
       "naslov": "Who receives what",
@@ -906,7 +911,8 @@
       "pokreniNijeKonfigurisan": "CRON_SECRET is not configured on this deployment.",
       "pokreniGreska": "Running reminders failed.",
       "vrijemeSatNeispravan": "Hour must be an integer 0–23.",
-      "saljiKlijentimaGreska": "Failed to change sending to clients."
+      "saljiKlijentimaGreska": "Failed to change sending to clients.",
+      "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice."
     }
   },
   "asistent": {

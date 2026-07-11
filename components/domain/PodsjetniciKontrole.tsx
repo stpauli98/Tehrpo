@@ -136,6 +136,9 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
           <DialogHeader>
             <DialogTitle>{t("potvrda")}</DialogTitle>
           </DialogHeader>
+          <p className="text-sm text-amber-600" role="alert">
+            {t("pokreniUpozorenje")}
+          </p>
           <DialogFooter>
             <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
             <Button

@@ -6,6 +6,7 @@ import { ReminderForm } from "@/components/domain/ReminderForm"
 import { PodsjetniciKontrole } from "@/components/domain/PodsjetniciKontrole"
 import { VrijemeSlanjaForm } from "@/components/domain/VrijemeSlanjaForm"
 import { SaljiKlijentimaToggle } from "@/components/domain/SaljiKlijentimaToggle"
+import { ZakazanoObavijestToggle } from "@/components/domain/ZakazanoObavijestToggle"
 import { NovaVrstaButton } from "@/components/domain/NovaVrstaButton"
 import { VrstePregledaTabela } from "@/components/domain/VrstePregledaTabela"
 import { KorisniciTab } from "@/components/domain/KorisniciTab"
@@ -51,6 +52,7 @@ export default async function PostavkePage() {
             <PodsjetniciKontrole aktivni={postRes.data?.podsjetnici_aktivni ?? true} />
             <VrijemeSlanjaForm vrijemeSat={postRes.data?.vrijeme_slanja_sat ?? 8} />
             <SaljiKlijentimaToggle salji={postRes.data?.salji_klijentima ?? false} />
+            <ZakazanoObavijestToggle aktivna={postRes.data?.zakazano_obavijest_aktivna ?? true} />
           </div>
         </CollapsibleSection>
       )}

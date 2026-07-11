@@ -540,6 +540,7 @@ export type Database = {
           updated_at: string
           vrijeme_slanja_sat: number
           zadnje_slanje_datum: string | null
+          zakazano_obavijest_aktivna: boolean
         }
         Insert: {
           dana_prije?: number[]
@@ -549,6 +550,7 @@ export type Database = {
           updated_at?: string
           vrijeme_slanja_sat?: number
           zadnje_slanje_datum?: string | null
+          zakazano_obavijest_aktivna?: boolean
         }
         Update: {
           dana_prije?: number[]
@@ -558,6 +560,7 @@ export type Database = {
           updated_at?: string
           vrijeme_slanja_sat?: number
           zadnje_slanje_datum?: string | null
+          zakazano_obavijest_aktivna?: boolean
         }
         Relationships: []
       }

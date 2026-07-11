@@ -432,6 +432,27 @@ export async function updateSaljiKlijentima(
   return { ok: true }
 }
 
+// ─── Prekidač: automatska "zakazano poslije roka" obavijest ──────────────────
+// Zaseban od podsjetnici_aktivni: gasi mejl koji se šalje internim primaocima kad
+// se termin zakaže na datum poslije roka (termini/actions.ts). Efektivni gejt je u
+// DEFINER RPC-u zabiljezi_zakazano_obavijest — ovaj toggle samo postavlja kolonu.
+
+export async function updateZakazanoObavijest(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const aktivna = formData.get("aktivna") === "on"
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("postavke")
+    .update({ zakazano_obavijest_aktivna: aktivna })
+    .eq("id", 1)
+  if (error) return { ok: false, message: t("zakazanoObavijestGreska") }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
 // ─── Ručno pokretanje podsjetnika (poziva cron rutu preko HTTP-a) ───────────
 
 export type PokreniRezultat =

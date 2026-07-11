@@ -731,7 +731,41 @@
       "ocisti": "Zurücksetzen"
     },
     "prazno": "Keine erfassten Ereignisse für die ausgewählten Filter.",
-    "sistemski": "System"
+    "sistemski": "System",
+    "vrijednosti": {
+      "prazno": "(leer)",
+      "da": "Ja",
+      "ne": "Nein"
+    },
+    "polja": {
+      "status": "Status",
+      "napomena": "Notiz",
+      "zaduzeni": "Zuständiger",
+      "datum_zakazan": "Geplantes Datum",
+      "rok_dospijeca": "Fälligkeitsdatum",
+      "datum_izvrsenja": "Abschlussdatum",
+      "updated_at": "Aktualisiert",
+      "created_at": "Erstellt",
+      "naziv": "Name",
+      "ime": "Vorname",
+      "email": "E-Mail",
+      "uloga": "Rolle",
+      "aktivan": "Aktiv",
+      "aktivna": "Aktiv",
+      "telefon": "Telefon",
+      "adresa": "Adresse",
+      "grad": "Stadt",
+      "podsjetnici_aktivni": "Erinnerungen aktiv",
+      "vrijeme_slanja_sat": "Sendestunde",
+      "salji_klijentima": "An Kunden senden",
+      "zakazano_obavijest_aktivna": "Geplante Benachrichtigung",
+      "dana_prije": "Tage vorher",
+      "zakonski_osnov": "Rechtsgrundlage",
+      "vodi_dokumentaciju": "Führt Dokumentation",
+      "broj_ugovora": "Vertragsnummer",
+      "datum_od": "Datum von",
+      "datum_do": "Datum bis"
+    }
   },
   "zapisnici": {
     "naslov": "Protokolle",

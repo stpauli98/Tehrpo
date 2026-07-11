@@ -731,7 +731,41 @@
       "ocisti": "Clear"
     },
     "prazno": "No recorded events for the selected filters.",
-    "sistemski": "System"
+    "sistemski": "System",
+    "vrijednosti": {
+      "prazno": "(empty)",
+      "da": "Yes",
+      "ne": "No"
+    },
+    "polja": {
+      "status": "Status",
+      "napomena": "Note",
+      "zaduzeni": "Assignee",
+      "datum_zakazan": "Scheduled date",
+      "rok_dospijeca": "Due date",
+      "datum_izvrsenja": "Completion date",
+      "updated_at": "Updated",
+      "created_at": "Created",
+      "naziv": "Name",
+      "ime": "First name",
+      "email": "Email",
+      "uloga": "Role",
+      "aktivan": "Active",
+      "aktivna": "Active",
+      "telefon": "Phone",
+      "adresa": "Address",
+      "grad": "City",
+      "podsjetnici_aktivni": "Reminders active",
+      "vrijeme_slanja_sat": "Send hour",
+      "salji_klijentima": "Send to clients",
+      "zakazano_obavijest_aktivna": "Scheduled notice",
+      "dana_prije": "Days before",
+      "zakonski_osnov": "Legal basis",
+      "vodi_dokumentaciju": "Keeps documentation",
+      "broj_ugovora": "Contract number",
+      "datum_od": "Date from",
+      "datum_do": "Date to"
+    }
   },
   "zapisnici": {
     "naslov": "Records",

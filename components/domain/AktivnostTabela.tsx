@@ -1,21 +1,48 @@
 import { getTranslations } from "next-intl/server"
 import type { AktivnostRed } from "@/lib/queries/aktivnost"
+import { formatDatum } from "@/lib/date"
+
+type T = Awaited<ReturnType<typeof getTranslations<"aktivnost">>>
+
+function prettify(k: string): string {
+  const s = k.replace(/_/g, " ")
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function poljeLabel(k: string, t: T): string {
+  const key = `polja.${k}`
+  return t.has(key as never) ? t(key as never) : prettify(k)
+}
+
+function formatVrijednost(v: unknown, t: T): string {
+  if (v === null || v === undefined || v === "") return t("vrijednosti.prazno")
+  if (typeof v === "boolean") return v ? t("vrijednosti.da") : t("vrijednosti.ne")
+  if (typeof v === "number") return String(v)
+  if (typeof v === "string") {
+    // ISO datum YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return formatDatum(v)
+    // ISO timestamp → datum + HH:mm (slice, TZ-safe; ne koristi Date() zbog TZ)
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return `${formatDatum(v)} ${v.slice(11, 16)}`
+    return v
+  }
+  return JSON.stringify(v)
+}
 
 // Izvuci izmijenjena polja za UPDATE (staro→novo), inače čitljiv opis iz detalji.
-function opisDetalja(red: AktivnostRed): string {
+function opisDetalja(red: AktivnostRed, t: T): string {
   if (red.akcija === "UPDATE" && red.staro && red.novo) {
     const staro = red.staro as Record<string, unknown>
     const novo = red.novo as Record<string, unknown>
     const promjene = Object.keys(novo)
       .filter((k) => JSON.stringify(staro[k]) !== JSON.stringify(novo[k]))
-      .map((k) => `${k}: ${JSON.stringify(staro[k])} → ${JSON.stringify(novo[k])}`)
-    return promjene.join(", ") || "—"
+      .map((k) => `${poljeLabel(k, t)}: ${formatVrijednost(staro[k], t)} → ${formatVrijednost(novo[k], t)}`)
+    return promjene.join("\n") || "—"
   }
   const d = red.detalji as Record<string, unknown> | null
   if (!d) return "—"
   if (d.ekran) return String(d.ekran)
   if (d.filteri) return Object.entries(d.filteri as Record<string, string>)
-    .map(([k, v]) => `${k}=${v}`).join(", ")
+    .map(([k, v]) => `${poljeLabel(k, t)}: ${v}`).join(", ")
   return JSON.stringify(d)
 }
 
@@ -54,7 +81,7 @@ export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
               <td className="px-3 py-2">{r.korisnik_ime ?? t("sistemski")}</td>
               <td className="px-3 py-2">{t(`akcije.${r.akcija}` as never)}</td>
               <td className="px-3 py-2">{ciljLabel(r)}</td>
-              <td className="px-3 py-2 text-muted-foreground">{opisDetalja(r)}</td>
+              <td className="px-3 py-2 text-muted-foreground whitespace-pre-line">{opisDetalja(r, t)}</td>
             </tr>
           ))}
         </tbody>

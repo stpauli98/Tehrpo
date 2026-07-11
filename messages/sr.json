@@ -731,7 +731,41 @@
       "ocisti": "Očisti"
     },
     "prazno": "Nema zabilježenih događaja za odabrane filtere.",
-    "sistemski": "Sistem"
+    "sistemski": "Sistem",
+    "vrijednosti": {
+      "prazno": "(prazno)",
+      "da": "Da",
+      "ne": "Ne"
+    },
+    "polja": {
+      "status": "Status",
+      "napomena": "Napomena",
+      "zaduzeni": "Zaduženi",
+      "datum_zakazan": "Datum zakazan",
+      "rok_dospijeca": "Rok dospijeća",
+      "datum_izvrsenja": "Datum izvršenja",
+      "updated_at": "Ažurirano",
+      "created_at": "Kreirano",
+      "naziv": "Naziv",
+      "ime": "Ime",
+      "email": "Email",
+      "uloga": "Uloga",
+      "aktivan": "Aktivan",
+      "aktivna": "Aktivna",
+      "telefon": "Telefon",
+      "adresa": "Adresa",
+      "grad": "Grad",
+      "podsjetnici_aktivni": "Podsjetnici aktivni",
+      "vrijeme_slanja_sat": "Vrijeme slanja (sat)",
+      "salji_klijentima": "Šalji klijentima",
+      "zakazano_obavijest_aktivna": "Obavijest o zakazanom",
+      "dana_prije": "Dana prije",
+      "zakonski_osnov": "Zakonski osnov",
+      "vodi_dokumentaciju": "Vodi dokumentaciju",
+      "broj_ugovora": "Broj ugovora",
+      "datum_od": "Datum od",
+      "datum_do": "Datum do"
+    }
   },
   "zapisnici": {
     "naslov": "Zapisnici",

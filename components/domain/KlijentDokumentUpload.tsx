@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { UploadCloud, FileText, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { uploadKlijentDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
 import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
@@ -31,6 +34,11 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   const [dragging, setDragging] = useState(false)
   const [file, setFile] = useState<{ name: string; size: number } | null>(null)
   const [greska, setGreska] = useState<string | null>(null)
+
+  // Mapa value→label za base-ui SelectValue (prikaz prevoda kad je select zatvoren).
+  const tipItems: Record<string, string> = Object.fromEntries(
+    DOKUMENT_TIPOVI.map((tip) => [tip, t(`tipovi.${tip}`)]),
+  )
 
   useEffect(() => {
     if (state !== prev.current) {
@@ -104,7 +112,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
         }}
         data-testid="klijent-dok-dropzone"
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center outline-none transition-colors focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/30",
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           dragging
             ? "border-brand bg-brand/5"
             : "border-border bg-muted hover:border-brand/60 hover:bg-muted",
@@ -120,7 +128,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
               type="button"
               onClick={(e) => { e.stopPropagation(); ocisti() }}
               aria-label={t("ukloniFajlAriaLabel")}
-              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-slate-200 hover:text-foreground"
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>
@@ -146,17 +154,17 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
       />
 
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <label className="block text-sm">
-          <span className="text-muted-foreground">{t("tipDokumentaLabel")}</span>
-          <select
-            name="tip"
-            defaultValue="ugovor"
-            className="mt-1 block rounded-md border border-border px-2 py-1.5 text-sm"
-            data-testid="klijent-dok-tip"
-          >
-            {DOKUMENT_TIPOVI.map((tip) => <option key={tip} value={tip}>{t(`tipovi.${tip}`)}</option>)}
-          </select>
-        </label>
+        <div className="space-y-1 text-sm">
+          <span className="block text-muted-foreground">{t("tipDokumentaLabel")}</span>
+          <Select name="tip" defaultValue="ugovor" items={tipItems}>
+            <SelectTrigger className="w-48" data-testid="klijent-dok-tip">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DOKUMENT_TIPOVI.map((tip) => <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <Button type="submit" disabled={pending || !file} data-testid="klijent-dok-submit">
           {pending ? t("submitPending") : t("submit")}
         </Button>

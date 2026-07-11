@@ -15,6 +15,12 @@ export function AktivnostSearch() {
   // Razlikuje NAŠ push (debounce) od SPOLJAŠNJE promjene URL-a (Očisti, back/forward),
   // da sync-iz-URL-a ne pregazi tekst koji korisnik trenutno kuca.
   const lastPushedRef = useRef(qUrl)
+  // Uvijek najsvježiji sp u ref-u (osvježava se poslije svakog rendera): debounce timeout ne smije
+  // graditi URL iz zastarjelog snapshot-a (npr. filter promijenjen u međuvremenu bi se izgubio).
+  const spRef = useRef(sp)
+  useEffect(() => {
+    spRef.current = sp
+  })
 
   // Debounce push (300ms).
   useEffect(() => {
@@ -22,7 +28,7 @@ export function AktivnostSearch() {
       const v = value.trim()
       if (v === lastPushedRef.current) return
       lastPushedRef.current = v
-      const p = new URLSearchParams(sp.toString())
+      const p = new URLSearchParams(spRef.current.toString())
       if (v) p.set("q", v)
       else p.delete("q")
       p.delete("strana")

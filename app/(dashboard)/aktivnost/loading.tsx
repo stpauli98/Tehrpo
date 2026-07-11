@@ -12,6 +12,7 @@ export default function AktivnostLoading() {
         <Skeleton className="h-10 w-40" />
         <Skeleton className="h-10 w-36" />
         <Skeleton className="h-10 w-36" />
+        <Skeleton className="h-10 w-24" />
       </div>
       <div className="space-y-2">
         {[0,1,2,3,4,5,6,7,8,9].map((i) => <Skeleton key={i} className="h-10 w-full" />)}

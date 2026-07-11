@@ -26,7 +26,14 @@ test("operater dobija 404 na /aktivnost", async ({ browser }) => {
   try {
     const opPage = await ctx.newPage()
     await injectSessionFor(ctx, OP_EMAIL, OP_LOZINKA)
+    // Prvo dokaži da operater sesija radi — inače bi tihi login-bounce na /prijava
+    // (koji nema "Aktivnost" heading) dao false-pass na negativnoj asertaciji ispod.
+    await opPage.goto("/pregled")
+    await expect(opPage.getByRole("heading", { name: "Pregled" })).toBeVisible({ timeout: 30_000 })
+    // Tek onda /aktivnost: notFound() zadržava URL /aktivnost (404), dok bi login-bounce
+    // promijenio URL na /prijava. Asertuj OBOJE da razlikuješ 404-gate od bounce-a.
     await opPage.goto("/aktivnost")
+    await expect(opPage).toHaveURL(/\/aktivnost/, { timeout: 30_000 })
     await expect(opPage.getByRole("heading", { name: "Aktivnost" })).toHaveCount(0)
   } finally {
     await ctx.close()

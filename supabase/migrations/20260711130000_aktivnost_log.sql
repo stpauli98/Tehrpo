@@ -98,3 +98,7 @@ begin
   get diagnostics v_broj = row_count;
   return v_broj;
 end; $$;
+
+-- Destruktivnu retenciju smije zvati SAMO service-role (cron admin klijent), ne prijavljeni korisnici.
+revoke execute on function obrisi_stare_dogadjaje() from public, anon, authenticated;
+grant execute on function obrisi_stare_dogadjaje() to service_role;

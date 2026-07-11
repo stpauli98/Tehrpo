@@ -32,6 +32,7 @@
       "klijenti": "Klijenti",
       "asistent": "Asistent",
       "zapisnici": "Zapisnici",
+      "aktivnost": "Aktivnost",
       "postavke": "Postavke"
     },
     "sidebar": {
@@ -709,6 +710,73 @@
       "izaberiteKlijenta": "Izaberite klijenta za prikaz godišnje matrice.",
       "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
       "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
+    }
+  },
+  "aktivnost": {
+    "naslov": "Aktivnost",
+    "opis": "Pregled svih događaja u aplikaciji — ko je šta promijenio, otvorio ili filtrirao.",
+    "kolone": {
+      "vrijeme": "Vrijeme",
+      "korisnik": "Korisnik",
+      "akcija": "Akcija",
+      "cilj": "Cilj",
+      "detalji": "Detalji"
+    },
+    "akcije": {
+      "INSERT": "Kreirano",
+      "UPDATE": "Izmijenjeno",
+      "DELETE": "Obrisano",
+      "NAVIGATE": "Otvorio ekran",
+      "VIEW": "Pogledao zapis",
+      "LOGIN": "Prijava",
+      "LOGOUT": "Odjava",
+      "FILTER": "Filtrirao"
+    },
+    "filteri": {
+      "korisnik": "Korisnik",
+      "akcija": "Tip akcije",
+      "svi": "Svi",
+      "od": "Od",
+      "do": "Do",
+      "pretraga": "Pretraga",
+      "primijeni": "Primijeni",
+      "ocisti": "Očisti"
+    },
+    "prazno": "Nema zabilježenih događaja za odabrane filtere.",
+    "sistemski": "Sistem",
+    "vrijednosti": {
+      "prazno": "(prazno)",
+      "da": "Da",
+      "ne": "Ne"
+    },
+    "polja": {
+      "status": "Status",
+      "napomena": "Napomena",
+      "zaduzeni": "Zaduženi",
+      "datum_zakazan": "Datum zakazan",
+      "rok_dospijeca": "Rok dospijeća",
+      "datum_izvrsenja": "Datum izvršenja",
+      "updated_at": "Ažurirano",
+      "created_at": "Kreirano",
+      "naziv": "Naziv",
+      "ime": "Ime",
+      "email": "Email",
+      "uloga": "Uloga",
+      "aktivan": "Aktivan",
+      "aktivna": "Aktivna",
+      "telefon": "Telefon",
+      "adresa": "Adresa",
+      "grad": "Grad",
+      "podsjetnici_aktivni": "Podsjetnici aktivni",
+      "vrijeme_slanja_sat": "Vrijeme slanja (sat)",
+      "salji_klijentima": "Šalji klijentima",
+      "zakazano_obavijest_aktivna": "Obavijest o zakazanom",
+      "dana_prije": "Dana prije",
+      "zakonski_osnov": "Zakonski osnov",
+      "vodi_dokumentaciju": "Vodi dokumentaciju",
+      "broj_ugovora": "Broj ugovora",
+      "datum_od": "Datum od",
+      "datum_do": "Datum do"
     }
   },
   "zapisnici": {

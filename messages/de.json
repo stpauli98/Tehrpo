@@ -32,6 +32,7 @@
       "klijenti": "Kunden",
       "asistent": "Assistent",
       "zapisnici": "Protokolle",
+      "aktivnost": "Aktivität",
       "postavke": "Einstellungen"
     },
     "sidebar": {
@@ -709,6 +710,73 @@
       "izaberiteKlijenta": "Wählen Sie einen Kunden, um die Jahresmatrix anzuzeigen.",
       "nemaTerminaMjesec": "Keine Termine für den ausgewählten Monat.",
       "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr."
+    }
+  },
+  "aktivnost": {
+    "naslov": "Aktivität",
+    "opis": "Übersicht aller Ereignisse in der Anwendung — wer was geändert, geöffnet oder gefiltert hat.",
+    "kolone": {
+      "vrijeme": "Zeit",
+      "korisnik": "Benutzer",
+      "akcija": "Aktion",
+      "cilj": "Ziel",
+      "detalji": "Details"
+    },
+    "akcije": {
+      "INSERT": "Erstellt",
+      "UPDATE": "Geändert",
+      "DELETE": "Gelöscht",
+      "NAVIGATE": "Bildschirm geöffnet",
+      "VIEW": "Datensatz angesehen",
+      "LOGIN": "Anmeldung",
+      "LOGOUT": "Abmeldung",
+      "FILTER": "Gefiltert"
+    },
+    "filteri": {
+      "korisnik": "Benutzer",
+      "akcija": "Aktionstyp",
+      "svi": "Alle",
+      "od": "Von",
+      "do": "Bis",
+      "pretraga": "Suche",
+      "primijeni": "Anwenden",
+      "ocisti": "Zurücksetzen"
+    },
+    "prazno": "Keine erfassten Ereignisse für die ausgewählten Filter.",
+    "sistemski": "System",
+    "vrijednosti": {
+      "prazno": "(leer)",
+      "da": "Ja",
+      "ne": "Nein"
+    },
+    "polja": {
+      "status": "Status",
+      "napomena": "Notiz",
+      "zaduzeni": "Zuständiger",
+      "datum_zakazan": "Geplantes Datum",
+      "rok_dospijeca": "Fälligkeitsdatum",
+      "datum_izvrsenja": "Abschlussdatum",
+      "updated_at": "Aktualisiert",
+      "created_at": "Erstellt",
+      "naziv": "Name",
+      "ime": "Vorname",
+      "email": "E-Mail",
+      "uloga": "Rolle",
+      "aktivan": "Aktiv",
+      "aktivna": "Aktiv",
+      "telefon": "Telefon",
+      "adresa": "Adresse",
+      "grad": "Stadt",
+      "podsjetnici_aktivni": "Erinnerungen aktiv",
+      "vrijeme_slanja_sat": "Sendestunde",
+      "salji_klijentima": "An Kunden senden",
+      "zakazano_obavijest_aktivna": "Geplante Benachrichtigung",
+      "dana_prije": "Tage vorher",
+      "zakonski_osnov": "Rechtsgrundlage",
+      "vodi_dokumentaciju": "Führt Dokumentation",
+      "broj_ugovora": "Vertragsnummer",
+      "datum_od": "Datum von",
+      "datum_do": "Datum bis"
     }
   },
   "zapisnici": {

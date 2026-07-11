@@ -32,6 +32,7 @@
       "klijenti": "Clients",
       "asistent": "Assistant",
       "zapisnici": "Records",
+      "aktivnost": "Activity",
       "postavke": "Settings"
     },
     "sidebar": {
@@ -709,6 +710,73 @@
       "izaberiteKlijenta": "Select a client to view the annual matrix.",
       "nemaTerminaMjesec": "No appointments for the selected month.",
       "nemaTerminaGodina": "This client has no appointments in the selected year."
+    }
+  },
+  "aktivnost": {
+    "naslov": "Activity",
+    "opis": "Overview of all events in the application — who changed, opened, or filtered what.",
+    "kolone": {
+      "vrijeme": "Time",
+      "korisnik": "User",
+      "akcija": "Action",
+      "cilj": "Target",
+      "detalji": "Details"
+    },
+    "akcije": {
+      "INSERT": "Created",
+      "UPDATE": "Updated",
+      "DELETE": "Deleted",
+      "NAVIGATE": "Opened screen",
+      "VIEW": "Viewed record",
+      "LOGIN": "Login",
+      "LOGOUT": "Logout",
+      "FILTER": "Filtered"
+    },
+    "filteri": {
+      "korisnik": "User",
+      "akcija": "Action type",
+      "svi": "All",
+      "od": "From",
+      "do": "To",
+      "pretraga": "Search",
+      "primijeni": "Apply",
+      "ocisti": "Clear"
+    },
+    "prazno": "No recorded events for the selected filters.",
+    "sistemski": "System",
+    "vrijednosti": {
+      "prazno": "(empty)",
+      "da": "Yes",
+      "ne": "No"
+    },
+    "polja": {
+      "status": "Status",
+      "napomena": "Note",
+      "zaduzeni": "Assignee",
+      "datum_zakazan": "Scheduled date",
+      "rok_dospijeca": "Due date",
+      "datum_izvrsenja": "Completion date",
+      "updated_at": "Updated",
+      "created_at": "Created",
+      "naziv": "Name",
+      "ime": "First name",
+      "email": "Email",
+      "uloga": "Role",
+      "aktivan": "Active",
+      "aktivna": "Active",
+      "telefon": "Phone",
+      "adresa": "Address",
+      "grad": "City",
+      "podsjetnici_aktivni": "Reminders active",
+      "vrijeme_slanja_sat": "Send hour",
+      "salji_klijentima": "Send to clients",
+      "zakazano_obavijest_aktivna": "Scheduled notice",
+      "dana_prije": "Days before",
+      "zakonski_osnov": "Legal basis",
+      "vodi_dokumentaciju": "Keeps documentation",
+      "broj_ugovora": "Contract number",
+      "datum_od": "Date from",
+      "datum_do": "Date to"
     }
   },
   "zapisnici": {

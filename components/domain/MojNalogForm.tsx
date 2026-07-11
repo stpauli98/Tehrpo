@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { toastRezultat } from "@/components/akcija-toast"
 import { promijeniLozinku } from "@/app/(dashboard)/postavke/actions"
 
 export function MojNalogForm() {
@@ -17,13 +17,11 @@ export function MojNalogForm() {
   function submit(e: React.FormEvent) {
     e.preventDefault()
     start(async () => {
-      const r = await promijeniLozinku(trenutna, nova, potvrda)
-      if (r.ok) {
-        toast.success(t("uspjeh"))
-        setTrenutna(""); setNova(""); setPotvrda("")
-      } else {
-        toast.error(r.message ?? t("greske.opsta"))
-      }
+      const res = toastRezultat(await promijeniLozinku(trenutna, nova, potvrda), {
+        uspjeh: t("uspjeh"),
+        greska: t("greske.opsta"),
+      })
+      if (res.ok) { setTrenutna(""); setNova(""); setPotvrda("") }
     })
   }
 

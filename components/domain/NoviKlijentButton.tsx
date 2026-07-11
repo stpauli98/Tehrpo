@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { createKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 
@@ -28,6 +29,7 @@ export function NoviKlijentButton() {
   const [state, action, pending] = useActionState(createKlijent, initial)
   const submitted = useRef(false)
   const mozeUrediti = useMozeUrediti()
+  useAkcijaToast(state, { uspjeh: t("uspjeh"), greska: tc("greska") })
 
   // Zatvori dialog TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).

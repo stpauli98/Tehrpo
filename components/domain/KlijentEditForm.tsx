@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { updateKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -44,6 +45,7 @@ export function KlijentEditForm({
   const [state, action, pending] = useActionState(updateKlijent, initial)
   const submitted = useRef(false)
   const mozeUrediti = useMozeUrediti()
+  useAkcijaToast(state, { uspjeh: t("uspjeh"), greska: tc("greska") })
 
   // items mapa (value→label) za base-ui SelectValue — prikaz IMENA radnika kad je
   // select zatvoren (bez nje base-ui prikaže sirovu vrijednost = UUID).

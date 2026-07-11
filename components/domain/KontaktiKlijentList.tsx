@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { KontaktSheet } from "@/components/domain/KontaktSheet"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
@@ -32,6 +33,7 @@ export function KontaktiKlijentList({
   info?: string
 }) {
   const t = useTranslations("klijenti.kontaktiFirme")
+  const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const [delState, delAction, delPending] = useActionState(deleteKontakt, initial)
@@ -40,6 +42,7 @@ export function KontaktiKlijentList({
   useEffect(() => {
     if (delState !== prev.current) { prev.current = delState; if (delState.ok) router.refresh() }
   }, [delState, router])
+  useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
 
   const upit = q.trim().toLowerCase()
   const filtrirani =

@@ -17,6 +17,7 @@ import { deleteKlijent } from "@/app/(dashboard)/klijenti/actions"
 import { useState } from "react"
 import { href } from "@/i18n/routes"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { toastRezultat } from "@/components/akcija-toast"
 
 export function ObrisiKlijentButton({
   klijentId,
@@ -53,7 +54,10 @@ export function ObrisiKlijentButton({
     const fd = new FormData()
     fd.append("id", klijentId)
     startTransition(async () => {
-      const result = await deleteKlijent({ ok: true }, fd)
+      const result = toastRezultat(await deleteKlijent({ ok: true }, fd), {
+        uspjeh: tc("obrisano"),
+        greska: t("greskaFallback"),
+      })
       if (result.ok) {
         router.push(href("/klijenti"))
       } else {

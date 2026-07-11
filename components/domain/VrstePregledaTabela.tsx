@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { Check, Minus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
@@ -62,9 +63,13 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
                 </td>
                 <td className="px-3 py-2 text-center">
                   {v.vodi_dokumentaciju ? (
-                    <span className="text-muted-foreground" title={t("vodiDokumentacijuTitle")}>✓</span>
+                    <span className="inline-flex text-muted-foreground" title={t("vodiDokumentacijuTitle")}>
+                      <Check className="h-[18px] w-[18px] shrink-0" aria-label={t("vodiDokumentacijuTitle")} />
+                    </span>
                   ) : (
-                    <span className="text-slate-300" title={t("bezDokumentacijeTitle")}>—</span>
+                    <span className="inline-flex text-muted-foreground/40" title={t("bezDokumentacijeTitle")}>
+                      <Minus className="h-[18px] w-[18px] shrink-0" aria-label={t("bezDokumentacijeTitle")} />
+                    </span>
                   )}
                 </td>
                 <td className="px-3 py-2">
@@ -181,10 +186,10 @@ function StatusPill({ vrsta }: { vrsta: Vrsta }) {
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50",
         vrsta.aktivna
           ? "bg-green-50 text-green-700 hover:bg-green-100"
-          : "bg-muted text-muted-foreground hover:bg-slate-200",
+          : "bg-muted text-muted-foreground hover:bg-accent",
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", vrsta.aktivna ? "bg-green-500" : "bg-slate-400")} />
+      <span className={cn("h-1.5 w-1.5 rounded-full", vrsta.aktivna ? "bg-green-500" : "bg-muted-foreground")} />
       {vrsta.aktivna ? t("aktivna") : t("neaktivna")}
     </button>
   )

@@ -62,7 +62,7 @@ export function KorisniciTabela({
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-xs text-muted-foreground">
             <tr>
@@ -84,7 +84,7 @@ export function KorisniciTabela({
                       <span
                         className={cn(
                           "grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold",
-                          k.aktivan ? "bg-brand/10 text-brand" : "bg-slate-200 text-muted-foreground",
+                          k.aktivan ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground",
                         )}
                         aria-hidden
                       >
@@ -93,9 +93,9 @@ export function KorisniciTabela({
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={cn("truncate font-medium", !k.aktivan && "text-muted-foreground")}>{k.ime}</span>
-                          {jeJa && <span className="text-[10px] text-muted-foreground">{t("ti")}</span>}
+                          {jeJa && <span className="text-xs text-muted-foreground">{t("ti")}</span>}
                           {!k.aktivan && (
-                            <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                            <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">
                               {t("deaktiviran")}
                             </span>
                           )}
@@ -119,7 +119,7 @@ export function KorisniciTabela({
                       <DodjelaKlijenata korisnikId={k.id} klijenti={klijenti} izabrani={k.izabrani} />
                     )}
                     {k.uloga !== "admin" && brFirmi === 0 && (
-                      <span className="ml-2 text-[10px] text-amber-600">{t("nemaDodijeljenih")}</span>
+                      <span className="ml-2 text-xs text-amber-600">{t("nemaDodijeljenih")}</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">

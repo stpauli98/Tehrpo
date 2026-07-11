@@ -12,7 +12,7 @@ export async function TipOdnosaBadge({ tip }: { tip: "ugovor" | "ponuda" | null 
         "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
         isUgovor
           ? "bg-blue-100 text-blue-700"
-          : "bg-slate-100 text-slate-600"
+          : "bg-muted text-muted-foreground"
       )}
     >
       {isUgovor ? t("ugovor") : t("ponuda")}

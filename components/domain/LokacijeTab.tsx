@@ -25,14 +25,14 @@ export async function LokacijeTab({
       {lokacije.length === 0 ? (
         <div
           data-testid="lokacije-empty"
-          className="rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500"
+          className="rounded-xl border border-border p-8 text-center text-sm text-muted-foreground"
         >
           {t("prazno")}
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm" data-testid="lokacije-table">
-            <thead className="bg-slate-50">
+            <thead className="bg-muted">
               <tr>
                 {[
                   t("kolone.naziv"),
@@ -43,7 +43,7 @@ export async function LokacijeTab({
                 ].map((c) => (
                   <th
                     key={c}
-                    className="px-3 py-2 text-left align-top text-xs font-medium uppercase tracking-wide text-slate-500"
+                    className="px-3 py-2 text-left align-top text-xs font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     {c}
                   </th>
@@ -52,10 +52,10 @@ export async function LokacijeTab({
             </thead>
             <tbody>
               {lokacije.map((l) => (
-                <tr key={l.id} data-testid="lokacija-row" className="border-t border-slate-100 align-top">
-                  <td className="px-3 py-2.5 font-medium text-slate-900">{l.naziv}</td>
-                  <td className="px-3 py-2.5 text-slate-600">{l.adresa || "—"}</td>
-                  <td className="px-3 py-2.5 text-slate-600">
+                <tr key={l.id} data-testid="lokacija-row" className="border-t border-border align-top">
+                  <td className="px-3 py-2.5 font-medium text-foreground">{l.naziv}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{l.adresa || "—"}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">
                     {[l.grad, l.regija].filter(Boolean).join(" · ") || "—"}
                   </td>
                   <td className="px-3 py-2.5">
@@ -71,7 +71,7 @@ export async function LokacijeTab({
                         {l.kontakt_osoba}
                       </Link>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2.5">

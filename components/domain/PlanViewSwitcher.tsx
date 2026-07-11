@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTransition } from "react"
 import { useTranslations } from "next-intl"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { PLAN_VIEWS, buildViewHref, type PlanView } from "@/lib/plan-view"
 
 export function PlanViewSwitcher({ current }: { current: PlanView }) {
@@ -20,14 +20,16 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
           type="button"
           data-testid={`view-${v}`}
           data-active={current === v}
+          aria-pressed={current === v}
           onClick={() =>
             startTransition(() => router.push(buildViewHref(new URLSearchParams(params.toString()), v)))
           }
           className={cn(
             "px-3 py-1 rounded-full text-sm border transition",
+            FOCUS_RING,
             current === v
-              ? "bg-slate-900 text-white border-slate-900"
-              : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50",
+              ? "bg-brand text-white border-brand"
+              : "bg-card text-muted-foreground border-border hover:bg-muted",
           )}
         >
           {t(v)}

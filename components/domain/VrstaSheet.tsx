@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { updateVrsta, postaviVrstaAktivna, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 
 const initial: ActionResult = { ok: true }
@@ -52,19 +53,19 @@ export function VrstaSheet({
               polje samo čuva trenutnu vrijednost da je updateVrsta ne prebriše na NULL. */}
           <input type="hidden" name="interval" value={vrsta.interval ?? ""} />
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNaziv")}</span>
+            <span className="text-muted-foreground">{t("poljeNaziv")}</span>
             <Input name="naziv" required defaultValue={vrsta.naziv} data-testid="vrsta-naziv" />
           </label>
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeZakonskiOsnov")}</span>
+            <span className="text-muted-foreground">{t("poljeZakonskiOsnov")}</span>
             <Input name="zakonski_osnov" defaultValue={vrsta.zakonski_osnov ?? ""} data-testid="vrsta-osnov" />
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="vodi_dokumentaciju" defaultChecked={vrsta.vodi_dokumentaciju} data-testid="vrsta-vodi-dok" />
-            <span className="text-slate-600">{t("poljeVodiDokumentaciju")}</span>
+            <Checkbox name="vodi_dokumentaciju" value="on" defaultChecked={vrsta.vodi_dokumentaciju} data-testid="vrsta-vodi-dok" />
+            <span className="text-muted-foreground">{t("poljeVodiDokumentaciju")}</span>
           </label>
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">{state.message}</p>
+            <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
           <Button type="submit" disabled={pending} data-testid="vrsta-submit">
             {pending ? t("spremam") : t("spremiIzmjene")}
@@ -76,7 +77,7 @@ export function VrstaSheet({
             variant="outline"
             disabled={togglePending}
             data-testid="vrsta-toggle-aktivna"
-            className={vrsta.aktivna ? "text-red-600 border-red-200 hover:bg-red-50" : "text-green-700 border-green-200 hover:bg-green-50"}
+            className={vrsta.aktivna ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-green-700 border-green-200 hover:bg-green-50"}
             onClick={() => startToggle(async () => { await postaviVrstaAktivna(vrsta.id, !vrsta.aktivna); router.refresh() })}
           >
             {vrsta.aktivna ? t("deaktiviraj") : t("aktiviraj")}

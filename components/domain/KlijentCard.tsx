@@ -18,11 +18,11 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
       data-testid="klijent-card"
       className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-xl"
     >
-      <Card className="h-full transition hover:border-slate-300">
+      <Card className="h-full transition hover:border-border">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <h3 className="font-semibold text-slate-900 leading-tight">{klijent.naziv}</h3>
+              <h3 className="font-semibold text-foreground leading-tight">{klijent.naziv}</h3>
               <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
             </div>
             {/* Kasni badge UVIJEK prikazan (spec §7.2 E); crven kad >0, neutralan kad 0 */}
@@ -32,15 +32,15 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
               className={cn(
                 "inline-flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset",
                 kasni > 0
-                  ? "bg-red-50 text-red-700 ring-red-600/20"
-                  : "bg-slate-50 text-slate-500 ring-slate-400/20"
+                  ? "bg-destructive/10 text-destructive ring-destructive/20"
+                  : "bg-muted text-muted-foreground ring-border"
               )}
             >
               <AlertTriangle className="w-3 h-3" aria-hidden />
               {t("kasniBadge", { count: kasni })}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" aria-hidden />
               {t("lokacija", { count: klijent.broj_lokacija ?? 0 })}
@@ -49,7 +49,7 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
               <Users className="w-3.5 h-3.5" aria-hidden />
               {t("aktivnih", { count: klijent.broj_aktivnih ?? 0 })}
             </span>
-            <span className={cn("ml-auto tabular-nums", "text-slate-400")}>
+            <span className={cn("ml-auto tabular-nums", "text-muted-foreground")}>
               {t("ukupno", { count: klijent.broj_termina ?? 0 })}
             </span>
           </div>

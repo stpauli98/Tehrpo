@@ -45,7 +45,7 @@ export function ObrisiDokumentButton({
         disabled={pending}
         data-testid={testId}
         aria-label={resolvedLabel}
-        className="group/tt relative text-red-600 hover:bg-red-50 hover:text-red-700"
+        className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"
       >
         {pending ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -55,7 +55,7 @@ export function ObrisiDokumentButton({
         <Tooltip>{resolvedLabel}</Tooltip>
       </Button>
       {state.ok === false && state.message && (
-        <span className="ml-2 text-xs text-red-600" role="alert">{state.message}</span>
+        <span className="ml-2 text-xs text-destructive" role="alert">{state.message}</span>
       )}
     </form>
   )

@@ -53,7 +53,7 @@ export default async function ObilasciPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
-        <p className="text-sm text-slate-500">{t("podnaslov")}</p>
+        <p className="text-sm text-muted-foreground">{t("podnaslov")}</p>
       </div>
 
       <ObilasciToolbar
@@ -67,17 +67,17 @@ export default async function ObilasciPage({
       {grupe.length === 0 ? (
         <div
           data-testid="obilasci-empty"
-          className="rounded-xl border border-slate-200 p-10 text-center text-sm text-slate-500"
+          className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
         >
           {t("prazno")}
         </div>
       ) : (
         grupe.map((g) => (
-          <section key={g.grad} data-testid="obilasci-grupa" className="rounded-xl border border-slate-200 p-4">
+          <section key={g.grad} data-testid="obilasci-grupa" className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-2 mb-3">
-              <MapPin className="w-4 h-4 text-red-600" aria-hidden />
+              <MapPin className="w-4 h-4 text-destructive" aria-hidden />
               <h2 className="font-semibold">
-                {g.grad} <span className="text-slate-400 font-normal">({g.items.length})</span>
+                {g.grad} <span className="text-muted-foreground font-normal">({g.items.length})</span>
               </h2>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
@@ -86,15 +86,15 @@ export default async function ObilasciPage({
                   key={termin.id}
                   href={href(`/plan-aktivnosti?view=lista&klijent_id=${termin.klijent_id}&mjesec=svi`)}
                   data-testid="obilasci-card"
-                  className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
+                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2 hover:bg-muted"
                 >
                   <span>
                     <span className="font-medium">{termin.klijent_naziv}</span>
-                    <span className="block text-xs text-slate-500">
+                    <span className="block text-xs text-muted-foreground">
                       {termin.vrsta_naziv}{termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
                     </span>
                   </span>
-                  <span className="flex items-center gap-2 text-sm text-slate-600">
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
                     {formatDatum(termin.rok_dospijeca)}
                     <StatusBadge status={termin.status_izvedeni} />
                   </span>

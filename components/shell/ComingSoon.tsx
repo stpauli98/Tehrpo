@@ -18,14 +18,14 @@ export async function ComingSoon({
       <h1 className="text-2xl font-semibold">{naslov}</h1>
       <div
         data-testid="coming-soon"
-        className="flex flex-col items-center rounded-xl border border-slate-200 p-10 text-center"
+        className="flex flex-col items-center rounded-xl border border-border p-10 text-center"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-light text-brand">
           <Icon className="h-6 w-6" aria-hidden />
         </div>
-        <p className="mt-4 text-base font-medium text-slate-900">{t("naslovUskoro", { naslov })}</p>
-        <p className="mt-1 max-w-md text-sm text-slate-500">{opis}</p>
-        <span className="mt-4 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+        <p className="mt-4 text-base font-medium text-foreground">{t("naslovUskoro", { naslov })}</p>
+        <p className="mt-1 max-w-md text-sm text-muted-foreground">{opis}</p>
+        <span className="mt-4 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
           {faza}
         </span>
       </div>

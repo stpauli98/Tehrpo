@@ -49,19 +49,19 @@ export default async function AsistentPage({
 
   return (
     <div className="grid grid-cols-[260px_1fr] gap-4">
-      <aside className="space-y-3 border-r border-slate-200 pr-4" data-testid="razgovori-sidebar">
+      <aside className="space-y-3 border-r border-border pr-4" data-testid="razgovori-sidebar">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-slate-600">{t("sidebar.naslov")}</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t("sidebar.naslov")}</h2>
           <NoviRazgovorButton />
         </div>
         <ul className="space-y-1">
-          {razgovori.length === 0 && <li className="text-xs text-slate-400">{t("sidebar.prazno")}</li>}
+          {razgovori.length === 0 && <li className="text-xs text-muted-foreground">{t("sidebar.prazno")}</li>}
           {razgovori.map((r) => (
             <li key={r.id}>
               <Link
                 href={href(`/asistent?k=${r.id}`)}
                 data-testid="razgovor-link"
-                className={`block truncate rounded-md px-2 py-1 text-sm hover:bg-slate-50 ${r.id === aktivni ? "bg-slate-100 font-medium" : "text-slate-600"}`}
+                className={`block truncate rounded-md px-2 py-1 text-sm hover:bg-muted ${r.id === aktivni ? "bg-muted font-medium" : "text-muted-foreground"}`}
               >
                 {r.naslov || t("sidebar.bezNaslova")}
               </Link>
@@ -84,7 +84,7 @@ export default async function AsistentPage({
 
 function NoviRazgovorChat({ prazanRazgovor }: { prazanRazgovor: string }) {
   return (
-    <div data-testid="prazan-asistent" className="rounded-xl border border-slate-200 p-6 text-sm text-slate-500">
+    <div data-testid="prazan-asistent" className="rounded-xl border border-border p-6 text-sm text-muted-foreground">
       {prazanRazgovor}
     </div>
   )

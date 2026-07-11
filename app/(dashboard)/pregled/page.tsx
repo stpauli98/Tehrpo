@@ -8,6 +8,7 @@ import { HitnoKasniList } from "@/components/domain/HitnoKasniList"
 import { getPredstojeciCount, getHitnoKasni } from "@/lib/termini"
 import { currentYear, todayIso } from "@/lib/date"
 import { href } from "@/i18n/routes"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export default async function PregledPage() {
   const t = await getTranslations("pregled")
@@ -41,12 +42,12 @@ export default async function PregledPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
-        <p className="text-sm text-slate-500">{t("podnaslov")}</p>
+        <p className="text-sm text-muted-foreground">{t("podnaslov")}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Klikabilne: vode na filter koji TAČNO odgovara broju na kartici */}
-        <Link href={href(`/plan-aktivnosti?view=lista&mjesec=${mjesec}`)} className="block" aria-label={terminiLabel}>
+        <Link href={href(`/plan-aktivnosti?view=lista&mjesec=${mjesec}`)} className={cn("block rounded-xl", FOCUS_RING)} aria-label={terminiLabel}>
           <StatCard
             label={terminiLabel}
             value={stats.ovog_mjeseca}
@@ -56,7 +57,7 @@ export default async function PregledPage() {
             testId="stat-card"
           />
         </Link>
-        <Link href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")} className="block" aria-label={kasniLabel}>
+        <Link href={href("/plan-aktivnosti?view=lista&status=kasni&mjesec=svi")} className={cn("block rounded-xl", FOCUS_RING)} aria-label={kasniLabel}>
           <StatCard
             label={kasniLabel}
             value={stats.kasni}
@@ -95,7 +96,7 @@ export default async function PregledPage() {
 
       {/* Grafik na dnu, pune širine — pregledniji uvid u godišnje opterećenje */}
       <div
-        className="rounded-xl border border-slate-200 bg-white p-5"
+        className="rounded-xl border border-border bg-card p-5"
         data-testid="dashboard-chart"
       >
         <OpterecenjeChart

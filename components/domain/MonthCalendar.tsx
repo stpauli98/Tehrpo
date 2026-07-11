@@ -6,7 +6,7 @@ import type { CalDay } from "@/lib/calendar"
 import { STATUS_DOT_CLASS, type DerivedStatus } from "@/lib/termini"
 import { APP_LOCALE } from "@/lib/locale"
 import { href } from "@/i18n/routes"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 export type DayTermin = {
   id: string
@@ -65,11 +65,11 @@ export function MonthCalendar({
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-slate-200"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border"
       data-testid="plan-grid"
     >
       {/* Day-of-week header */}
-      <div className="grid grid-cols-7 bg-slate-50 text-xs font-medium text-slate-500">
+      <div className="grid grid-cols-7 bg-muted text-xs font-medium text-muted-foreground">
         {DANI.map((d) => (
           <div key={d} className="px-2 py-2 text-center">
             {d}
@@ -88,11 +88,11 @@ export function MonthCalendar({
             <div
               key={c.date}
               className={cn(
-                "relative min-h-[84px] border-t border-l border-slate-100 transition",
-                !c.inMonth && "bg-slate-50/50 text-slate-300",
+                "relative min-h-[84px] border-t border-l border-border transition",
+                !c.inMonth && "bg-muted/50 text-slate-300",
                 isSelected
                   ? "ring-2 ring-inset ring-brand bg-brand-light/30"
-                  : "hover:bg-slate-50",
+                  : "hover:bg-muted",
               )}
             >
               {/* Pozadinski sloj: klik na cijeli dan → ?dan sidebar */}
@@ -102,7 +102,7 @@ export function MonthCalendar({
                 data-date={c.date}
                 data-selected={isSelected}
                 aria-label={t("danAriaLabel", { broj: c.day })}
-                className="absolute inset-0"
+                className={cn("absolute inset-0", FOCUS_RING)}
               />
               {/* Sloj sadržaja: broj dana + termini (klikovi prolaze do pozadine osim na linkovima) */}
               <div className="relative pointer-events-none p-1.5 text-left align-top">
@@ -124,7 +124,10 @@ export function MonthCalendar({
                       href={terminHref(termin.id)}
                       data-testid="cell-termin"
                       data-status={termin.status}
-                      className="pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-slate-600 hover:bg-slate-100"
+                      className={cn(
+                        "pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-muted-foreground hover:bg-muted",
+                        FOCUS_RING,
+                      )}
                     >
                       <span
                         className={cn(
@@ -142,7 +145,10 @@ export function MonthCalendar({
                     <Link
                       href={dayHref(c.date)}
                       data-testid="cell-vise"
-                      className="pointer-events-auto block text-[10px] text-brand font-medium hover:underline"
+                      className={cn(
+                        "pointer-events-auto block rounded-sm text-[10px] text-brand font-medium hover:underline",
+                        FOCUS_RING,
+                      )}
                     >
                       {t("jos", { count: termini.length - 3 })}
                     </Link>

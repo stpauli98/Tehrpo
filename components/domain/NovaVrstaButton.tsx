@@ -58,7 +58,7 @@ export function NovaVrstaButton() {
           data-testid="nova-vrsta-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNaziv")}</span>
+            <span className="text-muted-foreground">{t("poljeNaziv")}</span>
             <Input
               name="naziv"
               required
@@ -68,7 +68,7 @@ export function NovaVrstaButton() {
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeInterval")}</span>
+            <span className="text-muted-foreground">{t("poljeInterval")}</span>
             <Input
               name="interval"
               type="number"
@@ -80,7 +80,7 @@ export function NovaVrstaButton() {
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeZakonskiOsnov")}</span>
+            <span className="text-muted-foreground">{t("poljeZakonskiOsnov")}</span>
             <Input
               name="zakonski_osnov"
               placeholder={t("placeholderZakonskiOsnov")}
@@ -89,7 +89,7 @@ export function NovaVrstaButton() {
           </label>
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {state.message}
             </p>
           )}

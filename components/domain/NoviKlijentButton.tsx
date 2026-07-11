@@ -67,7 +67,7 @@ export function NoviKlijentButton() {
           data-testid="novi-klijent-form"
         >
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNaziv")}</span>
+            <span className="text-muted-foreground">{t("poljeNaziv")}</span>
             <Input
               name="naziv"
               required
@@ -75,41 +75,41 @@ export function NoviKlijentButton() {
               data-testid="novi-klijent-naziv"
             />
             {state.ok === false && state.errors?.naziv && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.naziv[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.naziv[0]}</p>
             )}
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeAdresa")}</span>
+            <span className="text-muted-foreground">{t("poljeAdresa")}</span>
             <Input name="adresa" required data-testid="novi-klijent-adresa" />
             {state.ok === false && state.errors?.adresa && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.adresa[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.adresa[0]}</p>
             )}
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeTelefon")}</span>
+            <span className="text-muted-foreground">{t("poljeTelefon")}</span>
             <Input name="telefon" required data-testid="novi-klijent-telefon" />
             {state.ok === false && state.errors?.telefon && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.telefon[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.telefon[0]}</p>
             )}
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeEmail")}</span>
+            <span className="text-muted-foreground">{t("poljeEmail")}</span>
             <Input name="email" type="email" required data-testid="novi-klijent-email" />
             {state.ok === false && state.errors?.email && (
-              <p className="text-sm text-status-kasni mt-1" role="alert">{state.errors.email[0]}</p>
+              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.email[0]}</p>
             )}
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-600">{t("poljeNapomena")}</span>
+            <span className="text-muted-foreground">{t("poljeNapomena")}</span>
             <Input name="napomena" data-testid="novi-klijent-napomena" />
           </label>
 
           {state.ok === false && state.message && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {state.message}
             </p>
           )}

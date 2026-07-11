@@ -52,8 +52,8 @@ export function KontaktiKlijentList({
   return (
     <div className="space-y-3" data-testid="kontakti-klijent-sekcija">
       <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <Users className="h-4 w-4 text-slate-400" aria-hidden /> {t("naslov")}
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Users className="h-4 w-4 text-muted-foreground" aria-hidden /> {t("naslov")}
           {info && <InfoIkona tekst={info} testId="info-sekcija-kontakti-firma" />}
         </h3>
         <KontaktSheet klijentId={klijentId} />
@@ -61,7 +61,7 @@ export function KontaktiKlijentList({
 
       {searchable && kontakti.length > 0 && (
         <div className="relative max-w-sm">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -73,17 +73,17 @@ export function KontaktiKlijentList({
       )}
 
       {kontakti.length === 0 ? (
-        <p className="text-sm text-slate-500">{t("prazno")}</p>
+        <p className="text-sm text-muted-foreground">{t("prazno")}</p>
       ) : filtrirani.length === 0 ? (
-        <p className="text-sm text-slate-400">{t("praznoPretraga", { q })}</p>
+        <p className="text-sm text-muted-foreground">{t("praznoPretraga", { q })}</p>
       ) : (
         <ul className="space-y-2">
           {vidljivi.map((k) => (
-            <li key={k.id} data-testid="kontakt-red" className="rounded-xl border border-slate-200 p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50/60">
+            <li key={k.id} data-testid="kontakt-red" className="rounded-xl border border-border p-3 text-sm transition-colors hover:border-border hover:bg-muted/60">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {k.ime}
-                  {k.funkcija && <span className="font-normal text-slate-500"> · {k.funkcija}</span>}
+                  {k.funkcija && <span className="font-normal text-muted-foreground"> · {k.funkcija}</span>}
                 </span>
                 <span className="flex items-center gap-2">
                   <KontaktSheet klijentId={klijentId} kontakt={k} />
@@ -92,14 +92,14 @@ export function KontaktiKlijentList({
                       <input type="hidden" name="id" value={k.id} />
                       <input type="hidden" name="klijent_id" value={klijentId} />
                       <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-kontakt-${k.id}`}>
-                        <Trash2 className="w-4 h-4 text-red-500" aria-hidden />
+                        <Trash2 className="w-4 h-4 text-destructive" aria-hidden />
                       </Button>
                     </form>
                   )}
                 </span>
               </div>
               {(k.telefon || k.email) && (
-                <div className="mt-1 text-slate-500">{[k.telefon, k.email].filter(Boolean).join(" · ")}</div>
+                <div className="mt-1 text-muted-foreground">{[k.telefon, k.email].filter(Boolean).join(" · ")}</div>
               )}
             </li>
           ))}
@@ -117,7 +117,7 @@ export function KontaktiKlijentList({
       )}
 
       {delState.ok === false && delState.message && (
-        <p className="text-sm text-red-600" role="alert">{delState.message}</p>
+        <p className="text-sm text-destructive" role="alert">{delState.message}</p>
       )}
     </div>
   )

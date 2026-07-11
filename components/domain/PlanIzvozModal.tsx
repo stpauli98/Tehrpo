@@ -141,9 +141,11 @@ export function PlanIzvozModal() {
                 {t("periodOvajMjesec")}
               </label>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-period" checked={periodMod === "god"} onChange={() => setPeriodMod("god")} data-testid="izvoz-period-god" />
-                {t("periodGodina")}
+              <div className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="izvoz-period" checked={periodMod === "god"} onChange={() => setPeriodMod("god")} data-testid="izvoz-period-god" />
+                  {t("periodGodina")}
+                </label>
                 {periodMod === "god" && (
                   <Select value={String(godina)} onValueChange={(v) => setGodina(Number(v))}>
                     <SelectTrigger size="sm" className="w-24" data-testid="izvoz-godina"><SelectValue /></SelectTrigger>
@@ -152,11 +154,13 @@ export function PlanIzvozModal() {
                     </SelectContent>
                   </Select>
                 )}
-              </label>
+              </div>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-period" checked={periodMod === "mj"} onChange={() => setPeriodMod("mj")} data-testid="izvoz-period-mj" />
-                {t("periodMjesec")}
+              <div className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="izvoz-period" checked={periodMod === "mj"} onChange={() => setPeriodMod("mj")} data-testid="izvoz-period-mj" />
+                  {t("periodMjesec")}
+                </label>
                 {periodMod === "mj" && (
                   <>
                     <Select value={String(mjesec)} onValueChange={(v) => setMjesec(Number(v))}>
@@ -175,7 +179,7 @@ export function PlanIzvozModal() {
                     </Select>
                   </>
                 )}
-              </label>
+              </div>
 
               <label className="flex items-center gap-2 text-sm">
                 <input type="radio" name="izvoz-period" checked={periodMod === "raspon"} onChange={() => setPeriodMod("raspon")} data-testid="izvoz-period-raspon" />

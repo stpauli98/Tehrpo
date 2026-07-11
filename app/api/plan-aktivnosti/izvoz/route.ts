@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createTranslator } from "next-intl"
+import type { PostgrestFilterBuilder } from "@supabase/supabase-js"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { parsePlanFilteri, applyPlanFilteri, applyPlanFilteriBezDatuma } from "@/lib/plan-filteri"
-import { parseIzvozParams } from "@/lib/plan-izvoz/params"
-import { izvozPeriodRange, izvozPeriodLabel } from "@/lib/plan-izvoz/period"
+import { parseIzvozParams, type IzvozOpseg } from "@/lib/plan-izvoz/params"
+import { izvozPeriodRange, izvozPeriodLabel, type IzvozPeriod } from "@/lib/plan-izvoz/period"
 import { planToXlsx } from "@/lib/plan-izvoz/xlsx"
 import { planToPdf } from "@/lib/plan-izvoz/pdf"
 import type { PlanRed } from "@/lib/plan-izvoz/types"
@@ -35,6 +36,18 @@ function legacyPeriodLabel(mjesec: string, godina: number): string {
   return mn >= 1 && mn <= 12 ? `${monthName(mn)} ${godina}` : tIzvoz("sviMjeseci")
 }
 
+/** Ne-legacy grana: opseg-filteri (bez datuma) + period-raspon. Dijele count i fajl grana. */
+function applyIzvozNeLegacy<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Q extends PostgrestFilterBuilder<any, any, any, any, any>,
+>(q: Q, opseg: IzvozOpseg, period: IzvozPeriod, sp: URLSearchParams): Q {
+  let out = q
+  if (opseg === "filtrirano") out = applyPlanFilteriBezDatuma(out, parsePlanFilteri(sp))
+  const r = izvozPeriodRange(period)
+  if (r) out = out.gte("datum_prikaza", r.from).lte("datum_prikaza", r.to)
+  return out
+}
+
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams
   const parsed = parseIzvozParams(sp)
@@ -50,9 +63,7 @@ export async function GET(req: NextRequest) {
     if (parsed.legacy) {
       cq = applyPlanFilteri(cq, parsePlanFilteri(sp))
     } else {
-      if (parsed.opseg === "filtrirano") cq = applyPlanFilteriBezDatuma(cq, parsePlanFilteri(sp))
-      const r = izvozPeriodRange(parsed.period)
-      if (r) cq = cq.gte("datum_prikaza", r.from).lte("datum_prikaza", r.to)
+      cq = applyIzvozNeLegacy(cq, parsed.opseg, parsed.period, sp)
     }
     const { count, error } = await cq
     if (error) return NextResponse.json({ greska: error.message }, { status: 500 })
@@ -67,9 +78,7 @@ export async function GET(req: NextRequest) {
     q = applyPlanFilteri(q, f)
     period = legacyPeriodLabel(f.mjesec, f.godina)
   } else {
-    if (parsed.opseg === "filtrirano") q = applyPlanFilteriBezDatuma(q, parsePlanFilteri(sp))
-    const r = izvozPeriodRange(parsed.period)
-    if (r) q = q.gte("datum_prikaza", r.from).lte("datum_prikaza", r.to)
+    q = applyIzvozNeLegacy(q, parsed.opseg, parsed.period, sp)
     period = izvozPeriodLabel(parsed.period, tIzvoz("sviMjeseci"))
   }
 

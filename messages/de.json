@@ -560,6 +560,7 @@
     "dodajProvjeru": {
       "dugme": "Prüfung hinzufügen",
       "naslov": "Prüfung zum Profil hinzufügen",
+      "opis": "Verknüpfen Sie eine Leistung mit einem Standort — Termin und Frist werden automatisch erstellt.",
       "bezLokacijaTekst": "Der Kunde hat keinen Standort, jede Prüfung muss jedoch mit einem Standort verknüpft sein.",
       "bezLokacijaLink": "Zuerst einen Standort des Kunden anlegen.",
       "poljeVrsta": "Art *",

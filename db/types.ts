@@ -38,7 +38,7 @@ export type Database = {
         Row: {
           akcija: string
           detalji: Json | null
-          entitet: string
+          entitet: string | null
           entitet_id: string | null
           id: number
           korisnik_id: string | null
@@ -49,7 +49,7 @@ export type Database = {
         Insert: {
           akcija: string
           detalji?: Json | null
-          entitet: string
+          entitet?: string | null
           entitet_id?: string | null
           id?: never
           korisnik_id?: string | null
@@ -60,7 +60,7 @@ export type Database = {
         Update: {
           akcija?: string
           detalji?: Json | null
-          entitet?: string
+          entitet?: string | null
           entitet_id?: string | null
           id?: never
           korisnik_id?: string | null

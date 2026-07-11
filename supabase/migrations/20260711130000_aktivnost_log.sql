@@ -4,6 +4,9 @@
 -- 1) UI kontekst (labela ekrana, filter parametri). Za UI redove staro/novo = null.
 alter table audit_log add column if not exists detalji jsonb;
 
+-- LOGIN/LOGOUT i sl. UI događaji nemaju entitet → dozvoli null (tg_audit uvijek postavlja TG_TABLE_NAME).
+alter table audit_log alter column entitet drop not null;
+
 -- 2) Indeksi za filtriranje na admin ekranu (postoje već: vrijeme desc, entitet+entitet_id).
 create index if not exists idx_audit_korisnik on audit_log (korisnik_id);
 create index if not exists idx_audit_akcija   on audit_log (akcija);

@@ -19,7 +19,10 @@
       "kasni": "{count, plural, =1 {# Tag überfällig} other {# Tage überfällig}}",
       "danas": "heute fällig",
       "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}"
-    }
+    },
+    "sacuvano": "Gespeichert",
+    "obrisano": "Gelöscht",
+    "greska": "Ein Fehler ist aufgetreten"
   },
   "shell": {
     "nav": {

@@ -106,6 +106,11 @@ export default async function KlijentDetailPage({
   const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
   const { data: korisniciData } = await supabase.from("korisnici").select("id, ime").eq("aktivan", true).order("ime")
   const korisnici = (korisniciData ?? []).map((k) => ({ id: k.id, ime: k.ime }))
+  // Aktivni admini (ime+email) za "Dodaj provjeru" fallback kad vrsta nema interval:
+  // operater ne može u Postavke, pa mu prikazujemo kome da se javi. RLS bi vratio prazno
+  // preko .from("korisnici"), pa ide SECURITY DEFINER RPC (izlaže samo kontakt admina).
+  const { data: adminiData } = await supabase.rpc("get_admini")
+  const admini = (adminiData ?? []).map((a) => ({ ime: a.ime, email: a.email }))
   // Ugovori trebaju samo na "id-karta" tabu → ne dohvaćaj ih bez potrebe.
   const ugovori = tab === "id-karta"
     ? ((await supabase.from("ugovori").select("*").eq("klijent_id", id)
@@ -191,7 +196,7 @@ export default async function KlijentDetailPage({
       {tab === "termini" && (
         <div data-testid="tab-termini-content" className="space-y-4">
           <div className="flex justify-end">
-            <DodajProvjeruButton klijentId={id} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />
+            <DodajProvjeruButton klijentId={id} vrste={vrsteOpcije} lokacije={lokacijeOpcije} admini={admini} />
           </div>
           <div className="rounded-xl border border-border overflow-hidden">
           {termini.length === 0 ? (
@@ -350,7 +355,7 @@ export default async function KlijentDetailPage({
       {tab === "podsjetnici" && <KlijentPodsjetniciTab klijentId={id} />}
 
       {tab === "profil" && (
-        <ProfilTab klijentId={id} stavke={profilStavke} vrste={vrsteOpcije} lokacije={lokacijeOpcije} />
+        <ProfilTab klijentId={id} stavke={profilStavke} vrste={vrsteOpcije} lokacije={lokacijeOpcije} admini={admini} />
       )}
     </div>
   )

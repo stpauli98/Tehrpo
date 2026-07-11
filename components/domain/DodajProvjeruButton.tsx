@@ -17,23 +17,27 @@ import { useAkcijaToast } from "@/components/akcija-toast"
 import { createProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { APP_NAME } from "@/lib/brand"
 import { href } from "@/i18n/routes"
-import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useMozeUrediti, useUloga } from "@/providers/korisnik-provider"
+import { jeAdmin } from "@/lib/auth/roles"
 
 const initial: ActionResult = { ok: true }
 
 type Rezim = "vec_radeno" | "prvi_put"
 
 export function DodajProvjeruButton({
-  klijentId, vrste, lokacije,
+  klijentId, vrste, lokacije, admini,
 }: {
   klijentId: string
   vrste: { id: string; naziv: string; interval: number | null }[]
   lokacije: { id: string; naziv: string }[]
+  admini: { ime: string; email: string }[]
 }) {
   const router = useRouter()
   const t = useTranslations("termini.dodajProvjeru")
   const tc = useTranslations("common")
   const mozeUrediti = useMozeUrediti()
+  const uloga = useUloga()
+  const korisnikJeAdmin = jeAdmin(uloga ?? "pregled")
   const [open, setOpen] = useState(false)
   const [vrstaId, setVrstaId] = useState("")
   const [lokId, setLokId] = useState("")
@@ -113,10 +117,26 @@ export function DodajProvjeruButton({
             <Input value={interval ?? ""} placeholder={t("placeholderVrsta")} disabled readOnly data-testid="profil-interval" />
           </label>
           {vrstaId && !interval && (
-            <p className="text-sm text-destructive" role="alert" data-testid="profil-bez-intervala">
-              {t("bezIntervalaTekst")}{" "}
-              <Link href={href("/postavke")} className="underline">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
-            </p>
+            korisnikJeAdmin ? (
+              <p className="text-sm text-destructive" role="alert" data-testid="profil-bez-intervala">
+                {t("bezIntervalaTekst")}{" "}
+                <Link href={href("/postavke")} className="underline">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
+              </p>
+            ) : (
+              <div className="text-sm text-destructive" role="alert" data-testid="profil-bez-intervala-operater">
+                <p>{t("bezIntervalaOperater")}</p>
+                {admini.length > 0 && (
+                  <ul className="mt-1 space-y-0.5">
+                    {admini.map((a) => (
+                      <li key={a.email}>
+                        <a href={`mailto:${a.email}`} className="underline">{a.ime}</a>
+                        <span className="text-muted-foreground"> · {a.email}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )
           )}
 
           <label className="block text-sm">

@@ -570,6 +570,7 @@
       "bezIntervalaTekst": "This type has no default interval — set it in",
       "bezIntervalaLink": "Settings",
       "bezIntervalaKraj": "before adding it to the profile.",
+      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding it to the profile.",
       "poljeRadjenoRanije": "Has this check already been done? *",
       "opcijaVecRadeno": "Yes — I'll enter the last date",
       "opcijaPrviPut": "No — first time (I'll enter the first deadline)",

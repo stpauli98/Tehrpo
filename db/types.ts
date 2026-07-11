@@ -897,6 +897,13 @@ export type Database = {
         Args: { p_email: string; p_klijent_id: string }
         Returns: string
       }
+      get_admini: {
+        Args: never
+        Returns: {
+          email: string
+          ime: string
+        }[]
+      }
       get_aktivnost: {
         Args: {
           p_akcija?: string

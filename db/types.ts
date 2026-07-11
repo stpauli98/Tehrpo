@@ -84,7 +84,6 @@ export type Database = {
           created_at: string
           id: string
           konverzacija_id: string
-          korisnik_id: string
           sadrzaj: string
           uloga: Database["public"]["Enums"]["chat_uloga"]
         }
@@ -93,7 +92,6 @@ export type Database = {
           created_at?: string
           id?: string
           konverzacija_id: string
-          korisnik_id?: string
           sadrzaj: string
           uloga: Database["public"]["Enums"]["chat_uloga"]
         }
@@ -102,19 +100,10 @@ export type Database = {
           created_at?: string
           id?: string
           konverzacija_id?: string
-          korisnik_id?: string
           sadrzaj?: string
           uloga?: Database["public"]["Enums"]["chat_uloga"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_poruke_korisnik_id_fkey"
-            columns: ["korisnik_id"]
-            isOneToOne: false
-            referencedRelation: "korisnici"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       dokumenti: {
         Row: {

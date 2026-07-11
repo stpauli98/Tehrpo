@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,7 @@ import {
 import type { TerminRow } from "@/components/domain/TerminiTable"
 import { DokumentiSekcija } from "@/components/domain/DokumentiSekcija"
 import type { Database } from "@/db/types"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
@@ -56,11 +56,14 @@ export function TerminSheet({
   // write-kontrole (v. docs/superpowers/specs/2026-07-10-pregled-readonly-design.md).
   const mozeUrediti = useMozeUrediti()
 
-  // Toast potvrda + TanStack Query invalidacija kad akcija prijeđe iz pending u uspjeh
+  useAkcijaToast(updateState, { uspjeh: t("toastIzmjeneSacuvane"), greska: tc("greska") })
+  useAkcijaToast(markState, { uspjeh: t("toastOznacenIzvrsenim"), greska: tc("greska") })
+  useAkcijaToast(otkazState, { uspjeh: t("toastOtkazan"), greska: tc("greska") })
+
+  // TanStack Query invalidacija kad akcija prijeđe iz pending u uspjeh (toast pokriven useAkcijaToast iznad)
   const prevUpdPending = useRef(updatePending)
   useEffect(() => {
     if (prevUpdPending.current && !updatePending && updateState.ok) {
-      toast.success(t("toastIzmjeneSacuvane"))
       if (termin.id) {
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
@@ -74,7 +77,6 @@ export function TerminSheet({
   const prevMarkPending = useRef(markPending)
   useEffect(() => {
     if (prevMarkPending.current && !markPending && markState.ok) {
-      toast.success(t("toastOznacenIzvrsenim"))
       if (termin.id) {
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }
@@ -88,7 +90,6 @@ export function TerminSheet({
   const prevOtkazPending = useRef(otkazPending)
   useEffect(() => {
     if (prevOtkazPending.current && !otkazPending && otkazState.ok) {
-      toast.success(t("toastOtkazan"))
       if (termin.id) {
         void queryClient.invalidateQueries({ queryKey: ["termin-detail", termin.id] })
       }

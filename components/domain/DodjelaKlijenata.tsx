@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Building2 } from "lucide-react"
-import { toast } from "sonner"
+import { toastRezultat } from "@/components/akcija-toast"
 import {
   Dialog,
   DialogTrigger,
@@ -49,13 +49,13 @@ export function DodjelaKlijenata({
 
   function sacuvaj() {
     start(async () => {
-      const r = await postaviDodjele(korisnikId, [...sel])
+      const r = toastRezultat(await postaviDodjele(korisnikId, [...sel]), {
+        uspjeh: t("toastSuccess"),
+        greska: t("toastErrorFallback"),
+      })
       if (r.ok) {
-        toast.success(t("toastSuccess"))
         setOpen(false)
         router.refresh()
-      } else {
-        toast.error(r.message ?? t("toastErrorFallback"))
       }
     })
   }

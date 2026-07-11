@@ -1,6 +1,8 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { AsistentChat } from "@/components/domain/AsistentChat"
 import { NoviRazgovorButton } from "@/components/domain/NoviRazgovorButton"
 import type { UiPoruka } from "@/components/domain/ChatMessage"
@@ -15,6 +17,12 @@ export default async function AsistentPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const t = await getTranslations("asistent")
+
+  // 'pregled' (read-only) ne koristi AI asistenta — tab mu je sakriven (Sidebar) i RLS blokira upis;
+  // ovdje se zatvara i direktan URL pristup.
+  const korisnik = await getTrenutniKorisnik()
+  if (korisnik?.uloga === "pregled") redirect(href("/pregled"))
+
   const sp = await searchParams
   const aktivni = typeof sp.k === "string" ? sp.k : null
 

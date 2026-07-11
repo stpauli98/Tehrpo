@@ -4,6 +4,7 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
+import { toastRezultat } from "@/components/akcija-toast"
 import { MoreHorizontal, Send, UserX, UserCheck, KeyRound } from "lucide-react"
 import {
   DropdownMenu,
@@ -52,21 +53,20 @@ export function KorisnikAkcije({
 
   function posaljiReset() {
     start(async () => {
-      const r = await posaljiResetKorisniku(email)
-      if (r.ok) toast.success(t("resetPoslat", { email }))
-      else toast.error(r.message ?? t("resetGreska"))
+      toastRezultat(await posaljiResetKorisniku(email), {
+        uspjeh: t("resetPoslat", { email }),
+        greska: t("resetGreska"),
+      })
     })
   }
 
   function toggleAktivan() {
     start(async () => {
-      const r = await postaviAktivan(korisnikId, !aktivan)
-      if (r.ok) {
-        toast.success(aktivan ? t("korisnikDeaktiviran") : t("korisnikAktiviran"))
-        router.refresh()
-      } else {
-        toast.error(r.message ?? t("greska"))
-      }
+      const res = toastRezultat(await postaviAktivan(korisnikId, !aktivan), {
+        uspjeh: aktivan ? t("korisnikDeaktiviran") : t("korisnikAktiviran"),
+        greska: t("greska"),
+      })
+      if (res.ok) router.refresh()
     })
   }
 

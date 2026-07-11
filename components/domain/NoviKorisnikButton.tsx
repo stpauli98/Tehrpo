@@ -3,6 +3,7 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Plus } from "lucide-react"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { kreirajKorisnika, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -16,10 +17,12 @@ const initial: ActionResult = { ok: true }
 export function NoviKorisnikButton() {
   const t = useTranslations("postavke.noviKorisnik")
   const tu = useTranslations("postavke.uloge")
+  const tc = useTranslations("common")
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(kreirajKorisnika, initial)
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {

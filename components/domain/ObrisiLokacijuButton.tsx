@@ -13,6 +13,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 
@@ -25,6 +26,7 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
   const [state, action, pending] = useActionState(deleteLokacija, initial)
   const submitted = useRef(false)
   const mozeUrediti = useMozeUrediti()
+  useAkcijaToast(state, { uspjeh: tc("obrisano"), greska: tc("greska") })
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {

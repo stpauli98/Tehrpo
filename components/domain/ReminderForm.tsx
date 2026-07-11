@@ -7,6 +7,7 @@ import { X, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { updatePostavke, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 
 const initial: ActionResult = { ok: true }
@@ -20,9 +21,11 @@ function sortedDesc(arr: number[]): number[] {
 
 export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
   const t = useTranslations("postavke.reminderForm")
+  const tc = useTranslations("common")
   const labelFor = (n: number): string => (n === 0 ? t("naDan") : t("dana", { count: n }))
   const router = useRouter()
   const [state, action, pending] = useActionState(updatePostavke, initial)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
   const [opcije, setOpcije] = useState<number[]>(() => sortedDesc([...DEFAULT_OPCIJE, ...danaPrije]))
   const [selected, setSelected] = useState<Set<number>>(() => new Set(danaPrije))
   const [custom, setCustom] = useState("")

@@ -15,4 +15,11 @@ describe("isCronAuthorized", () => {
     expect(isCronAuthorized("Bearer ", "")).toBe(false)
     expect(isCronAuthorized(null, undefined)).toBe(false)
   })
+  it("false za header različite dužine (prefiks tačne tajne)", () => {
+    expect(isCronAuthorized("Bearer taj", "tajna")).toBe(false)
+    expect(isCronAuthorized("Bearer tajna-visak", "tajna")).toBe(false)
+  })
+  it("false bez 'Bearer ' prefiksa", () => {
+    expect(isCronAuthorized("tajna", "tajna")).toBe(false)
+  })
 })

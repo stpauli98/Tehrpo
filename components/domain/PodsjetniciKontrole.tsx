@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import {
   updatePodsjetniciAktivni,
   pokreniPodsjetnikeSada,
@@ -33,6 +34,7 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
     updatePodsjetniciAktivni,
     initialToggleState,
   )
+  useAkcijaToast(toggleState, { uspjeh: tc("sacuvano"), greska: tc("greska") })
   // "trenutno" = vrijednost prikazana korisniku; "verzija" forsira REMOUNT Checkbox-a
   // (svjež defaultChecked) — OBA se mijenjaju ISKLJUČIVO ZAJEDNO (nikad "trenutno"
   // samo), nakon SVAKOG završenog round-trip-a (uspjeh ILI neuspjeh). Klik samo

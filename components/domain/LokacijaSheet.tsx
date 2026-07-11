@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { createLokacija, updateLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -52,6 +53,7 @@ export function LokacijaSheet({
     initial,
   )
   const submitted = useRef(false)
+  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {

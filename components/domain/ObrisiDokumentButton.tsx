@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { Trash2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
+import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
 import { jeAdmin } from "@/lib/auth/roles"
@@ -22,6 +23,7 @@ export function ObrisiDokumentButton({
   testId?: string
 }) {
   const t = useTranslations("dokumenti")
+  const tc = useTranslations("common")
   const router = useRouter()
   const uloga = useUloga()
   const [state, action, pending] = useActionState(deleteDokumentAction, initial)
@@ -32,6 +34,7 @@ export function ObrisiDokumentButton({
       if (state.ok) router.refresh()
     }
   }, [state, router])
+  useAkcijaToast(state, { uspjeh: tc("obrisano"), greska: tc("greska") })
   // Brisanje dokumenata je admin-only (server akcija to i nameće) — ne-adminima ne nudi dugme.
   if (!uloga || !jeAdmin(uloga)) return null
   const resolvedLabel = label ?? t("obrisiDokument")

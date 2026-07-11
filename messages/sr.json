@@ -19,7 +19,10 @@
       "kasni": "kasni {count, plural, =1 {# dan} other {# dana}}",
       "danas": "danas",
       "za": "za {count, plural, =1 {# dan} other {# dana}}"
-    }
+    },
+    "sacuvano": "Sačuvano",
+    "obrisano": "Obrisano",
+    "greska": "Došlo je do greške"
   },
   "shell": {
     "nav": {
@@ -230,7 +233,8 @@
         "ponuda": "Po ponudi"
       },
       "submitPending": "Spremam…",
-      "submit": "Spremi izmjene"
+      "submit": "Spremi izmjene",
+      "uspjeh": "Klijent sačuvan"
     },
     "tabs": {
       "idKarta": {
@@ -275,7 +279,8 @@
       "poljeEmail": "Email *",
       "poljeNapomena": "Napomena",
       "submitPending": "Kreiram…",
-      "submit": "Kreiraj klijenta"
+      "submit": "Kreiraj klijenta",
+      "uspjeh": "Klijent kreiran"
     },
     "obrisi": {
       "disabledTitle": "Klijent ima termine i ne može se obrisati",
@@ -411,7 +416,8 @@
       "formatiHint": "PDF, DOCX, PNG, JPG, WEBP",
       "tipDokumentaLabel": "Tip dokumenta",
       "submitPending": "Šaljem…",
-      "submit": "Dodaj dokument"
+      "submit": "Dodaj dokument",
+      "uspjeh": "Dokument dodat"
     },
     "dodjelaKlijenata": {
       "dugme": "Firme ({count})",
@@ -594,7 +600,9 @@
       "spremam": "Spremam…",
       "spremiIzmjene": "Spremi izmjene",
       "deaktiviraj": "Deaktiviraj",
-      "aktiviraj": "Aktiviraj"
+      "aktiviraj": "Aktiviraj",
+      "aktiviranaUspjeh": "Vrsta aktivirana",
+      "deaktiviranaUspjeh": "Vrsta deaktivirana"
     },
     "vrstePregleda": {
       "prikaziNeaktivne": "Prikaži i neaktivne",
@@ -615,7 +623,9 @@
       "klikDeaktivacija": "Klik za deaktivaciju",
       "klikAktivacija": "Klik za aktivaciju",
       "aktivna": "Aktivna",
-      "neaktivna": "Neaktivna"
+      "neaktivna": "Neaktivna",
+      "aktiviranaUspjeh": "Vrsta aktivirana",
+      "deaktiviranaUspjeh": "Vrsta deaktivirana"
     },
     "actions": {
       "datumNeispravan": "Neispravan datum",
@@ -810,7 +820,9 @@
     "prazno": "Nema dokumenata za ovaj termin.",
     "preuzmi": "Preuzmi",
     "obrisiDokument": "Obriši dokument",
-    "aiOznaka": "AI"
+    "aiOznaka": "AI",
+    "uploadUspjeh": "Dokument dodat",
+    "zapisnikUspjeh": "Zapisnik generisan"
   },
   "postavke": {
     "naslov": "Postavke",

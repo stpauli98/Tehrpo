@@ -3,7 +3,7 @@
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
+import { toastRezultat } from "@/components/akcija-toast"
 import { postaviUlogu } from "@/app/(dashboard)/postavke/actions"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -39,14 +39,10 @@ export function UlogaSelect({
       onValueChange={(v) => {
         const next = v as Uloga
         start(async () => {
-          const r = await postaviUlogu(korisnikId, next)
-          if (r.ok) {
-            toast.success(t("sacuvano"))
-            router.refresh()
-          } else {
-            toast.error(r.message ?? t("greska"))
-            router.refresh() // vrati select na stvarnu vrijednost ako je brana odbila
-          }
+          // router.refresh() se izvršava u oba slučaja: uspjeh osvježava prikaz,
+          // greška vraća select na stvarnu vrijednost ako je brana odbila.
+          toastRezultat(await postaviUlogu(korisnikId, next), { uspjeh: t("sacuvano"), greska: t("greska") })
+          router.refresh()
         })
       }}
     >

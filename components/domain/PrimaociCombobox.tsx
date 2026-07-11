@@ -4,10 +4,10 @@ import { useMemo, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 import { X, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { toastRezultat } from "@/components/akcija-toast"
 import {
   updateKontaktPodsjetnikPrimalac,
   dodajPodsjetnikEmail,
@@ -38,6 +38,7 @@ export function PrimaociCombobox({
   adHocEmails: string[]
 }) {
   const t = useTranslations("klijenti.podsjetnici")
+  const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const [pending, startTransition] = useTransition()
@@ -73,18 +74,24 @@ export function PrimaociCombobox({
     setIzabraniIds((p) => new Set(p).add(id))
     setQ(""); setOpen(false); setHi(0)
     startTransition(async () => {
-      const res = await updateKontaktPodsjetnikPrimalac(id, klijentId, true)
+      const res = toastRezultat(await updateKontaktPodsjetnikPrimalac(id, klijentId, true), {
+        uspjeh: tc("sacuvano"),
+        greska: tc("greska"),
+      })
       if (res.ok) { router.refresh() }
-      else { setIzabraniIds((p) => { const n = new Set(p); n.delete(id); return n }); toast.error(res.message) }
+      else { setIzabraniIds((p) => { const n = new Set(p); n.delete(id); return n }) }
     })
   }
 
   function ukloniKontakt(id: string) {
     setIzabraniIds((p) => { const n = new Set(p); n.delete(id); return n })
     startTransition(async () => {
-      const res = await updateKontaktPodsjetnikPrimalac(id, klijentId, false)
+      const res = toastRezultat(await updateKontaktPodsjetnikPrimalac(id, klijentId, false), {
+        uspjeh: tc("obrisano"),
+        greska: tc("greska"),
+      })
       if (res.ok) { router.refresh() }
-      else { setIzabraniIds((p) => new Set(p).add(id)); toast.error(res.message) }
+      else { setIzabraniIds((p) => new Set(p).add(id)) }
     })
   }
 
@@ -93,18 +100,24 @@ export function PrimaociCombobox({
     setAdHoc((p) => [...p, norm])
     setQ(""); setOpen(false); setHi(0)
     startTransition(async () => {
-      const res = await dodajPodsjetnikEmail(klijentId, email)
+      const res = toastRezultat(await dodajPodsjetnikEmail(klijentId, email), {
+        uspjeh: tc("sacuvano"),
+        greska: tc("greska"),
+      })
       if (res.ok) { router.refresh() }
-      else { setAdHoc((p) => p.filter((e) => e.toLowerCase() !== norm)); toast.error(res.message) }
+      else { setAdHoc((p) => p.filter((e) => e.toLowerCase() !== norm)) }
     })
   }
 
   function ukloniEmail(email: string) {
     setAdHoc((p) => p.filter((e) => e.toLowerCase() !== email.toLowerCase()))
     startTransition(async () => {
-      const res = await ukloniPodsjetnikEmail(klijentId, email)
+      const res = toastRezultat(await ukloniPodsjetnikEmail(klijentId, email), {
+        uspjeh: tc("obrisano"),
+        greska: tc("greska"),
+      })
       if (res.ok) { router.refresh() }
-      else { setAdHoc((p) => (p.some((e) => e.toLowerCase() === email.toLowerCase()) ? p : [...p, email])); toast.error(res.message) }
+      else { setAdHoc((p) => (p.some((e) => e.toLowerCase() === email.toLowerCase()) ? p : [...p, email])) }
     })
   }
 

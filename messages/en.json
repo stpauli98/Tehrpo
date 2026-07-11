@@ -451,7 +451,7 @@
       "primaociOpis": "Pick a saved contact or add a one-off address.",
       "comboPlaceholder": "Type an email or pick a contact",
       "dodajJednokratni": "Add \"{email}\" as one-off",
-      "tagJednokratno": "one-off",
+      "tagJednokratno": "⟨one-off⟩",
       "nemaPrimalaca": "No recipients selected.",
       "nemaRezultata": "No contacts for that query.",
       "ukloniPrimaoca": "Remove recipient",

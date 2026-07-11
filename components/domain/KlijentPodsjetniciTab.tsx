@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
+import { href } from "@/i18n/routes"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { KlijentPodsjetniciForm } from "./KlijentPodsjetniciForm"
@@ -29,7 +30,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
   return (
     <div className="space-y-8" data-testid="tab-podsjetnici-content">
       <section>
-        <h2 className="mb-3 text-lg font-medium">{t("sekcijaSlanje")}</h2>
+        <h2 className="mb-3 text-lg font-medium text-foreground">{t("sekcijaSlanje")}</h2>
         {saljiGlobalno ? (
           <KlijentPodsjetniciForm klijentId={klijentId} salji={salji} kontakti={kontakti} adHocEmails={adHocEmails} />
         ) : (
@@ -38,7 +39,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
             {jeAdmin && (
               <>
                 {" "}
-                <Link href="/postavke" className="font-medium text-brand hover:underline">
+                <Link href={href("/postavke")} className="font-medium text-brand hover:underline">
                   {t("otvoriPostavke")}
                 </Link>
               </>
@@ -48,7 +49,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
       </section>
       {jeAdmin && (
         <section>
-          <h2 className="mb-3 text-lg font-medium">{t("sekcijaDodjela")}</h2>
+          <h2 className="mb-3 text-lg font-medium text-foreground">{t("sekcijaDodjela")}</h2>
           <DodjelaRadnikaFirmi klijentId={klijentId} radnici={radnici} izabrani={izabrani} />
         </section>
       )}

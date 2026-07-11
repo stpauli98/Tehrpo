@@ -138,7 +138,7 @@ export function PrimaociCombobox({
               <button
                 type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
                 data-testid={`ukloni-kontakt-${k.id}`}
-                className={cn("ml-0.5 rounded hover:bg-slate-300/60 disabled:opacity-50", FOCUS_RING)}
+                className={cn("ml-0.5 rounded hover:bg-foreground/10 disabled:opacity-50", FOCUS_RING)}
                 onClick={() => ukloniKontakt(k.id)}
               ><X className="h-3 w-3" aria-hidden /></button>
             )}
@@ -147,12 +147,12 @@ export function PrimaociCombobox({
         {adHocPrikaz.map((email) => (
           <Badge key={email} variant="outline" className="gap-1" data-testid="primalac-adhoc">
             <span className="truncate">{email}</span>
-            <span className="text-xs text-muted-foreground">⟨{t("tagJednokratno")}⟩</span>
+            <span className="text-xs text-muted-foreground">{t("tagJednokratno")}</span>
             {mozeUrediti && (
               <button
                 type="button" disabled={pending} aria-label={t("ukloniPrimaoca")}
                 data-testid={`ukloni-adhoc-${email}`}
-                className={cn("ml-0.5 rounded hover:bg-slate-200 disabled:opacity-50", FOCUS_RING)}
+                className={cn("ml-0.5 rounded hover:bg-foreground/10 disabled:opacity-50", FOCUS_RING)}
                 onClick={() => ukloniEmail(email)}
               ><X className="h-3 w-3" aria-hidden /></button>
             )}

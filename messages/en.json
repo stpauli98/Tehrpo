@@ -560,6 +560,7 @@
     "dodajProvjeru": {
       "dugme": "Add check",
       "naslov": "Add check to profile",
+      "opis": "Link a service to a location — the appointment and deadline are generated automatically.",
       "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
       "bezLokacijaLink": "Add a client location first.",
       "poljeVrsta": "Type *",

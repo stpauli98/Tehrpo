@@ -4,9 +4,9 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Plus } from "lucide-react"
+import { Plus, Repeat, TriangleAlert, Mail } from "lucide-react"
 import {
-  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -66,18 +66,28 @@ export function DodajProvjeruButton({
 
   if (!mozeUrediti) return null
 
+  const imaLokacija = lokacije.length > 0
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button data-testid="dodaj-provjeru-btn"><Plus className="w-4 h-4" aria-hidden /> {t("dugme")}</Button>} />
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="dodaj-provjeru-sheet">
-        <DialogHeader><DialogTitle>{t("naslov")}</DialogTitle></DialogHeader>
-        {lokacije.length === 0 ? (
-          <p className="text-sm text-muted-foreground" data-testid="profil-bez-lokacija">
-            {t("bezLokacijaTekst")}{" "}
-            <Link href={href(`/klijenti/${klijentId}?tab=lokacije`)} className="text-brand underline">
-              {t("bezLokacijaLink")}
-            </Link>
-          </p>
+        <DialogHeader>
+          <DialogTitle>{t("naslov")}</DialogTitle>
+          <DialogDescription>{t("opis")}</DialogDescription>
+        </DialogHeader>
+        {!imaLokacija ? (
+          <>
+            <p className="text-sm text-muted-foreground" data-testid="profil-bez-lokacija">
+              {t("bezLokacijaTekst")}{" "}
+              <Link href={href(`/klijenti/${klijentId}?tab=lokacije`)} className="text-brand underline underline-offset-2">
+                {t("bezLokacijaLink")}
+              </Link>
+            </p>
+            <DialogFooter>
+              <DialogClose render={<Button type="button" variant="outline">{tc("otkazi")}</Button>} />
+            </DialogFooter>
+          </>
         ) : (
         <form
           action={(fd) => {
@@ -89,60 +99,79 @@ export function DodajProvjeruButton({
             submitted.current = true
             action(fd)
           }}
-          className="space-y-3"
+          className="space-y-4"
           data-testid="dodaj-provjeru-form"
         >
-          <label className="block text-sm">
-            <span className="text-muted-foreground">{t("poljeVrsta")}</span>
+          <label className="block">
+            <span className="text-sm font-medium text-foreground">{t("poljeVrsta")}</span>
             <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
-              <SelectTrigger className="w-full" data-testid="profil-vrsta"><SelectValue placeholder={t("placeholderVrsta")} /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 w-full" data-testid="profil-vrsta"><SelectValue placeholder={t("placeholderVrsta")} /></SelectTrigger>
               <SelectContent>
                 {vrste.map((v) => <SelectItem key={v.id} value={v.id}>{v.naziv}</SelectItem>)}
               </SelectContent>
             </Select>
           </label>
 
-          <label className="block text-sm">
-            <span className="text-muted-foreground">{t("poljeLokacija")}</span>
+          <label className="block">
+            <span className="text-sm font-medium text-foreground">{t("poljeLokacija")}</span>
             <Select value={lokId} onValueChange={(v) => setLokId(v ?? "")} items={lokItems}>
-              <SelectTrigger className="w-full" data-testid="profil-lokacija"><SelectValue placeholder={t("placeholderLokacija")} /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 w-full" data-testid="profil-lokacija"><SelectValue placeholder={t("placeholderLokacija")} /></SelectTrigger>
               <SelectContent>
                 {lokacije.map((l) => <SelectItem key={l.id} value={l.id}>{l.naziv}</SelectItem>)}
               </SelectContent>
             </Select>
           </label>
 
-          <label className="block text-sm">
-            <span className="text-muted-foreground">{t("poljeInterval")}</span>
-            <Input value={interval ?? ""} placeholder={t("placeholderVrsta")} disabled readOnly data-testid="profil-interval" />
-          </label>
-          {vrstaId && !interval && (
-            korisnikJeAdmin ? (
-              <p className="text-sm text-destructive" role="alert" data-testid="profil-bez-intervala">
-                {t("bezIntervalaTekst")}{" "}
-                <Link href={href("/postavke")} className="underline">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
-              </p>
-            ) : (
-              <div className="text-sm text-destructive" role="alert" data-testid="profil-bez-intervala-operater">
-                <p>{t("bezIntervalaOperater")}</p>
-                {admini.length > 0 && (
-                  <ul className="mt-1 space-y-0.5">
-                    {admini.map((a) => (
-                      <li key={a.email}>
-                        <a href={`mailto:${a.email}`} className="underline">{a.ime}</a>
-                        <span className="text-muted-foreground"> · {a.email}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+          <div>
+            <label className="block">
+              <span className="text-sm font-medium text-foreground">{t("poljeInterval")}</span>
+              <div className="relative mt-1.5">
+                <Repeat className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                <Input
+                  value={interval ?? ""}
+                  placeholder={t("placeholderVrsta")}
+                  disabled
+                  readOnly
+                  data-testid="profil-interval"
+                  className="bg-muted/40 pl-9 font-semibold tabular-nums"
+                />
               </div>
-            )
-          )}
+            </label>
+            {vrstaId && !interval && (
+              korisnikJeAdmin ? (
+                <div className="mt-2 flex gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert" data-testid="profil-bez-intervala">
+                  <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <p>
+                    {t("bezIntervalaTekst")}{" "}
+                    <Link href={href("/postavke")} className="font-medium underline underline-offset-2">{t("bezIntervalaLink")}</Link> {t("bezIntervalaKraj")}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-2 flex gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert" data-testid="profil-bez-intervala-operater">
+                  <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <div className="space-y-2">
+                    <p>{t("bezIntervalaOperater")}</p>
+                    {admini.length > 0 && (
+                      <ul className="space-y-1">
+                        {admini.map((a) => (
+                          <li key={a.email} className="flex items-center gap-2 text-foreground">
+                            <Mail className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                            <a href={`mailto:${a.email}`} className="font-medium underline-offset-2 hover:underline">{a.ime}</a>
+                            <span className="text-muted-foreground">{a.email}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
 
-          <label className="block text-sm">
-            <span className="text-muted-foreground">{t("poljeRadjenoRanije")}</span>
+          <label className="block">
+            <span className="text-sm font-medium text-foreground">{t("poljeRadjenoRanije")}</span>
             <Select value={rezim} onValueChange={(v) => setRezim((v as Rezim) ?? "vec_radeno")} items={{ vec_radeno: t("opcijaVecRadeno"), prvi_put: t("opcijaPrviPut") }}>
-              <SelectTrigger className="w-full" data-testid="profil-rezim"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 w-full" data-testid="profil-rezim"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="vec_radeno">{t("opcijaVecRadeno")}</SelectItem>
                 <SelectItem value="prvi_put">{t("opcijaPrviPut")}</SelectItem>
@@ -151,21 +180,21 @@ export function DodajProvjeruButton({
           </label>
 
           {rezim === "vec_radeno" ? (
-            <label className="block text-sm">
-              <span className="text-muted-foreground">{t("poljeZadnjiDatum")}</span>
-              <Input name="zadnji_datum" type="date" required data-testid="profil-zadnji-datum" />
+            <label className="block">
+              <span className="text-sm font-medium text-foreground">{t("poljeZadnjiDatum")}</span>
+              <Input name="zadnji_datum" type="date" required data-testid="profil-zadnji-datum" className="mt-1.5" />
             </label>
           ) : (
-            <label className="block text-sm">
-              <span className="text-muted-foreground">{t("poljePrviRok")}</span>
-              <Input name="prvi_rok" type="date" required data-testid="profil-prvi-rok" />
+            <label className="block">
+              <span className="text-sm font-medium text-foreground">{t("poljePrviRok")}</span>
+              <Input name="prvi_rok" type="date" required data-testid="profil-prvi-rok" className="mt-1.5" />
             </label>
           )}
 
-          <label className="block text-sm">
-            <span className="text-muted-foreground">{t("poljeNacinIzvrsenja")}</span>
+          <label className="block">
+            <span className="text-sm font-medium text-foreground">{t("poljeNacinIzvrsenja")}</span>
             <Select value={nacin} onValueChange={(v) => setNacin((v as "izvrsava" | "pracenje") ?? "izvrsava")} items={{ izvrsava: t("nacinIzvrsava", { appName: APP_NAME }), pracenje: t("nacinPracenje") }}>
-              <SelectTrigger className="w-full" data-testid="profil-nacin"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 w-full" data-testid="profil-nacin"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="izvrsava">{t("nacinIzvrsava", { appName: APP_NAME })}</SelectItem>
                 <SelectItem value="pracenje">{t("nacinPracenje")}</SelectItem>
@@ -177,14 +206,14 @@ export function DodajProvjeruButton({
             <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
 
-          <Button type="submit" disabled={pending || !vrstaId || !lokId || !interval} data-testid="profil-submit">
-            {pending ? t("dodajem") : t("dodajIGenerisi")}
-          </Button>
+          <DialogFooter className="mt-1">
+            <DialogClose render={<Button type="button" variant="outline">{tc("otkazi")}</Button>} />
+            <Button type="submit" disabled={pending || !vrstaId || !lokId || !interval} data-testid="profil-submit">
+              {pending ? t("dodajem") : t("dodajIGenerisi")}
+            </Button>
+          </DialogFooter>
         </form>
         )}
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

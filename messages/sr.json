@@ -560,6 +560,7 @@
     "dodajProvjeru": {
       "dugme": "Dodaj provjeru",
       "naslov": "Dodaj provjeru u profil",
+      "opis": "Veži uslugu za lokaciju — termin i rok se generišu automatski.",
       "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
       "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
       "poljeVrsta": "Vrsta *",

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { createUgovor, updateUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -78,11 +79,11 @@ export function UgovorSheet({ klijentId, ugovor }: { klijentId: string; ugovor?:
             </label>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="automatsko_obnavljanje" defaultChecked={ugovor?.automatsko_obnavljanje ?? false} data-testid="ugovor-auto" />
+            <Checkbox name="automatsko_obnavljanje" value="on" defaultChecked={ugovor?.automatsko_obnavljanje ?? false} data-testid="ugovor-auto" />
             <span className="text-slate-600">{t("poljeAutoObnavljanje")}</span>
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="aktivan" defaultChecked={ugovor?.aktivan ?? true} data-testid="ugovor-aktivan" />
+            <Checkbox name="aktivan" value="on" defaultChecked={ugovor?.aktivan ?? true} data-testid="ugovor-aktivan" />
             <span className="text-slate-600">{t("poljeAktivan")}</span>
           </label>
           <label className="block text-sm">

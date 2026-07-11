@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { updateVrsta, postaviVrstaAktivna, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 
 const initial: ActionResult = { ok: true }
@@ -60,7 +61,7 @@ export function VrstaSheet({
             <Input name="zakonski_osnov" defaultValue={vrsta.zakonski_osnov ?? ""} data-testid="vrsta-osnov" />
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="vodi_dokumentaciju" defaultChecked={vrsta.vodi_dokumentaciju} data-testid="vrsta-vodi-dok" />
+            <Checkbox name="vodi_dokumentaciju" value="on" defaultChecked={vrsta.vodi_dokumentaciju} data-testid="vrsta-vodi-dok" />
             <span className="text-slate-600">{t("poljeVodiDokumentaciju")}</span>
           </label>
           {state.ok === false && state.message && (

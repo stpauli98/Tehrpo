@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react"
+import { useActionState, useRef, useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   updatePodsjetniciAktivni,
   pokreniPodsjetnikeSada,
@@ -28,24 +29,43 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
   const t = useTranslations("postavke.podsjetniciKontrole")
   const tc = useTranslations("common")
   const formRef = useRef<HTMLFormElement>(null)
-  const checkboxRef = useRef<HTMLInputElement>(null)
   const [toggleState, toggleAction, togglePending] = useActionState(
     updatePodsjetniciAktivni,
     initialToggleState,
   )
-  // Prati koji je toggleState već obrađen za rollback, da se checkbox vrati na
-  // server-istinu tačno jednom po neuspjehu (isti idiom kao PrimaPodsjetnikeToggle,
-  // ali ovdje kroz useActionState pa rollback ide preko useEffect-a, ne inline callbacka).
-  const obradjenoZa = useRef(initialToggleState)
-
-  useEffect(() => {
-    if (toggleState !== obradjenoZa.current) {
-      obradjenoZa.current = toggleState
-      if (toggleState.ok === false && checkboxRef.current) {
-        checkboxRef.current.checked = aktivni
-      }
-    }
-  }, [toggleState, aktivni])
+  // "trenutno" = vrijednost prikazana korisniku; "verzija" forsira REMOUNT Checkbox-a
+  // (svjež defaultChecked) — OBA se mijenjaju ISKLJUČIVO ZAJEDNO (nikad "trenutno"
+  // samo), nakon SVAKOG završenog round-trip-a (uspjeh ILI neuspjeh). Klik samo
+  // bilježi namjeru u `namjeraChecked` i SINHRONO submit-uje (vidi napomenu na
+  // onCheckedChange niže) — ne mijenja "trenutno" direktno.
+  //
+  // Zašto remount a ne kontrolisan `checked`: React 19 nakon uspješne form-akcije
+  // radi automatski form.reset() koji vraća native input na NJEGOV ORIGINALNI
+  // (mount-time) defaultChecked — MIMO React-ove kontrolisane sinhronizacije.
+  // Potvrđeno empirijski (throwaway Playwright skript, isti mehanizam kao
+  // SaljiKlijentimaToggle): sa `checked={state}` je checkbox nakon USPJEŠNOG
+  // submit-a vizuelno skakao nazad na staro stanje iako je DB ispravno ažuriran,
+  // što je drugi klik pretvaralo u pogrešnu tranziciju. Remont sa svježim
+  // `defaultChecked` (isti obrazac kao UgovorSheet-ov `key={ugovor?.id ?? "new"}`)
+  // izbjegava taj konflikt jer je nova instanca uvijek već "u default stanju" koje
+  // želimo — rollback na server-istinu ide istim putem, bez useEffect-a
+  // (react-hooks/set-state-in-effect), preko "adjust state while rendering" obrasca.
+  //
+  // Zašto `namjeraChecked` (state, ne ref) a ne setTrenutno direktno na klik: vidi
+  // identičan komentar u SaljiKlijentimaToggle — izbjegava Base UI-jevo dev-only
+  // console.error upozorenje za promjenu defaultChecked na već montiranoj
+  // nekontrolisanoj instanci. Mora biti state (ne ref) jer se čita unutar "adjust
+  // state while rendering" bloka — čitanje ref.current tokom rendera je zabranjeno
+  // (react-hooks/refs).
+  const [trenutno, setTrenutno] = useState(aktivni)
+  const [verzija, setVerzija] = useState(0)
+  const [namjeraChecked, setNamjeraChecked] = useState(aktivni)
+  const [prevToggleState, setPrevToggleState] = useState(toggleState)
+  if (toggleState !== prevToggleState) {
+    setPrevToggleState(toggleState)
+    setTrenutno(toggleState.ok === false ? aktivni : namjeraChecked)
+    setVerzija((v) => v + 1)
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -61,18 +81,30 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
   return (
     <div className="space-y-4">
       <form ref={formRef} action={toggleAction} className="flex items-start gap-3">
-        <input
-          ref={checkboxRef}
-          type="checkbox"
+        <Checkbox
+          key={verzija}
           name="aktivni"
-          defaultChecked={aktivni}
+          value="on"
+          defaultChecked={trenutno}
           disabled={togglePending}
           aria-label={t("naslov")}
           title={t("naslov")}
           data-testid="podsjetnici-aktivni-toggle"
-          className="mt-0.5 h-4 w-4 cursor-pointer accent-brand disabled:opacity-50"
-          onChange={(e) => {
-            e.currentTarget.form?.requestSubmit()
+          className="mt-0.5"
+          // NAPOMENA (razlikuje se od T3 Select-a): za checkbox NIJE potreban
+          // setTimeout-deferred requestSubmit. Native <input type="checkbox"> mijenja
+          // svoj .checked SINHRONO kao dio browser-ovog default click ponašanja PRIJE
+          // nego 'change' uopšte ispali — za razliku od Select-a gdje Base UI mora
+          // SINTETIZOVATI hidden input vrijednost kroz React re-render (asinhrono u
+          // odnosu na onValueChange). Potvrđeno empirijski (page.evaluate odmah nakon
+          // .click(): native .checked već tačan). Sinhroni requestSubmit ovdje je NE
+          // SAMO ispravan nego i SIGURNIJI: setTimeout(...,0) otvara realan race-prozor
+          // pod opterećenjem servera (empirijski uhvaćeno: reload nakon toBeEnabled()
+          // je stigao PRIJE nego se odgođeni requestSubmit uopšte izvršio, pending
+          // nikad nije ni postao true, pa je stara vrijednost ostala u DB).
+          onCheckedChange={(next) => {
+            setNamjeraChecked(next)
+            formRef.current?.requestSubmit()
           }}
         />
         <div>

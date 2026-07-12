@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server"
+import { Users } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { NoviKorisnikButton } from "./NoviKorisnikButton"
@@ -26,7 +27,11 @@ export async function KorisniciTab() {
   }))
 
   return (
-    <CollapsibleSection title={t("naslov")} action={<NoviKorisnikButton />}>
+    <CollapsibleSection
+      title={t("naslov")}
+      icon={<Users className="h-[18px] w-[18px]" />}
+      action={<NoviKorisnikButton />}
+    >
       <KorisniciTabela korisnici={korisnici} klijenti={klijentiRes.data ?? []} jaId={ja?.id} />
     </CollapsibleSection>
   )

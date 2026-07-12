@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowUp } from "lucide-react"
+import { AlertTriangle, ArrowUp, Send } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
@@ -71,50 +71,87 @@ export async function KoStaPrimaTab() {
     return { id: k.id, naziv: k.naziv, radnici, adrese, firmaPrima, razlog }
   })
 
+  const brojPrima = redovi.filter((r) => r.firmaPrima).length
+
   return (
-    <CollapsibleSection title={t("naslov")} description={t("opis")}>
+    <CollapsibleSection
+      title={t("naslov")}
+      description={t("opis")}
+      icon={<Send className="h-[18px] w-[18px]" />}
+    >
       {!saljiGlobalno && (
         <div
           data-testid="ksp-global-off-banner"
           className="mb-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
         >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <AlertTriangle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
           <span className="inline-flex items-center gap-1">
             {t("globalnoIskljucenoBanner", { prekidac: tSalji("naslov") })}
             <ArrowUp className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </span>
         </div>
       )}
-      <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-foreground/10">
+
+      <div className="mb-2 flex items-center justify-end">
+        <span className="text-xs text-muted-foreground">
+          {t("sazetak", { prima: brojPrima, ukupno: redovi.length })}
+        </span>
+      </div>
+
+      <div className="max-h-[26rem] overflow-auto rounded-lg bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm" data-testid="ko-sta-prima-tabela">
-          <thead>
-            <tr className="text-left text-muted-foreground">
-              <th className="px-3 py-2">{t("firma")}</th>
-              <th className="px-3 py-2">{t("radnici")}</th>
-              <th className="px-3 py-2">{t("firmaPrima")}</th>
-              <th className="px-3 py-2">{t("adrese")}</th>
+          <thead className="sticky top-0 z-10 bg-muted text-left text-xs text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2 font-medium">{t("firma")}</th>
+              <th className="px-4 py-2 font-medium">{t("radnici")}</th>
+              <th className="px-4 py-2 font-medium">{t("firmaPrima")}</th>
+              <th className="px-4 py-2 font-medium">{t("adrese")}</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border">
             {redovi.map((r) => (
-              <tr key={r.id} className="border-t border-border" data-testid={`ksp-red-${r.id}`}>
-                <td className="px-3 py-2 font-medium">{r.naziv}</td>
-                <td className="px-3 py-2">{r.radnici.length > 0 ? r.radnici.join(", ") : "—"}</td>
-                <td className="px-3 py-2">
-                  {r.firmaPrima ? (
-                    <span className="text-green-700">{t("da")}</span>
+              <tr
+                key={r.id}
+                className="transition-colors hover:bg-muted/40"
+                data-testid={`ksp-red-${r.id}`}
+              >
+                <td className="px-4 py-2.5 font-medium">{r.naziv}</td>
+                <td className="px-4 py-2.5">
+                  {r.radnici.length > 0 ? (
+                    r.radnici.join(", ")
                   ) : (
-                    <span className="text-muted-foreground">
-                      {t("ne")}
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-2.5">
+                  {r.firmaPrima ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                      <span className="size-1.5 rounded-full bg-green-500" aria-hidden />
+                      {t("da")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                        {t("ne")}
+                      </span>
                       {r.razlog && (
-                        <span className="ml-1 text-xs text-muted-foreground">({t(RAZLOG_KEY[r.razlog])})</span>
+                        <span className="text-xs text-muted-foreground">{t(RAZLOG_KEY[r.razlog])}</span>
                       )}
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-muted-foreground">{r.adrese.length > 0 ? r.adrese.join(", ") : "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">
+                  {r.adrese.length > 0 ? r.adrese.join(", ") : "—"}
+                </td>
               </tr>
             ))}
+            {redovi.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
+                  {t("prazno")}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -877,6 +877,9 @@
       "trenutna": "Aktuelles Passwort",
       "nova": "Neues Passwort (min. 8)",
       "potvrda": "Neues Passwort bestätigen",
+      "prijavljenKao": "Angemeldet als",
+      "prikaziLozinku": "Passwort anzeigen",
+      "sakrijLozinku": "Passwort verbergen",
       "dugme": "Passwort ändern",
       "uToku": "Wird geändert…",
       "uspjeh": "Passwort geändert.",
@@ -889,7 +892,9 @@
     },
     "reminders": {
       "naslov": "E-Mail-Erinnerungen",
-      "opis": "Wie viele Tage vor dem Fälligkeitstermin eine Erinnerung gesendet wird. Das System prüft die Termine täglich."
+      "opis": "Wie viele Tage vor dem Fälligkeitstermin eine Erinnerung gesendet wird. Das System prüft die Termine täglich.",
+      "grupaRaspored": "Sendeplan",
+      "grupaPrimaoci": "Kunden-E-Mails & Hinweise"
     },
     "vrste": {
       "naslov": "Prüfungsarten",
@@ -987,6 +992,8 @@
       "radnici": "Zugewiesene Mitarbeiter",
       "firmaPrima": "Firma erhält?",
       "adrese": "Firmenadressen",
+      "sazetak": "{prima} von {ukupno} Firmen erhalten Erinnerungen",
+      "prazno": "Keine Firmen anzuzeigen.",
       "da": "Ja",
       "ne": "Nein",
       "globalnoIskljucenoBanner": "Der globale Schalter „{prekidac}“ ist deaktiviert — derzeit erhält keine Firma Erinnerungen, unabhängig von den Einzeleinstellungen. Oben in den Einstellungen aktivieren.",

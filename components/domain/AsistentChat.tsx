@@ -59,7 +59,7 @@ export function AsistentChat({
             if (!lastOrig || lastOrig.role !== "assistant") return prev
             const last = { ...lastOrig, tools: [...(lastOrig.tools ?? [])] }
             if (ev.type === "text") last.text += ev.text
-            else if (ev.type === "tool") last.tools = [...last.tools, ev.tool]
+            else if (ev.type === "tool") last.tools = [...last.tools, ev.label]
             else if (ev.type === "proposal") last.proposal = ev.data
             else if (ev.type === "error") last.text += t("greskaEvent", { poruka: ev.message })
             const next = [...prev]
@@ -84,7 +84,7 @@ export function AsistentChat({
 
   return (
     <div className="flex h-[calc(100vh-10rem)] flex-col">
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-2" data-testid="chat-poruke">
+      <div ref={scrollRef} role="log" aria-live="polite" aria-busy={busy} className="flex-1 space-y-3 overflow-y-auto p-2" data-testid="chat-poruke">
         {poruke.length === 0 && (
           <p className="text-sm text-muted-foreground">{t("prazno")}</p>
         )}

@@ -877,6 +877,9 @@
       "trenutna": "Trenutna lozinka",
       "nova": "Nova lozinka (min 8)",
       "potvrda": "Potvrdi novu lozinku",
+      "prijavljenKao": "Prijavljen kao",
+      "prikaziLozinku": "Prikaži lozinku",
+      "sakrijLozinku": "Sakrij lozinku",
       "dugme": "Promijeni lozinku",
       "uToku": "Mijenjam…",
       "uspjeh": "Lozinka je promijenjena.",
@@ -889,7 +892,9 @@
     },
     "reminders": {
       "naslov": "Email podsjetnici",
-      "opis": "Koliko dana prije roka dospijeća se šalje podsjetnik. Sistem dnevno provjerava termine."
+      "opis": "Koliko dana prije roka dospijeća se šalje podsjetnik. Sistem dnevno provjerava termine.",
+      "grupaRaspored": "Raspored slanja",
+      "grupaPrimaoci": "Slanje firmama i obavijesti"
     },
     "vrste": {
       "naslov": "Vrste pregleda",
@@ -987,6 +992,8 @@
       "radnici": "Dodijeljeni radnici",
       "firmaPrima": "Firma prima?",
       "adrese": "Adrese firme",
+      "sazetak": "{prima} od {ukupno} firmi prima podsjetnike",
+      "prazno": "Nema firmi za prikaz.",
       "da": "Da",
       "ne": "Ne",
       "globalnoIskljucenoBanner": "Globalni prekidač „{prekidac}“ je isključen — trenutno nijedna firma ne prima podsjetnike, bez obzira na pojedinačne postavke. Uključi ga u postavkama iznad.",

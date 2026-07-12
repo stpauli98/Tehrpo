@@ -877,6 +877,9 @@
       "trenutna": "Current password",
       "nova": "New password (min 8)",
       "potvrda": "Confirm new password",
+      "prijavljenKao": "Signed in as",
+      "prikaziLozinku": "Show password",
+      "sakrijLozinku": "Hide password",
       "dugme": "Change password",
       "uToku": "Changing…",
       "uspjeh": "Password changed.",
@@ -889,7 +892,9 @@
     },
     "reminders": {
       "naslov": "Email reminders",
-      "opis": "How many days before the due date a reminder is sent. The system checks appointments daily."
+      "opis": "How many days before the due date a reminder is sent. The system checks appointments daily.",
+      "grupaRaspored": "Sending schedule",
+      "grupaPrimaoci": "Client emails & notices"
     },
     "vrste": {
       "naslov": "Check types",
@@ -987,6 +992,8 @@
       "radnici": "Assigned workers",
       "firmaPrima": "Client receives?",
       "adrese": "Client addresses",
+      "sazetak": "{prima} of {ukupno} clients receive reminders",
+      "prazno": "No clients to show.",
       "da": "Yes",
       "ne": "No",
       "globalnoIskljucenoBanner": "The global switch “{prekidac}” is off — no client currently receives reminders, regardless of individual settings. Enable it in the settings above.",

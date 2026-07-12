@@ -5,6 +5,7 @@ import { runChat, type ChatTurn, type ChatEvent } from "@/lib/claude/chat"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { rateLimitWindows, prekoracenLimit } from "@/lib/claude/rate-limit"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -14,10 +15,6 @@ const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namesp
 const bodySchema = z.object({
   konverzacija_id: z.string().uuid(),
   userText: z.string().min(1).max(4000),
-  history: z
-    .array(z.object({ role: z.enum(["user", "assistant"]), text: z.string() }))
-    .max(40)
-    .default([]),
 })
 
 export async function POST(req: Request): Promise<Response> {
@@ -44,9 +41,38 @@ export async function POST(req: Request): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     })
   }
-  const { konverzacija_id, userText, history } = parsed
+  const { konverzacija_id, userText } = parsed
 
   const supabase = await createServerSupabaseClient()
+
+  // Rate-limit: sliding-window nad vlastitim user porukama (prije upisa nove).
+  const { minuteAgo, dayAgo } = rateLimitWindows(Date.now())
+  const [minRes, dayRes] = await Promise.all([
+    supabase.from("chat_poruke").select("id", { count: "exact", head: true })
+      .eq("korisnik_id", korisnik.id).eq("uloga", "user").gte("created_at", minuteAgo),
+    supabase.from("chat_poruke").select("id", { count: "exact", head: true })
+      .eq("korisnik_id", korisnik.id).eq("uloga", "user").gte("created_at", dayAgo),
+  ])
+  if (prekoracenLimit(minRes.count ?? 0, dayRes.count ?? 0)) {
+    return new Response(JSON.stringify({ error: t("previseZahtjeva") }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "60" },
+    })
+  }
+
+  // Historija se rekonstruiše sa servera (ne vjeruje se klijentu): posljednjih 40
+  // poruka ovog razgovora u vlasništvu korisnika, obrnuto u ascending za model.
+  const { data: priorRows } = await supabase
+    .from("chat_poruke")
+    .select("uloga, sadrzaj")
+    .eq("konverzacija_id", konverzacija_id)
+    .eq("korisnik_id", korisnik.id)
+    .order("created_at", { ascending: false })
+    .limit(40)
+  const history: ChatTurn[] = (priorRows ?? [])
+    .reverse()
+    .map((r) => ({ role: r.uloga === "assistant" ? "assistant" : "user", text: r.sadrzaj }))
+
   // Persist user poruku odmah (prije streama) — greška mora spriječiti stream
   const { error: userErr } = await supabase
     .from("chat_poruke")
@@ -63,7 +89,7 @@ export async function POST(req: Request): Promise<Response> {
     async start(controller) {
       const send = (e: ChatEvent) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"))
       try {
-        const { assistantText, toolsUsed } = await runChat(history as ChatTurn[], userText, send)
+        const { assistantText, toolsUsed } = await runChat(history, userText, send)
         // Persist assistant poruku (sa korištenim alatima u alat_pozivi)
         const { error: asstErr } = await supabase.from("chat_poruke").insert({
           konverzacija_id,

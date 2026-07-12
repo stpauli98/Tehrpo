@@ -32,7 +32,6 @@ export function AsistentChat({
   async function send(userText: string) {
     if (busy) return
     setBusy(true)
-    const history = poruke.map((p) => ({ role: p.role, text: p.text }))
     setPoruke((prev) => [...prev, { role: "user", text: userText }, { role: "assistant", text: "", tools: [] }])
     scrollDown()
 
@@ -40,7 +39,7 @@ export function AsistentChat({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ konverzacija_id: konverzacijaId, userText, history }),
+        body: JSON.stringify({ konverzacija_id: konverzacijaId, userText }),
       })
       if (!res.body) throw new Error(t("nemaStream"))
       const reader = res.body.getReader()

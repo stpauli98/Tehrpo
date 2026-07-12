@@ -1090,7 +1090,8 @@
       "greskaAsistenta": "Assistant error",
       "bezTeksta": "(no text)",
       "neovlasten": "Not signed in",
-      "zabranjeno": "You do not have access to the assistant"
+      "zabranjeno": "You do not have access to the assistant",
+      "previseZahtjeva": "Too many requests — wait a moment and try again."
     }
   },
   "email": {

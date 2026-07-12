@@ -1090,7 +1090,8 @@
       "greskaAsistenta": "Greška asistenta",
       "bezTeksta": "(bez teksta)",
       "neovlasten": "Niste prijavljeni",
-      "zabranjeno": "Nemate pristup asistentu"
+      "zabranjeno": "Nemate pristup asistentu",
+      "previseZahtjeva": "Previše zahtjeva — sačekaj trenutak pa pokušaj ponovo."
     }
   },
   "email": {

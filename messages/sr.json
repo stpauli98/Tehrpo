@@ -1088,7 +1088,9 @@
       "neispravanZahtjev": "Neispravan zahtjev",
       "snimanjeNijeUspjelo": "Snimanje poruke nije uspjelo",
       "greskaAsistenta": "Greška asistenta",
-      "bezTeksta": "(bez teksta)"
+      "bezTeksta": "(bez teksta)",
+      "neovlasten": "Niste prijavljeni",
+      "zabranjeno": "Nemate pristup asistentu"
     }
   },
   "email": {

@@ -1088,7 +1088,9 @@
       "neispravanZahtjev": "Ungültige Anfrage",
       "snimanjeNijeUspjelo": "Speichern der Nachricht fehlgeschlagen",
       "greskaAsistenta": "Fehler des Assistenten",
-      "bezTeksta": "(kein Text)"
+      "bezTeksta": "(kein Text)",
+      "neovlasten": "Nicht angemeldet",
+      "zabranjeno": "Kein Zugriff auf den Assistenten"
     }
   },
   "email": {

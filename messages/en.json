@@ -1088,7 +1088,9 @@
       "neispravanZahtjev": "Invalid request",
       "snimanjeNijeUspjelo": "Saving the message failed",
       "greskaAsistenta": "Assistant error",
-      "bezTeksta": "(no text)"
+      "bezTeksta": "(no text)",
+      "neovlasten": "Not signed in",
+      "zabranjeno": "You do not have access to the assistant"
     }
   },
   "email": {

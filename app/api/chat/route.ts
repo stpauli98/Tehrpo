@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { runChat, type ChatTurn, type ChatEvent } from "@/lib/claude/chat"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -20,6 +21,20 @@ const bodySchema = z.object({
 })
 
 export async function POST(req: Request): Promise<Response> {
+  const korisnik = await getTrenutniKorisnik()
+  if (!korisnik) {
+    return new Response(JSON.stringify({ error: t("neovlasten") }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+  if (korisnik.uloga === "pregled") {
+    return new Response(JSON.stringify({ error: t("zabranjeno") }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+
   let parsed: z.infer<typeof bodySchema>
   try {
     parsed = bodySchema.parse(await req.json())

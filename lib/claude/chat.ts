@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { env } from "@/lib/env"
-import { SISTEM_PROMPT } from "./prompts"
+import { SISTEM_PROMPT, datumNapomena } from "./prompts"
 import { CHAT_TOOLS, toolLabel, executeTool, type ProposalData } from "./tools"
 import { mockChatEvents } from "./mock"
 
@@ -48,7 +48,7 @@ export async function runChat(
     const stream = client.messages.stream({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
-      system: SISTEM_PROMPT,
+      system: SISTEM_PROMPT + datumNapomena(new Date().toISOString().slice(0, 10)),
       tools: CHAT_TOOLS,
       messages,
     })

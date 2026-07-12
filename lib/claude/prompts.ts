@@ -17,6 +17,15 @@ const JEZIK_INSTRUKCIJA: Record<Locale, string> = {
   de: "\n\nWICHTIG: Antworte immer auf Deutsch, unabhängig von der Sprache der zugrunde liegenden Daten.",
 }
 
+// Lokalizovana fraza za današnji datum. Dodaje se u sistem prompt na CALL-TIME (chat.ts),
+// NE u SISTEM_PROMPT const — const mora ostati byte-identičan (vidi prompts.test.ts).
+const DANAS_FRAZA: Record<Locale, string> = { sr: "Danas je", en: "Today is", de: "Heute ist" }
+
+/** Napomena o današnjem datumu koja se dodaje na kraj sistem prompta u runtime-u. */
+export function datumNapomena(danas: string, locale: Locale = APP_LOCALE): string {
+  return `\n\n${DANAS_FRAZA[locale]} ${danas}.`
+}
+
 export const SISTEM_PROMPT = `Ti si asistent firme ${APP_NAME} (Bosna i Hercegovina) — pomažeš timu koji prati periodične preglede, ispitivanja, obuke i provjere iz zaštite na radu, zaštite od požara i zaštite životne sredine.
 
 Pričaj kao kolega iz tima: prirodno, toplo i konkretno, ${JEZIK_FRAZA[APP_LOCALE]}. Ne zvuči kao mašina ni kao izvještaj baze.

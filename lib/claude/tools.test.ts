@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest"
-import { toolLabel } from "./tools"
+import { toolLabel, validIsoDatum, CHAT_TOOLS } from "./tools"
 
 describe("toolLabel (sr — default, mora ostati byte-identičan)", () => {
   it("vraća postojeće bosanske labele za sve poznate alate", () => {
@@ -65,5 +65,26 @@ describe("toolLabel (default parametar prati APP_LOCALE)", () => {
     const { toolLabel: deToolLabel } = await import("./tools")
     expect(deToolLabel("predloziZapisnik")).toBe("Protokollentwurf wird vorbereitet…")
     expect(deToolLabel("nepoznatAlat")).toBe("Arbeite…")
+  })
+})
+
+describe("validIsoDatum", () => {
+  it("prihvata YYYY-MM-DD", () => {
+    expect(validIsoDatum("2026-07-12")).toBe(true)
+  })
+  it("odbija druge formate i smeće", () => {
+    expect(validIsoDatum("2026/07/12")).toBe(false)
+    expect(validIsoDatum("12.07.2026")).toBe(false)
+    expect(validIsoDatum("garbage")).toBe(false)
+    expect(validIsoDatum("")).toBe(false)
+  })
+})
+
+describe("searchTermini datumski parametri", () => {
+  it("input_schema ima rok_od i rok_do", () => {
+    const alat = CHAT_TOOLS.find((t) => t.name === "searchTermini")
+    const props = alat?.input_schema.properties as Record<string, unknown>
+    expect(props.rok_od).toBeDefined()
+    expect(props.rok_do).toBeDefined()
   })
 })

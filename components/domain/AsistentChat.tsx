@@ -32,7 +32,6 @@ export function AsistentChat({
   async function send(userText: string) {
     if (busy) return
     setBusy(true)
-    const history = poruke.map((p) => ({ role: p.role, text: p.text }))
     setPoruke((prev) => [...prev, { role: "user", text: userText }, { role: "assistant", text: "", tools: [] }])
     scrollDown()
 
@@ -40,7 +39,7 @@ export function AsistentChat({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ konverzacija_id: konverzacijaId, userText, history }),
+        body: JSON.stringify({ konverzacija_id: konverzacijaId, userText }),
       })
       if (!res.body) throw new Error(t("nemaStream"))
       const reader = res.body.getReader()
@@ -60,7 +59,7 @@ export function AsistentChat({
             if (!lastOrig || lastOrig.role !== "assistant") return prev
             const last = { ...lastOrig, tools: [...(lastOrig.tools ?? [])] }
             if (ev.type === "text") last.text += ev.text
-            else if (ev.type === "tool") last.tools = [...last.tools, ev.tool]
+            else if (ev.type === "tool") last.tools = [...last.tools, ev.label]
             else if (ev.type === "proposal") last.proposal = ev.data
             else if (ev.type === "error") last.text += t("greskaEvent", { poruka: ev.message })
             const next = [...prev]
@@ -85,7 +84,7 @@ export function AsistentChat({
 
   return (
     <div className="flex h-[calc(100vh-10rem)] flex-col">
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-2" data-testid="chat-poruke">
+      <div ref={scrollRef} role="log" aria-live="polite" aria-busy={busy} className="flex-1 space-y-3 overflow-y-auto p-2" data-testid="chat-poruke">
         {poruke.length === 0 && (
           <p className="text-sm text-muted-foreground">{t("prazno")}</p>
         )}

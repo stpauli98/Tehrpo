@@ -57,12 +57,14 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   {
     name: "searchTermini",
     description:
-      "Pretraži termine (preglede/provjere). Vrati listu termina sa klijentom, vrstom, lokacijom, rokom i statusom. Koristi za upite tipa 'koji termini kasne', 'termini za WAIKIKI', 'šta dospijeva ovog mjeseca'.",
+      "Pretraži termine (preglede/provjere). Vrati listu termina sa klijentom, vrstom, lokacijom, rokom i statusom. Koristi za upite tipa 'koji termini kasne', 'termini za WAIKIKI', 'šta dospijeva ovog mjeseca'. Podržava i datumski raspon preko rok_od/rok_do (YYYY-MM-DD) nad rokom dospijeća.",
     input_schema: {
       type: "object",
       properties: {
         pretraga: { type: "string", description: "Tekst za pretragu po nazivu klijenta ili lokacije (opcionalno)" },
         status: { type: "string", enum: ["kasni", "planirano", "zakazano", "izvrseno", "otkazano"], description: "Filter po statusu (opcionalno)" },
+        rok_od: { type: "string", description: "Donja granica roka dospijeća, uključivo, format YYYY-MM-DD (opcionalno)" },
+        rok_do: { type: "string", description: "Gornja granica roka dospijeća, uključivo, format YYYY-MM-DD (opcionalno)" },
         limit: { type: "number", description: "Maks. broj rezultata (default 20)" },
       },
     },
@@ -97,6 +99,12 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   },
 ]
 
+const ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/
+/** Validacija YYYY-MM-DD — sprječava ubacivanje proizvoljne vrijednosti u PostgREST filter. */
+export function validIsoDatum(s: string): boolean {
+  return ISO_DATUM.test(s)
+}
+
 const MAX = 20
 
 export async function executeTool(name: string, input: unknown): Promise<ToolResult> {
@@ -114,6 +122,8 @@ export async function executeTool(name: string, input: unknown): Promise<ToolRes
       q = q.or(`klijent_naziv.ilike.%${p}%,lokacija_naziv.ilike.%${p}%`)
     }
     if (typeof args.status === "string") q = q.eq("status_izvedeni", args.status)
+    if (typeof args.rok_od === "string" && validIsoDatum(args.rok_od)) q = q.gte("rok_dospijeca", args.rok_od)
+    if (typeof args.rok_do === "string" && validIsoDatum(args.rok_do)) q = q.lte("rok_dospijeca", args.rok_do)
     const { data, error } = await q
     if (error) return { forModel: `Greška pri pretrazi termina: ${error.message}` }
     return { forModel: JSON.stringify(data ?? []) }

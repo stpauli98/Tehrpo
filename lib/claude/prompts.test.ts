@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest"
-import { SISTEM_PROMPT } from "./prompts"
+import { SISTEM_PROMPT, datumNapomena } from "./prompts"
 
 describe("SISTEM_PROMPT (sr — default, mora ostati byte-identičan)", () => {
   it("sadrži bosansku jezičku instrukciju u osnovnoj rečenici", () => {
@@ -58,5 +58,18 @@ describe("SISTEM_PROMPT (en/de — parametrizacija po APP_LOCALE)", () => {
       "WICHTIG: Antworte immer auf Deutsch, unabhängig von der Sprache der zugrunde liegenden Daten.",
     )
     expect(dePrompt).toContain("predloziZapisnik")
+  })
+})
+
+describe("datumNapomena (call-time datum, ne dira SISTEM_PROMPT const)", () => {
+  it("sr: 'Danas je <datum>.' sa vodećim praznim redovima", () => {
+    expect(datumNapomena("2026-07-12", "sr")).toBe("\n\nDanas je 2026-07-12.")
+  })
+  it("en/de fraze", () => {
+    expect(datumNapomena("2026-07-12", "en")).toBe("\n\nToday is 2026-07-12.")
+    expect(datumNapomena("2026-07-12", "de")).toBe("\n\nHeute ist 2026-07-12.")
+  })
+  it("SISTEM_PROMPT const ostaje bez datuma (byte-identičan)", () => {
+    expect(SISTEM_PROMPT).not.toContain("Danas je")
   })
 })

@@ -53,6 +53,13 @@ export async function POST(req: Request): Promise<Response> {
     supabase.from("chat_poruke").select("id", { count: "exact", head: true })
       .eq("korisnik_id", korisnik.id).eq("uloga", "user").gte("created_at", dayAgo),
   ])
+  if (minRes.error || dayRes.error) {
+    console.error("Rate-limit count nije uspio:", minRes.error?.message ?? dayRes.error?.message)
+    return new Response(JSON.stringify({ error: t("greskaAsistenta") }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
   if (prekoracenLimit(minRes.count ?? 0, dayRes.count ?? 0)) {
     return new Response(JSON.stringify({ error: t("previseZahtjeva") }), {
       status: 429,
@@ -62,13 +69,14 @@ export async function POST(req: Request): Promise<Response> {
 
   // Historija se rekonstruiše sa servera (ne vjeruje se klijentu): posljednjih 40
   // poruka ovog razgovora u vlasništvu korisnika, obrnuto u ascending za model.
-  const { data: priorRows } = await supabase
+  const { data: priorRows, error: histErr } = await supabase
     .from("chat_poruke")
     .select("uloga, sadrzaj")
     .eq("konverzacija_id", konverzacija_id)
     .eq("korisnik_id", korisnik.id)
     .order("created_at", { ascending: false })
     .limit(40)
+  if (histErr) console.error("Učitavanje historije nije uspjelo:", histErr.message)
   const history: ChatTurn[] = (priorRows ?? [])
     .reverse()
     .map((r) => ({ role: r.uloga === "assistant" ? "assistant" : "user", text: r.sadrzaj }))

@@ -28,11 +28,11 @@ export default async function PoslatiMejloviPage({
   const tip = jeMejlTip(sp.tip) ? sp.tip : null
   const status = jeMejlStatus(sp.status) ? sp.status : null
 
-  const { redovi, ukupno } = await dohvatiPoslateMejlove({
+  const { redovi } = await dohvatiPoslateMejlove({
     tip,
     status,
     od: sp.od || null,
-    do: sp.do || null,
+    do: sp.do ? `${sp.do}T23:59:59` : null,
     samoGreske: sp.samo_greske === "1",
     samoNepregledane: sp.nepregledano === "1",
   })
@@ -105,7 +105,6 @@ export default async function PoslatiMejloviPage({
         </button>
       </form>
       <PoslatiMejloviTabela redovi={redovi} />
-      <p className="text-sm text-muted-foreground">{ukupno}</p>
     </div>
   )
 }

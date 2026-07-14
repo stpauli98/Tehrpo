@@ -14,6 +14,7 @@ import {
   ScrollText,
   Settings,
   ChevronsLeft,
+  Mail,
 } from "lucide-react"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { href: href("/plan-aktivnosti"), labelKey: "planAktivnosti",  icon: Calendar },
   { href: href("/obilasci"),        labelKey: "obilasci",        icon: Map },
   { href: href("/klijenti"),        labelKey: "klijenti",        icon: Users },
+  { href: href("/poslati-mejlovi"), labelKey: "poslatiMejlovi",  icon: Mail },
   { href: href("/asistent"),        labelKey: "asistent",        icon: Bot },
   { href: href("/zapisnici"),       labelKey: "zapisnici",       icon: FileText },
   { href: href("/aktivnost"),       labelKey: "aktivnost",       icon: ScrollText },
@@ -39,7 +41,7 @@ const COLLAPSE_THRESHOLD = 140 // ispod ove širine se ponaša kao skupljeno i s
 const RESIZE_STEP = 16         // korak za resize sa tastature (strelice)
 const STORAGE_KEY = "tehpro:sidebar-width"
 
-export function Sidebar() {
+export function Sidebar({ mejlGreske = 0 }: { mejlGreske?: number }) {
   const pathname = usePathname()
   const uloga = useUloga()
   const t = useTranslations("shell.nav")
@@ -129,13 +131,13 @@ export function Sidebar() {
     [toggle],
   )
 
-  const renderItem = ({ href, labelKey, icon: Icon }: { href: string; labelKey: string; icon: typeof Settings }) => {
-    const active = pathname.startsWith(href)
+  const renderItem = ({ href: itemHref, labelKey, icon: Icon }: { href: string; labelKey: string; icon: typeof Settings }) => {
+    const active = pathname.startsWith(itemHref)
     const label = t(labelKey)
     return (
       <Link
-        key={href}
-        href={href}
+        key={itemHref}
+        href={itemHref}
         prefetch
         aria-label={label}
         aria-current={active ? "page" : undefined}
@@ -150,6 +152,11 @@ export function Sidebar() {
       >
         <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
         {!collapsed && <span className="min-w-0 truncate">{label}</span>}
+        {itemHref === href("/poslati-mejlovi") && mejlGreske > 0 && !collapsed && (
+          <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-medium text-white">
+            {mejlGreske}
+          </span>
+        )}
         {collapsed && (
           <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-md group-hover/item:block">
             {label}

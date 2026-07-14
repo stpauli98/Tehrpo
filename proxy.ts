@@ -12,7 +12,7 @@ import { href } from "@/i18n/routes"
 // href() identitet pa se ništa ne mijenja; bez ovoga bi za de/en zahtjev za npr.
 // /anmeldung (prevedeni /prijava) bio tretiran kao zaštićena ruta → redirekcija
 // nazad na href("/prijava") === "/anmeldung" → beskonačna petlja.
-const PUBLIC = [href("/prijava"), href("/zaboravljena-lozinka"), "/auth", "/api/cron"]
+const PUBLIC = [href("/prijava"), href("/zaboravljena-lozinka"), "/auth", "/api/cron", "/api/webhooks/resend"]
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl

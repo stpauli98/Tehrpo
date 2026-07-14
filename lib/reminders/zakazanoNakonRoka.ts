@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/db/types"
 import { env } from "@/lib/env"
 import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
+import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
 import { parseEmailList } from "@/lib/reminders/recipients"
 import { zakazanoNakonRokaSubject, zakazanoNakonRokaHtml } from "@/lib/email/templates"
 
@@ -29,7 +30,7 @@ export async function posaljiZakazanoNakonRoka(
     // idempotencijski slot u termin_zakazano_obavijest).
     const { data: row, error: rowErr } = await supabase
       .from("termini_view")
-      .select("klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca")
+      .select("klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca")
       .eq("id", args.terminId)
       .maybeSingle()
     if (rowErr || !row?.klijent_naziv || !row.vrsta_naziv || !row.rok_dospijeca) {
@@ -48,17 +49,24 @@ export async function posaljiZakazanoNakonRoka(
     if (to.length === 0) return { poslato: false, razlog: "preskoceno" }
 
     // Pošalji (best-effort; send() može baciti — catch normalizuje na greska).
-    const res = await send({
-      to,
-      subject: zakazanoNakonRokaSubject({ vrsta: row.vrsta_naziv, klijent: row.klijent_naziv }),
-      html: zakazanoNakonRokaHtml({
-        klijent: row.klijent_naziv,
-        vrsta: row.vrsta_naziv,
-        rok: row.rok_dospijeca,
-        zakazan: args.datumZakazan,
-        lokacija: row.lokacija_naziv,
-      }),
-    })
+    const res = await posaljiIzabiljezi(
+      supabase,
+      {
+        to,
+        subject: zakazanoNakonRokaSubject({ vrsta: row.vrsta_naziv, klijent: row.klijent_naziv }),
+        html: zakazanoNakonRokaHtml({
+          klijent: row.klijent_naziv,
+          vrsta: row.vrsta_naziv,
+          rok: row.rok_dospijeca,
+          zakazan: args.datumZakazan,
+          lokacija: row.lokacija_naziv,
+        }),
+        tip: "zakazano_nakon_roka",
+        terminId: args.terminId,
+        klijentId: row.klijent_id,
+      },
+      send,
+    )
     return { poslato: true, to, dryRun: res.dryRun }
   } catch (e) {
     return { poslato: false, razlog: "greska", message: e instanceof Error ? e.message : String(e) }

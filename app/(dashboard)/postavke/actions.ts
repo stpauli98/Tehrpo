@@ -9,7 +9,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { validirajNovuLozinku } from "@/lib/auth/lozinka"
 import { revalidateVrste } from "@/lib/cache"
-import { sendEmail } from "@/lib/email/resend"
+import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
 import { testEmailSubject, testEmailHtml } from "@/lib/email/templates"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
@@ -265,10 +265,11 @@ export async function posaljiTestniEmail(korisnikId: string): Promise<TestEmailR
   if (!data?.email) return { ok: false, message: t("korisnikNemaEmail") }
 
   try {
-    const res = await sendEmail({
+    const res = await posaljiIzabiljezi(supabase, {
       to: [data.email],
       subject: testEmailSubject(),
       html: testEmailHtml({ ime: data.ime }),
+      tip: "test",
     })
     return { ok: true, dryRun: res.dryRun, email: data.email, primaPodsjetnike: data.prima_podsjetnike }
   } catch (e) {

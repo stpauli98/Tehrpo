@@ -3,6 +3,7 @@ import { createTranslator } from "next-intl"
 import type { Database } from "@/db/types"
 import { env } from "@/lib/env"
 import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
+import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
 import { buildTerminIcs } from "@/lib/email/ics"
 import { reminderSubject, reminderHtml, reminderHtmlFirma } from "@/lib/email/templates"
 import { recipientsForKlijent, firmaRecipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
@@ -114,7 +115,16 @@ export async function runReminders(
     // Pomoćna: pošalji jedan kanal + audit po kanalu.
     const posalji = async (kanal: "interni" | "firma", args: SendArgs): Promise<Outcome> => {
       try {
-        const res = await send(args)
+        const res = await posaljiIzabiljezi(
+          supabase,
+          {
+            ...args,
+            tip: kanal === "interni" ? "podsjetnik_interni" : "podsjetnik_firma",
+            terminId: r.termin_id!,
+            klijentId: r.klijent_id,
+          },
+          send,
+        )
         const primaoci = [...(args.to ?? []), ...(args.bcc ?? [])]
         if (res.dryRun) return { kind: "sent", terminId: r.termin_id!, danaPrije: r.dana_prije!, to: primaoci, resendId: res.id, dryRun: true }
         const { error: insErr } = await supabase.from("podsjetnici").insert({

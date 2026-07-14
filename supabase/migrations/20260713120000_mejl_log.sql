@@ -85,3 +85,40 @@ revoke execute on function zabiljezi_mejl_log(mejl_tip,text[],text,uuid,uuid,tex
   from public, anon;
 grant  execute on function zabiljezi_mejl_log(mejl_tip,text[],text,uuid,uuid,text,mejl_status,text)
   to authenticated, service_role;
+
+-- 6) Rang dostave + atomsko napredovanje statusa
+create or replace function mejl_dostava_rang(s mejl_dostava_status)
+returns int language sql immutable as $$
+  select case s
+    when 'nepoznato'       then 0
+    when 'delivered'       then 1
+    when 'opened'          then 2
+    when 'delivery_failed' then 3
+    when 'bounced'         then 4
+    when 'complained'      then 5
+  end;
+$$;
+
+create or replace function azuriraj_mejl_dostavu(
+  p_resend_id text,
+  p_status    mejl_dostava_status,
+  p_at        timestamptz
+) returns int
+language plpgsql security definer set search_path = public as $$
+declare v int;
+begin
+  update mejl_log
+     set delivery_status = p_status,
+         delivery_at     = p_at,
+         pregledano_at   = case when p_status in ('bounced','complained','delivery_failed')
+                                then null else pregledano_at end,
+         pregledano_od   = case when p_status in ('bounced','complained','delivery_failed')
+                                then null else pregledano_od end
+   where resend_id = p_resend_id
+     and mejl_dostava_rang(p_status) > mejl_dostava_rang(delivery_status);
+  get diagnostics v = row_count;
+  return v;  -- 0 = nepoznat id ILI niži/isti rang (oba OK)
+end; $$;
+
+revoke execute on function azuriraj_mejl_dostavu(text,mejl_dostava_status,timestamptz) from public, anon, authenticated;
+grant  execute on function azuriraj_mejl_dostavu(text,mejl_dostava_status,timestamptz) to service_role;

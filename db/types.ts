@@ -500,6 +500,93 @@ export type Database = {
           },
         ]
       }
+      mejl_log: {
+        Row: {
+          created_at: string
+          delivery_at: string | null
+          delivery_status: Database["public"]["Enums"]["mejl_dostava_status"]
+          greska: string | null
+          id: string
+          klijent_id: string | null
+          pregledano_at: string | null
+          pregledano_od: string | null
+          primaoci: string[]
+          resend_id: string | null
+          status: Database["public"]["Enums"]["mejl_status"]
+          subject: string
+          termin_id: string | null
+          tip: Database["public"]["Enums"]["mejl_tip"]
+        }
+        Insert: {
+          created_at?: string
+          delivery_at?: string | null
+          delivery_status?: Database["public"]["Enums"]["mejl_dostava_status"]
+          greska?: string | null
+          id?: string
+          klijent_id?: string | null
+          pregledano_at?: string | null
+          pregledano_od?: string | null
+          primaoci?: string[]
+          resend_id?: string | null
+          status: Database["public"]["Enums"]["mejl_status"]
+          subject: string
+          termin_id?: string | null
+          tip: Database["public"]["Enums"]["mejl_tip"]
+        }
+        Update: {
+          created_at?: string
+          delivery_at?: string | null
+          delivery_status?: Database["public"]["Enums"]["mejl_dostava_status"]
+          greska?: string | null
+          id?: string
+          klijent_id?: string | null
+          pregledano_at?: string | null
+          pregledano_od?: string | null
+          primaoci?: string[]
+          resend_id?: string | null
+          status?: Database["public"]["Enums"]["mejl_status"]
+          subject?: string
+          termin_id?: string | null
+          tip?: Database["public"]["Enums"]["mejl_tip"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mejl_log_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_pregledano_od_fkey"
+            columns: ["pregledano_od"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       podsjetnici: {
         Row: {
           dana_prije: number
@@ -834,6 +921,65 @@ export type Database = {
         }
         Relationships: []
       }
+      mejl_log_view: {
+        Row: {
+          created_at: string | null
+          delivery_at: string | null
+          delivery_status:
+            | Database["public"]["Enums"]["mejl_dostava_status"]
+            | null
+          greska: string | null
+          id: string | null
+          klijent_id: string | null
+          klijent_naziv: string | null
+          pregledano_at: string | null
+          pregledano_od: string | null
+          pregledao_ime: string | null
+          primaoci: string[] | null
+          resend_id: string | null
+          status: Database["public"]["Enums"]["mejl_status"] | null
+          subject: string | null
+          termin_id: string | null
+          tip: Database["public"]["Enums"]["mejl_tip"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mejl_log_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_klijent_id_fkey"
+            columns: ["klijent_id"]
+            isOneToOne: false
+            referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_pregledano_od_fkey"
+            columns: ["pregledano_od"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mejl_log_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       termini_view: {
         Row: {
           created_at: string | null
@@ -893,6 +1039,14 @@ export type Database = {
       }
     }
     Functions: {
+      azuriraj_mejl_dostavu: {
+        Args: {
+          p_at: string
+          p_resend_id: string
+          p_status: Database["public"]["Enums"]["mejl_dostava_status"]
+        }
+        Returns: number
+      }
       dodaj_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }
         Returns: string
@@ -945,6 +1099,7 @@ export type Database = {
           vrsta_naziv: string
         }[]
       }
+      get_mejl_greske_broj: { Args: never; Returns: number }
       get_opterecenje: {
         Args: { godina: number }
         Returns: {
@@ -952,6 +1107,36 @@ export type Database = {
           kasni: number
           mjesec: number
           u_planu: number
+          ukupno: number
+        }[]
+      }
+      get_poslati_mejlovi: {
+        Args: {
+          p_do?: string
+          p_limit?: number
+          p_od?: string
+          p_offset?: number
+          p_samo_greske?: boolean
+          p_samo_nepregledane?: boolean
+          p_status?: Database["public"]["Enums"]["mejl_status"]
+          p_tip?: Database["public"]["Enums"]["mejl_tip"]
+        }
+        Returns: {
+          created_at: string
+          delivery_at: string
+          delivery_status: Database["public"]["Enums"]["mejl_dostava_status"]
+          greska: string
+          id: string
+          klijent_id: string
+          klijent_naziv: string
+          pregledano_at: string
+          pregledao_ime: string
+          primaoci: string[]
+          resend_id: string
+          status: Database["public"]["Enums"]["mejl_status"]
+          subject: string
+          termin_id: string
+          tip: Database["public"]["Enums"]["mejl_tip"]
           ukupno: number
         }[]
       }
@@ -968,7 +1153,12 @@ export type Database = {
       ima_pristup_klijentu: { Args: { p_klijent_id: string }; Returns: boolean }
       je_admin: { Args: never; Returns: boolean }
       je_pregled: { Args: never; Returns: boolean }
+      mejl_dostava_rang: {
+        Args: { s: Database["public"]["Enums"]["mejl_dostava_status"] }
+        Returns: number
+      }
       obrisi_stare_dogadjaje: { Args: never; Returns: number }
+      oznaci_mejl_pregledan: { Args: { p_id: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       tekst_u_uuid: { Args: { t: string }; Returns: string }
@@ -977,6 +1167,19 @@ export type Database = {
         Returns: undefined
       }
       zabiljezi_dogadjaje: { Args: { p_dogadjaji: Json }; Returns: undefined }
+      zabiljezi_mejl_log: {
+        Args: {
+          p_greska: string
+          p_klijent_id: string
+          p_primaoci: string[]
+          p_resend_id: string
+          p_status: Database["public"]["Enums"]["mejl_status"]
+          p_subject: string
+          p_termin_id: string
+          p_tip: Database["public"]["Enums"]["mejl_tip"]
+        }
+        Returns: undefined
+      }
       zabiljezi_zakazano_obavijest: {
         Args: { p_base: string[]; p_datum_zakazan: string; p_termin_id: string }
         Returns: string[]
@@ -985,6 +1188,19 @@ export type Database = {
     Enums: {
       chat_uloga: "user" | "assistant"
       korisnik_uloga: "admin" | "operater" | "pregled"
+      mejl_dostava_status:
+        | "nepoznato"
+        | "delivered"
+        | "opened"
+        | "delivery_failed"
+        | "bounced"
+        | "complained"
+      mejl_status: "poslato" | "greska_slanja"
+      mejl_tip:
+        | "podsjetnik_interni"
+        | "podsjetnik_firma"
+        | "zakazano_nakon_roka"
+        | "test"
       nacin_izvrsenja_tip: "izvrsava" | "pracenje"
       termini_status: "planirano" | "zakazano" | "izvrseno" | "otkazano"
     }
@@ -1119,6 +1335,21 @@ export const Constants = {
     Enums: {
       chat_uloga: ["user", "assistant"],
       korisnik_uloga: ["admin", "operater", "pregled"],
+      mejl_dostava_status: [
+        "nepoznato",
+        "delivered",
+        "opened",
+        "delivery_failed",
+        "bounced",
+        "complained",
+      ],
+      mejl_status: ["poslato", "greska_slanja"],
+      mejl_tip: [
+        "podsjetnik_interni",
+        "podsjetnik_firma",
+        "zakazano_nakon_roka",
+        "test",
+      ],
       nacin_izvrsenja_tip: ["izvrsava", "pracenje"],
       termini_status: ["planirano", "zakazano", "izvrseno", "otkazano"],
     },

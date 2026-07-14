@@ -122,3 +122,84 @@ end; $$;
 
 revoke execute on function azuriraj_mejl_dostavu(text,mejl_dostava_status,timestamptz) from public, anon, authenticated;
 grant  execute on function azuriraj_mejl_dostavu(text,mejl_dostava_status,timestamptz) to service_role;
+
+-- 7) "Označi pregledanim" (čisti bedž) — validira isti troslojni pristup
+create or replace function oznaci_mejl_pregledan(p_id uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare v_klijent uuid;
+begin
+  if auth.uid() is null then return; end if;
+  select klijent_id into v_klijent from mejl_log where id = p_id;
+  if not ( je_admin() or ( v_klijent is not null and ima_pristup_klijentu(v_klijent) ) ) then
+    return;  -- nema prava → tiho, bez izmjene
+  end if;
+  update mejl_log
+     set pregledano_at = now(), pregledano_od = auth.uid()
+   where id = p_id and pregledano_at is null;  -- idempotentno
+end; $$;
+revoke execute on function oznaci_mejl_pregledan(uuid) from public, anon;
+grant  execute on function oznaci_mejl_pregledan(uuid) to authenticated;
+
+-- 8) Bedž — brojač (RLS-skopiran preko security invoker)
+create or replace function get_mejl_greske_broj()
+returns int language sql stable security invoker set search_path = public as $$
+  select count(*)::int from mejl_log
+  where pregledano_at is null
+    and ( status = 'greska_slanja'
+          or delivery_status in ('bounced','complained','delivery_failed') );
+$$;
+grant execute on function get_mejl_greske_broj() to authenticated;
+
+-- 9) Read-model view (OBAVEZNO security_invoker=on → nasljeđuje RLS bazne tabele)
+create or replace view mejl_log_view
+with (security_invoker = on) as
+select m.id, m.created_at, m.tip, m.primaoci, m.subject,
+       m.termin_id, m.klijent_id, kl.naziv as klijent_naziv,
+       m.resend_id, m.status, m.greska,
+       m.delivery_status, m.delivery_at,
+       m.pregledano_at, m.pregledano_od, ko.ime as pregledao_ime
+from mejl_log m
+left join klijenti  kl on kl.id = m.klijent_id
+left join korisnici ko on ko.id = m.pregledano_od;
+grant select on mejl_log_view to authenticated;
+
+-- 10) Paginirani čitni RPC (security invoker → RLS pozivaoca)
+create or replace function get_poslati_mejlovi(
+  p_tip               mejl_tip    default null,
+  p_status            mejl_status default null,
+  p_od                timestamptz default null,
+  p_do                timestamptz default null,
+  p_samo_greske       boolean     default false,
+  p_samo_nepregledane boolean     default false,
+  p_limit             int         default 50,
+  p_offset            int         default 0
+) returns table (
+  id uuid, created_at timestamptz, tip mejl_tip, primaoci text[], subject text,
+  termin_id uuid, klijent_id uuid, klijent_naziv text, resend_id text,
+  status mejl_status, greska text, delivery_status mejl_dostava_status,
+  delivery_at timestamptz, pregledano_at timestamptz, pregledao_ime text,
+  ukupno bigint
+) language sql stable security invoker set search_path = public as $$
+  with f as (
+    select * from mejl_log_view v
+    where (p_tip    is null or v.tip = p_tip)
+      and (p_status is null or v.status = p_status)
+      and (p_od     is null or v.created_at >= p_od)
+      and (p_do     is null or v.created_at <  p_do)
+      and (not p_samo_greske
+           or v.status = 'greska_slanja'
+           or v.delivery_status in ('bounced','complained','delivery_failed'))
+      and (not p_samo_nepregledane or v.pregledano_at is null)
+  )
+  select f.id, f.created_at, f.tip, f.primaoci, f.subject, f.termin_id, f.klijent_id,
+         f.klijent_naziv, f.resend_id, f.status, f.greska, f.delivery_status,
+         f.delivery_at, f.pregledano_at, f.pregledao_ime,
+         count(*) over () as ukupno
+  from f
+  order by f.created_at desc
+  limit greatest(p_limit,0) offset greatest(p_offset,0);
+$$;
+grant execute on function
+  get_poslati_mejlovi(mejl_tip,mejl_status,timestamptz,timestamptz,boolean,boolean,int,int)
+  to authenticated;

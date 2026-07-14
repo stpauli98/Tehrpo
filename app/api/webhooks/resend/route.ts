@@ -35,11 +35,14 @@ export async function POST(req: Request) {
   const status = mapirajDostavu(event.type)
   if (status && event.data?.email_id) {
     const supabase = createAdminSupabaseClient() // service-role: ruta NIJE app request-path
-    await supabase.rpc("azuriraj_mejl_dostavu", {
+    const { error } = await supabase.rpc("azuriraj_mejl_dostavu", {
       p_resend_id: event.data.email_id,
       p_status: status,
       p_at: event.data.created_at ?? event.created_at ?? new Date().toISOString(),
     })
+    if (error) {
+      console.error("[resend-webhook] azuriraj_mejl_dostavu:", error.message)
+    }
   }
   return NextResponse.json({ ok: true }) // uvijek 200 za validan potpis
 }

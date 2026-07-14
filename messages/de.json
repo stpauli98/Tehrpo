@@ -1181,7 +1181,8 @@
       "do": "Bis",
       "samoGreske": "Nur Fehler",
       "samoNerijesene": "Nur ungelöste",
-      "svi": "Alle"
+      "svi": "Alle",
+      "filtriraj": "Filtern"
     },
     "oznaciPregledanim": "Als geprüft markieren",
     "bedzGreske": "Ungelöste Fehler"

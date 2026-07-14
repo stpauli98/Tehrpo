@@ -83,7 +83,6 @@ async function main() {
   }
   for (let i = 0; i < mejlIds.length; i += BATCH) {
     const slice = mejlIds.slice(i, i + BATCH)
-    // eslint-disable-next-line no-await-in-loop
     const { error } = await sb.from("mejl_log").delete().in("id", slice)
     if (error) throw new Error(`delete mejl_log: ${error.message}`)
   }

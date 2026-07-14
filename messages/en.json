@@ -1181,7 +1181,8 @@
       "do": "To",
       "samoGreske": "Errors only",
       "samoNerijesene": "Unresolved only",
-      "svi": "All"
+      "svi": "All",
+      "filtriraj": "Filter"
     },
     "oznaciPregledanim": "Mark as reviewed",
     "bedzGreske": "Unresolved errors"

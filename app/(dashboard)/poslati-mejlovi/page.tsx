@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server"
 import { dohvatiPoslateMejlove } from "@/lib/queries/poslati-mejlovi"
 import { PoslatiMejloviTabela, TIP_KEY, STATUS_KEY } from "@/components/domain/PoslatiMejloviTabela"
+import { Pagination } from "@/components/domain/Pagination"
+import { href } from "@/i18n/routes"
 import { Constants, type Database } from "@/db/types"
 
 type MejlTip = Database["public"]["Enums"]["mejl_tip"]
@@ -8,6 +10,11 @@ type MejlStatus = Database["public"]["Enums"]["mejl_status"]
 
 const SVI_TIPOVI = Constants.public.Enums.mejl_tip
 const SVI_STATUSI = Constants.public.Enums.mejl_status
+
+// Isti page-size obrazac kao klijenti/page.tsx (PER_PAGE konstanta + range),
+// ovdje = RPC-ov postojeći podrazumijevani limit (p_limit ?? 50) da se prva
+// strana ne promijeni kad je paginacija uvedena.
+const PER_PAGE = 50
 
 function jeMejlTip(v: string | undefined): v is MejlTip {
   return !!v && (SVI_TIPOVI as readonly string[]).includes(v)
@@ -24,18 +31,35 @@ export default async function PoslatiMejloviPage({
 }) {
   const sp = await searchParams
   const t = await getTranslations("poslatiMejlovi")
+  const tPag = await getTranslations("common.pagination")
 
   const tip = jeMejlTip(sp.tip) ? sp.tip : null
   const status = jeMejlStatus(sp.status) ? sp.status : null
+  const pageNum = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1)
+  const offset = (pageNum - 1) * PER_PAGE
 
-  const { redovi } = await dohvatiPoslateMejlove({
+  const { redovi, ukupno } = await dohvatiPoslateMejlove({
     tip,
     status,
     od: sp.od || null,
     do: sp.do ? `${sp.do}T23:59:59` : null,
     samoGreske: sp.samo_greske === "1",
     samoNepregledane: sp.nepregledano === "1",
+    limit: PER_PAGE,
+    offset,
   })
+  const totalPages = Math.max(1, Math.ceil(ukupno / PER_PAGE))
+
+  const currentSearch = new URLSearchParams(
+    Object.entries(sp).flatMap(([k, v]) =>
+      typeof v === "string" ? [[k, v] as [string, string]] : []
+    )
+  ).toString()
+  const pageHref = (p: number) => {
+    const params = new URLSearchParams(currentSearch)
+    params.set("page", String(p))
+    return href(`/poslati-mejlovi?${params.toString()}`)
+  }
 
   return (
     <div className="space-y-4">
@@ -101,10 +125,23 @@ export default async function PoslatiMejloviPage({
           {t("filteri.samoNerijesene")}
         </label>
         <button type="submit" className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted">
-          {t("filteri.svi")}
+          {t("filteri.filtriraj")}
         </button>
       </form>
       <PoslatiMejloviTabela redovi={redovi} />
+      {totalPages > 1 && (
+        <div className="flex items-center justify-end border-t border-border pt-4 text-sm text-muted-foreground" data-testid="poslati-mejlovi-pagination">
+          <Pagination
+            pageNum={pageNum}
+            totalPages={totalPages}
+            hrefFor={pageHref}
+            pageTestId="poslati-mejlovi-page"
+            prethodnaLabel={tPag("prethodna")}
+            sljedecaLabel={tPag("sljedeca")}
+            stranaText={tPag("strana", { pageNum, totalPages })}
+          />
+        </div>
+      )}
     </div>
   )
 }

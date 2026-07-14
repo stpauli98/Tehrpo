@@ -1181,7 +1181,8 @@
       "do": "Do",
       "samoGreske": "Samo greške",
       "samoNerijesene": "Samo neriješene",
-      "svi": "Svi"
+      "svi": "Svi",
+      "filtriraj": "Filtriraj"
     },
     "oznaciPregledanim": "Označi pregledanim",
     "bedzGreske": "Neriješene greške"

@@ -52,3 +52,36 @@ create policy mejl_log_sel on mejl_log for select using (
   je_admin()
   or ( klijent_id is not null and ima_pristup_klijentu(klijent_id) )
 );
+
+-- 5) Upisni put (jedini). Bez INSERT politike → direktan authenticated INSERT je odbijen.
+create or replace function zabiljezi_mejl_log(
+  p_tip        mejl_tip,
+  p_primaoci   text[],
+  p_subject    text,
+  p_termin_id  uuid,
+  p_klijent_id uuid,
+  p_resend_id  text,
+  p_status     mejl_status,
+  p_greska     text
+) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  -- service_role (cron): auth.uid() NULL → trusted server-context.
+  -- authenticated: mora je_admin() ILI ima_pristup_klijentu(p_klijent_id).
+  if auth.uid() is not null
+     and not ( je_admin()
+               or ( p_klijent_id is not null and ima_pristup_klijentu(p_klijent_id) ) )
+  then
+    return;  -- nema prava → tiho preskoči (best-effort; wrapper ne baca)
+  end if;
+
+  insert into mejl_log
+    (tip, primaoci, subject, termin_id, klijent_id, resend_id, status, greska, delivery_status)
+  values
+    (p_tip, p_primaoci, p_subject, p_termin_id, p_klijent_id, p_resend_id, p_status, p_greska, 'nepoznato');
+end; $$;
+
+revoke execute on function zabiljezi_mejl_log(mejl_tip,text[],text,uuid,uuid,text,mejl_status,text)
+  from public, anon;
+grant  execute on function zabiljezi_mejl_log(mejl_tip,text[],text,uuid,uuid,text,mejl_status,text)
+  to authenticated, service_role;

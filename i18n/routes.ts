@@ -23,6 +23,7 @@ export const ROUTE_MAP: Record<string, { en: string; de: string }> = {
   "zaboravljena-lozinka": { en: "forgotten-password", de: "passwort-vergessen" },
   "nova-lozinka": { en: "new-password", de: "neues-passwort" },
   "odjava": { en: "logout", de: "abmeldung" },
+  "poslati-mejlovi": { en: "sent-emails", de: "gesendete-mails" },
 }
 
 /** Prevodi svaki segment putanje nezavisno (npr. /auth/nova-lozinka → /auth/new-password: "auth" nije u mapi i ostaje). */

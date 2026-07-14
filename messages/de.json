@@ -33,7 +33,8 @@
       "asistent": "Assistent",
       "zapisnici": "Protokolle",
       "aktivnost": "Aktivität",
-      "postavke": "Einstellungen"
+      "postavke": "Einstellungen",
+      "poslatiMejlovi": "Gesendete Mails"
     },
     "sidebar": {
       "glavnaNavigacija": "Hauptnavigation",
@@ -1140,6 +1141,50 @@
       "poljeLokacija": "Standort",
       "napomena": "Eine Planung nach der Frist ist erlaubt; dies ist eine automatische Benachrichtigung an die Zuständigen."
     }
+  },
+  "poslatiMejlovi": {
+    "naslov": "Gesendete Mails",
+    "opis": "Protokoll automatischer und manueller E-Mails mit Zustellstatus.",
+    "prazno": "Es wurden noch keine E-Mails gesendet.",
+    "kolone": {
+      "vrijeme": "Zeit",
+      "tip": "Typ",
+      "primaoci": "Empfänger",
+      "naslov": "Betreff",
+      "slanje": "Versand",
+      "dostava": "Zustellung",
+      "greska": "Fehler",
+      "klijent": "Kunde"
+    },
+    "tip": {
+      "podsjetnikInterni": "Erinnerung (intern)",
+      "podsjetnikFirma": "Erinnerung (Firma)",
+      "zakazanoNakonRoka": "Nach Frist geplant",
+      "test": "Test"
+    },
+    "status": {
+      "poslato": "Gesendet",
+      "greskaSlanja": "Versand fehlgeschlagen"
+    },
+    "dostava": {
+      "nepoznato": "Unbekannt",
+      "delivered": "Zugestellt",
+      "opened": "Geöffnet",
+      "deliveryFailed": "Zustellung fehlgeschlagen",
+      "bounced": "Unzustellbar",
+      "complained": "Als Spam gemeldet"
+    },
+    "filteri": {
+      "tip": "Typ",
+      "status": "Versand",
+      "od": "Von",
+      "do": "Bis",
+      "samoGreske": "Nur Fehler",
+      "samoNerijesene": "Nur ungelöste",
+      "svi": "Alle"
+    },
+    "oznaciPregledanim": "Als geprüft markieren",
+    "bedzGreske": "Ungelöste Fehler"
   },
   "izvoz": {
     "plan": {

@@ -33,7 +33,8 @@
       "asistent": "Assistant",
       "zapisnici": "Records",
       "aktivnost": "Activity",
-      "postavke": "Settings"
+      "postavke": "Settings",
+      "poslatiMejlovi": "Sent emails"
     },
     "sidebar": {
       "glavnaNavigacija": "Main navigation",
@@ -1140,6 +1141,50 @@
       "poljeLokacija": "Location",
       "napomena": "Scheduling after the due date is allowed; this is an automatic notice to the assignees."
     }
+  },
+  "poslatiMejlovi": {
+    "naslov": "Sent emails",
+    "opis": "Log of automatic and manual emails with delivery status.",
+    "prazno": "No emails have been sent yet.",
+    "kolone": {
+      "vrijeme": "Time",
+      "tip": "Type",
+      "primaoci": "Recipients",
+      "naslov": "Subject",
+      "slanje": "Sending",
+      "dostava": "Delivery",
+      "greska": "Error",
+      "klijent": "Client"
+    },
+    "tip": {
+      "podsjetnikInterni": "Reminder (internal)",
+      "podsjetnikFirma": "Reminder (company)",
+      "zakazanoNakonRoka": "Scheduled after due date",
+      "test": "Test"
+    },
+    "status": {
+      "poslato": "Sent",
+      "greskaSlanja": "Sending failed"
+    },
+    "dostava": {
+      "nepoznato": "Unknown",
+      "delivered": "Delivered",
+      "opened": "Opened",
+      "deliveryFailed": "Delivery failed",
+      "bounced": "Bounced",
+      "complained": "Marked as spam"
+    },
+    "filteri": {
+      "tip": "Type",
+      "status": "Sending",
+      "od": "From",
+      "do": "To",
+      "samoGreske": "Errors only",
+      "samoNerijesene": "Unresolved only",
+      "svi": "All"
+    },
+    "oznaciPregledanim": "Mark as reviewed",
+    "bedzGreske": "Unresolved errors"
   },
   "izvoz": {
     "plan": {

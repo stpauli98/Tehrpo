@@ -33,7 +33,8 @@
       "asistent": "Asistent",
       "zapisnici": "Zapisnici",
       "aktivnost": "Aktivnost",
-      "postavke": "Postavke"
+      "postavke": "Postavke",
+      "poslatiMejlovi": "Poslati mejlovi"
     },
     "sidebar": {
       "glavnaNavigacija": "Glavna navigacija",
@@ -1140,6 +1141,50 @@
       "poljeLokacija": "Lokacija",
       "napomena": "Zakazivanje poslije roka je dozvoljeno; ovo je automatska obavijest zaduženima."
     }
+  },
+  "poslatiMejlovi": {
+    "naslov": "Poslati mejlovi",
+    "opis": "Dnevnik automatskih i ručnih mejlova sa statusom dostave.",
+    "prazno": "Još nema poslatih mejlova.",
+    "kolone": {
+      "vrijeme": "Vrijeme",
+      "tip": "Tip",
+      "primaoci": "Primaoci",
+      "naslov": "Naslov",
+      "slanje": "Slanje",
+      "dostava": "Dostava",
+      "greska": "Greška",
+      "klijent": "Klijent"
+    },
+    "tip": {
+      "podsjetnikInterni": "Podsjetnik (interni)",
+      "podsjetnikFirma": "Podsjetnik (firma)",
+      "zakazanoNakonRoka": "Zakazano nakon roka",
+      "test": "Test"
+    },
+    "status": {
+      "poslato": "Poslato",
+      "greskaSlanja": "Greška slanja"
+    },
+    "dostava": {
+      "nepoznato": "Nepoznato",
+      "delivered": "Isporučeno",
+      "opened": "Otvoreno",
+      "deliveryFailed": "Neuspjela dostava",
+      "bounced": "Odbijeno",
+      "complained": "Prijava spama"
+    },
+    "filteri": {
+      "tip": "Tip",
+      "status": "Slanje",
+      "od": "Od",
+      "do": "Do",
+      "samoGreske": "Samo greške",
+      "samoNerijesene": "Samo neriješene",
+      "svi": "Svi"
+    },
+    "oznaciPregledanim": "Označi pregledanim",
+    "bedzGreske": "Neriješene greške"
   },
   "izvoz": {
     "plan": {

@@ -17,6 +17,7 @@ import {
   clearDodjele,
   insertKlijent,
   deleteKlijentByNaziv,
+  deleteKorisnikByEmail,
 } from "./db"
 
 const MARK = `[E2E] ${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -39,8 +40,9 @@ test.describe("admin — dnevnik poslatih mejlova (/poslati-mejlovi)", () => {
     }
   })
 
-  test("admin vidi grešku bez firme (crveni red), filter bedža i pregled je uklanja", async ({ page }) => {
-    const subject = `${MARK} greska-bez-firme`
+  test("admin vidi grešku bez firme (crveni red), filter bedža i pregled je uklanja", async ({ page }, testInfo) => {
+    // Subjekt jedinstven PO PROJEKTU (chromium/webkit) da se seed-ovi ne sudaraju.
+    const subject = `${MARK} ${testInfo.project.name} greska-bez-firme`
 
     // Seed: greška bez firme (tip "test", bez klijent_id) — service-role klijent,
     // isti obrazac kao insertKlijent/insertTermin u db.ts (bypass RLS na insert).
@@ -81,27 +83,35 @@ test.describe("admin — dnevnik poslatih mejlova (/poslati-mejlovi)", () => {
 // playwright.config.ts (koji ima samo "chromium"/"webkit" projekte sa admin
 // storageState-om). RLS (mejl_log_sel) skopira SELECT na je_admin() ili
 // dodijeljenog klijenta — operater NE smije vidjeti red bez firme.
-const OP_EMAIL = "e2e-operater-mejlovi@tehpro.test"
 const OP_LOZINKA = "E2eOperaterMejlovi2026!"
 const OP_IME = "E2E Operater Mejlovi"
-const KLIJENT_NAZIV = `E2E-TMP Mejlovi ${Date.now()}`
 
 test.describe("operater — RLS scoping na /poslati-mejlovi", () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
   let opId = ""
   let klijentId = ""
+  // Identifikatori JEDINSTVENI PO PROJEKTU (chromium/webkit) — inače dijeljeni
+  // operater/klijent/marker izazovu sudar beforeAll↔afterAll između projekata
+  // (jedan projekat obriše dodjelu/klijent drugog → operater ne vidi svoj red).
+  let opEmail = ""
+  let klijentNaziv = ""
+  let vidljivSubject = ""
+  let skrivenSubject = ""
   const seededIds: string[] = []
 
-  test.beforeAll(async () => {
-    opId = await ensureOperater(OP_EMAIL, OP_LOZINKA, OP_IME)
-    await deleteKlijentByNaziv(KLIJENT_NAZIV).catch(() => {})
-    klijentId = await insertKlijent(KLIJENT_NAZIV)
+  test.beforeAll(async ({}, testInfo) => {
+    const proj = testInfo.project.name
+    opEmail = `e2e-operater-mejlovi-${proj}@tehpro.test`
+    klijentNaziv = `E2E-TMP Mejlovi ${proj} ${Date.now()}`
+    vidljivSubject = `${MARK} ${proj} vidljiv-operateru`
+    skrivenSubject = `${MARK} ${proj} skriven-operateru`
+
+    opId = await ensureOperater(opEmail, OP_LOZINKA, OP_IME)
+    await deleteKlijentByNaziv(klijentNaziv).catch(() => {})
+    klijentId = await insertKlijent(klijentNaziv)
     await clearDodjele(opId)
     await assignKlijent(opId, klijentId)
-
-    const vidljivSubject = `${MARK} vidljiv-operateru`
-    const skrivenSubject = `${MARK} skriven-operateru`
 
     const { data: vidljiv, error: vErr } = await db
       .from("mejl_log")
@@ -136,15 +146,16 @@ test.describe("operater — RLS scoping na /poslati-mejlovi", () => {
 
   test.afterAll(async () => {
     if (seededIds.length) await db.from("mejl_log").delete().in("id", seededIds)
-    await clearDodjele(opId)
-    await deleteKlijentByNaziv(KLIJENT_NAZIV).catch(() => {})
+    if (opId) await clearDodjele(opId)
+    if (klijentNaziv) await deleteKlijentByNaziv(klijentNaziv).catch(() => {})
+    if (opEmail) await deleteKorisnikByEmail(opEmail).catch(() => {})
   })
 
   test("operater vidi samo mejl svoje dodijeljene firme, ne i red bez firme", async ({ context }) => {
-    await injectSessionFor(context, OP_EMAIL, OP_LOZINKA)
+    await injectSessionFor(context, opEmail, OP_LOZINKA)
     const page = await context.newPage()
     await page.goto("/poslati-mejlovi")
-    await expect(page.getByText(`${MARK} vidljiv-operateru`)).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByText(`${MARK} skriven-operateru`)).toHaveCount(0)
+    await expect(page.getByText(vidljivSubject)).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(skrivenSubject)).toHaveCount(0)
   })
 })

@@ -187,15 +187,69 @@ export async function getVrstaInterval(vrstaId: string): Promise<number | null> 
   return (data?.podrazumevani_interval_mjeseci as number | null) ?? null
 }
 
+/** Da li je greška PROLAZNA mrežna (AuthRetryableFetchError i sl.) — vrijedi retry. */
+function jeRetryableAuth(e: unknown): boolean {
+  const poruka = `${(e as { name?: string })?.name ?? ""} ${(e as Error)?.message ?? ""}`
+  return /AuthRetryableFetchError|FetchError|ETIMEDOUT|ECONNRESET|network|fetch failed/i.test(poruka)
+}
+
+/** Ponovi auth-admin poziv na prolaznu mrežnu grešku — E2E ide protiv živog
+ *  Supabase auth API-ja pa povremeni mrežni blip nije bug. Wrapper (op) mora
+ *  BACITI prolaznu grešku (bilo vraćenu u {error}, bilo bačenu) da retry radi. */
+async function saAuthRetry<T>(op: () => Promise<T>): Promise<T> {
+  let zadnja: unknown
+  for (let i = 0; i < 4; i++) {
+    try {
+      // eslint-disable-next-line no-await-in-loop -- sekvencijalni retry s backoff-om
+      return await op()
+    } catch (e) {
+      zadnja = e
+      if (!jeRetryableAuth(e)) throw e
+      // eslint-disable-next-line no-await-in-loop -- backoff pauza između pokušaja
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)))
+    }
+  }
+  throw zadnja
+}
+
+/** Nađi auth korisnika po emailu. NAPOMENA: listUsers je eventual-consistent —
+ *  ne vraća uvijek korisnika kreiranog trenutak ranije (npr. u drugom projektu). */
+async function nadjiAuthIdPoEmailu(email: string): Promise<string | undefined> {
+  const { data } = await saAuthRetry(async () => {
+    const r = await db.auth.admin.listUsers()
+    if (r.error && jeRetryableAuth(r.error)) throw r.error
+    return r
+  })
+  return data?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())?.id
+}
+
+/** Idempotentno nađi/kreiraj auth korisnika; vrati id. Otporno na cross-projekt
+ *  race (chromium→webkit) gdje stale listUsers ne vrati upravo kreiranog korisnika
+ *  pa createUser javi "already been registered" — u tom slučaju ponovo pronađi id. */
+async function nadjiIliKreirajAuthId(email: string, lozinka: string): Promise<string> {
+  const postojeci = await nadjiAuthIdPoEmailu(email)
+  if (postojeci) return postojeci
+  const { data, error } = await saAuthRetry(async () => {
+    const r = await db.auth.admin.createUser({ email, password: lozinka, email_confirm: true })
+    if (r.error && jeRetryableAuth(r.error)) throw r.error
+    return r
+  })
+  if (!error) return data.user.id
+  if (!/already.*registered/i.test(error.message)) throw error
+  // Korisnik postoji ali ga stale listUsers nije vratio → kratki retry dok se ne pojavi.
+  for (let i = 0; i < 5; i++) {
+    // eslint-disable-next-line no-await-in-loop -- namjeran sekvencijalni retry protiv eventual-consistency
+    const id = await nadjiAuthIdPoEmailu(email)
+    if (id) return id
+    // eslint-disable-next-line no-await-in-loop -- pauza između pokušaja
+    await new Promise((r) => setTimeout(r, 300))
+  }
+  throw error
+}
+
 /** Nađi/kreiraj operatera sa fiksnom lozinkom; vrati id. */
 export async function ensureOperater(email: string, lozinka: string, ime: string): Promise<string> {
-  const { data: list } = await db.auth.admin.listUsers()
-  let id = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())?.id
-  if (!id) {
-    const { data, error } = await db.auth.admin.createUser({ email, password: lozinka, email_confirm: true })
-    if (error) throw error
-    id = data.user.id
-  }
+  const id = await nadjiIliKreirajAuthId(email, lozinka)
   const { error } = await db.from("korisnici").upsert({ id, ime, email, uloga: "operater", aktivan: true }, { onConflict: "id" })
   if (error) throw new Error(`ensureOperater upsert: ${error.message}`)
   return id
@@ -208,13 +262,7 @@ export async function ensureKorisnik(
   ime: string,
   uloga: "admin" | "operater" | "pregled",
 ): Promise<string> {
-  const { data: list } = await db.auth.admin.listUsers()
-  let id = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())?.id
-  if (!id) {
-    const { data, error } = await db.auth.admin.createUser({ email, password: lozinka, email_confirm: true })
-    if (error) throw error
-    id = data.user.id
-  }
+  const id = await nadjiIliKreirajAuthId(email, lozinka)
   const { error } = await db.from("korisnici").upsert({ id, ime, email, uloga, aktivan: true }, { onConflict: "id" })
   if (error) throw new Error(`ensureKorisnik upsert: ${error.message}`)
   return id

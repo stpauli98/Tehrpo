@@ -11,6 +11,9 @@ type MejlDostava = Database["public"]["Enums"]["mejl_dostava_status"]
 export const TIP_KEY = {
   podsjetnik_interni: "podsjetnikInterni",
   podsjetnik_firma: "podsjetnikFirma",
+  podsjetnik_rok_istekao_interni: "podsjetnikRokIstekaoInterni",
+  podsjetnik_rok_istekao_firma: "podsjetnikRokIstekaoFirma",
+  podsjetnik_digest: "podsjetnikDigest",
   zakazano_nakon_roka: "zakazanoNakonRoka",
   test: "test",
 } as const satisfies Record<MejlTip, string>

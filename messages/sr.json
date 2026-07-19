@@ -1159,6 +1159,9 @@
     "tip": {
       "podsjetnikInterni": "Podsjetnik (interni)",
       "podsjetnikFirma": "Podsjetnik (firma)",
+      "podsjetnikRokIstekaoInterni": "Rok istekao (interno)",
+      "podsjetnikRokIstekaoFirma": "Rok istekao (firmi)",
+      "podsjetnikDigest": "Sedmični pregled",
       "zakazanoNakonRoka": "Zakazano nakon roka",
       "test": "Test"
     },

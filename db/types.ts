@@ -632,6 +632,60 @@ export type Database = {
           },
         ]
       }
+      post_due_obavijesti: {
+        Row: {
+          ciklus_rok: string
+          claimed_at: string
+          id: string
+          kanal: string
+          poslat_at: string | null
+          poslat_na: string[]
+          razlog: string | null
+          resend_id: string | null
+          stanje: string
+          termin_id: string
+        }
+        Insert: {
+          ciklus_rok: string
+          claimed_at?: string
+          id?: string
+          kanal: string
+          poslat_at?: string | null
+          poslat_na?: string[]
+          razlog?: string | null
+          resend_id?: string | null
+          stanje?: string
+          termin_id: string
+        }
+        Update: {
+          ciklus_rok?: string
+          claimed_at?: string
+          id?: string
+          kanal?: string
+          poslat_at?: string | null
+          poslat_na?: string[]
+          razlog?: string | null
+          resend_id?: string | null
+          stanje?: string
+          termin_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_due_obavijesti_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_due_obavijesti_termin_id_fkey"
+            columns: ["termin_id"]
+            isOneToOne: false
+            referencedRelation: "termini_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       postavke: {
         Row: {
           dana_prije: number[]
@@ -1047,6 +1101,10 @@ export type Database = {
         }
         Returns: number
       }
+      claim_post_due: {
+        Args: { p_ciklus: string; p_kanal: string; p_termin: string }
+        Returns: string
+      }
       dodaj_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }
         Returns: string
@@ -1140,6 +1198,22 @@ export type Database = {
           ukupno: number
         }[]
       }
+      get_post_due_termine: {
+        Args: never
+        Returns: {
+          ciklus_rok: string
+          dana_do_ciklusa: number
+          datum_zakazan: string
+          klijent_id: string
+          klijent_naziv: string
+          lokacija_naziv: string
+          rok_dospijeca: string
+          termin_id: string
+          treba_firma: boolean
+          treba_interni: boolean
+          vrsta_naziv: string
+        }[]
+      }
       get_termini_stats: {
         Args: never
         Returns: {
@@ -1201,6 +1275,9 @@ export type Database = {
         | "podsjetnik_firma"
         | "zakazano_nakon_roka"
         | "test"
+        | "podsjetnik_rok_istekao_interni"
+        | "podsjetnik_rok_istekao_firma"
+        | "podsjetnik_digest"
       nacin_izvrsenja_tip: "izvrsava" | "pracenje"
       termini_status: "planirano" | "zakazano" | "izvrseno" | "otkazano"
     }
@@ -1349,6 +1426,9 @@ export const Constants = {
         "podsjetnik_firma",
         "zakazano_nakon_roka",
         "test",
+        "podsjetnik_rok_istekao_interni",
+        "podsjetnik_rok_istekao_firma",
+        "podsjetnik_digest",
       ],
       nacin_izvrsenja_tip: ["izvrsava", "pracenje"],
       termini_status: ["planirano", "zakazano", "izvrseno", "otkazano"],

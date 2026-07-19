@@ -1159,6 +1159,9 @@
     "tip": {
       "podsjetnikInterni": "Reminder (internal)",
       "podsjetnikFirma": "Reminder (company)",
+      "podsjetnikRokIstekaoInterni": "Deadline passed (internal)",
+      "podsjetnikRokIstekaoFirma": "Deadline passed (client)",
+      "podsjetnikDigest": "Weekly summary",
       "zakazanoNakonRoka": "Scheduled after due date",
       "test": "Test"
     },

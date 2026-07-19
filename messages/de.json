@@ -1159,6 +1159,9 @@
     "tip": {
       "podsjetnikInterni": "Erinnerung (intern)",
       "podsjetnikFirma": "Erinnerung (Firma)",
+      "podsjetnikRokIstekaoInterni": "Frist abgelaufen (intern)",
+      "podsjetnikRokIstekaoFirma": "Frist abgelaufen (Kunde)",
+      "podsjetnikDigest": "Wöchentliche Übersicht",
       "zakazanoNakonRoka": "Nach Frist geplant",
       "test": "Test"
     },

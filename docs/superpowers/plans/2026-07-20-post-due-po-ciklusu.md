@@ -22,6 +22,7 @@
 - Zabranjeni Tailwind breakpointi `sm:`/`md:` (eslint `no-restricted-syntax`); koristiti `lg:`/`xl:`/`2xl:`.
 - `no-await-in-loop: error` svugdje osim u `scripts/`; namjerno sekvencijalne petlje traže `// eslint-disable-next-line no-await-in-loop` sa obrazloženjem, kao u `runReminders.ts:172`.
 - **Cloud DB nije dostupan kroz Supabase MCP.** Migracije na cloud idu jedna po jedna: `pnpm db:apply-cloud <file>`.
+- Postgres `create or replace function` traži **cijelo tijelo funkcije**; kad migracija mijenja jednu granu, druga se mora prekopirati doslovno. To nije izbjegljiva duplikacija nego zahtjev jezika, i tako je već urađeno u `20260629120000`.
 - **DEMO i PROD u lockstep-u**: migracija na jedan ide odmah i na drugi. PROD = ref `fqtqkehjidkzeasiegnq` (`DATABASE_URL` u `.env.local`); DEMO = ref `mtwwotmwrasozmcgqwhc` (`DATABASE_URL_DEMO` u `.env.development.local`).
 - Cloud primjena migracija i deploy su **korisnikova radnja**, ne agentova (Task 6).
 - Rad ide na grani `fix/post-due-po-ciklusu`, ne na `main`. Merge u `main` = produkcijski deploy na tri Vercel projekta.
@@ -485,22 +486,19 @@ describe.skipIf(!URL)("get_post_due_termine + claim_post_due (integracija, lokal
       }
       expect(await postDue(t)).toHaveLength(0)
 
-      // Rok pomjeren 10 dana naprijed; sada je kašnjenje opet 5 dana, ali je datum drugi.
-      await db.query("update termini set rok_dospijeca = rok_dospijeca + 10 where id = $1", [t])
-      await db.query("update termini set rok_dospijeca = current_date - 5 + 10 where id = $1", [t])
-      await db.query("update termini set rok_dospijeca = current_date - 5 where id = $1", [t])
-      const rows = await postDue(t)
-      // Isti datum kao ciklus1 → i dalje zatvoreno. Ovo dokazuje da ključ NIJE broj dana.
-      expect(rows).toHaveLength(0)
-
-      // Stvarno novi datum → novi ciklus → oba kanala opet otvorena.
+      // Rok pomjeren naprijed pa opet istekao — novi datum, dakle novi ciklus.
       await db.query("update termini set rok_dospijeca = current_date - 3 where id = $1", [t])
-      const rows2 = await postDue(t)
-      expect(rows2).toHaveLength(1)
-      expect(rows2[0]!.ciklus_rok).not.toBe(ciklus1)
-      expect(rows2[0]!.treba_interni).toBe(true)
-      expect(rows2[0]!.treba_firma).toBe(true)
-      expect(await claim(t, rows2[0]!.ciklus_rok, "interni")).not.toBeNull()
+      const rows = await postDue(t)
+      expect(rows).toHaveLength(1)
+      expect(rows[0]!.ciklus_rok).not.toBe(ciklus1)
+      expect(rows[0]!.treba_interni).toBe(true)
+      expect(rows[0]!.treba_firma).toBe(true)
+      expect(await claim(t, rows[0]!.ciklus_rok, "interni")).not.toBeNull()
+
+      // Kontrola: povratak na PRVI ciklus mora ostati zatvoren — dokaz da ključ
+      // nosi datum, a ne broj dana kašnjenja niti puko "termin je već javljen".
+      await db.query("update termini set rok_dospijeca = $2::date where id = $1", [t, ciklus1])
+      expect(await postDue(t)).toHaveLength(0)
     })
   })
 })

@@ -1,7 +1,7 @@
 # Podsjetnici poslije roka: jednokratna obavijest po ciklusu + sedmični digest
 
-**Datum:** 2026-07-19 (revizija 4: 2026-07-20)
-**Status:** Revizija 4 (nakon pet nezavisnih recenzija) — čeka završni krug recenzije
+**Datum:** 2026-07-19 (posljednja revizija: 2026-07-20)
+**Status:** Revizija 5 (nakon šest nezavisnih recenzija) — spreman za plan implementacije
 **Isporuke:** dva nezavisna PR-a (§3)
 **Grane (prijedlog):** `fix/post-due-po-ciklusu`, zatim `feat/digest-isteklih`
 
@@ -77,7 +77,7 @@ Pragovi iz `postavke.dana_prije`, jedan mejl po pragu po terminu, oba kanala. Pr
 
 Firmin kanal poštuje postojeće prekidače: `postavke.salji_klijentima`, `klijenti.salji_podsjetnik_klijentu`, adrese iz `kontakt_osobe.podsjetnik_primalac` **i `klijenti.podsjetnik_emails`** (`recipients.ts:91-102`).
 
-Firmin šablon je poziv na dogovor, ne opomena: bez internih dugmadi, **bez ICS priloga**, i sa **vlastitim subject-om** (postojeći `reminderSubject`, `templates.ts:79-87`, za negativne dane daje „kasni N dana").
+Firmin šablon je poziv na dogovor, ne opomena: bez internih dugmadi, **bez ICS priloga**, i sa **novim subject-om** `rokIstekaoFirmaSubject()`. Postojeći `reminderSubject` (`templates.ts:79-87`) se ne koristi jer za negativne dane daje „kasni N dana", dakle ton opomene koji ovaj kanal odbacuje.
 
 ### 4.3 Oba šablona prate ciklus, ne rok
 
@@ -91,7 +91,11 @@ Termin izlazi iz alarma i digesta kad status pređe u `izvrseno`/`otkazano`, ili
 
 ### 4.5 Kadenca digesta
 
-Ponedjeljkom, po lokalnom vremenu `Europe/Vienna`; dan je konstanta u kodu. Primalac dobija digest kad je: **danas ponedjeljak**, ili **posljednji digest tom primaocu stariji od 7 dana** (oporavak). Uz to, `trebaDigest` vraća `false` ako je taj primalac već dobio digest **danas** — bez tog uslova bi se, pošto digest ruta nema `zadnje_slanje_datum` ekvivalent, svaki od ~14 dnevnih GH Actions okidača radio pun posao i završavao na unique konfliktu.
+Ponedjeljkom, po lokalnom vremenu `Europe/Vienna`; dan je konstanta u kodu. Primalac dobija digest kad je: **danas ponedjeljak**, ili **posljednji digest tom primaocu stariji od 7 dana** (oporavak).
+
+Uz to, `trebaDigest` vraća `false` ako taj primalac za **današnji bečki datum** već ima red u stanju `poslato`, **ili** red u stanju `u_toku` mlađi od 15 minuta. Bez ikakvog dnevnog uslova bi se, pošto digest ruta nema `zadnje_slanje_datum` ekvivalent, svaki od ~14 dnevnih GH Actions okidača radio pun posao i završavao na unique konfliktu.
+
+> **Uslov mora biti po stanju, ne po postojanju reda.** Recenzija je našla da bi „već ima red za danas" poništilo 15-minutni oporavak upravo za digest: claim zaglavljen u `u_toku` (pad slanja, smrt procesa) trajno bi vetovao digest do kraja dana, a sljedeći okidač je tek za sedmicu — dakle ista greška zbog koje je pala revizija 3, samo na drugoj tabeli.
 
 > **Zašto ne čisto „7 dana od zadnjeg".** Recenzija je predlagala izbacivanje dana u sedmici. Odbijeno zbog **drifta**: jedan zakašnjeli ciklus trajno pomjera kadencu, pa poslije nekoliko mjeseci digest stiže četvrtkom. Sedmični izvještaj koji stiže ponedjeljkom je ritual; onaj koji klizi to nije.
 >
@@ -121,7 +125,7 @@ Skup termina u alarmu je **podskup** onoga što Plan prikazuje kao `KASNI`: izos
 
 ### 4.10 Efekat na trenutne podatke
 
-Po deployu PR 1: **nula mejlova**, jer migracija upisuje supresione tragove za tekući ciklus svih termina koji su trenutno u alarmu i aktivno se spamuju (§6.1). Po deployu PR 2, u prvi ponedjeljak: jedan interni digest po primaocu.
+Po deployu PR 1 **na PROD-u**: nula mejlova, jer migracija upisuje supresione tragove za tekući ciklus svih termina koji su trenutno u alarmu i aktivno se spamuju (§6.1). Recenzija je to verifikovala izvršavanjem RPC-a protiv živih podataka: prazan ledger vraća tri reda, sa backfillom nula. Na DEMO-u vrijedi ograda iz §6.1. Po deployu PR 2, u prvi ponedjeljak: jedan interni digest po primaocu.
 
 ---
 
@@ -143,7 +147,7 @@ Kolona `stanje text check (stanje in ('u_toku','poslato','preskoceno'))`.
 
 Redoslijed na oba puta: **upiši claim → pošalji → označi poslato**.
 
-Claim je jedan atomski upit koji istovremeno rezerviše i preuzima zaglavljeno:
+Claim je jedan atomski upit koji istovremeno rezerviše i preuzima zaglavljeno. **Živi unutar SQL funkcije `claim_post_due()`, ne u TypeScriptu** (§6.7):
 
 ```sql
 insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, claimed_at)
@@ -155,7 +159,9 @@ on conflict (termin_id, ciklus_rok, kanal) do update
 returning id;
 ```
 
-Prazan `returning` znači da claim drži neko drugi (ili je posao završen) → preskoči bez slanja. Isti obrazac za `digest_slanja`.
+Prazan `returning` znači da claim drži neko drugi (ili je posao završen) → preskoči bez slanja. Isti obrazac za `digest_slanja`, kroz `claim_digest()`.
+
+> **Zašto funkcija, a ne upit iz TypeScripta.** Cron radi preko `createAdminSupabaseClient()`, dakle `supabase-js` → PostgREST; `pg` se u repozitoriju uvozi samo u skriptama i integracionim testovima. `.upsert()` **ne može** izraziti `on conflict do update ... where ... returning` — `ignoreDuplicates` je jedina opcija i ona bi vratila prazno i za zaglavljeni claim, čime bi oporavak opet postao nedostižan. Recenzija je to našla i provjerila da u bazi ne postoji nijedna generička `exec_sql` funkcija. Repozitorij ima presedan: `20260710120000_podsjetnik_email_atomic_rpc.sql` postoji upravo zato što se atomska operacija ne da izraziti kroz PostgREST.
 
 **Zaglavljeni claim mora biti vidljiv RPC-u, inače je oporavak mrtvo slovo.** Ovo je bila druga kritična greška revizije 3: RPC je izbacivao svaki termin koji već ima red, pa `runPostDue` zaglavljeni claim nikad nije vidio i `update` se nikad nije izdavao — smrt procesa između upisa i slanja **trajno je gutala jedinu obavijest za taj ciklus**, bez mejla, bez traga i bez greške. Zato `treba_interni`/`treba_firma` u §6.3 nisu `not exists`, nego uključuju i „postoji red u stanju `u_toku` stariji od 15 minuta".
 
@@ -216,12 +222,12 @@ create table if not exists post_due_obavijesti (
   constraint uq_post_due unique (termin_id, ciklus_rok, kanal)
 );
 
-create index if not exists idx_post_due_termin on post_due_obavijesti (termin_id, ciklus_rok);
-
 alter table post_due_obavijesti enable row level security;
 ```
 
 Bez politika: piše i čita isključivo cron preko service-role klijenta, koji zaobilazi RLS. RLS je uključen da tabela ne bude otvorena kroz PostgREST. (Napomena: Supabase ima `alter default privileges ... grant all on tables to anon, authenticated, service_role` u shemi `public`, pa je nova tabela automatski grantovana — jedino je RLS bez politika štiti.)
+
+Bez zasebnog indeksa: `uq_post_due (termin_id, ciklus_rok, kanal)` već ima prefiks `(termin_id, ciklus_rok)` i pokriva svaki upit iz §6.3 i §6.7.
 
 **Supresioni backfill**, u istoj migraciji:
 
@@ -239,10 +245,13 @@ join podsjetnici p on p.termin_id = t.id and p.dana_prije < 0
 where t.status in ('planirano','zakazano')
   and t.rok_dospijeca < current_date
   and coalesce(t.datum_zakazan, t.rok_dospijeca) < current_date
+  and p.kanal = k.kanal
   and p.poslat_at > now() - interval '14 days'
 group by t.id, coalesce(t.datum_zakazan, t.rok_dospijeca), k.kanal
 on conflict do nothing;
 ```
+
+`p.kanal = k.kanal` je namjeran: ušutkuje se **samo kanal koji je stvarno slao**. Recenzija je našla da bi bez tog uslova NEW YORKER (`5520a8d5`, koji ima isključivo `interni` zapise) dobio i firmin supresioni trag. Danas je to benigno — tom klijentu je `salji_podsjetnik_klijentu = false`, nula flagovanih kontakata i nula ad-hoc adresa, pa bi firmin kanal ionako završio kao `preskoceno` — ali obrazac je krhak: klijent kojem je prekidač uključen juče izgubio bi svoju jedinu firminu obavijest za tekući ciklus.
 
 > **Ovo je ispravka treće kritične greške.** Revizija 3 je backfill radila rekonstrukcijom `poslat_at::date + dana_prije`. Ta aritmetika daje **`rok_dospijeca`**, jer je stari upit upisivao `dana_prije = rok − danas` — a novi RPC traži ciklus `coalesce(datum_zakazan, rok_dospijeca)`. Recenzija je verifikovala na PROD-u: CARMEUSE (rok 13.07., zakazano 15.07.) dobio bi trag za 13.07. dok RPC traži 15.07. → **dva mejla na dan deploya**, i to na istom terminu i sa istom klasom greške (pogrešna jedinica u dedup ključu) koju §2 opisuje kao kritičan nalaz revizije 2.
 >
@@ -250,7 +259,9 @@ on conflict do nothing;
 >
 > `on conflict do nothing` bez naziva ograničenja je validan PostgreSQL i pokriva sva unique ograničenja.
 
-Na PROD-u ovo daje šest redova (tri termina × dva kanala) i **nula mejlova** po deployu.
+Na PROD-u ovo daje **pet** redova: tri termina × dva kanala, minus firmin kanal za NEW YORKER koji nikad nije slao. Mejlova je i dalje **nula** — NEW YORKER-ov firmin kanal ostaje otvoren, RPC ga vrati, `runPostDue` ne nađe nijednog primaoca i upiše `preskoceno` bez slanja.
+
+**Na DEMO-u backfill daje nula redova**, jer `podsjetnici_aktivni = false` znači da tamo nema nijednog post-due zapisa, a četiri termina jesu u alarmu. GET je gejtovan prekidačem pa cron ništa neće poslati, ali prvi ručni `POST` / `pnpm reminders` bi upisao osam claim-ova i pokušao četiri interna slanja. Tvrdnja „nula mejlova" važi za PROD.
 
 ### 6.2 PR 1 — `20260720121000_get_due_bez_post_due.sql`
 
@@ -329,11 +340,14 @@ Tri ispravke iz recenzije:
 ### 6.4 PR 1 — `20260720119000_mejl_tip_prosirenje.sql`
 
 ```sql
+alter type mejl_tip add value if not exists 'podsjetnik_rok_istekao_interni';
 alter type mejl_tip add value if not exists 'podsjetnik_rok_istekao_firma';
 alter type mejl_tip add value if not exists 'podsjetnik_digest';
 ```
 
-Obje vrijednosti odjednom u PR 1, iako se `podsjetnik_digest` koristi tek u PR 2 — da se `TIP_KEY` i `db:types` ne rade dva puta. Bez zasebnog tipa bi firmina post-due obavijest u dnevniku bila neodvojiva od pre-due podsjetnika.
+Sve tri vrijednosti odjednom u PR 1, iako se `podsjetnik_digest` koristi tek u PR 2 — da se `TIP_KEY` i `db:types` ne rade dva puta. Bez zasebnog tipa bi post-due obavijest u dnevniku bila neodvojiva od pre-due podsjetnika.
+
+Interni post-due tip je dodat u ovoj reviziji: raniji obrazac je uvodio zaseban tip samo za firmin kanal, uz obrazloženje koje doslovno važi i za interni. Recenzija je tu asimetriju označila kao nedosljednost u vlastitom obrazloženju.
 
 **Broj `119000` je namjerno niži** od ostalih migracija PR-a 1: `alter type ... add value` mora biti commit-ovan prije bilo čega što tu vrijednost koristi, a `scripts/apply-cloud-migration.ts:13-17` šalje fajl kao jedan `query`, dakle jednu transakciju. Revizija 2 je imala migraciju koja se po imenu sortirala zadnja a morala se primijeniti prva.
 
@@ -364,7 +378,44 @@ alter table digest_slanja enable row level security;
 
 ### 6.6 PR 2 — `20260721121000_get_istekli_termini.sql`
 
-Isti `ef` filter kao §6.3 (oba uslova alarma), bez kanalskih uslova, uz `dana_do_ciklusa` negativan. Izuzima termin čiji ciklus ima trag sa `poslat_at::date = current_date` (§4.8). `security invoker`, `set search_path = public`, `revoke execute from public, anon, authenticated`, `grant` samo `service_role`.
+Isti `ef` filter kao §6.3 (oba uslova alarma), bez kanalskih uslova, uz `dana_do_ciklusa` negativan.
+
+Potpis je `get_istekli_termini(p_danas date)`. Izuzima termin čiji ciklus ima trag sa `poslat_at::date = p_danas` (§4.8), gdje `p_danas` dolazi iz `lokalniSatIDatum`, dakle **bečki datum** — isti izvor koji je ključ u `digest_slanja`.
+
+> Revizija 4 je ovdje koristila `current_date`, koji je UTC. Recenzija je našla da je to ista klasa greške koju §6.5 pažljivo izbjegava: GH Actions okida na svaki puni sat, pa bi run između 00:30 i 01:59 po Beču vidio jučerašnji UTC datum i izuzeće bi pokazivalo na pogrešan dan. Posljedica je blaga (stavka izostavljena iz jednog digesta), ali je nepotrebna.
+
+`security invoker`, `set search_path = public`, `revoke execute from public, anon, authenticated`, `grant` samo `service_role`.
+
+### 6.7 Claim funkcije — `20260720123000_claim_post_due.sql` (PR 1) i `20260721122000_claim_digest.sql` (PR 2)
+
+Atomski claim iz §5.3 se ne može izraziti kroz PostgREST, pa živi u SQL funkcijama:
+
+```sql
+create or replace function claim_post_due(p_termin uuid, p_ciklus date, p_kanal text)
+returns uuid
+language sql
+volatile
+security invoker
+set search_path = public
+as $$
+  insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, claimed_at)
+  values (p_termin, p_ciklus, p_kanal, 'u_toku', now())
+  on conflict (termin_id, ciklus_rok, kanal) do update
+    set claimed_at = now()
+    where post_due_obavijesti.stanje = 'u_toku'
+      and post_due_obavijesti.claimed_at < now() - interval '15 minutes'
+  returning id;
+$$;
+
+revoke execute on function claim_post_due(uuid, date, text) from public, anon, authenticated;
+grant  execute on function claim_post_due(uuid, date, text) to service_role;
+```
+
+`claim_digest(p_email text, p_datum date)` je isti obrazac nad `digest_slanja`.
+
+Funkcija vraća `null` (prazan rezultat) kad claim drži neko drugi ili je posao završen → pozivalac preskače bez slanja. Označavanje ishoda (`stanje = 'poslato'` uz `resend_id`, `poslat_at`, `poslat_na`; ili `'preskoceno'` uz `razlog`) je običan `update` po `id`-u koji je funkcija vratila, pa za to nije potrebna dodatna funkcija.
+
+**Ponašanje pri trci**, potvrđeno u recenziji: gubitnik `insert`-a blokira na redu pobjednika, pa poslije commit-a re-evaluira `where` nad novom verzijom reda (`claimed_at = now()`) → uslov je `false` → prazan `returning`. Nema dvostrukog slanja, i nema `ON CONFLICT DO UPDATE cannot affect row a second time`, jer statement ubacuje tačno jedan red.
 
 ---
 
@@ -382,7 +433,7 @@ Isti `ef` filter kao §6.3 (oba uslova alarma), bez kanalskih uslova, uz `dana_d
 
 **`lib/reminders/runReminders.ts`** — **nepromijenjen**. Post-due grana nestaje time što je RPC više ne vraća; ICS uslovnost živi u `runPostDue`, ne ovdje. (Revizija 3 je ovdje sama sebi protivrječila: §4.2 je tražila izmjenu `runReminders.ts:154-157`, a §7.1 tvrdila da ostaje nepromijenjen.)
 
-**`app/api/cron/reminders/route.ts`** — poziva `runPostDue` poslije `runReminders`.
+**`app/api/cron/reminders/route.ts`** — poziva `runPostDue` poslije `runReminders`, i **podiže `maxDuration`** sa 60 na 120 (`:12`). Postojećih 60s je dimenzionisano za `runReminders` pri punom cap-u (~50s uz throttling); dodavanje druge throttlovane petlje u isti zahtjev bi ga prekoračilo, a prekid usred slanja ostavlja zaglavljene claim-ove — oporavive, ali nepotrebno.
 
 **`lib/email/resend.ts` / cron ruta** — **glasan pad kad `RESEND_API_KEY` nedostaje u cron kontekstu**, umjesto tihog prelaska na `drySend` (`resend.ts:25`). Na produkcijskoj instanci bi istekao ključ značio da dedup prestane raditi, a po vraćanju ključa bi prvi run poslao sve odjednom.
 
@@ -446,9 +497,11 @@ Isti `ef` filter kao §6.3 (oba uslova alarma), bez kanalskih uslova, uz `dana_d
 
 ## 10. Redoslijed puštanja
 
-**PR 1:** `20260720119000` (enum) prvo i zasebno → `20260720120000` (tabela + backfill), `20260720121000` (RPC bez post-due), `20260720122000` (novi RPC), DEMO pa PROD → `pnpm db:types` → deploy → verifikacija na PROD-u: prvi run šalje **nula** mejlova, `post_due_obavijesti` ima šest backfill redova → kontrolna provjera poslije prvog pomjeranja roka: tačno jedna obavijest po kanalu, `insert` ne puca.
+**PR 1:** `20260720119000` (enum) prvo i zasebno → `20260720120000` (tabela + backfill), `20260720121000` (RPC bez post-due), `20260720122000` (novi RPC), `20260720123000` (claim funkcija), DEMO pa PROD → **primjena istih migracija lokalno** → `pnpm db:types` → deploy → verifikacija na PROD-u: prvi run šalje **nula** mejlova, `post_due_obavijesti` ima pet backfill redova → kontrolna provjera poslije prvog pomjeranja roka: tačno jedna obavijest po kanalu.
 
-**PR 2:** `20260721120000`, `20260721121000`, DEMO pa PROD → `pnpm db:types` → deploy + drugi cron unos + dva koraka u GH workflow-u (poslije koraka za podsjetnike) → ručno okidanje na instanci sa Resend ključem → verifikacija u prvi ponedjeljak.
+**PR 2:** `20260721120000`, `20260721121000`, `20260721122000`, DEMO pa PROD → lokalna primjena → `pnpm db:types` → deploy + drugi cron unos + dva koraka u GH workflow-u (poslije koraka za podsjetnike) → ručno okidanje na instanci sa Resend ključem → verifikacija u prvi ponedjeljak.
+
+> **Lokalna primjena nije opcionalna.** `pnpm db:types` je `supabase gen types typescript --local` (`package.json:15`), dakle čita **lokalni** stack, ne cloud. Bez `pnpm db:reset` (ili ručne primjene istih fajlova lokalno), `db/types.ts` neće dobiti nove tabele, RPC-ove ni `mejl_tip` vrijednosti, pa `TIP_KEY ... satisfies Record<MejlTip, string>` (`PoslatiMejloviTabela.tsx:11-16`) puca u suprotnom smjeru od onog koji §7.1 opisuje. Recenzija je ovaj korak našla kao izostavljen.
 
 ---
 
@@ -474,7 +527,9 @@ Isti `ef` filter kao §6.3 (oba uslova alarma), bez kanalskih uslova, uz `dana_d
 
 ## 12. Trag recenzija
 
-Pet nezavisnih recenzija bez konteksta razgovora u kojem je dokument nastao: dvije na reviziju 1, dvije na reviziju 2, jedna na reviziju 3. Posljednje dvije su imale read-only pristup živoj bazi.
+Šest nezavisnih recenzija bez konteksta razgovora u kojem je dokument nastao: dvije na reviziju 1, dvije na reviziju 2, jedna na reviziju 3, jedna na reviziju 4. Posljednje tri su imale read-only pristup živoj bazi; posljednja je RPC iz §6.3 **izvršila** protiv PROD podataka (prazan ledger → tri reda, sa backfillom → nula) umjesto da ga samo pročita.
+
+**Nalazi šeste recenzije, ugrađeni u ovu verziju:** claim se ne može izraziti kroz PostgREST → uvedene funkcije `claim_post_due` / `claim_digest` (§6.7); `trebaDigest` mora gledati stanje, ne postojanje reda, inače zaglavljeni claim guta digest cijelu sedmicu (§4.5); `pnpm db:types` traži prethodnu lokalnu primjenu migracija (§10); `maxDuration` podignut na 120 (§7.1); backfill ušutkuje samo kanal koji je stvarno slao (§6.1); `get_istekli_termini` prima bečki datum umjesto `current_date` (§6.6); zaseban `mejl_tip` i za interni post-due (§6.4); izbačen redundantan indeks (§6.1); razriješena protivrječnost oko firminog subject-a (§4.2); ograda da „nula mejlova" važi za PROD, ne za DEMO (§6.1).
 
 **Tri kritična nalaza, svaki je oborio po jednu verziju:**
 

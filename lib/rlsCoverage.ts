@@ -11,7 +11,13 @@ export type RlsViolation = { table: string; kind: "rls_disabled" | "no_policy" }
 
 // Tabele koje NAMJERNO imaju RLS uključen bez politike (deny-all; pristup samo preko service-role
 // ili SECURITY DEFINER RPC-a). Novu takvu tabelu treba SVJESNO dodati ovdje — inače je provjera obara.
-export const RLS_INTENTIONAL_POLICYLESS: readonly string[] = ["termin_zakazano_obavijest"]
+// - termin_zakazano_obavijest: piše/čita isključivo cron preko service-role klijenta
+// - post_due_obavijesti: ledger za post-due engine podsjetnika; piše/čita isključivo cron preko
+//   service-role klijenta (claim_post_due / get_post_due_termine RPC-ovi)
+export const RLS_INTENTIONAL_POLICYLESS: readonly string[] = [
+  "termin_zakazano_obavijest",
+  "post_due_obavijesti",
+]
 
 export function rlsCoverageViolations(
   tables: TableRow[],

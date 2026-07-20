@@ -1,3 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/db/types"
+import { env } from "@/lib/env"
+
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function parseEmailList(raw: string | null | undefined): string[] {
@@ -122,4 +126,60 @@ export function firmaRecipientsForKlijent(index: RecipientIndex, klijentId: stri
     out.push(e)
   }
   return out
+}
+
+const DEFAULT_DANA = [60, 30, 15, 7]
+
+/**
+ * Jedan izvor istine za "ko prima šta": postavke + admini + dodjele + firmine adrese.
+ * Zovu ga runReminders i runPostDue — kopiranje bi udvostručilo upite i otvorilo
+ * mogućnost da dva puta u istom zahtjevu vide različit snapshot dodjela.
+ *
+ * saljiKlijentima dolazi iz postavke i MORA biti dio ovog čitanja: bez njega bi
+ * buildRecipientIndex dobio false i firmin kanal bi tiho ostao ugašen.
+ */
+export async function loadRecipientIndex(
+  supabase: SupabaseClient<Database>,
+): Promise<{ index: RecipientIndex; base: string[]; danaPrije: number[] }> {
+  const { data: post, error: postErr } = await supabase
+    .from("postavke")
+    .select("dana_prije, salji_klijentima")
+    .eq("id", 1)
+    .maybeSingle()
+  // Baca na stvarnu grešku čitanja — tiho tretiranje kvara kao "post?.salji_klijentima ?? false"
+  // bi trajno ugasilo firmin kanal (upisalo bi 'preskoceno' za tekući ciklus). Odsustvo reda
+  // (data === null BEZ greške) nije kvar: postavke sa id=1 mogu legitimno nedostajati, tada
+  // važe fallback-ovi ispod.
+  if (postErr) throw new Error(`Greška pri čitanju postavki: ${postErr.message}`)
+  const danaPrije = post?.dana_prije && post.dana_prije.length > 0 ? post.dana_prije : DEFAULT_DANA
+  const saljiKlijentima = post?.salji_klijentima ?? false
+
+  const base = parseEmailList(env.REMINDER_TO)
+  const { data: korisnici, error: korErr } = await supabase
+    .from("korisnici")
+    .select("id, email, uloga, aktivan, prima_podsjetnike")
+  if (korErr) throw new Error(`Greška pri čitanju primalaca (korisnici): ${korErr.message}`)
+  // PostgREST implicitno limitira na ~1000 redova: sigurno na trenutnoj skali, ali ako dodjele narastu
+  // dodaj eksplicitan .range()/count provjeru — tiha trunkacija bi inače ispustila nekog primaoca.
+  const { data: dodjele, error: kkErr } = await supabase
+    .from("korisnik_klijent")
+    .select("korisnik_id, klijent_id")
+  if (kkErr) throw new Error(`Greška pri čitanju dodjela (korisnik_klijent): ${kkErr.message}`)
+  const { data: klijentiZaSlanje, error: klErr } = await supabase
+    .from("klijenti")
+    .select("id, salji_podsjetnik_klijentu, podsjetnik_emails")
+  if (klErr) throw new Error(`Greška pri čitanju klijenata (Krug 2): ${klErr.message}`)
+  const { data: kontaktiPrimaoci, error: kontErr } = await supabase
+    .from("kontakt_osobe")
+    .select("klijent_id, email, podsjetnik_primalac")
+  if (kontErr) throw new Error(`Greška pri čitanju kontakata (Krug 2): ${kontErr.message}`)
+
+  const index = buildRecipientIndex(
+    korisnici ?? [],
+    dodjele ?? [],
+    klijentiZaSlanje ?? [],
+    kontaktiPrimaoci ?? [],
+    saljiKlijentima,
+  )
+  return { index, base, danaPrije }
 }

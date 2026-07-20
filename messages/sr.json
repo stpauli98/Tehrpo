@@ -1124,7 +1124,19 @@
       "poljeLokacija": "Lokacija",
       "dugmeTermin": "Otvori termin",
       "dugmeKlijent": "Otvori klijenta",
-      "prilogNaziv": "termin.ics"
+      "prilogNaziv": "termin.ics",
+      "poljeZakazanoZa": "Zakazano za"
+    },
+    "rokIstekaoFirma": {
+      "predmet": "Rok je istekao — {vrsta} · {klijent}",
+      "headerLabel": "Obavijest",
+      "znacka": "ROK ISTEKAO",
+      "uvod": "Rok za izvršenje je istekao. Molimo javite se kako bismo dogovorili termin.",
+      "poljeRok": "Rok dospijeća",
+      "poljeZakazan": "Bilo zakazano za",
+      "poljeVrsta": "Vrsta",
+      "poljeKlijent": "Klijent",
+      "poljeLokacija": "Lokacija"
     },
     "ics": {
       "opis": "Podsjetnik o roku.",
@@ -1159,6 +1171,9 @@
     "tip": {
       "podsjetnikInterni": "Podsjetnik (interni)",
       "podsjetnikFirma": "Podsjetnik (firma)",
+      "podsjetnikRokIstekaoInterni": "Rok istekao (interno)",
+      "podsjetnikRokIstekaoFirma": "Rok istekao (firmi)",
+      "podsjetnikDigest": "Sedmični pregled",
       "zakazanoNakonRoka": "Zakazano nakon roka",
       "test": "Test"
     },

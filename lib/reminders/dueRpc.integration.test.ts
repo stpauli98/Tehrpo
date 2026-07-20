@@ -71,19 +71,6 @@ describe.skipIf(!URL)("get_due_podsjetnici (integracija, lokalni DB)", () => {
     })
   })
 
-  it("post-due: termin -2 daje jedan red (dana_prije=-2, dana_do_roka=-2); idempotentno isti dan", async () => {
-    await withSeed(async (ids) => {
-      const t = await addTermin(ids, -2)
-      const r1 = (await due([60, 30, 15, 7])).filter((x) => x.termin_id === t)
-      expect(r1).toHaveLength(1)
-      expect(r1[0]!.dana_prije).toBe(-2)
-      expect(r1[0]!.dana_do_roka).toBe(-2)
-      await db.query("insert into podsjetnici (termin_id, dana_prije, poslat_na) values ($1, -2, '{a@x.com}')", [t])
-      const r2 = (await due([60, 30, 15, 7])).filter((x) => x.termin_id === t)
-      expect(r2).toHaveLength(0)
-    })
-  })
-
   it("negativni post-due marker ne blokira pre-due prag za isti termin (reschedule)", async () => {
     await withSeed(async (ids) => {
       const t = await addTermin(ids, 30) // rok +30 → pre-due prag 30 treba okidati

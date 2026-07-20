@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import {
   reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml,
   reminderHtmlFirma, zakazanoNakonRokaHtml,
+  rokIstekaoFirmaSubject, rokIstekaoFirmaHtml,
 } from "./templates"
 
 describe("escapeHtml", () => {
@@ -142,5 +143,51 @@ describe("osvježeni dijeljeni okvir", () => {
       expect(html).toContain("border-radius:12px")
       expect(html).toContain("box-shadow:0 1px 3px rgba(15,23,42,.08)")
     }
+  })
+})
+
+describe("rokIstekaoFirma", () => {
+  const brand = { name: "TEHPRO", tagline: "Zaštita na radu i zaštita od požara" }
+
+  it("subject ne sadrži riječ o kašnjenju", () => {
+    const s = rokIstekaoFirmaSubject({ vrsta: "Obilazak", klijent: "CARMEUSE" })
+    expect(s).toContain("CARMEUSE")
+    expect(s.toLowerCase()).not.toContain("kasni")
+  })
+
+  it("html nema interne linkove ni dugmad", () => {
+    const html = rokIstekaoFirmaHtml({
+      klijent: "CARMEUSE", vrsta: "Obilazak", rok: "2026-07-13", brand,
+    })
+    expect(html).not.toContain("/plan-aktivnosti")
+    expect(html).not.toContain("/klijenti/")
+    expect(html).toContain("TEHPRO")
+  })
+
+  it("prikazuje zakazani datum kad postoji", () => {
+    const html = rokIstekaoFirmaHtml({
+      klijent: "CARMEUSE", vrsta: "Obilazak", rok: "2026-07-13", zakazanoZa: "2026-07-15", brand,
+    })
+    expect(html).toContain("15.07.2026")
+    expect(html).toContain("13.07.2026")
+  })
+
+  it("escapuje naziv klijenta", () => {
+    const html = rokIstekaoFirmaHtml({
+      klijent: "A & B <test>", vrsta: "Obilazak", rok: "2026-07-13", brand,
+    })
+    expect(html).toContain("A &amp; B &lt;test&gt;")
+    expect(html).not.toContain("<test>")
+  })
+})
+
+describe("reminderHtml sa zakazanoZa", () => {
+  it("prikazuje i rok i zakazani datum, i računa kašnjenje od zakazanog", () => {
+    const html = reminderHtml({
+      klijent: "CARMEUSE", vrsta: "Obilazak", rok: "2026-07-13",
+      danaDoRoka: -2, zakazanoZa: "2026-07-15",
+    })
+    expect(html).toContain("13.07.2026")
+    expect(html).toContain("15.07.2026")
   })
 })

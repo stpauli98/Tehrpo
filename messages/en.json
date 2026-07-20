@@ -1124,7 +1124,19 @@
       "poljeLokacija": "Location",
       "dugmeTermin": "Open appointment",
       "dugmeKlijent": "Open client",
-      "prilogNaziv": "appointment.ics"
+      "prilogNaziv": "appointment.ics",
+      "poljeZakazanoZa": "Scheduled for"
+    },
+    "rokIstekaoFirma": {
+      "predmet": "Deadline passed — {vrsta} · {klijent}",
+      "headerLabel": "Notice",
+      "znacka": "DEADLINE PASSED",
+      "uvod": "The deadline has passed. Please get in touch so we can arrange a visit.",
+      "poljeRok": "Due date",
+      "poljeZakazan": "Was scheduled for",
+      "poljeVrsta": "Service",
+      "poljeKlijent": "Client",
+      "poljeLokacija": "Location"
     },
     "ics": {
       "opis": "Deadline reminder.",
@@ -1159,6 +1171,9 @@
     "tip": {
       "podsjetnikInterni": "Reminder (internal)",
       "podsjetnikFirma": "Reminder (company)",
+      "podsjetnikRokIstekaoInterni": "Deadline passed (internal)",
+      "podsjetnikRokIstekaoFirma": "Deadline passed (client)",
+      "podsjetnikDigest": "Weekly summary",
       "zakazanoNakonRoka": "Scheduled after due date",
       "test": "Test"
     },

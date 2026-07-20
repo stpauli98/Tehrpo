@@ -125,6 +125,7 @@ export function reminderHtml(args: {
   rok: string
   danaDoRoka: number
   lokacija?: string | null
+  zakazanoZa?: string | null
   terminId?: string
   klijentId?: string
   baseUrl?: string
@@ -135,6 +136,10 @@ export function reminderHtml(args: {
   const boja = kasni ? "#dc2626" : "#2563eb"
   const badgeTekst = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
   const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
+  // Kad ciklus dolazi iz datum_zakazan, mejl mora prikazati OBA datuma — rok ostaje rok.
+  const zakazanoRed = args.zakazanoZa
+    ? poljeRed(t("poljeZakazanoZa"), formatDatum(args.zakazanoZa, locale))
+    : ""
 
   // Dugmad: samo s baseUrl + odgovarajući id. Table-based ("bulletproof") za Outlook.
   const base = args.baseUrl ? args.baseUrl.replace(/\/$/, "") : ""
@@ -160,6 +165,7 @@ export function reminderHtml(args: {
             ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta), true)}
             ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
             ${lokRed}
+            ${zakazanoRed}
           </table>
           ${dugmadBlok}`
   return layoutOmot({
@@ -195,6 +201,55 @@ export function reminderHtmlFirma(args: {
           <p style="margin:12px 0 0;font-size:15px"><strong>${t("rokDospijeca")}</strong> ${rok}</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
             ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta), true)}
+            ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
+            ${lokRed}
+          </table>`
+  return layoutOmot({
+    accent: boja,
+    headerNaziv: escapeHtml(b.name),
+    headerLabel: t("headerLabel"),
+    telo,
+    footer: potpis,
+    locale,
+  })
+}
+
+export function rokIstekaoFirmaSubject(
+  args: { vrsta: string; klijent: string },
+  locale: Locale = APP_LOCALE,
+): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.rokIstekaoFirma" })
+  return t("predmet", { vrsta: args.vrsta, klijent: args.klijent })
+}
+
+/**
+ * Firmina obavijest da je rok istekao — poziv na dogovor, ne opomena.
+ * Bez internih dugmadi i bez ICS priloga; brend iz FirmBrand.
+ */
+export function rokIstekaoFirmaHtml(args: {
+  klijent: string
+  vrsta: string
+  rok: string
+  zakazanoZa?: string | null
+  lokacija?: string | null
+  brand: FirmBrand
+}, locale: Locale = APP_LOCALE): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.rokIstekaoFirma" })
+  const b = args.brand
+  const boja = "#dc2626"
+  const zakazanRed = args.zakazanoZa
+    ? poljeRed(t("poljeZakazan"), formatDatum(args.zakazanoZa, locale))
+    : ""
+  const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
+  const kontakt = [b.email, b.phone, b.web].filter(Boolean).map((x) => escapeHtml(String(x))).join(" · ")
+  const potpis = `${escapeHtml(b.name)} — ${escapeHtml(b.tagline)}${kontakt ? `<br>${kontakt}` : ""}`
+
+  const telo = `${badge(boja, t("znacka"))}
+          <p style="margin:12px 0 0;font-size:15px">${t("uvod")}</p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
+            ${poljeRed(t("poljeRok"), formatDatum(args.rok, locale), true)}
+            ${zakazanRed}
+            ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta))}
             ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
             ${lokRed}
           </table>`

@@ -6,7 +6,7 @@ import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
 import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
 import { buildTerminIcs } from "@/lib/email/ics"
 import { reminderSubject, reminderHtml, reminderHtmlFirma } from "@/lib/email/templates"
-import { recipientsForKlijent, firmaRecipientsForKlijent, buildRecipientIndex, parseEmailList } from "@/lib/reminders/recipients"
+import { recipientsForKlijent, firmaRecipientsForKlijent, loadRecipientIndex } from "@/lib/reminders/recipients"
 import { firmBrand } from "@/lib/email/firmBrand"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
@@ -22,8 +22,6 @@ type Outcome =
   | ({ kind: "sent" } & SentItem)
   | ({ kind: "skip" } & SkipItem)
   | ({ kind: "err" } & ErrItem)
-
-const DEFAULT_DANA = [60, 30, 15, 7]
 
 export async function runReminders(
   supabase: SupabaseClient<Database>,
@@ -42,47 +40,13 @@ export async function runReminders(
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
   const delayMs = deps.delayMs ?? (Number(env.REMINDER_BATCH_DELAY_MS) || 1100)
 
-  const { data: post } = await supabase
-    .from("postavke")
-    .select("dana_prije, salji_klijentima")
-    .eq("id", 1)
-    .maybeSingle()
-  const danaPrije = post?.dana_prije && post.dana_prije.length > 0 ? post.dana_prije : DEFAULT_DANA
-  const saljiKlijentima = post?.salji_klijentima ?? false
+  // Indeks primalaca (jednom po run-u): admini + mapa klijent_id → dodijeljeni; eligibilnost = aktivan & prima_podsjetnike.
+  const { index: recipientIndex, base, danaPrije } = await loadRecipientIndex(supabase)
 
   const { data: due, error } = await supabase.rpc("get_due_podsjetnici", { dana_prije_arr: danaPrije })
   if (error) throw new Error(error.message)
   const rows = due ?? []
 
-  // Indeks primalaca (jednom po run-u): admini + mapa klijent_id → dodijeljeni; eligibilnost = aktivan & prima_podsjetnike.
-  const base = parseEmailList(env.REMINDER_TO)
-  const { data: korisnici, error: korErr } = await supabase
-    .from("korisnici")
-    .select("id, email, uloga, aktivan, prima_podsjetnike")
-  if (korErr) throw new Error(`Greška pri čitanju primalaca (korisnici): ${korErr.message}`)
-  // PostgREST implicitno limitira na ~1000 redova: sigurno na trenutnoj skali, ali ako dodjele narastu
-  // dodaj eksplicitan .range()/count provjeru — tiha trunkacija bi inače ispustila nekog primaoca.
-  const { data: dodjele, error: kkErr } = await supabase
-    .from("korisnik_klijent")
-    .select("korisnik_id, klijent_id")
-  if (kkErr) throw new Error(`Greška pri čitanju dodjela (korisnik_klijent): ${kkErr.message}`)
-  const { data: klijentiZaSlanje, error: klErr } = await supabase
-    .from("klijenti")
-    .select("id, salji_podsjetnik_klijentu, podsjetnik_emails")
-  if (klErr) throw new Error(`Greška pri čitanju klijenata (Krug 2): ${klErr.message}`)
-  // Firmine adrese dolaze iz flagovanih kontakata (jedan izvor istine = kontakt_osobe).
-  // PostgREST ~1000-red limit: sigurno na trenutnoj skali; ako kontakti narastu dodaj .range()/count.
-  const { data: kontaktiPrimaoci, error: kontErr } = await supabase
-    .from("kontakt_osobe")
-    .select("klijent_id, email, podsjetnik_primalac")
-  if (kontErr) throw new Error(`Greška pri čitanju kontakata (Krug 2): ${kontErr.message}`)
-  const recipientIndex = buildRecipientIndex(
-    korisnici ?? [],
-    dodjele ?? [],
-    klijentiZaSlanje ?? [],
-    kontaktiPrimaoci ?? [],
-    saljiKlijentima,
-  )
   if (
     recipientIndex.adminEmails.length === 0 &&
     recipientIndex.assignedByKlijent.size === 0 &&

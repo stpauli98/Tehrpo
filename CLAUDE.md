@@ -39,7 +39,8 @@ pnpm db:types         # regenerate db/types.ts from the LOCAL DB — AUTO-GENERA
 pnpm db:reset         # supabase db reset (reapply all migrations to local stack)
 pnpm seed             # wipe + repopulate LOCAL DB from ../2026- obilasci...xlsx (needs `supabase start` first)
 pnpm seed:admin <email> <pw> "<ime>"   # create Supabase Auth user + admin korisnici row (idempotent)
-pnpm db:apply-cloud <migration.sql>    # apply ONE migration to CLOUD (raw pg over DATABASE_URL = PROD; ref-guard for DEMO)
+pnpm db:apply-cloud --demo <migration.sql>              # apply ONE migration to cloud DEMO
+POTVRDI_PROD=da pnpm db:apply-cloud --prod <migration.sql>  # ... to cloud PROD (target is never implicit)
 pnpm reminders [-- --dry]              # run the reminder engine locally (same code as the cron route)
 pnpm preview:import   # dry-read the Excel workbook, no DB writes
 ```
@@ -73,7 +74,7 @@ Pick by execution context; this is the most important rule in the codebase:
 
 ### Migrations & read models
 - `supabase/migrations/*.sql` is the source of truth. `db/types.ts` is auto-generated — run `pnpm db:types` after any migration, never hand-edit.
-- **The cloud DB is NOT reachable through the Supabase MCP.** Apply migrations to cloud one file at a time with `pnpm db:apply-cloud <file>` (raw `pg` over the `DATABASE_URL` pooler).
+- **The cloud DB is NOT reachable through the Supabase MCP.** Apply migrations to cloud one file at a time with `pnpm db:apply-cloud --demo <file>` / `POTVRDI_PROD=da pnpm db:apply-cloud --prod <file>` (raw `pg` over the pooler). **The target is never implicit:** without `--demo`/`--prod` the script refuses to run, and it verifies the connection string actually carries the matching project ref before executing (`lib/supabase/refs.ts`). Until 2026-07-20 it silently defaulted to PROD.
 - Read-model convention: pages read from flat enriched **views** (`klijenti_view`, `termini_view` — joined names + computed `status_izvedeni`) and **stable RPCs** (`get_termini_stats`, `get_opterecenje`) so a screen aggregates in one round-trip rather than N queries.
 
 ### App Router conventions (`app/`)
@@ -102,8 +103,8 @@ One codebase serves multiple firms and languages; brand and locale are **build-t
 
 ### Tests & deployment
 - **Unit:** Vitest, node env, `lib/**/*.test.ts` only, pure logic.
-- **E2E:** Playwright, `--workers=1`, chromium + webkit at 1440×900. It boots its own dev server (`--webpack`, with `ZAPISNIK_DRY_RUN=1` + `CHAT_DRY_RUN=1`). `auth.setup.ts` logs in via Supabase REST and hand-encodes the `@supabase/ssr` cookie into `storageState` to avoid hundreds of real logins. **E2E runs against the cloud DEMO Supabase (not a local stack)** — mutations hit the live DEMO DB (`--workers=1`, since specs share global singleton `postavke` id=1), so `pnpm cleanup:test-data` purges test junk afterward.
-- **Deploy:** Vercel, region `dub1` (`vercel.json`). The reminder cron route exists but `vercel.json` has **no `crons` array yet** — the schedule isn't wired.
+- **E2E:** Playwright, `--workers=1`, chromium + webkit at 1440×900. It boots its own dev server (`--webpack`, with `ZAPISNIK_DRY_RUN=1` + `CHAT_DRY_RUN=1`). `auth.setup.ts` logs in via Supabase REST and hand-encodes the `@supabase/ssr` cookie into `storageState` to avoid hundreds of real logins. **E2E runs against the cloud DEMO Supabase (not a local stack)** — mutations hit the live DEMO DB (`--workers=1`, since specs share global singleton `postavke` id=1), so `pnpm cleanup:test-data` purges test junk afterward. **A `globalSetup` guard refuses to run the suite unless the resolved target is the DEMO ref** (`tests/e2e/global-setup.ts`) — in a git worktree missing `.env.development.local`, `next dev` silently falls back to `.env.local` (PROD), which is how a full E2E run once wrote to production.
+- **Deploy:** Vercel, region `dub1` (`vercel.json`). The reminder cron **is** wired: `vercel.json` has a `crons` entry (`/api/cron/reminders`, `0 8 * * *`), and `.github/workflows/reminders.yml` additionally hits the route hourly per instance. Note that with `postavke.vrijeme_slanja_sat = 10` the Vercel cron falls outside the sending window in winter (08:00 UTC = 09:00 Vienna), so GitHub Actions is the effective scheduler.
 
 ### Conventions enforced by lint
 - **No `sm:` / `md:` Tailwind breakpoints** (`no-restricted-syntax` in `eslint.config.mjs`) — desktop-only; use `lg:`/`xl:`/`2xl:` or no breakpoint.

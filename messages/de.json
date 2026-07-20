@@ -1124,7 +1124,19 @@
       "poljeLokacija": "Standort",
       "dugmeTermin": "Termin öffnen",
       "dugmeKlijent": "Kunde öffnen",
-      "prilogNaziv": "termin.ics"
+      "prilogNaziv": "termin.ics",
+      "poljeZakazanoZa": "Geplant für:"
+    },
+    "rokIstekaoFirma": {
+      "predmet": "Frist abgelaufen — {vrsta} · {klijent}",
+      "headerLabel": "Mitteilung",
+      "znacka": "FRIST ABGELAUFEN",
+      "uvod": "Die Frist ist abgelaufen. Bitte melden Sie sich, damit wir einen Termin vereinbaren können.",
+      "poljeRok": "Fälligkeitsdatum",
+      "poljeZakazan": "War geplant für",
+      "poljeVrsta": "Leistung",
+      "poljeKlijent": "Kunde",
+      "poljeLokacija": "Standort"
     },
     "ics": {
       "opis": "Erinnerung an die Frist.",

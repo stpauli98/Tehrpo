@@ -33,6 +33,8 @@ import {
   zakazanoNakonRokaHtml,
   testEmailSubject,
   testEmailHtml,
+  rokIstekaoFirmaSubject,
+  rokIstekaoFirmaHtml,
 } from "@/lib/email/templates"
 import { firmBrand } from "@/lib/email/firmBrand"
 import { sendEmail, drySend } from "@/lib/email/resend"
@@ -52,6 +54,9 @@ const FX = {
   // Zakazano nakon roka:
   zakazanoRok: "2026-06-01",
   zakazanoZakazan: "2026-07-20",
+  // Rok istekao (post-due): ciklus dolazi iz zakazanog datuma koji je i sam prošao.
+  istekaoRok: "2026-07-13",
+  istekaoZakazan: "2026-07-15",
 } as const
 
 const DANA_USKORO = 7
@@ -59,7 +64,7 @@ const DANA_KASNI = -3
 
 type PreviewItem = { file: string; naziv: string; subject: string; html: string }
 
-/** Sve preview stavke (6 fajlova: interni×2, firma×2, zakazano, test). */
+/** Sve preview stavke (8 fajlova (interni×3, firma×3, zakazano, test)). */
 function buildItems(): PreviewItem[] {
   const brand = firmBrand()
   const { klijent, vrsta, rok, lokacija, baseUrl, terminId, klijentId } = FX
@@ -96,7 +101,24 @@ function buildItems(): PreviewItem[] {
       html: zakazanoNakonRokaHtml({ klijent, vrsta, rok: FX.zakazanoRok, zakazan: FX.zakazanoZakazan, lokacija }),
     },
     {
-      file: "6-test-email.html",
+      file: "6-rok-istekao-firma.html",
+      naziv: "Rok istekao (firma, poziv na dogovor, FirmBrand)",
+      subject: rokIstekaoFirmaSubject({ vrsta, klijent }),
+      html: rokIstekaoFirmaHtml({
+        klijent, vrsta, rok: FX.istekaoRok, zakazanoZa: FX.istekaoZakazan, lokacija, brand,
+      }),
+    },
+    {
+      file: "7-podsjetnik-interni-zakazan-pa-propusten.html",
+      naziv: "Podsjetnik (interni) — zakazano pa propušteno",
+      subject: reminderSubject({ vrsta, klijent, danaDoRoka: DANA_KASNI }),
+      html: reminderHtml({
+        klijent, vrsta, rok: FX.istekaoRok, danaDoRoka: DANA_KASNI, lokacija,
+        zakazanoZa: FX.istekaoZakazan, terminId, klijentId, baseUrl,
+      }),
+    },
+    {
+      file: "8-test-email.html",
       naziv: "Test email (potvrda dostave)",
       subject: testEmailSubject(),
       html: testEmailHtml({ ime: "Marko Marković" }),

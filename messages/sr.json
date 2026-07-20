@@ -1125,7 +1125,7 @@
       "dugmeTermin": "Otvori termin",
       "dugmeKlijent": "Otvori klijenta",
       "prilogNaziv": "termin.ics",
-      "poljeZakazanoZa": "Zakazano za:"
+      "poljeZakazanoZa": "Zakazano za"
     },
     "rokIstekaoFirma": {
       "predmet": "Rok je istekao — {vrsta} · {klijent}",

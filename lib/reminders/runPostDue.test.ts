@@ -32,6 +32,7 @@ function makeFake(opts: {
 }) {
   const updates: Array<{ id: unknown; patch: Record<string, unknown> }> = []
   const mejlLogTipovi: string[] = []
+  const rpcPozivi: string[] = []
   const claims = [...(opts.claimIds ?? ["c1", "c2", "c3", "c4"])]
   const fake = {
     from(table: string) {
@@ -61,6 +62,7 @@ function makeFake(opts: {
       throw new Error(`neočekivan from(${table})`)
     },
     async rpc(name: string, params?: Record<string, unknown>) {
+      rpcPozivi.push(name)
       if (name === "get_post_due_termine") return { data: opts.rows ?? [], error: null }
       if (name === "claim_post_due") {
         if (opts.claimError) return { data: null, error: { message: opts.claimError } }
@@ -73,7 +75,7 @@ function makeFake(opts: {
       return { data: null, error: null }
     },
   }
-  return { supabase: fake as unknown as SupabaseClient<Database>, updates, mejlLogTipovi }
+  return { supabase: fake as unknown as SupabaseClient<Database>, updates, mejlLogTipovi, rpcPozivi }
 }
 
 const ADMIN = { id: "u1", email: "admin@x.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }
@@ -184,14 +186,18 @@ describe("runPostDue", () => {
     expect(mejlLogTipovi).toEqual(["podsjetnik_rok_istekao_interni"])
   })
 
-  it("dry-run: ledger ostaje neoznačen, rezultat nosi dryRun: true", async () => {
-    const { supabase, updates } = makeFake({ rows: [ROW], korisnici: [ADMIN] })
+  it("dry-run: ne uzima claim, ledger ostaje netaknut, rezultat nosi dryRun: true", async () => {
+    const { supabase, updates, rpcPozivi } = makeFake({ rows: [ROW], korisnici: [ADMIN] })
     const res = await runPostDue(supabase, {
       send: async () => ({ id: "re_dry", dryRun: true }),
+      dryRun: true,
       delayMs: 0,
     })
     expect(res.sent).toHaveLength(1)
     expect(res.sent[0]!.dryRun).toBe(true)
+    // Dokaz regresije iz recenzije: dry run NE smije uzeti claim_post_due — inače
+    // red ostaje 'u_toku' 15 minuta i blokira stvarnu obavijest za taj ciklus.
+    expect(rpcPozivi).not.toContain("claim_post_due")
     expect(updates).toHaveLength(0)
   })
 

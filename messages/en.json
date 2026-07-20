@@ -1125,7 +1125,7 @@
       "dugmeTermin": "Open appointment",
       "dugmeKlijent": "Open client",
       "prilogNaziv": "appointment.ics",
-      "poljeZakazanoZa": "Scheduled for:"
+      "poljeZakazanoZa": "Scheduled for"
     },
     "rokIstekaoFirma": {
       "predmet": "Deadline passed — {vrsta} · {klijent}",

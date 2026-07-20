@@ -7,7 +7,7 @@ const DRY = process.argv.includes("--dry")
 
 async function main() {
   const supabase = createAdminSupabaseClient()
-  const posalji = DRY ? { send: drySend } : {}
+  const posalji = DRY ? { send: drySend, dryRun: true } : {}
   const result = await runReminders(supabase, posalji)
   const postDue = await runPostDue(supabase, posalji)
   console.log(JSON.stringify({ preDue: result, postDue }, null, 2))

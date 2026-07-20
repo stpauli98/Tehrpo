@@ -68,7 +68,7 @@ async function handle(req: Request) {
   }
 
   try {
-    const posalji = dryRun ? { send: drySend } : {}
+    const posalji = dryRun ? { send: drySend, dryRun: true } : {}
     // preDue UVIJEK ima isti oblik (sent/skipped/errors kao nizovi, deferred kao broj) bez
     // obzira da li je stvarno pokrenut ili preskočen zbog dnevnog markera — potrošači (UI,
     // testovi) rade .sent.length/.skipped.length bez provjere tipa. Razlog preskakanja ide u

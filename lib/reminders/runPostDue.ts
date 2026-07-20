@@ -34,6 +34,13 @@ type PostDueObavijestiUpdate = Database["public"]["Tables"]["post_due_obavijesti
  * istovremeno. Send-first bi značio da oba nađu prazan ledger i oba pošalju.
  * Pad slanja NE briše claim — red ostaje 'u_toku' i get_post_due_termine ga
  * ponovo otvori poslije 15 minuta.
+ *
+ * Dry run (deps.dryRun) je izuzet iz claim-a: ne piše u ledger uopšte, jer ne
+ * postoji "pravo slanje" koje bi trebalo zaštititi od duplikata. Da dry run
+ * ipak uzme claim, ostavio bi red u 'u_toku' na 15 minuta i time blokirao
+ * stvarnu obavijest za taj ciklus — upravo scenario koji claim-first sprječava
+ * za pravo slanje. Namjerno eksplicitan flag, ne poređenje `deps.send === drySend`:
+ * referenca funkcije nije pouzdan signal (poziv može doći umotan/rebinding-om).
  */
 export async function runPostDue(
   supabase: SupabaseClient<Database>,
@@ -41,9 +48,11 @@ export async function runPostDue(
     send?: (a: SendArgs) => Promise<SendResult>
     batchSize?: number
     delayMs?: number
+    dryRun?: boolean
   } = {},
 ): Promise<PostDueRunResult> {
   const send = deps.send ?? sendEmail
+  const isDryRun = deps.dryRun === true
   const brand = firmBrand()
   const fromAddr = env.EMAIL_FROM ?? "no-reply@tehpro"
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
@@ -66,22 +75,25 @@ export async function runPostDue(
 
   const obradiKanal = async (r: (typeof rows)[number], kanal: Kanal): Promise<Outcome> => {
     const terminId = r.termin_id!
-    const { data, error: claimErr } = await supabase.rpc("claim_post_due", {
-      p_termin: terminId, p_ciklus: r.ciklus_rok!, p_kanal: kanal,
-    })
-    // Generisani tip laže: claim_post_due je tipiziran kao `Returns: string`, ali
-    // stvarno vraća null kad claim drži neko drugi (potvrđeno izvršavanjem u recenziji
-    // prethodnog taska). Provjera ispod mora ostati — bez nje bi "claim nije dobijen"
-    // tiho prošlo kao uspjeh i poslalo duplikat.
-    const claimId = data as string | null
-    if (claimErr) return { kind: "err", terminId, kanal, message: claimErr.message }
-    if (!claimId) return { kind: "skip", terminId, kanal, razlog: "claim drži neko drugi" }
+    let claimId: string | null = null
+    if (!isDryRun) {
+      const { data, error: claimErr } = await supabase.rpc("claim_post_due", {
+        p_termin: terminId, p_ciklus: r.ciklus_rok!, p_kanal: kanal,
+      })
+      // Generisani tip laže: claim_post_due je tipiziran kao `Returns: string`, ali
+      // stvarno vraća null kad claim drži neko drugi (potvrđeno izvršavanjem u recenziji
+      // prethodnog taska). Provjera ispod mora ostati — bez nje bi "claim nije dobijen"
+      // tiho prošlo kao uspjeh i poslalo duplikat.
+      claimId = data as string | null
+      if (claimErr) return { kind: "err", terminId, kanal, message: claimErr.message }
+      if (!claimId) return { kind: "skip", terminId, kanal, razlog: "claim drži neko drugi" }
+    }
 
     const primaoci = kanal === "interni"
       ? recipientsForKlijent(index, r.klijent_id!, base)
       : firmaRecipientsForKlijent(index, r.klijent_id!)
     if (primaoci.length === 0) {
-      await oznaci(claimId, { stanje: "preskoceno", razlog: "nema_primalaca" })
+      if (claimId) await oznaci(claimId, { stanje: "preskoceno", razlog: "nema_primalaca" })
       return { kind: "skip", terminId, kanal, razlog: "nema primalaca" }
     }
 
@@ -127,7 +139,11 @@ export async function runPostDue(
         send,
       )
       const svi = [...(args.to ?? []), ...(args.bcc ?? [])]
-      if (!res.dryRun) {
+      // claimId je null tačno kad je isDryRun true (claim se u tom slučaju ni ne uzima) —
+      // ledger se dry runu ne dira. res.dryRun se dodatno provjerava za rubni slučaj kad
+      // claim JESTE uzet (isDryRun false) ali je send() svejedno tiho pao na drySend
+      // (nedostaje RESEND_API_KEY) — tada mejl nije stvarno poslat pa se ni ne označava.
+      if (claimId && !res.dryRun) {
         const { error: updErr } = await supabase
           .from("post_due_obavijesti")
           .update({ stanje: "poslato", poslat_at: new Date().toISOString(), poslat_na: svi, resend_id: res.id })

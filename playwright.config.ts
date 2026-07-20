@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test"
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Odbija pokretanje ako cilj nije DEMO. Vidi tests/e2e/global-setup.ts —
+  // postoji zbog incidenta u kojem je cijeli E2E prolaz otišao na produkciju.
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

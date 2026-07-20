@@ -5,37 +5,19 @@
  *
  * ⚠️ Mutacije idu na ISTU cloud bazu koju koristi app — vidi napomenu u README/planu.
  */
-import { readFileSync } from "node:fs"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import { envVar } from "./env"
+import { zahtijevajCilj } from "@/lib/supabase/refs"
 
-function fromFile(file: string, key: string): string {
-  let content = ""
-  try {
-    content = readFileSync(file, "utf8")
-  } catch {
-    return ""
-  }
-  const line = content
-    .split("\n")
-    .find((l) => l.trimStart().startsWith(`${key}=`))
-  return line ? line.slice(line.indexOf("=") + 1).trim() : ""
-}
+const SUPABASE_URL = envVar("NEXT_PUBLIC_SUPABASE_URL")
 
-// Ista precedenca kao Next dev i auth.setup: process.env > .env.development.local > .env.local.
-// KRITIČNO: dev server (app pod testom) radi protiv .env.development.local (DEMO projekt). Ovaj
-// helper MORA pisati u ISTI projekt — inače test podaci odu u drugi projekt (PROD) i app ih ne
-// vidi (sheet se ne otvori, brojači krivi) + zagađuje PROD bazu.
-function envVar(key: string): string {
-  return (
-    process.env[key] ||
-    fromFile(".env.development.local", key) ||
-    fromFile(".env.local", key) ||
-    ""
-  )
-}
+// Druga brana, uz tests/e2e/global-setup.ts: nijedan helper koji PIŠE ne smije se
+// instancirati protiv produkcije. Guard je ovdje jer se ovaj modul uvozi iz specova
+// i kad neko pokrene pojedinačni test zaobilazeći uobičajeni put.
+zahtijevajCilj(SUPABASE_URL, "demo", "tests/e2e/db.ts")
 
 export const db: SupabaseClient = createClient(
-  envVar("NEXT_PUBLIC_SUPABASE_URL"),
+  SUPABASE_URL,
   envVar("SUPABASE_SERVICE_ROLE_KEY"),
   { auth: { persistSession: false } },
 )

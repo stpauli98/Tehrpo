@@ -34,7 +34,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 vi.mock("@/lib/env", () => ({ env: envMock }))
 
 // route.ts uvozi handle preko GET/POST (isti handler za oba).
-import { GET } from "./route"
+import { GET, POST } from "./route"
 
 type Postavke = {
   podsjetnici_aktivni?: boolean
@@ -198,5 +198,119 @@ describe("GET /api/cron/reminders", () => {
     expect(runRemindersMock).not.toHaveBeenCalled()
     expect(runPostDueMock).not.toHaveBeenCalled()
     expect(updateCalls).toHaveLength(0) // 500 je PRIJE try bloka (prije marker upisa i pre/post-due poziva)
+  })
+
+  it("7. POST (ručno) sa markerom == danas → gating blok se NE izvršava, runReminders SE poziva", async () => {
+    // Isti postavke red kao scenario 3, gdje bi GET preskočio pre-due zbog markera —
+    // ovdje dokazujemo da POST tu granu uopšte ne dodiruje (gating blok je `if (req.method === "GET")`).
+    const { supabase, updateCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-08" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await POST(req("POST"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
+    // Diskriminator skip-grane: samo preskočen pre-due (GET+marker) ima `preskocen`.
+    expect(body.preDue.preskocen).toBeUndefined()
+    expect(updateCalls).toHaveLength(0) // POST nikad ne upisuje dnevni marker
+  })
+
+  it("8. RESEND_API_KEY odsutan + eksplicitan dryRun:true (POST) → gating prošao, NE vraća 500", async () => {
+    // GET ne može nositi tijelo (fetch/undici baca na Request({method:'GET', body}), pa je POST
+    // jedini realni nosilac eksplicitnog dryRun-a — u skladu sa komentarom u route.ts (Vercel Cron
+    // šalje GET bez tijela). Za POST gating trivijalno "prolazi" (blok se ne izvršava), a provjera
+    // ključa je iza cijelog gating bloka i mora izuzeti dryRun bez obzira na metod.
+    envMock.RESEND_API_KEY = undefined
+    const { supabase } = makeSupabase({})
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await POST(req("POST", { body: { dryRun: true } }))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.error).toBeUndefined()
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("9. greška upisa markera (updateError) se loguje preko console.error, ali odgovor i dalje uspije", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const { supabase, updateCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+      updateError: "upis nije uspio",
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await GET(req("GET"))
+
+    expect(res.status).toBe(200) // greška upisa markera ne smije srušiti response
+    expect(updateCalls).toHaveLength(1) // upis je pokušan
+    expect(runPostDueMock).toHaveBeenCalledTimes(1) // i dalje nastavlja na post-due
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining("upis markera zadnje_slanje_datum nije uspio"),
+      "upis nije uspio",
+    )
+  })
+
+  it("10. runPostDue baci grešku → 500, ALI marker je svejedno upisan (svrha redoslijeda marker→post-due)", async () => {
+    const { supabase, updateCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockRejectedValue(new Error("post-due je pukao"))
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.error).toContain("post-due je pukao")
+    // Ovo je cijela svrha upisa markera PRIJE runPostDue poziva (vidi komentar u route.ts):
+    // pad u post-due putanji ne smije poništiti da je pre-due danas već uspješno odrađen.
+    expect(updateCalls).toHaveLength(1)
+    expect(updateCalls[0]!.patch).toEqual({ zadnje_slanje_datum: "2026-07-08" })
+  })
+
+  it("11. sat === vrijeme_slanja_sat (granica) → NE preskače, šalje se", async () => {
+    // IZNAD_SATA je lokalno 09:00 (vidi komentar uz konstantu) — postavljamo prag tačno na 9,
+    // ne 8 kao u ostalim testovima, da pogodimo granicu sat === vrijemeSat (>=, ne >).
+    const { supabase } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 9, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.skipped).toBeUndefined() // NIJE "izvan_sata"
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("12. postavke red nedostaje (null) → tretira se kao uključeno, ruta radi umjesto da padne", async () => {
+    const { supabase } = makeSupabase({ postavke: null })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.error).toBeUndefined()
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
   })
 })

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { runReminders } from "@/lib/reminders/runReminders"
+import { runPostDue } from "@/lib/reminders/runPostDue"
 import { drySend } from "@/lib/email/resend"
 import { isCronAuthorized } from "@/lib/reminders/cronAuth"
 import { podsjetniciAktivni, lokalniSatIDatum, trebaSlatiSada } from "@/lib/reminders/gating"
@@ -8,8 +9,9 @@ import { env } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-// Throttlovan run (grupe + pauze) može trajati ~50s pri punom cap-u → podigni limit funkcije.
-export const maxDuration = 60
+// Dvije throttlovane petlje (pre-due + post-due) dijele jedan zahtjev; 60s je bilo
+// dimenzionisano samo za runReminders pri punom cap-u (~50s).
+export const maxDuration = 120
 
 async function handle(req: Request) {
   if (!isCronAuthorized(req.headers.get("authorization"), env.CRON_SECRET)) {
@@ -22,6 +24,13 @@ async function handle(req: Request) {
     dryRun = body?.dryRun === true
   } catch {
     // prazno telo (Vercel Cron šalje GET bez tijela) je OK → dryRun = false
+  }
+
+  // Bez ključa sendEmail tiho pređe na drySend (resend.ts:25). U cron kontekstu to
+  // znači da se tragovi ne upisuju, dedup prestane raditi, a po vraćanju ključa prvi
+  // run pošalje sve odjednom. Bolje pasti glasno. Eksplicitni dryRun je izuzet.
+  if (!dryRun && !env.RESEND_API_KEY) {
+    return NextResponse.json({ error: "RESEND_API_KEY nije postavljen" }, { status: 500 })
   }
 
   const supabase = createAdminSupabaseClient()
@@ -49,12 +58,14 @@ async function handle(req: Request) {
   }
 
   try {
-    const result = await runReminders(supabase, dryRun ? { send: drySend } : {})
+    const posalji = dryRun ? { send: drySend } : {}
+    const result = await runReminders(supabase, posalji)
+    const postDue = await runPostDue(supabase, posalji)
     // Uspješan auto-run: obilježi da je danas (lokalni datum) slato → spriječi ponovni run istog dana.
     if (datumZaMarker) {
       await supabase.from("postavke").update({ zadnje_slanje_datum: datumZaMarker }).eq("id", 1)
     }
-    return NextResponse.json(result)
+    return NextResponse.json({ ...result, postDue })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Greška"
     return NextResponse.json({ error: message }, { status: 500 })

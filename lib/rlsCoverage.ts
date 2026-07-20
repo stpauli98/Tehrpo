@@ -14,9 +14,12 @@ export type RlsViolation = { table: string; kind: "rls_disabled" | "no_policy" }
 // - termin_zakazano_obavijest: piše/čita isključivo cron preko service-role klijenta
 // - post_due_obavijesti: ledger za post-due engine podsjetnika; piše/čita isključivo cron preko
 //   service-role klijenta (claim_post_due / get_post_due_termine RPC-ovi)
+// - digest_slanja: ledger za sedmični digest; piše/čita isključivo cron preko service-role
+//   klijenta (claim_digest / get_istekli_termini RPC-ovi)
 export const RLS_INTENTIONAL_POLICYLESS: readonly string[] = [
   "termin_zakazano_obavijest",
   "post_due_obavijesti",
+  "digest_slanja",
 ]
 
 export function rlsCoverageViolations(

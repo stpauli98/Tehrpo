@@ -1,0 +1,202 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/db/types"
+
+// Modul zavisi od pet vanjskih stvari: runReminders, runPostDue, createAdminSupabaseClient,
+// isCronAuthorized i env. Sve pet se mockuju da test ne dodiruje ni mrežu ni bazu — gating
+// (lokalniSatIDatum/trebaSlatiSada/podsjetniciAktivni) ostaje REALAN jer je čista funkcija
+// vremena (već pokrivena u gating.test.ts) i kontroliše se preko vi.setSystemTime.
+const { runRemindersMock, runPostDueMock, isCronAuthorizedMock, createAdminSupabaseClientMock, envMock } =
+  vi.hoisted(() => ({
+    runRemindersMock: vi.fn(),
+    runPostDueMock: vi.fn(),
+    isCronAuthorizedMock: vi.fn(),
+    createAdminSupabaseClientMock: vi.fn(),
+    envMock: {
+      CRON_SECRET: "test-cron-secret" as string | undefined,
+      RESEND_API_KEY: "re_test_key" as string | undefined,
+      EMAIL_FROM: undefined as string | undefined,
+    },
+  }))
+
+vi.mock("@/lib/reminders/runReminders", () => ({
+  runReminders: (...args: unknown[]) => runRemindersMock(...args),
+}))
+vi.mock("@/lib/reminders/runPostDue", () => ({
+  runPostDue: (...args: unknown[]) => runPostDueMock(...args),
+}))
+vi.mock("@/lib/reminders/cronAuth", () => ({
+  isCronAuthorized: (...args: unknown[]) => isCronAuthorizedMock(...args),
+}))
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminSupabaseClient: () => createAdminSupabaseClientMock(),
+}))
+vi.mock("@/lib/env", () => ({ env: envMock }))
+
+// route.ts uvozi handle preko GET/POST (isti handler za oba).
+import { GET } from "./route"
+
+type Postavke = {
+  podsjetnici_aktivni?: boolean
+  vrijeme_slanja_sat?: number
+  zadnje_slanje_datum?: string | null
+} | null
+
+function makeSupabase(opts: { postavke?: Postavke; onUpdate?: () => void; updateError?: string }) {
+  const updateCalls: Array<{ patch: Record<string, unknown> }> = []
+  const supabase = {
+    from(table: string) {
+      if (table !== "postavke") throw new Error(`neočekivan from(${table}) u testu`)
+      return {
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: opts.postavke ?? null, error: null }),
+          }),
+        }),
+        update: (patch: Record<string, unknown>) => ({
+          eq: async () => {
+            updateCalls.push({ patch })
+            opts.onUpdate?.()
+            return opts.updateError ? { error: { message: opts.updateError } } : { error: null }
+          },
+        }),
+      }
+    },
+  }
+  return { supabase: supabase as unknown as SupabaseClient<Database>, updateCalls }
+}
+
+function req(method: "GET" | "POST", opts?: { withAuth?: boolean; body?: unknown }): Request {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (opts?.withAuth !== false) headers.Authorization = "Bearer test-cron-secret"
+  return new Request("http://localhost/api/cron/reminders", {
+    method,
+    headers,
+    body: opts?.body !== undefined ? JSON.stringify(opts.body) : undefined,
+  })
+}
+
+// Ljeti CEST (UTC+2): 2026-07-08T07:00:00Z → lokalno 09:00, datum 2026-07-08 (isto kao gating.test.ts).
+const IZNAD_SATA = new Date("2026-07-08T07:00:00Z")
+// Lokalno 06:00 — ispod praga 8.
+const ISPOD_SATA = new Date("2026-07-08T04:00:00Z")
+
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(IZNAD_SATA)
+  isCronAuthorizedMock.mockReturnValue(true)
+  runRemindersMock.mockReset()
+  runPostDueMock.mockReset()
+  createAdminSupabaseClientMock.mockReset()
+  envMock.CRON_SECRET = "test-cron-secret"
+  envMock.RESEND_API_KEY = "re_test_key"
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+describe("GET /api/cron/reminders", () => {
+  it("1. podsjetnici_aktivni=false → 200 skip, RESEND_API_KEY se ne dodiruje, ništa se ne poziva", async () => {
+    envMock.RESEND_API_KEY = undefined // da dokažemo da provjera ključa nije ni dosegnuta (inače 500)
+    const { supabase } = makeSupabase({ postavke: { podsjetnici_aktivni: false, vrijeme_slanja_sat: 8 } })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body).toEqual({ ok: true, skipped: "podsjetnici_iskljuceni" })
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(runPostDueMock).not.toHaveBeenCalled()
+  })
+
+  it("2. lokalni sat < vrijeme_slanja_sat → 200 skip, ništa se ne poziva", async () => {
+    vi.setSystemTime(ISPOD_SATA)
+    envMock.RESEND_API_KEY = undefined
+    const { supabase } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body).toEqual({ ok: true, skipped: "izvan_sata" })
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(runPostDueMock).not.toHaveBeenCalled()
+  })
+
+  it("3. marker je današnji lokalni datum → runReminders NE, runPostDue DA, marker se ne prepisuje", async () => {
+    const { supabase, updateCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-08" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
+    expect(updateCalls).toHaveLength(0) // marker se NE prepisuje
+    expect(body.preDue).toEqual({ sent: [], skipped: [], errors: [], deferred: 0, preskocen: "vec_slato_danas" })
+  })
+
+  it("4. marker nije današnji → oba se pozivaju, marker se upisuje PRIJE runPostDue", async () => {
+    const callOrder: string[] = []
+    const { supabase, updateCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+      onUpdate: () => callOrder.push("marker"),
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockImplementation(async () => {
+      callOrder.push("postDue")
+      return { sent: [], skipped: [], errors: [] }
+    })
+
+    const res = await GET(req("GET"))
+
+    expect(res.status).toBe(200)
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
+    expect(updateCalls).toHaveLength(1)
+    expect(updateCalls[0]!.patch).toEqual({ zadnje_slanje_datum: "2026-07-08" })
+    // Dokaz REDOSLIJEDA, ne samo da su se oba desila: marker mora biti upisan prije post-due poziva.
+    expect(callOrder).toEqual(["marker", "postDue"])
+  })
+
+  it("5. neautorizovan zahtjev → 401, ne otkriva ništa o konfiguraciji", async () => {
+    isCronAuthorizedMock.mockReturnValue(false)
+
+    const res = await GET(req("GET", { withAuth: false }))
+    const body = await res.json()
+
+    expect(res.status).toBe(401)
+    expect(body).toEqual({ error: "Unauthorized" })
+    expect(Object.keys(body)).toEqual(["error"]) // ništa drugo (npr. razlog, konfig) se ne vraća
+    expect(createAdminSupabaseClientMock).not.toHaveBeenCalled()
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(runPostDueMock).not.toHaveBeenCalled()
+  })
+
+  it("6. bez RESEND_API_KEY i bez dryRun, gating prošao → 500 sa jasnom porukom", async () => {
+    envMock.RESEND_API_KEY = undefined
+    const { supabase, updateCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.error).toMatch(/RESEND_API_KEY/)
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(runPostDueMock).not.toHaveBeenCalled()
+    expect(updateCalls).toHaveLength(0) // 500 je PRIJE try bloka (prije marker upisa i pre/post-due poziva)
+  })
+})

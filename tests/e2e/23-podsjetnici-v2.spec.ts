@@ -170,8 +170,10 @@ test.describe("Podsjetnici v2", () => {
 
   test("Pokreni sada: dugme/dijalog su ispravno povezani (BEZ stvarnog pokretanja)", async ({ page }) => {
     // pokreniPodsjetnikeSada() (app/(dashboard)/postavke/actions.ts) hardkodira
-    // { dryRun: false } prema POST /api/cron/reminders — a DEMO ima aktivan (živi)
-    // RESEND_API_KEY + REMINDER_TO. Stvaran klik na "potvrdi" bi poslao pravi email.
+    // { dryRun: false } prema POST /api/cron/reminders. DEMO NEMA aktivan RESEND_API_KEY
+    // (samo REMINDER_TO) — stvaran klik na "potvrdi" bi zato pao na route.ts gejtu
+    // "RESEND_API_KEY nije postavljen" (500), a ne poslao pravi email. Svejedno se ovdje
+    // ne klika na potvrdi jer test ne smije zavisiti od te env razlike (PROD je ima).
     // Zato ovdje testiramo SAMO UI kablovanje (dugme → dijalog → testid potvrde
     // vidljiv) i zatvaramo dijalog Escape-om, bez klika na potvrdi. Sama "gate-bypass"
     // logika (POST radi bez obzira na sat/dan) se dokazuje sljedećim testom preko
@@ -196,12 +198,15 @@ test.describe("Podsjetnici v2", () => {
       const res = await request.post("/api/cron/reminders", { headers, data: { dryRun: true } })
       expect(res.status()).toBe(200)
       const body = await res.json()
-      // route.ts: gate (sat/zadnje_slanje_datum) provjerava SAMO GET; da je POST greškom
-      // počeo poštovati gate, odgovor bi bio { ok:true, skipped:"izvan_sata" | "vec_slato_danas" }
-      // (skipped=string) — umjesto stvarnog rezultata runReminders (skipped=niz).
-      expect(Array.isArray(body.sent)).toBe(true)
-      expect(Array.isArray(body.skipped)).toBe(true)
-      expect(Array.isArray(body.errors)).toBe(true)
+      // route.ts: gate (sat/zadnje_slanje_datum) provjerava SAMO GET; preDue ima ISTI oblik
+      // (sent/skipped/errors kao nizovi) i kad je stvarno pokrenut i kad je preskočen — jedini
+      // razlikovni znak je `preskocen`, koje postoji SAMO na preskočenoj grani. Da je POST
+      // greškom počeo poštovati gate, body.preDue.preskocen bi bio "vec_slato_danas" umjesto
+      // undefined (a rezultat bi bio prazne nizove umjesto stvarnog runReminders ishoda).
+      expect(body.preDue.preskocen).toBeUndefined()
+      expect(Array.isArray(body.preDue.sent)).toBe(true)
+      expect(Array.isArray(body.preDue.skipped)).toBe(true)
+      expect(Array.isArray(body.preDue.errors)).toBe(true)
     } finally {
       await setPostavkeV2({
         vrijeme_slanja_sat: prije.vrijeme_slanja_sat,

@@ -69,14 +69,26 @@ async function handle(req: Request) {
 
   try {
     const posalji = dryRun ? { send: drySend } : {}
+    // preDue UVIJEK ima isti oblik (sent/skipped/errors kao nizovi, deferred kao broj) bez
+    // obzira da li je stvarno pokrenut ili preskočen zbog dnevnog markera — potrošači (UI,
+    // testovi) rade .sent.length/.skipped.length bez provjere tipa. Razlog preskakanja ide u
+    // odvojeno `preskocen` polje, ne u `skipped` (koje bi inače prešlo sa niza na string).
     const preDue = preskociPreDue
-      ? ({ skipped: "vec_slato_danas" as const })
+      ? { sent: [], skipped: [], errors: [], deferred: 0, preskocen: "vec_slato_danas" as const }
       : await runReminders(supabase, posalji)
     // Marker se upisuje ODMAH poslije uspješnog pre-due, prije post-due poziva —
     // greška u post-due putu ne smije poništiti da je pre-due danas već odrađen
     // (inače bi svaki sljedeći sat ponovo vrtio pre-due dok post-due ne prođe).
     if (datumZaMarker) {
-      await supabase.from("postavke").update({ zadnje_slanje_datum: datumZaMarker }).eq("id", 1)
+      const { error: markerErr } = await supabase
+        .from("postavke")
+        .update({ zadnje_slanje_datum: datumZaMarker })
+        .eq("id", 1)
+      if (markerErr) {
+        // Isti obrazac kao u post-due putu (runPostDue.ts): greška se ne smije progutati —
+        // bez ovoga bi pre-due tiho pokušavao ponovo svaki sat do kraja dana.
+        console.error("[cron/reminders] upis markera zadnje_slanje_datum nije uspio:", markerErr.message)
+      }
     }
     const postDue = await runPostDue(supabase, posalji)
     return NextResponse.json({ preDue, postDue })

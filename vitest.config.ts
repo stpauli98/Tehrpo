@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "node",
-    include: ["lib/**/*.test.ts", "i18n/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "i18n/**/*.test.ts", "app/**/*.test.ts"],
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {

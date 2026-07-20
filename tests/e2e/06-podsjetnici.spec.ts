@@ -19,7 +19,7 @@ test.describe.configure({ mode: "serial" })
 test.describe("Faza 6 — Cron endpoint", () => {
   // Svaki browser projekt (chromium/webkit) pokreće ove testove serijski
   // protiv iste baze. Prva iteracija upisuje audit redove; drugi projekt bi
-  // ih zatekao i first.sent.length bi bio 0 → lažan fail.
+  // ih zatekao i first.preDue.sent.length bi bio 0 → lažan fail.
   // Rješenje: prije svakog projekta očisti podsjetnici tablicu (cloud DB).
   test.beforeAll(async () => {
     await clearPodsjetnici()
@@ -42,17 +42,18 @@ test.describe("Faza 6 — Cron endpoint", () => {
     const secret = cronSecret()
     const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }
 
+    // Odgovor je oblika { preDue, postDue } — ovaj test cilja pre-due krug.
     // Prvi run: REMINDER_TO je postavljen → due termini imaju primaoce → sent > 0, audit upisan.
     const first = await (await request.post("/api/cron/reminders", { headers, data: { dryRun: true } })).json()
-    expect(Array.isArray(first.sent)).toBe(true)
-    expect(Array.isArray(first.skipped)).toBe(true)
-    expect(Array.isArray(first.errors)).toBe(true)
-    expect(first.sent.length).toBeGreaterThan(0) // dokazuje da recipient pipeline radi (REMINDER_TO setovan)
-    expect(first.errors.length).toBe(0)
+    expect(Array.isArray(first.preDue.sent)).toBe(true)
+    expect(Array.isArray(first.preDue.skipped)).toBe(true)
+    expect(Array.isArray(first.preDue.errors)).toBe(true)
+    expect(first.preDue.sent.length).toBeGreaterThan(0) // dokazuje da recipient pipeline radi (REMINDER_TO setovan)
+    expect(first.preDue.errors.length).toBe(0)
 
     // Drugi run: isti due redovi su sad u podsjetnici → RPC anti-join ih isključuje → 0 novih.
     const second = await (await request.post("/api/cron/reminders", { headers, data: { dryRun: true } })).json()
-    expect(second.sent.length).toBe(0)
+    expect(second.preDue.sent.length).toBe(0)
   })
 })
 

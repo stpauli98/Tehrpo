@@ -491,18 +491,24 @@ export async function pokreniPodsjetnikeSada(): Promise<PokreniRezultat> {
     cache: "no-store",
   })
   if (!res.ok) return { ok: false, message: t("pokreniGreska") }
-  let data: { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[]; deferred?: number }
+  // Ruta vraća { preDue, postDue } (ne korijenske sent/skipped/errors) — oba kruga se
+  // moraju uračunati u prikazane brojače. postDue nema `deferred` (samo pre-due kapira
+  // broj obrada po run-u), pa je odgođeno isključivo iz preDue.
+  type StranaRezultat = { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[]; deferred?: number }
+  let data: { preDue?: StranaRezultat; postDue?: StranaRezultat }
   try {
-    data = (await res.json()) as { sent?: unknown[]; skipped?: unknown[]; errors?: unknown[]; deferred?: number }
+    data = (await res.json()) as { preDue?: StranaRezultat; postDue?: StranaRezultat }
   } catch {
     return { ok: false, message: t("pokreniGreska") }
   }
+  const preDue = data.preDue
+  const postDue = data.postDue
   return {
     ok: true,
-    poslano: data.sent?.length ?? 0,
-    preskoceno: data.skipped?.length ?? 0,
-    odgodjeno: data.deferred ?? 0,
-    greske: data.errors?.length ?? 0,
+    poslano: (preDue?.sent?.length ?? 0) + (postDue?.sent?.length ?? 0),
+    preskoceno: (preDue?.skipped?.length ?? 0) + (postDue?.skipped?.length ?? 0),
+    odgodjeno: preDue?.deferred ?? 0,
+    greske: (preDue?.errors?.length ?? 0) + (postDue?.errors?.length ?? 0),
   }
 }
 

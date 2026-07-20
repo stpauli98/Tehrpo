@@ -141,11 +141,16 @@ const DEFAULT_DANA = [60, 30, 15, 7]
 export async function loadRecipientIndex(
   supabase: SupabaseClient<Database>,
 ): Promise<{ index: RecipientIndex; base: string[]; danaPrije: number[] }> {
-  const { data: post } = await supabase
+  const { data: post, error: postErr } = await supabase
     .from("postavke")
     .select("dana_prije, salji_klijentima")
     .eq("id", 1)
     .maybeSingle()
+  // Baca na stvarnu grešku čitanja — tiho tretiranje kvara kao "post?.salji_klijentima ?? false"
+  // bi trajno ugasilo firmin kanal (upisalo bi 'preskoceno' za tekući ciklus). Odsustvo reda
+  // (data === null BEZ greške) nije kvar: postavke sa id=1 mogu legitimno nedostajati, tada
+  // važe fallback-ovi ispod.
+  if (postErr) throw new Error(`Greška pri čitanju postavki: ${postErr.message}`)
   const danaPrije = post?.dana_prije && post.dana_prije.length > 0 ? post.dana_prije : DEFAULT_DANA
   const saljiKlijentima = post?.salji_klijentima ?? false
 

@@ -20,20 +20,27 @@ const ROW: PostDueRow = {
 function makeFake(opts: {
   rows?: PostDueRow[]
   claimIds?: (string | null)[]      // redom, po pozivu claim_post_due
+  claimError?: string
   saljiKlijentima?: boolean
   korisnici?: { id: string; email: string; uloga: string; aktivan: boolean; prima_podsjetnike: boolean }[]
   kk?: { korisnik_id: string; klijent_id: string }[]
   klijenti?: { id: string; salji_podsjetnik_klijentu: boolean; podsjetnik_emails?: string[] }[]
   kontakti?: { klijent_id: string; email: string | null; podsjetnik_primalac: boolean }[]
   postavkeThrows?: boolean
+  postavkeError?: string
+  updateError?: string
 }) {
   const updates: Array<{ id: unknown; patch: Record<string, unknown> }> = []
+  const mejlLogTipovi: string[] = []
   const claims = [...(opts.claimIds ?? ["c1", "c2", "c3", "c4"])]
   const fake = {
     from(table: string) {
       if (table === "postavke") {
         if (opts.postavkeThrows) {
           return { select: () => ({ eq: () => ({ maybeSingle: async () => { throw new Error("postavke nedostupne") } }) }) }
+        }
+        if (opts.postavkeError) {
+          return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: { message: opts.postavkeError } }) }) }) }
         }
         return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { dana_prije: [30, 14, 7], salji_klijentima: opts.saljiKlijentima ?? false }, error: null }) }) }) }
       }
@@ -44,19 +51,29 @@ function makeFake(opts: {
       if (table === "post_due_obavijesti") {
         return {
           update: (patch: Record<string, unknown>) => ({
-            eq: async (_col: string, id: unknown) => { updates.push({ id, patch }); return { error: null } },
+            eq: async (_col: string, id: unknown) => {
+              updates.push({ id, patch })
+              return opts.updateError ? { error: { message: opts.updateError } } : { error: null }
+            },
           }),
         }
       }
       throw new Error(`neočekivan from(${table})`)
     },
-    async rpc(name: string) {
+    async rpc(name: string, params?: Record<string, unknown>) {
       if (name === "get_post_due_termine") return { data: opts.rows ?? [], error: null }
-      if (name === "claim_post_due") return { data: claims.shift() ?? null, error: null }
+      if (name === "claim_post_due") {
+        if (opts.claimError) return { data: null, error: { message: opts.claimError } }
+        return { data: claims.shift() ?? null, error: null }
+      }
+      if (name === "zabiljezi_mejl_log") {
+        mejlLogTipovi.push(String(params?.p_tip))
+        return { data: null, error: null }
+      }
       return { data: null, error: null }
     },
   }
-  return { supabase: fake as unknown as SupabaseClient<Database>, updates }
+  return { supabase: fake as unknown as SupabaseClient<Database>, updates, mejlLogTipovi }
 }
 
 const ADMIN = { id: "u1", email: "admin@x.com", uloga: "admin", aktivan: true, prima_podsjetnike: true }
@@ -95,6 +112,7 @@ describe("runPostDue", () => {
     })
     expect(poslato).toBe(0)
     expect(res.skipped).toHaveLength(1)
+    expect(updates).toHaveLength(1)
     expect(updates[0]!.patch.stanje).toBe("preskoceno")
     expect(updates[0]!.patch.razlog).toBe("nema_primalaca")
   })
@@ -130,9 +148,17 @@ describe("runPostDue", () => {
     await expect(runPostDue(supabase, { send: okSend, delayMs: 0 })).rejects.toThrow()
   })
 
+  it("baca kad postavke vrate grešku (bez throw-a) — stvarno ponašanje Supabase klijenta", async () => {
+    // Supabase-js NE baca na grešku čitanja, vraća { data: null, error }. Fake iz prethodnog
+    // testa (throw unutar maybeSingle) ne odslikava to — ovaj test cilja pravu putanju iz
+    // recepta: post?.salji_klijentima ?? false bi progutao grešku i trajno ugasio firmin kanal.
+    const { supabase } = makeFake({ rows: [ROW], postavkeError: "transientni kvar konekcije" })
+    await expect(runPostDue(supabase, { send: okSend, delayMs: 0 })).rejects.toThrow(/postavki/)
+  })
+
   it("firmin mejl ide bez ICS priloga i sa BCC adresama", async () => {
     const row = { ...ROW, treba_interni: false, treba_firma: true }
-    const { supabase } = makeFake({
+    const { supabase, mejlLogTipovi } = makeFake({
       rows: [row], korisnici: [ADMIN], saljiKlijentima: true,
       klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["firma@x.com"] }],
     })
@@ -143,5 +169,73 @@ describe("runPostDue", () => {
     })
     expect(args!.attachments).toBeUndefined()
     expect(args!.bcc).toEqual(["firma@x.com"])
+    expect(mejlLogTipovi).toEqual(["podsjetnik_rok_istekao_firma"])
+  })
+
+  it("interni kanal ima ICS prilog i tačan mejl_tip", async () => {
+    const { supabase, mejlLogTipovi } = makeFake({ rows: [ROW], korisnici: [ADMIN] })
+    let args: SendArgs | null = null
+    await runPostDue(supabase, {
+      send: async (a) => { args = a; return { id: "re_ics", dryRun: false } },
+      delayMs: 0,
+    })
+    expect(args!.attachments).toHaveLength(1)
+    expect(args!.attachments![0]!.content.toString("utf-8")).toContain("BEGIN:VCALENDAR")
+    expect(mejlLogTipovi).toEqual(["podsjetnik_rok_istekao_interni"])
+  })
+
+  it("dry-run: ledger ostaje neoznačen, rezultat nosi dryRun: true", async () => {
+    const { supabase, updates } = makeFake({ rows: [ROW], korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, {
+      send: async () => ({ id: "re_dry", dryRun: true }),
+      delayMs: 0,
+    })
+    expect(res.sent).toHaveLength(1)
+    expect(res.sent[0]!.dryRun).toBe(true)
+    expect(updates).toHaveLength(0)
+  })
+
+  it("datum_zakazan različit od roka: oba datuma se pojavljuju u poslatom HTML-u", async () => {
+    const row = { ...ROW, datum_zakazan: "2026-07-15", ciklus_rok: "2026-07-15" }
+    const { supabase } = makeFake({ rows: [row], korisnici: [ADMIN] })
+    let args: SendArgs | null = null
+    await runPostDue(supabase, {
+      send: async (a) => { args = a; return { id: "re_4", dryRun: false } },
+      delayMs: 0,
+    })
+    // rok_dospijeca=2026-07-13, datum_zakazan=2026-07-15 — mejl mora prikazati OBA (sr format DD.MM.YYYY.)
+    expect(args!.html).toContain("13.07.2026.")
+    expect(args!.html).toContain("15.07.2026.")
+  })
+
+  it("claim_post_due koji vrati grešku: ništa se ne šalje, greška se prijavljuje", async () => {
+    let poslato = 0
+    const { supabase, updates } = makeFake({ rows: [ROW], korisnici: [ADMIN], claimError: "rpc nedostupan" })
+    const res = await runPostDue(supabase, {
+      send: async () => { poslato++; return { id: "x", dryRun: false } },
+      delayMs: 0,
+    })
+    expect(poslato).toBe(0)
+    expect(res.sent).toHaveLength(0)
+    expect(res.errors).toHaveLength(1)
+    expect(res.errors[0]!.message).toContain("rpc nedostupan")
+    expect(updates).toHaveLength(0)
+  })
+
+  it("pad označavanja NAKON uspješnog slanja se prijavljuje kao greška, ne kao 'sent'", async () => {
+    // Mejl je stvarno poslat (send je pozvan i vratio uspjeh), ali upis ishoda u ledger
+    // padne. Red ostaje 'u_toku' i RPC bi ga ponovo otvorio za 15 min → rizik duplikata.
+    // To mora biti vidljivo pozivaocu kroz errors, ne samo kroz console.error.
+    let poslato = 0
+    const { supabase, updates } = makeFake({ rows: [ROW], korisnici: [ADMIN], updateError: "upis nije uspio" })
+    const res = await runPostDue(supabase, {
+      send: async () => { poslato++; return { id: "re_5", dryRun: false } },
+      delayMs: 0,
+    })
+    expect(poslato).toBe(1)
+    expect(res.sent).toHaveLength(0)
+    expect(res.errors).toHaveLength(1)
+    expect(res.errors[0]!.message).toContain("upis nije uspio")
+    expect(updates).toHaveLength(1)
   })
 })

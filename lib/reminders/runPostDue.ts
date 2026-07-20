@@ -128,9 +128,21 @@ export async function runPostDue(
       )
       const svi = [...(args.to ?? []), ...(args.bcc ?? [])]
       if (!res.dryRun) {
-        await oznaci(claimId, {
-          stanje: "poslato", poslat_at: new Date().toISOString(), poslat_na: svi, resend_id: res.id,
-        })
+        const { error: updErr } = await supabase
+          .from("post_due_obavijesti")
+          .update({ stanje: "poslato", poslat_at: new Date().toISOString(), poslat_na: svi, resend_id: res.id })
+          .eq("id", claimId)
+        if (updErr) {
+          // Mejl je STVARNO poslat, ali trag u ledgeru nije upisan: red ostaje 'u_toku' i
+          // get_post_due_termine ga ponovo otvori za 15 minuta → realan rizik duplikata.
+          // Vraćamo "err" (ne "sent") da bi pozivalac (cron) ovo vidio kao grešku koju treba
+          // istražiti — samo console.error bi ovo progutao bez traga za nadzor.
+          console.error("[post-due] mejl poslat ali označavanje ishoda nije uspjelo:", updErr.message)
+          return {
+            kind: "err", terminId, kanal,
+            message: `mejl poslat (resend_id=${res.id}) ali označavanje ishoda nije uspjelo (${updErr.message}) — red ostaje u_toku, mogući duplikat`,
+          }
+        }
       }
       return { kind: "sent", terminId, kanal, to: svi, resendId: res.id, dryRun: res.dryRun }
     } catch (e) {

@@ -195,15 +195,17 @@ Digest se izvršava **u postojećoj ruti `/api/cron/reminders`**, poslije `runPo
 ### 5.6 Tok podataka
 
 ```
-GH Actions, po instanci, ovim redom:
-  → /api/cron/reminders
-        runReminders(): pre-due iz get_due_podsjetnici        [nepromijenjeno]
-        runPostDue():   get_post_due_termine()
-              po terminu i kanalu: claim → pošalji → 'poslato'
-  → /api/cron/digest
-        get_istekli_termini() + loadRecipientIndex() → digestGroups()
+Vercel cron (0 9 i 0 13 UTC), po projektu → /api/cron/reminders, ovim redom u JEDNOM handleru:
+  runReminders(): pre-due iz get_due_podsjetnici              [nepromijenjeno]
+  runPostDue():   get_post_due_termine()
+        po terminu i kanalu: claim → pošalji → 'poslato'
+  runDigest():    get_istekli_termini(bečki danas) + loadRecipientIndex() → digestGroups()
         po primaocu: trebaDigest()? → claim → pošalji → 'poslato'
+        izolovan u vlastiti try/catch — njegov pad ne smije obarati odgovor,
+        jer su preDue i postDue do tada već poslali prave mejlove
 ```
+
+Redoslijed nije kozmetika: `get_istekli_termini` izostavlja termin koji je danas dobio pojedinačnu obavijest, pa `runPostDue` mora prvo upisati svoje tragove.
 
 ---
 
@@ -506,7 +508,7 @@ Funkcija vraća `null` (prazan rezultat) kad claim drži neko drugi ili je posao
 
 **PR 1:** `20260720119000` (enum) prvo i zasebno → `20260720120000` (tabela + backfill), `20260720121000` (RPC bez post-due), `20260720122000` (novi RPC), `20260720123000` (claim funkcija), DEMO pa PROD → **primjena istih migracija lokalno** → `pnpm db:types` → deploy → verifikacija na PROD-u: prvi run šalje **nula** mejlova, `post_due_obavijesti` ima pet backfill redova → kontrolna provjera poslije prvog pomjeranja roka: tačno jedna obavijest po kanalu.
 
-**PR 2:** `20260721120000`, `20260721121000`, `20260721122000`, DEMO pa PROD → lokalna primjena → `pnpm db:types` → deploy + drugi cron unos + dva koraka u GH workflow-u (poslije koraka za podsjetnike) → ručno okidanje na instanci sa Resend ključem → verifikacija u prvi ponedjeljak.
+**PR 2:** `20260721120000`, `20260721121000`, `20260721122000`, DEMO pa PROD → lokalna primjena → `pnpm db:types` → **E2E protiv DEMO-a tek poslije DEMO migracije** (prije nje dva testa padaju jer `get_istekli_termini` ne postoji) → deploy. **Bez novog cron unosa i bez GH workflow-a** — digest se izvršava u postojećoj ruti (§5.5). Verifikacija u prvi ponedjeljak: po jedan red u `digest_slanja` po primaocu, sa `stanje = 'poslato'`, popunjenim `resend_id` i `termin_ids`.
 
 > **Lokalna primjena nije opcionalna.** `pnpm db:types` je `supabase gen types typescript --local` (`package.json:15`), dakle čita **lokalni** stack, ne cloud. Bez `pnpm db:reset` (ili ručne primjene istih fajlova lokalno), `db/types.ts` neće dobiti nove tabele, RPC-ove ni `mejl_tip` vrijednosti, pa `TIP_KEY ... satisfies Record<MejlTip, string>` (`PoslatiMejloviTabela.tsx:11-16`) puca u suprotnom smjeru od onog koji §7.1 opisuje. Recenzija je ovaj korak našla kao izostavljen.
 

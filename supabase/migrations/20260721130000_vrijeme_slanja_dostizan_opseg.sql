@@ -18,8 +18,9 @@ where vrijeme_slanja_sat is distinct from (case when vrijeme_slanja_sat <= 11 th
 
 -- 2. Ukloni stari, sada suvišni check (0..23) iz 20260708120000_podsjetnici_v2.sql.
 --    Novi check ispod je stroži i strogo ga obuhvata (0..14 ⊂ 0..23) — zadržavanje
---    oba bi za vrijednosti izvan OBA opsega (npr. negativne) proizvelo nasumičan
---    izbor koje ime ograničenja Postgres prijavljuje u grešci.
+--    oba bi za vrijednosti izvan OBA opsega (npr. negativne) i dalje bilo tehnički
+--    ispravno, ali bi Postgres uvijek prijavio STARIJE (prvo nastalo) ograničenje,
+--    ne ono koje stvarno opisuje dostižan opseg — suvišno je i zbunilo bi poruku.
 alter table postavke drop constraint if exists chk_postavke_sat;
 
 -- 3. Tek sada novo ograničenje.

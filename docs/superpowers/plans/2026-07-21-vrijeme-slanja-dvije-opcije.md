@@ -638,13 +638,19 @@ git commit -m "feat(postavke): vrijeme slanja kao dvije opcije umjesto 24 sata"
 
 **Izvršava korisnik**, ne agent.
 
-- [ ] **Step 1: Migracija na DEMO**
+Redoslijed je **merge/deploy → migracija DEMO → provjera → migracija PROD** — obrnuto od intuitivnog "prvo baza, pa kod". Razlog: obrnuti smjer (migracija pa tek onda merge) ostavlja prozor u kom je `check (0..14)` već na bazi a stara forma (koja i dalje validira `0..23` i pušta te vrijednosti do baze) još živi u produkciji — admin koji u tom prozoru izabere sat 15–23 dobije sirovu Postgres grešku u toastu umjesto UI validacije. Smjer **merge prvo** nema taj prozor: nova forma nikad ne šalje ništa osim 8 ili 13, obje vrijednosti prolaze i staro ograničenje `chk_postavke_sat (0..23)` (dok migracija još nije primijenjena), a zatečene vrijednosti (PROD `10`, DEMO `23`) se ispravno prikazuju kao „ujutro"/„poslijepodne" i prije migracije jer `terminIzSata` radi na bilo kom broju. DEMO/PROD lockstep (migracija na oba) ostaje nepromijenjen — mijenja se samo kad se ona pokreće u odnosu na merge.
+
+- [ ] **Step 1: Merge i deploy**
+
+Merge grane u `main`. Vercel auto-deployuje sva tri projekta (PROD + DEMO + treći) sa novom formom i akcijom. Baza je još na starom ograničenju (`chk_postavke_sat`, 0..23) — to je u redu, nova forma nikad ne piše van 8/13.
+
+- [ ] **Step 2: Migracija na DEMO**
 
 ```bash
 pnpm db:apply-cloud --demo supabase/migrations/20260721130000_vrijeme_slanja_dostizan_opseg.sql
 ```
 
-- [ ] **Step 2: Provjera na DEMO-u**
+- [ ] **Step 3: Provjera na DEMO-u**
 
 ```sql
 select vrijeme_slanja_sat from postavke where id = 1;
@@ -652,23 +658,19 @@ select vrijeme_slanja_sat from postavke where id = 1;
 
 Očekivano: `13` — DEMO je bio na `23`, migracija ga normalizuje u „poslijepodne".
 
-- [ ] **Step 3: E2E protiv migriranog DEMO-a**
+- [ ] **Step 4: E2E protiv migriranog DEMO-a**
 
 ```bash
 pnpm exec playwright test tests/e2e/23-podsjetnici-v2.spec.ts tests/e2e/06-podsjetnici.spec.ts --workers=1 --project=chromium
 ```
 
-- [ ] **Step 4: Migracija na PROD**
+- [ ] **Step 5: Migracija na PROD**
 
 ```bash
 POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260721130000_vrijeme_slanja_dostizan_opseg.sql
 ```
 
 Očekivano poslije: `vrijeme_slanja_sat = 8` (PROD je bio na `10`, dakle „ujutro"). **Ponašanje slanja ostaje identično** — i `10` i `8` prolaze na prvom dnevnom runu.
-
-- [ ] **Step 5: Merge**
-
-Migracije **prije** merge-a, jer Vercel auto-deployuje `main`. Stari kod uz novu shemu radi: `10 → 8` je i dalje validna vrijednost za staru formu.
 
 ---
 

@@ -229,15 +229,16 @@ describe("GET /api/cron/reminders", () => {
   })
 
   it("7b. POST sa vrijeme_slanja_sat u budućnosti → sat-gate se ne provjerava, runReminders SE poziva", async () => {
-    // Isto obrazloženje kao test 7, ali za SAT granu (ne marker): 23 je iznad IZNAD_SATA
+    // Isto obrazloženje kao test 7, ali za SAT granu (ne marker): 14 je iznad IZNAD_SATA
     // (lokalno 09:00) i GET bi to skip-ovao kao "izvan_sata". POST gating blok potpuno
     // preskače (if (req.method === "GET")), pa čak ni ne čita vrijeme_slanja_sat —
-    // runReminders se svejedno poziva. (Referenca: e2e regresija u
-    // tests/e2e/23-podsjetnici-v2.spec.ts više ne upisuje 23 u bazu jer bi ga novi
-    // `chk_postavke_vrijeme_slanja_sat` check odbio — ovaj mockovani test je zato
-    // pravo mjesto za tu tvrdnju.)
+    // runReminders se svejedno poziva. (14 je najveća vrijednost koju novi
+    // `chk_postavke_vrijeme_slanja_sat` check uopšte dopušta — vidi
+    // lib/reminders/rasporedSlanja.ts; e2e regresija u
+    // tests/e2e/23-podsjetnici-v2.spec.ts više ne upisuje nedostižan sat u bazu jer bi ga
+    // taj check odbio — ovaj mockovani test je zato pravo mjesto za tu tvrdnju.)
     const { supabase } = makeSupabase({
-      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 23, zadnje_slanje_datum: null },
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 14, zadnje_slanje_datum: null },
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
     runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })

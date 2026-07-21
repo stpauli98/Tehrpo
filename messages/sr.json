@@ -1046,7 +1046,7 @@
       "samoAdmin": "Samo administrator može pokrenuti podsjetnike.",
       "pokreniNijeKonfigurisan": "CRON_SECRET nije konfigurisan na ovom deploymentu.",
       "pokreniGreska": "Pokretanje podsjetnika nije uspjelo.",
-      "vrijemeSatNeispravan": "Sat mora biti cijeli broj 0–23.",
+      "vrijemeSatNeispravan": "Nepoznat termin slanja.",
       "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama.",
       "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka."
     }

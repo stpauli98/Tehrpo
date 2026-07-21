@@ -1046,7 +1046,7 @@
       "samoAdmin": "Only an administrator can run reminders.",
       "pokreniNijeKonfigurisan": "CRON_SECRET is not configured on this deployment.",
       "pokreniGreska": "Running reminders failed.",
-      "vrijemeSatNeispravan": "Hour must be an integer 0–23.",
+      "vrijemeSatNeispravan": "Unknown sending time slot.",
       "saljiKlijentimaGreska": "Failed to change sending to clients.",
       "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice."
     }

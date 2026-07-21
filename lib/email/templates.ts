@@ -263,6 +263,76 @@ export function rokIstekaoFirmaHtml(args: {
   })
 }
 
+// ─── Sedmični digest isteklih termina ────────────────────────────────────────
+
+export type DigestStavka = {
+  klijent: string
+  vrsta: string
+  rok: string
+  zakazanoZa?: string | null
+  lokacija?: string | null
+  danaDoCiklusa: number
+}
+
+export function digestSubject(args: { broj: number }, locale: Locale = APP_LOCALE): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.digest" })
+  return t("predmet", { broj: args.broj })
+}
+
+/**
+ * Sedmični pregled isteklih termina — gola lista, bez sekcija i bez gornje granice.
+ * Redoslijed dolazi iz RPC-a (najveće kašnjenje prvo) i ovdje se ne dira.
+ */
+export function digestHtml(args: {
+  stavke: DigestStavka[]
+  baseUrl?: string
+}, locale: Locale = APP_LOCALE): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.digest" })
+  const boja = "#dc2626"
+
+  const redovi = args.stavke.map((s) => {
+    const zakazano = s.zakazanoZa && s.zakazanoZa !== s.rok
+      ? `<br><span style="color:#64748b;font-size:12px">${t("zakazanoZa", { datum: formatDatum(s.zakazanoZa, locale) })}</span>`
+      : ""
+    const lok = s.lokacija ? `<br><span style="color:#64748b;font-size:12px">${escapeHtml(s.lokacija)}</span>` : ""
+    return `<tr>
+      <td style="padding:8px 0;border-top:1px solid #e2e8f0">${escapeHtml(s.klijent)}${lok}</td>
+      <td style="padding:8px 0;border-top:1px solid #e2e8f0">${escapeHtml(s.vrsta)}</td>
+      <td style="padding:8px 0;border-top:1px solid #e2e8f0;white-space:nowrap">${formatDatum(s.rok, locale)}${zakazano}</td>
+      <td style="padding:8px 0;border-top:1px solid #e2e8f0;text-align:right;white-space:nowrap;color:${boja}">${danaTekst(s.danaDoCiklusa, locale)}</td>
+    </tr>`
+  }).join("")
+
+  const base = args.baseUrl ? args.baseUrl.replace(/\/$/, "") : ""
+  const dugme = base
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:20px auto 0"><tr><td style="border-radius:6px;background:${boja}">
+         <a href="${base}${localizeHref("/plan-aktivnosti", locale)}" style="display:inline-block;padding:10px 18px;font-size:14px;color:#ffffff;text-decoration:none">${t("dugmePlan")}</a>
+       </td></tr></table>`
+    : ""
+
+  const telo = `${badge(boja, t("znacka"))}
+          <p style="margin:12px 0 0;font-size:15px">${t("uvod")}</p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;font-size:14px">
+            <tr style="color:#64748b;font-size:12px;text-align:left">
+              <th style="padding:0 0 4px">${t("kolonaKlijent")}</th>
+              <th style="padding:0 0 4px">${t("kolonaVrsta")}</th>
+              <th style="padding:0 0 4px">${t("kolonaRok")}</th>
+              <th style="padding:0 0 4px;text-align:right">${t("kolonaKasni")}</th>
+            </tr>
+            ${redovi}
+          </table>
+          ${dugme}`
+
+  return layoutOmot({
+    accent: boja,
+    headerNaziv: escapeHtml(APP_NAME),
+    headerLabel: t("headerLabel"),
+    telo,
+    footer: `${escapeHtml(APP_NAME)} — ${escapeHtml(APP_TAGLINE)}`,
+    locale,
+  })
+}
+
 // ─── Zakazano nakon roka ─────────────────────────────────────────────────────
 
 export function zakazanoNakonRokaHtml(args: {

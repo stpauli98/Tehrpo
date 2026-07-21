@@ -3,6 +3,7 @@ import {
   reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml,
   reminderHtmlFirma, zakazanoNakonRokaHtml,
   rokIstekaoFirmaSubject, rokIstekaoFirmaHtml,
+  digestSubject, digestHtml,
 } from "./templates"
 
 describe("escapeHtml", () => {
@@ -189,5 +190,43 @@ describe("reminderHtml sa zakazanoZa", () => {
     })
     expect(html).toContain("13.07.2026")
     expect(html).toContain("15.07.2026")
+  })
+})
+
+const stavka = (klijent: string, danaDoCiklusa: number, extra: Record<string, unknown> = {}) => ({
+  klijent, vrsta: "Obilazak", rok: "2026-06-08", danaDoCiklusa, ...extra,
+})
+
+describe("digest", () => {
+  it("subject nosi broj stavki", () => {
+    expect(digestSubject({ broj: 3 })).toContain("3")
+  })
+
+  it("html sadrži svaku stavku", () => {
+    const html = digestHtml({ stavke: [stavka("CARMEUSE", -6), stavka("WAIKIKI", -22)] })
+    expect(html).toContain("CARMEUSE")
+    expect(html).toContain("WAIKIKI")
+  })
+
+  it("escapuje nazive", () => {
+    const html = digestHtml({ stavke: [stavka("A & B <x>", -6)] })
+    expect(html).toContain("A &amp; B &lt;x&gt;")
+    expect(html).not.toContain("<x>")
+  })
+
+  it("prikazuje zakazani datum kad se razlikuje od roka", () => {
+    const html = digestHtml({ stavke: [stavka("CARMEUSE", -6, { zakazanoZa: "2026-07-15" })] })
+    expect(html).toContain("15.07.2026")
+  })
+
+  it("dugme ka planu postoji samo uz baseUrl", () => {
+    const bez = digestHtml({ stavke: [stavka("CARMEUSE", -6)] })
+    expect(bez).not.toContain("plan-aktivnosti")
+    const sa = digestHtml({ stavke: [stavka("CARMEUSE", -6)], baseUrl: "https://app.example.com" })
+    expect(sa).toContain("plan-aktivnosti")
+  })
+
+  it("prazna lista ne baca", () => {
+    expect(() => digestHtml({ stavke: [] })).not.toThrow()
   })
 })

@@ -229,4 +229,30 @@ describe("digest", () => {
   it("prazna lista ne baca", () => {
     expect(() => digestHtml({ stavke: [] })).not.toThrow()
   })
+
+  it("redoslijed stavki slijedi redoslijed ulaza (ne sortira)", () => {
+    // Unesite stavke u redoslijedu koji NIJE sortiraj po kašnjenju
+    // (-3, -50, -1): trebalo bi biti -50, -3, -1 ako bi se sortiralo po kašnjenju
+    const html = digestHtml({
+      stavke: [
+        stavka("Alpha", -3),
+        stavka("Beta", -50),
+        stavka("Gamma", -1),
+      ],
+    })
+
+    // Provjerite da su klijenti u HTML-u u istom redoslijedu kao što su prosljeđeni
+    const posAlpha = html.indexOf("Alpha")
+    const posBeta = html.indexOf("Beta")
+    const posGamma = html.indexOf("Gamma")
+
+    // Svi moraju biti pronađeni u HTML-u
+    expect(posAlpha).toBeGreaterThan(-1)
+    expect(posBeta).toBeGreaterThan(-1)
+    expect(posGamma).toBeGreaterThan(-1)
+
+    // Redoslijed: Alpha → Beta → Gamma (kao što je proslijeđeno, ne sortirano)
+    expect(posAlpha).toBeLessThan(posBeta)
+    expect(posBeta).toBeLessThan(posGamma)
+  })
 })

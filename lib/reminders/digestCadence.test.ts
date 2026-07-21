@@ -70,4 +70,25 @@ describe("trebaDigest", () => {
       danasnji: { stanje: "u_toku", claimedAt: "2026-07-20T07:30:00Z" }, now,
     })).toBe(true)
   })
+
+  it("granica: ponedjeljak, u_toku tačno 14:59 minuta (ispod granice) → NE šalje", () => {
+    expect(trebaDigest({
+      danas: PON, zadnjiPoslat: null,
+      danasnji: { stanje: "u_toku", claimedAt: "2026-07-20T07:45:01Z" }, now,
+    })).toBe(false)
+  })
+
+  it("granica: ponedjeljak, u_toku tačno 15:00 minuta (na granici) → šalje", () => {
+    expect(trebaDigest({
+      danas: PON, zadnjiPoslat: null,
+      danasnji: { stanje: "u_toku", claimedAt: "2026-07-20T07:45:00Z" }, now,
+    })).toBe(true)
+  })
+
+  it("granica: ponedjeljak, u_toku tačno 15:01 minuta (iznad granice) → šalje", () => {
+    expect(trebaDigest({
+      danas: PON, zadnjiPoslat: null,
+      danasnji: { stanje: "u_toku", claimedAt: "2026-07-20T07:44:59Z" }, now,
+    })).toBe(true)
+  })
 })

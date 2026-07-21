@@ -186,12 +186,16 @@ test.describe("Podsjetnici v2", () => {
     await expect(page.getByTestId("pokreni-podsjetnike-potvrdi")).toHaveCount(0)
   })
 
-  test("regresija: POST /api/cron/reminders zaobilazi sat/dnevni gate (dry)", async ({ request }) => {
+  test("regresija: POST /api/cron/reminders zaobilazi dnevni gate (dry)", async ({ request }) => {
     const prije = await getPostavkeV2()
-    // Stanje koje bi GET (auto-cron) sigurno preskočio: sat u budućnosti (23) i
-    // marker "već slato danas" (zadnje_slanje_datum = danas po Europe/Vienna).
+    // Sat-gate se ovdje više ne postavlja: `check` na postavke.vrijeme_slanja_sat
+    // dopušta samo dostižne vrijednosti (0..14), pa se nedostižan sat ne može ni
+    // upisati. Zaobilaženje SAT-gejta za POST pokriva unit test rute
+    // (app/api/cron/reminders/route.test.ts), koji ga može mockovati bez baze.
+    // Stanje koje bi GET (auto-cron) sigurno preskočio: marker "već slato danas"
+    // (zadnje_slanje_datum = danas po Europe/Vienna).
     const danas = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Vienna" }).format(new Date())
-    await setPostavkeV2({ vrijeme_slanja_sat: 23, zadnje_slanje_datum: danas })
+    await setPostavkeV2({ zadnje_slanje_datum: danas })
     try {
       const secret = cronSecret()
       const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }

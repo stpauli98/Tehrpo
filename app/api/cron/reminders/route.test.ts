@@ -228,6 +228,29 @@ describe("GET /api/cron/reminders", () => {
     expect(updateCalls).toHaveLength(0) // POST nikad ne upisuje dnevni marker
   })
 
+  it("7b. POST sa vrijeme_slanja_sat u budućnosti → sat-gate se ne provjerava, runReminders SE poziva", async () => {
+    // Isto obrazloženje kao test 7, ali za SAT granu (ne marker): 23 je iznad IZNAD_SATA
+    // (lokalno 09:00) i GET bi to skip-ovao kao "izvan_sata". POST gating blok potpuno
+    // preskače (if (req.method === "GET")), pa čak ni ne čita vrijeme_slanja_sat —
+    // runReminders se svejedno poziva. (Referenca: e2e regresija u
+    // tests/e2e/23-podsjetnici-v2.spec.ts više ne upisuje 23 u bazu jer bi ga novi
+    // `chk_postavke_vrijeme_slanja_sat` check odbio — ovaj mockovani test je zato
+    // pravo mjesto za tu tvrdnju.)
+    const { supabase } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 23, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await POST(req("POST"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    expect(body.preDue.preskocen).toBeUndefined()
+  })
+
   it("8. RESEND_API_KEY odsutan + eksplicitan dryRun:true (POST) → gating prošao, NE vraća 500", async () => {
     // GET ne može nositi tijelo (fetch/undici baca na Request({method:'GET', body}), pa je POST
     // jedini realni nosilac eksplicitnog dryRun-a — u skladu sa komentarom u route.ts (Vercel Cron

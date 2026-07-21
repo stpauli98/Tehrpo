@@ -2,14 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/db/types"
 
-// Modul zavisi od pet vanjskih stvari: runReminders, runPostDue, createAdminSupabaseClient,
-// isCronAuthorized i env. Sve pet se mockuju da test ne dodiruje ni mrežu ni bazu — gating
-// (lokalniSatIDatum/trebaSlatiSada/podsjetniciAktivni) ostaje REALAN jer je čista funkcija
-// vremena (već pokrivena u gating.test.ts) i kontroliše se preko vi.setSystemTime.
-const { runRemindersMock, runPostDueMock, isCronAuthorizedMock, createAdminSupabaseClientMock, envMock } =
+// Modul zavisi od šest vanjskih stvari: runReminders, runPostDue, runDigest,
+// createAdminSupabaseClient, isCronAuthorized i env. Sve se mockuju da test ne dodiruje ni
+// mrežu ni bazu — gating (lokalniSatIDatum/trebaSlatiSada/podsjetniciAktivni) ostaje REALAN
+// jer je čista funkcija vremena (već pokrivena u gating.test.ts) i kontroliše se preko
+// vi.setSystemTime.
+const { runRemindersMock, runPostDueMock, runDigestMock, isCronAuthorizedMock, createAdminSupabaseClientMock, envMock } =
   vi.hoisted(() => ({
     runRemindersMock: vi.fn(),
     runPostDueMock: vi.fn(),
+    runDigestMock: vi.fn(),
     isCronAuthorizedMock: vi.fn(),
     createAdminSupabaseClientMock: vi.fn(),
     envMock: {
@@ -24,6 +26,9 @@ vi.mock("@/lib/reminders/runReminders", () => ({
 }))
 vi.mock("@/lib/reminders/runPostDue", () => ({
   runPostDue: (...args: unknown[]) => runPostDueMock(...args),
+}))
+vi.mock("@/lib/reminders/runDigest", () => ({
+  runDigest: (...args: unknown[]) => runDigestMock(...args),
 }))
 vi.mock("@/lib/reminders/cronAuth", () => ({
   isCronAuthorized: (...args: unknown[]) => isCronAuthorizedMock(...args),
@@ -87,6 +92,8 @@ beforeEach(() => {
   isCronAuthorizedMock.mockReturnValue(true)
   runRemindersMock.mockReset()
   runPostDueMock.mockReset()
+  runDigestMock.mockReset()
+  runDigestMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
   createAdminSupabaseClientMock.mockReset()
   envMock.CRON_SECRET = "test-cron-secret"
   envMock.RESEND_API_KEY = "re_test_key"
@@ -312,5 +319,83 @@ describe("GET /api/cron/reminders", () => {
     expect(body.error).toBeUndefined()
     expect(runRemindersMock).toHaveBeenCalledTimes(1)
     expect(runPostDueMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("odgovor sadrži sva tri kruga: preDue, postDue i digest", async () => {
+    const { supabase } = makeSupabase({ postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null } })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(true)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z")) // 11:00 Beč → sat >= 8
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body).toHaveProperty("preDue")
+    expect(body).toHaveProperty("postDue")
+    expect(body).toHaveProperty("digest")
+    expect(runDigestMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("digest se poziva POSLIJE post-due puta", async () => {
+    const redoslijed: string[] = []
+    const { supabase } = makeSupabase({ postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null } })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(true)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockImplementation(async () => { redoslijed.push("postDue"); return { sent: [], skipped: [], errors: [] } })
+    runDigestMock.mockImplementation(async () => { redoslijed.push("digest"); return { sent: [], skipped: [], errors: [] } })
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z"))
+
+    await GET(req("GET"))
+
+    // Redoslijed nije kozmetika: get_istekli_termini izostavlja termin koji je danas
+    // dobio pojedinačnu obavijest, pa post-due mora prvo upisati svoje tragove.
+    expect(redoslijed).toEqual(["postDue", "digest"])
+  })
+
+  it("runDigest baci grešku → 200, preDue i postDue ostaju netaknuti, digest nosi grešku", async () => {
+    // Digest je najmanje kritičan i posljednji od tri kruga: preDue i postDue su u ovom
+    // trenutku već poslali prave mejlove i upisali svoje ledgere (npr. DEMO bez digest
+    // migracija → get_istekli_termini ne postoji). Pad digesta ne smije obrisati te
+    // rezultate iz odgovora niti pretvoriti uspješan cron u 500.
+    const { supabase } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    const preDueRezultat = { sent: [{ email: "a@x.com" }], skipped: [], errors: [], deferred: 0 }
+    const postDueRezultat = { sent: [{ email: "b@x.com" }], skipped: [], errors: [] }
+    runRemindersMock.mockResolvedValue(preDueRezultat)
+    runPostDueMock.mockResolvedValue(postDueRezultat)
+    runDigestMock.mockRejectedValue(new Error("get_istekli_termini ne postoji"))
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z"))
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.preDue).toEqual(preDueRezultat)
+    expect(body.postDue).toEqual(postDueRezultat)
+    expect(body.digest).toEqual({ error: expect.stringContaining("get_istekli_termini ne postoji") })
+  })
+
+  it("GET sa današnjim markerom preskače pre-due, ali i dalje pokreće post-due i digest", async () => {
+    const { supabase } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-20" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(true)
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z")) // bečki datum = 2026-07-20
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(body.preDue.preskocen).toBe("vec_slato_danas")
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
+    expect(runDigestMock).toHaveBeenCalledTimes(1)
   })
 })

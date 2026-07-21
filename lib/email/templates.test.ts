@@ -3,6 +3,7 @@ import {
   reminderSubject, reminderHtml, escapeHtml, testEmailSubject, testEmailHtml,
   reminderHtmlFirma, zakazanoNakonRokaHtml,
   rokIstekaoFirmaSubject, rokIstekaoFirmaHtml,
+  digestSubject, digestHtml,
 } from "./templates"
 
 describe("escapeHtml", () => {
@@ -189,5 +190,74 @@ describe("reminderHtml sa zakazanoZa", () => {
     })
     expect(html).toContain("13.07.2026")
     expect(html).toContain("15.07.2026")
+  })
+})
+
+const stavka = (klijent: string, danaDoCiklusa: number, extra: Record<string, unknown> = {}) => ({
+  klijent, vrsta: "Obilazak", rok: "2026-06-08", danaDoCiklusa, ...extra,
+})
+
+describe("digest", () => {
+  it("subject nosi broj stavki", () => {
+    expect(digestSubject({ broj: 3 })).toContain("3")
+  })
+
+  it("html sadrži svaku stavku", () => {
+    const html = digestHtml({ stavke: [stavka("CARMEUSE", -6), stavka("WAIKIKI", -22)] })
+    expect(html).toContain("CARMEUSE")
+    expect(html).toContain("WAIKIKI")
+  })
+
+  it("escapuje nazive", () => {
+    const html = digestHtml({ stavke: [stavka("A & B <x>", -6)] })
+    expect(html).toContain("A &amp; B &lt;x&gt;")
+    expect(html).not.toContain("<x>")
+  })
+
+  it("prikazuje zakazani datum kad se razlikuje od roka", () => {
+    const html = digestHtml({ stavke: [stavka("CARMEUSE", -6, { zakazanoZa: "2026-07-15" })] })
+    expect(html).toContain("15.07.2026")
+  })
+
+  it("dugme ka planu postoji samo uz baseUrl", () => {
+    const bez = digestHtml({ stavke: [stavka("CARMEUSE", -6)] })
+    expect(bez).not.toContain("plan-aktivnosti")
+    const sa = digestHtml({ stavke: [stavka("CARMEUSE", -6)], baseUrl: "https://app.example.com" })
+    expect(sa).toContain("plan-aktivnosti")
+  })
+
+  it("prazna lista ne baca", () => {
+    expect(() => digestHtml({ stavke: [] })).not.toThrow()
+  })
+
+  it("redoslijed stavki slijedi redoslijed ulaza (ne sortira)", () => {
+    // Stavke namjerno u redoslijedu koji NIJE sortiran po kašnjenju
+    // (-3, -50, -1): bilo bi -50, -3, -1 da se sortiralo po kašnjenju.
+    const html = digestHtml({
+      stavke: [
+        stavka("Alpha", -3),
+        stavka("Beta", -50),
+        stavka("Gamma", -1),
+      ],
+    })
+
+    // Klijenti moraju biti u HTML-u u istom redoslijedu kao što su proslijeđeni.
+    const posAlpha = html.indexOf("Alpha")
+    const posBeta = html.indexOf("Beta")
+    const posGamma = html.indexOf("Gamma")
+
+    // Svi moraju biti pronađeni u HTML-u.
+    expect(posAlpha).toBeGreaterThan(-1)
+    expect(posBeta).toBeGreaterThan(-1)
+    expect(posGamma).toBeGreaterThan(-1)
+
+    // Redoslijed: Alpha → Beta → Gamma (kao što je proslijeđeno, ne sortirano)
+    expect(posAlpha).toBeLessThan(posBeta)
+    expect(posBeta).toBeLessThan(posGamma)
+  })
+
+  it("prikazuje tekst kašnjenja za danaDoCiklusa", () => {
+    const html = digestHtml({ stavke: [stavka("CARMEUSE", -42)] })
+    expect(html).toContain("kasni 42 dana")
   })
 })

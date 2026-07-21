@@ -35,6 +35,8 @@ import {
   testEmailHtml,
   rokIstekaoFirmaSubject,
   rokIstekaoFirmaHtml,
+  digestSubject,
+  digestHtml,
 } from "@/lib/email/templates"
 import { firmBrand } from "@/lib/email/firmBrand"
 import { sendEmail, drySend } from "@/lib/email/resend"
@@ -64,7 +66,7 @@ const DANA_KASNI = -3
 
 type PreviewItem = { file: string; naziv: string; subject: string; html: string }
 
-/** Sve preview stavke (8 fajlova (interni×3, firma×3, zakazano, test)). */
+/** Sve preview stavke (9 fajlova: interni×3, firma×3, zakazano, digest, test). */
 function buildItems(): PreviewItem[] {
   const brand = firmBrand()
   const { klijent, vrsta, rok, lokacija, baseUrl, terminId, klijentId } = FX
@@ -118,7 +120,20 @@ function buildItems(): PreviewItem[] {
       }),
     },
     {
-      file: "8-test-email.html",
+      file: "8-digest-sedmicni.html",
+      naziv: "Sedmični digest isteklih termina",
+      subject: digestSubject({ broj: 3 }),
+      html: digestHtml({
+        stavke: [
+          { klijent: "NEW YORKER", vrsta: "Obilazak", rok: "2026-06-08", danaDoCiklusa: -42, lokacija: "ISTOČNO SARAJEVO" },
+          { klijent: "WAIKIKI", vrsta: "Ispitivanje hidranata", rok: "2026-06-27", danaDoCiklusa: -23 },
+          { klijent: "CARMEUSE", vrsta: "Obilazak", rok: "2026-07-13", zakazanoZa: "2026-07-15", danaDoCiklusa: -5 },
+        ],
+        baseUrl: FX.baseUrl,
+      }),
+    },
+    {
+      file: "9-test-email.html",
       naziv: "Test email (potvrda dostave)",
       subject: testEmailSubject(),
       html: testEmailHtml({ ime: "Marko Marković" }),

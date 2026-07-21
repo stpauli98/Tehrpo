@@ -1152,6 +1152,18 @@
       "poljeKlijent": "Klijent",
       "poljeLokacija": "Lokacija",
       "napomena": "Zakazivanje poslije roka je dozvoljeno; ovo je automatska obavijest zaduženima."
+    },
+    "digest": {
+      "predmet": "Sedmični pregled: {broj} isteklih termina",
+      "headerLabel": "Sedmični pregled",
+      "znacka": "ISTEKLI ROKOVI",
+      "uvod": "Ovi termini su i dalje otvoreni nakon isteka roka:",
+      "kolonaKlijent": "Klijent",
+      "kolonaVrsta": "Vrsta",
+      "kolonaRok": "Rok",
+      "kolonaKasni": "Kašnjenje",
+      "zakazanoZa": "zakazano za {datum}",
+      "dugmePlan": "Otvori plan aktivnosti"
     }
   },
   "poslatiMejlovi": {

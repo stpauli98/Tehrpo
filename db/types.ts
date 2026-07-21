@@ -116,6 +116,39 @@ export type Database = {
           },
         ]
       }
+      digest_slanja: {
+        Row: {
+          claimed_at: string
+          datum: string
+          id: string
+          poslat_at: string | null
+          primalac_email: string
+          resend_id: string | null
+          stanje: string
+          termin_ids: string[]
+        }
+        Insert: {
+          claimed_at?: string
+          datum: string
+          id?: string
+          poslat_at?: string | null
+          primalac_email: string
+          resend_id?: string | null
+          stanje?: string
+          termin_ids?: string[]
+        }
+        Update: {
+          claimed_at?: string
+          datum?: string
+          id?: string
+          poslat_at?: string | null
+          primalac_email?: string
+          resend_id?: string | null
+          stanje?: string
+          termin_ids?: string[]
+        }
+        Relationships: []
+      }
       dokumenti: {
         Row: {
           generated_by_ai: boolean
@@ -1101,6 +1134,10 @@ export type Database = {
         }
         Returns: number
       }
+      claim_digest: {
+        Args: { p_datum: string; p_email: string }
+        Returns: string
+      }
       claim_post_due: {
         Args: { p_ciklus: string; p_kanal: string; p_termin: string }
         Returns: string
@@ -1149,6 +1186,20 @@ export type Database = {
         Returns: {
           dana_do_roka: number
           dana_prije: number
+          klijent_id: string
+          klijent_naziv: string
+          lokacija_naziv: string
+          rok_dospijeca: string
+          termin_id: string
+          vrsta_naziv: string
+        }[]
+      }
+      get_istekli_termini: {
+        Args: { p_danas: string }
+        Returns: {
+          ciklus_rok: string
+          dana_do_ciklusa: number
+          datum_zakazan: string
           klijent_id: string
           klijent_naziv: string
           lokacija_naziv: string

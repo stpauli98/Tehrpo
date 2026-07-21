@@ -1152,6 +1152,18 @@
       "poljeKlijent": "Kunde",
       "poljeLokacija": "Standort",
       "napomena": "Eine Planung nach der Frist ist erlaubt; dies ist eine automatische Benachrichtigung an die Zuständigen."
+    },
+    "digest": {
+      "predmet": "Wochenübersicht: {broj} überfällige Termine",
+      "headerLabel": "Wochenübersicht",
+      "znacka": "ÜBERFÄLLIG",
+      "uvod": "Diese Termine sind nach Fristablauf weiterhin offen:",
+      "kolonaKlijent": "Kunde",
+      "kolonaVrsta": "Leistung",
+      "kolonaRok": "Frist",
+      "kolonaKasni": "Überfällig seit",
+      "zakazanoZa": "geplant für {datum}",
+      "dugmePlan": "Aktivitätsplan öffnen"
     }
   },
   "poslatiMejlovi": {

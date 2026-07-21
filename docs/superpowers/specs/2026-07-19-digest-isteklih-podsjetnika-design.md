@@ -1,7 +1,7 @@
 # Podsjetnici poslije roka: jednokratna obavijest po ciklusu + sedmični digest
 
 **Datum:** 2026-07-19 (posljednja revizija: 2026-07-20)
-**Status:** Revizija 5 (nakon šest nezavisnih recenzija) — spreman za plan implementacije
+**Status:** Revizija 6 — PR 1 ISPORUČEN i verifikovan na produkciji 2026-07-20; PR 2 (digest) spreman za plan
 **Isporuke:** dva nezavisna PR-a (§3)
 **Grane (prijedlog):** `fix/post-due-po-ciklusu`, zatim `feat/digest-isteklih`
 
@@ -175,28 +175,37 @@ Cijena: ako je Resend stvarno poslao a proces umro prije upisa `poslato`, primal
 
 RPC-ovi vraćaju ravne liste i ne znaju ništa o primaocima; grupisanje radi TS preko `buildRecipientIndex`. Alternativa — RPC koji vraća parove `(email, termini)` — značila bi dva izvora istine za pravila o primaocima.
 
-### 5.5 Raspored i stvarni scheduler
+### 5.5 Raspored i gdje digest živi
 
-Digest ide u zasebnu rutu `GET|POST /api/cron/digest`: `postavke` se u postojećoj ruti čita samo unutar `if (req.method === "GET")` (`route.ts:32-36`), pa ručni POST nema odakle pročitati stanje; i `zadnje_slanje_datum` ostaje netaknut, pa idempotencija digesta počiva isključivo na `digest_slanja`.
+Digest se izvršava **u postojećoj ruti `/api/cron/reminders`**, poslije `runPostDue`. Nema zasebne rute ni zasebnog cron unosa.
 
-> **Serijalizaciju ne obezbjeđuje raspored, nego redoslijed koraka u GH workflow-u.** Revizija 3 je razmak od 30 minuta između dva Vercel cron unosa navodila kao branu. Recenzija je pokazala da to zimi ne radi: uz `vrijeme_slanja_sat = 10` i CET (UTC+1), `0 8 * * *` pada u 09:00 po Beču → `route.ts:42` vraća `skipped: "izvan_sata"`. Oba Vercel crona su zimi mrtva, a stvarno slanje ide preko GH Actions (`0 * * * *`) u istom jobu, u razmaku od sekundi.
+> **Revizija 6 — dvije pretpostavke revizije 5 su pale.** Tamo je digest dobijao vlastitu rutu `/api/cron/digest` sa vlastitim cron unosom, a serijalizaciju je trebao obezbijediti redoslijed koraka u `.github/workflows/reminders.yml`.
 >
-> Zato: **korak za digest u `.github/workflows/reminders.yml` mora doći poslije koraka za podsjetnike, za svaku instancu.** Vercel cron unosi ostaju kao rezerva. Uslov po ciklusu (§4.8) je druga brana, a ne jedina.
+> - **Vercel plan dopušta samo dva cron posla po projektu**, i oba su zauzeta (`/api/cron/reminders` u `0 9 * * *` i `0 13 * * *` UTC). Za treći nema mjesta; pokušaj satnog crona je oborio sve buildove uz link na cron usage-and-pricing.
+> - **GH workflow je obrisan 2026-07-20** jer nikad nije radio: secreti prazni, `curl` je dobijao prazan URL, a `|| true` je svaki run prijavljivao kao uspjeh.
+>
+> Sva tri razloga za odvajanje su u međuvremenu otpala: `postavke` se čita i za POST, gating je restrukturiran u PR-u 1, a `zadnje_slanje_datum` više ne gejtuje post-due. Ostao je samo `maxDuration` (120s), a digest je ~6 mejlova sedmično.
+>
+> **Dobitak:** redoslijed unutar jednog handlera je zagarantovan, pa termin koji je danas dobio pojedinačnu obavijest sigurno ne uđe u isti digest. Recenzija je to označila kao rupu upravo zato što su dvije cron staze paralelne. Uslov po ciklusu (§4.8) ostaje kao druga brana.
+>
+> **Cijena:** digest ima dvije prilike dnevno umjesto satnih. Za sedmični pregled nebitno — drugi run istog dana preskače jer `digest_slanja` već ima red u stanju `poslato`.
 
-`proxy.ts:15` već ima `/api/cron` u `PUBLIC`, pa nova ruta ne traži izmjenu proxy-ja.
+`proxy.ts:15` već ima `/api/cron` u `PUBLIC`; ruta se ne mijenja u tom pogledu.
 
 ### 5.6 Tok podataka
 
 ```
-GH Actions, po instanci, ovim redom:
-  → /api/cron/reminders
-        runReminders(): pre-due iz get_due_podsjetnici        [nepromijenjeno]
-        runPostDue():   get_post_due_termine()
-              po terminu i kanalu: claim → pošalji → 'poslato'
-  → /api/cron/digest
-        get_istekli_termini() + loadRecipientIndex() → digestGroups()
+Vercel cron (0 9 i 0 13 UTC), po projektu → /api/cron/reminders, ovim redom u JEDNOM handleru:
+  runReminders(): pre-due iz get_due_podsjetnici              [nepromijenjeno]
+  runPostDue():   get_post_due_termine()
+        po terminu i kanalu: claim → pošalji → 'poslato'
+  runDigest():    get_istekli_termini(bečki danas) + loadRecipientIndex() → digestGroups()
         po primaocu: trebaDigest()? → claim → pošalji → 'poslato'
+        izolovan u vlastiti try/catch — njegov pad ne smije obarati odgovor,
+        jer su preDue i postDue do tada već poslali prave mejlove
 ```
+
+Redoslijed nije kozmetika: `get_istekli_termini` izostavlja termin koji je danas dobio pojedinačnu obavijest, pa `runPostDue` mora prvo upisati svoje tragove.
 
 ---
 
@@ -449,7 +458,7 @@ Funkcija vraća `null` (prazan rezultat) kad claim drži neko drugi ili je posao
 
 ### 7.2 PR 2
 
-`digestGroups.ts` (čista funkcija), `digestCadence.ts` (`jePonedjeljak` + `trebaDigest` po §4.5), `runDigest.ts` (claim-first), `digestSubject`/`digestHtml`, `app/api/cron/digest/route.ts` sa vlastitim `maxDuration`, digest u `scripts/send-reminders.ts`, drugi cron unos u `vercel.json`, i **dva** nova `curl` koraka u `.github/workflows/reminders.yml` — po jedan za PROD i DE instancu, **poslije** odgovarajućeg koraka za podsjetnike (§5.5).
+`digestGroups.ts` (čista funkcija), `digestCadence.ts` (`jePonedjeljak` + `trebaDigest` po §4.5), `runDigest.ts` (claim-first), `digestSubject`/`digestHtml`, poziv `runDigest` u `app/api/cron/reminders/route.ts` **poslije `runPostDue`** (§5.5), i digest u `scripts/send-reminders.ts`. **Bez** nove rute, bez novog cron unosa, bez GH workflow-a — vidi §5.5.
 
 ---
 
@@ -499,7 +508,7 @@ Funkcija vraća `null` (prazan rezultat) kad claim drži neko drugi ili je posao
 
 **PR 1:** `20260720119000` (enum) prvo i zasebno → `20260720120000` (tabela + backfill), `20260720121000` (RPC bez post-due), `20260720122000` (novi RPC), `20260720123000` (claim funkcija), DEMO pa PROD → **primjena istih migracija lokalno** → `pnpm db:types` → deploy → verifikacija na PROD-u: prvi run šalje **nula** mejlova, `post_due_obavijesti` ima pet backfill redova → kontrolna provjera poslije prvog pomjeranja roka: tačno jedna obavijest po kanalu.
 
-**PR 2:** `20260721120000`, `20260721121000`, `20260721122000`, DEMO pa PROD → lokalna primjena → `pnpm db:types` → deploy + drugi cron unos + dva koraka u GH workflow-u (poslije koraka za podsjetnike) → ručno okidanje na instanci sa Resend ključem → verifikacija u prvi ponedjeljak.
+**PR 2:** `20260721120000`, `20260721121000`, `20260721122000`, DEMO pa PROD → lokalna primjena → `pnpm db:types` → **E2E protiv DEMO-a tek poslije DEMO migracije** (prije nje dva testa padaju jer `get_istekli_termini` ne postoji) → deploy. **Bez novog cron unosa i bez GH workflow-a** — digest se izvršava u postojećoj ruti (§5.5). Verifikacija u prvi ponedjeljak: po jedan red u `digest_slanja` po primaocu, sa `stanje = 'poslato'`, popunjenim `resend_id` i `termin_ids`.
 
 > **Lokalna primjena nije opcionalna.** `pnpm db:types` je `supabase gen types typescript --local` (`package.json:15`), dakle čita **lokalni** stack, ne cloud. Bez `pnpm db:reset` (ili ručne primjene istih fajlova lokalno), `db/types.ts` neće dobiti nove tabele, RPC-ove ni `mejl_tip` vrijednosti, pa `TIP_KEY ... satisfies Record<MejlTip, string>` (`PoslatiMejloviTabela.tsx:11-16`) puca u suprotnom smjeru od onog koji §7.1 opisuje. Recenzija je ovaj korak našla kao izostavljen.
 

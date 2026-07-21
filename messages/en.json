@@ -1152,6 +1152,18 @@
       "poljeKlijent": "Client",
       "poljeLokacija": "Location",
       "napomena": "Scheduling after the due date is allowed; this is an automatic notice to the assignees."
+    },
+    "digest": {
+      "predmet": "Weekly summary: {broj} overdue items",
+      "headerLabel": "Weekly summary",
+      "znacka": "OVERDUE",
+      "uvod": "These items are still open past their due date:",
+      "kolonaKlijent": "Client",
+      "kolonaVrsta": "Service",
+      "kolonaRok": "Due",
+      "kolonaKasni": "Overdue by",
+      "zakazanoZa": "scheduled for {datum}",
+      "dugmePlan": "Open activity plan"
     }
   },
   "poslatiMejlovi": {

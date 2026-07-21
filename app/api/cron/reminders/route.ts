@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { runReminders } from "@/lib/reminders/runReminders"
 import { runPostDue } from "@/lib/reminders/runPostDue"
+import { runDigest } from "@/lib/reminders/runDigest"
 import { drySend } from "@/lib/email/resend"
 import { isCronAuthorized } from "@/lib/reminders/cronAuth"
 import { podsjetniciAktivni, lokalniSatIDatum, trebaSlatiSada } from "@/lib/reminders/gating"
@@ -9,7 +10,7 @@ import { env } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-// Dvije throttlovane petlje (pre-due + post-due) dijele jedan zahtjev; 60s je bilo
+// Tri throttlovane petlje (pre-due + post-due + digest) dijele jedan zahtjev; 60s je bilo
 // dimenzionisano samo za runReminders pri punom cap-u (~50s).
 export const maxDuration = 120
 
@@ -91,7 +92,12 @@ async function handle(req: Request) {
       }
     }
     const postDue = await runPostDue(supabase, posalji)
-    return NextResponse.json({ preDue, postDue })
+    // Digest ide POSLIJE post-due puta, u istom zahtjevu. Redoslijed nije kozmetika:
+    // get_istekli_termini izostavlja termin koji je danas dobio pojedinačnu obavijest,
+    // pa post-due mora prvo upisati svoje tragove. U ranijem dizajnu je digest bio
+    // zasebna cron ruta i taj redoslijed nije bio zagarantovan.
+    const digest = await runDigest(supabase, posalji)
+    return NextResponse.json({ preDue, postDue, digest })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Greška"
     return NextResponse.json({ error: message }, { status: 500 })

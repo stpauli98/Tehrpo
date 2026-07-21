@@ -975,8 +975,10 @@
     },
     "vrijemeSlanja": {
       "naslov": "Sendezeit",
-      "opis": "Erinnerungen werden zur ersten Stunde ab der gewählten gesendet, einmal täglich.",
-      "zona": "Ortszeit (Wien)"
+      "opis": "Erinnerungen werden einmal täglich zu einem von zwei Zeitpunkten versendet.",
+      "zona": "Ortszeit (Wien)",
+      "ujutro": "Vormittags (ca. 10–11 Uhr)",
+      "poslijepodne": "Nachmittags (ca. 14–15 Uhr)"
     },
     "saljiKlijentima": {
       "naslov": "Erinnerungen auch an Firmen senden",

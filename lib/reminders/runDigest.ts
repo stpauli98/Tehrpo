@@ -19,8 +19,16 @@ type Outcome =
   | ({ kind: "skip" } & SkipItem)
   | ({ kind: "err" } & ErrItem)
 
-/** Koliko dana unazad gledamo ledger da bismo znali kad je primalac zadnji put dobio digest. */
-const PROZOR_DANA = 8
+/**
+ * Koliko dana unazad gledamo ledger da bismo znali kad je primalac zadnji put dobio digest.
+ *
+ * Mora biti širi od kadence (7 dana) za više od jednog dana: ako propadne i
+ * ponedjeljak i utorak, oporavak u srijedu i dalje treba vidjeti zadnji uspješan
+ * "poslato" zapis star 9 dana. Prag od 8 dana pokriva samo jedan propušteni dan
+ * oporavka; 14 dana ostavlja rezervu za više uzastopnih propusta prije nego što
+ * primalac tiho ispadne iz prozora i čeka sljedeći ponedjeljak.
+ */
+const PROZOR_DANA = 14
 
 /**
  * Sedmični digest isteklih termina — jedan mejl po primaocu, ponedjeljkom.
@@ -135,6 +143,12 @@ export async function runDigest(
         },
         send,
       )
+      // claimId je null tačno kad je isDryRun true (claim se u tom slučaju ni ne uzima) —
+      // ledger se dry runu ne dira. res.dryRun se dodatno provjerava za rubni slučaj kad
+      // claim JESTE uzet (isDryRun false) ali je send() svejedno tiho pao na drySend
+      // (nedostaje RESEND_API_KEY) — tada mejl nije stvarno poslat pa se ni ne označava,
+      // claim ostaje 'u_toku' i reklamira se svakih 15 minuta dok rezultat i dalje javlja
+      // "sent" sa dryRun: true.
       if (claimId && !res.dryRun) {
         const { error: updErr } = await supabase
           .from("digest_slanja")

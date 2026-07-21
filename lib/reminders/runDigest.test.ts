@@ -25,6 +25,7 @@ function makeFake(opts: {
   postojeciZapisi?: { primalac_email: string; datum: string; stanje: string; claimed_at: string }[]
   korisnici?: typeof ADMIN[]
   claimError?: string
+  updateError?: string
 }) {
   const updates: Array<{ id: unknown; patch: Record<string, unknown> }> = []
   const claims = [...(opts.claimIds ?? ["c1", "c2", "c3"])]
@@ -42,7 +43,11 @@ function makeFake(opts: {
         return {
           select: () => ({ gte: async () => ({ data: opts.postojeciZapisi ?? [], error: null }) }),
           update: (patch: Record<string, unknown>) => ({
-            eq: async (_c: string, id: unknown) => { updates.push({ id, patch }); return { error: null } },
+            eq: async (_c: string, id: unknown) => {
+              updates.push({ id, patch })
+              if (opts.updateError) return { error: { message: opts.updateError } }
+              return { error: null }
+            },
           }),
         }
       }
@@ -73,6 +78,10 @@ describe("runDigest", () => {
     expect(updates).toHaveLength(1)
     expect(updates[0]!.patch.stanje).toBe("poslato")
     expect(updates[0]!.patch.termin_ids).toEqual(["t1"])
+    // Reclaim zaglavljenog reda u claim_digest prepisuje samo claimed_at — resend_id i
+    // poslat_at ostaju od ranijeg (neuspjelog) pokušaja ako ih ovaj update ne prepiše i on.
+    expect(updates[0]!.patch.resend_id).toBe("re_1")
+    expect(updates[0]!.patch.poslat_at).toEqual(expect.any(String))
   })
 
   it("utorkom bez starijeg digesta ne šalje ništa", async () => {
@@ -115,6 +124,17 @@ describe("runDigest", () => {
     expect(res.errors).toHaveLength(1)
     expect(res.errors[0]!.message).toContain("resend pao")
     expect(updates).toHaveLength(0)
+  })
+
+  it("mejl poslat ali upis ishoda padne: prijavljuje grešku sa resend_id, ne uspjeh", async () => {
+    const { supabase, updates } = makeFake({ rows: [ROW], updateError: "upis pukao" })
+    const res = await runDigest(supabase, { send: okSend, now: PONEDJELJAK, delayMs: 0 })
+    expect(res.sent).toHaveLength(0)
+    expect(res.errors).toHaveLength(1)
+    expect(res.errors[0]!.message).toContain("re_1")
+    // Upis je pokušan (i pao) — claim ostaje 'u_toku' u bazi jer update nije prošao,
+    // što je tačno scenario dupliranog digesta za 15 minuta.
+    expect(updates).toHaveLength(1)
   })
 
   it("dry run ne uzima claim i ne dira ledger", async () => {

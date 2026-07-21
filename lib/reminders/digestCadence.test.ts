@@ -91,4 +91,31 @@ describe("trebaDigest", () => {
       danasnji: { stanje: "u_toku", claimedAt: "2026-07-20T07:44:59Z" }, now,
     })).toBe(true)
   })
+
+  it("utorak, nikad uspješno slato ALI zaglavljen jučerašnji pokušaj u prozoru → šalje (oporavak prvog puta)", () => {
+    // Prvi ponedjeljak poslije deploya: claim uzet, slanje/upis pao → red ostaje 'u_toku'
+    // i sutradan više nije 'današnji'. zadnjiPoslat je i dalje null jer nikad nije uspio.
+    expect(trebaDigest({
+      danas: UTO, zadnjiPoslat: null, danasnji: null,
+      neuspjeliPokusaj: PON, now,
+    })).toBe(true)
+  })
+
+  it("utorak, nikad ništa u ledgeru (bez neuspjelog pokušaja) → i dalje NE šalje (čeka ponedjeljak)", () => {
+    // Ne smije se narušiti postojeće ponašanje: primalac koji nikad ništa nije imao
+    // u ledgeru i dalje čeka ponedjeljak.
+    expect(trebaDigest({
+      danas: UTO, zadnjiPoslat: null, danasnji: null,
+      neuspjeliPokusaj: null, now,
+    })).toBe(false)
+  })
+
+  it("utorak, zadnji digest bio juče USPJEŠNO, uz stariji neuspjeli pokušaj u prozoru → NE šalje", () => {
+    // zadnjiPoslat postoji → odluka ide isključivo po 7-dnevnoj kadenci, neuspjeliPokusaj
+    // se ignoriše kad postoji uspješan zapis.
+    expect(trebaDigest({
+      danas: UTO, zadnjiPoslat: PON, danasnji: null,
+      neuspjeliPokusaj: "2026-07-06", now,
+    })).toBe(false)
+  })
 })

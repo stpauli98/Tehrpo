@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { runReminders } from "@/lib/reminders/runReminders"
 import { runPostDue } from "@/lib/reminders/runPostDue"
-import { runDigest } from "@/lib/reminders/runDigest"
+import { runDigest, type DigestRunResult } from "@/lib/reminders/runDigest"
 import { drySend } from "@/lib/email/resend"
 import { isCronAuthorized } from "@/lib/reminders/cronAuth"
 import { podsjetniciAktivni, lokalniSatIDatum, trebaSlatiSada } from "@/lib/reminders/gating"
@@ -96,7 +96,19 @@ async function handle(req: Request) {
     // get_istekli_termini izostavlja termin koji je danas dobio pojedinačnu obavijest,
     // pa post-due mora prvo upisati svoje tragove. U ranijem dizajnu je digest bio
     // zasebna cron ruta i taj redoslijed nije bio zagarantovan.
-    const digest = await runDigest(supabase, posalji)
+    //
+    // Digest ima vlastiti try/catch: on je najmanje kritičan od tri kruga i posljednji
+    // je u nizu. preDue i postDue su u ovom trenutku već poslali stvarne mejlove i upisali
+    // svoje ledgere — pad digesta ne smije obrisati te rezultate iz odgovora niti pretvoriti
+    // uspješan cron u 500. Kad padne, `digest` nosi grešku umjesto uobičajenog oblika.
+    let digest: DigestRunResult | { error: string }
+    try {
+      digest = await runDigest(supabase, posalji)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Greška"
+      console.error("[cron/reminders] runDigest je pukao:", message)
+      digest = { error: message }
+    }
     return NextResponse.json({ preDue, postDue, digest })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Greška"

@@ -27,16 +27,22 @@ function danaIzmedju(od: string, do_: string): number {
  *  1. je li danas već obrađen — 'poslato' zatvara dan, a 'u_toku' zatvara samo
  *     dok je svjež; zaglavljen claim stariji od 15 min mora biti dostižan, inače
  *     bi pad slanja progutao digest do sljedeće sedmice,
- *  2. kadenca — ponedjeljak, ili oporavak kad je posljednji stariji od 7 dana.
- *     Primalac koji nikad nije dobio digest čeka ponedjeljak.
+ *  2. kadenca — ponedjeljak, ili oporavak kad je posljednji USPJEŠAN digest stariji
+ *     od 7 dana. Primalac koji nikad nije dobio digest čeka ponedjeljak — OSIM ako
+ *     u prozoru postoji zaglavljen neuspio pokušaj (`neuspjeliPokusaj`): bez toga bi
+ *     primalac čiji je prvi ikad pokušaj pao (npr. prvi ponedjeljak poslije deploya)
+ *     ostao nevidljiv narednih sedam dana — red je 'u_toku', nije 'poslato', nije
+ *     'današnji', a `zadnjiPoslat` je i dalje `null`.
  */
 export function trebaDigest(args: {
   danas: string
   zadnjiPoslat: string | null
   danasnji: { stanje: string; claimedAt: string } | null
+  /** Datum najskorijeg reda iz prozora koji NIJE 'poslato' i NIJE današnji. */
+  neuspjeliPokusaj?: string | null
   now: Date
 }): boolean {
-  const { danas, zadnjiPoslat, danasnji, now } = args
+  const { danas, zadnjiPoslat, danasnji, now, neuspjeliPokusaj = null } = args
 
   if (danasnji) {
     if (danasnji.stanje === "poslato") return false
@@ -47,6 +53,6 @@ export function trebaDigest(args: {
   }
 
   if (jePonedjeljak(danas)) return true
-  if (!zadnjiPoslat) return false
-  return danaIzmedju(zadnjiPoslat, danas) >= 7
+  if (zadnjiPoslat) return danaIzmedju(zadnjiPoslat, danas) >= 7
+  return neuspjeliPokusaj !== null
 }

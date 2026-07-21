@@ -41,7 +41,11 @@ function makeFake(opts: {
       if (table === "kontakt_osobe") return { select: async () => ({ data: [], error: null }) }
       if (table === "digest_slanja") {
         return {
-          select: () => ({ gte: async () => ({ data: opts.postojeciZapisi ?? [], error: null }) }),
+          select: () => ({
+            gte: () => ({
+              order: async () => ({ data: opts.postojeciZapisi ?? [], error: null }),
+            }),
+          }),
           update: (patch: Record<string, unknown>) => ({
             eq: async (_c: string, id: unknown) => {
               updates.push({ id, patch })
@@ -160,6 +164,25 @@ describe("runDigest", () => {
     })
     expect(poslato).toBe(0)
     expect(res.skipped).toHaveLength(1)
+  })
+
+  it("zaglavljeni jučerašnji red (u_toku, nikad uspješno poslato) okida digest i van ponedjeljka", async () => {
+    // Prvi ponedjeljak poslije deploya: claim uzet, slanje/upis pao → red ostaje 'u_toku'.
+    // Sutradan (utorak) taj red više nije 'današnji' i zadnjiPoslat je i dalje null —
+    // bez oporavka iz neuspjelog pokušaja digest bi ćutao sedmicu dana bez ijedne greške.
+    const { supabase, updates } = makeFake({
+      rows: [ROW],
+      postojeciZapisi: [
+        { primalac_email: "admin@x.com", datum: "2026-06-08", stanje: "u_toku", claimed_at: "2026-06-08T07:00:00Z" },
+      ],
+    })
+    const res = await runDigest(supabase, {
+      send: okSend, now: new Date("2026-06-09T08:00:00Z"), delayMs: 0,
+    })
+    expect(res.sent).toHaveLength(1)
+    expect(res.sent[0]!.email).toBe("admin@x.com")
+    expect(updates).toHaveLength(1)
+    expect(updates[0]!.patch.stanje).toBe("poslato")
   })
 
   it("greška iz claim_digest se prijavljuje i ništa se ne šalje", async () => {

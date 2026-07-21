@@ -356,6 +356,31 @@ describe("GET /api/cron/reminders", () => {
     expect(redoslijed).toEqual(["postDue", "digest"])
   })
 
+  it("runDigest baci grešku → 200, preDue i postDue ostaju netaknuti, digest nosi grešku", async () => {
+    // Digest je najmanje kritičan i posljednji od tri kruga: preDue i postDue su u ovom
+    // trenutku već poslali prave mejlove i upisali svoje ledgere (npr. DEMO bez digest
+    // migracija → get_istekli_termini ne postoji). Pad digesta ne smije obrisati te
+    // rezultate iz odgovora niti pretvoriti uspješan cron u 500.
+    const { supabase } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    const preDueRezultat = { sent: [{ email: "a@x.com" }], skipped: [], errors: [], deferred: 0 }
+    const postDueRezultat = { sent: [{ email: "b@x.com" }], skipped: [], errors: [] }
+    runRemindersMock.mockResolvedValue(preDueRezultat)
+    runPostDueMock.mockResolvedValue(postDueRezultat)
+    runDigestMock.mockRejectedValue(new Error("get_istekli_termini ne postoji"))
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z"))
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.preDue).toEqual(preDueRezultat)
+    expect(body.postDue).toEqual(postDueRezultat)
+    expect(body.digest).toEqual({ error: expect.stringContaining("get_istekli_termini ne postoji") })
+  })
+
   it("GET sa današnjim markerom preskače pre-due, ali i dalje pokreće post-due i digest", async () => {
     const { supabase } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-20" },

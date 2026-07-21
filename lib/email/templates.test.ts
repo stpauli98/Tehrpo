@@ -231,8 +231,8 @@ describe("digest", () => {
   })
 
   it("redoslijed stavki slijedi redoslijed ulaza (ne sortira)", () => {
-    // Unesite stavke u redoslijedu koji NIJE sortiraj po kašnjenju
-    // (-3, -50, -1): trebalo bi biti -50, -3, -1 ako bi se sortiralo po kašnjenju
+    // Stavke namjerno u redoslijedu koji NIJE sortiran po kašnjenju
+    // (-3, -50, -1): bilo bi -50, -3, -1 da se sortiralo po kašnjenju.
     const html = digestHtml({
       stavke: [
         stavka("Alpha", -3),
@@ -241,12 +241,12 @@ describe("digest", () => {
       ],
     })
 
-    // Provjerite da su klijenti u HTML-u u istom redoslijedu kao što su prosljeđeni
+    // Klijenti moraju biti u HTML-u u istom redoslijedu kao što su proslijeđeni.
     const posAlpha = html.indexOf("Alpha")
     const posBeta = html.indexOf("Beta")
     const posGamma = html.indexOf("Gamma")
 
-    // Svi moraju biti pronađeni u HTML-u
+    // Svi moraju biti pronađeni u HTML-u.
     expect(posAlpha).toBeGreaterThan(-1)
     expect(posBeta).toBeGreaterThan(-1)
     expect(posGamma).toBeGreaterThan(-1)
@@ -254,5 +254,10 @@ describe("digest", () => {
     // Redoslijed: Alpha → Beta → Gamma (kao što je proslijeđeno, ne sortirano)
     expect(posAlpha).toBeLessThan(posBeta)
     expect(posBeta).toBeLessThan(posGamma)
+  })
+
+  it("prikazuje tekst kašnjenja za danaDoCiklusa", () => {
+    const html = digestHtml({ stavke: [stavka("CARMEUSE", -42)] })
+    expect(html).toContain("kasni 42 dana")
   })
 })

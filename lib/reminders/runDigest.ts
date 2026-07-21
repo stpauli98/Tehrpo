@@ -85,10 +85,14 @@ export async function runDigest(
     .from("digest_slanja")
     .select("primalac_email, datum, stanje, claimed_at")
     .gte("datum", odDatum)
+    .order("datum", { ascending: false })
   if (zapErr) throw new Error(`Greška pri čitanju digest_slanja: ${zapErr.message}`)
 
   const zadnjiPoslatPo = new Map<string, string>()
   const danasnjiPo = new Map<string, { stanje: string; claimedAt: string }>()
+  // Zaglavljen (neuspio) pokušaj iz prozora, po primaocu — okida oporavak u trebaDigest
+  // kad zadnjiPoslat ne postoji (vidi komentar u digestCadence.ts).
+  const neuspjeliPokusajPo = new Map<string, string>()
   for (const z of zapisi ?? []) {
     if (z.datum === danas) {
       danasnjiPo.set(z.primalac_email, { stanje: z.stanje, claimedAt: z.claimed_at })
@@ -96,6 +100,9 @@ export async function runDigest(
     if (z.stanje === "poslato") {
       const prethodni = zadnjiPoslatPo.get(z.primalac_email)
       if (!prethodni || z.datum > prethodni) zadnjiPoslatPo.set(z.primalac_email, z.datum)
+    } else if (z.datum !== danas) {
+      const prethodni = neuspjeliPokusajPo.get(z.primalac_email)
+      if (!prethodni || z.datum > prethodni) neuspjeliPokusajPo.set(z.primalac_email, z.datum)
     }
   }
 
@@ -104,6 +111,7 @@ export async function runDigest(
       danas,
       zadnjiPoslat: zadnjiPoslatPo.get(email) ?? null,
       danasnji: danasnjiPo.get(email) ?? null,
+      neuspjeliPokusaj: neuspjeliPokusajPo.get(email) ?? null,
       now,
     })
     if (!treba) return { kind: "skip", email, razlog: "van kadence ili već obrađen danas" }

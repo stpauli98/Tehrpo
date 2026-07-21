@@ -53,6 +53,12 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
     return (r.rows[0]?.id as string | null) ?? null
   }
 
+  /** Bečki "danas" pomjeren za offsetDana, kao ISO datum — izračunato u bazi da izbjegnemo TZ zamke u Node-u. */
+  async function pomjerenDanas(offsetDana: number): Promise<string> {
+    const r = await db.query("select to_char(current_date + $1::int, 'YYYY-MM-DD') as d", [offsetDana])
+    return r.rows[0]!.d as string
+  }
+
   it("termin u alarmu je u listi, sa negativnim dana_do_ciklusa", async () => {
     await withSeed(async (ids) => {
       const t = await addTermin(ids, -9)
@@ -117,6 +123,86 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
       )
       expect(await istekli(t)).toHaveLength(1)
     })
+  })
+
+  it("p_danas ≠ current_date: obavijest poslata danas ostaje bez efekta kad se preda juče", async () => {
+    await withSeed(async (ids) => {
+      const t = await addTermin(ids, -9)
+      await db.query(
+        `insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, poslat_at)
+         values ($1, current_date - 9, 'interni', 'poslato', now())`,
+        [t],
+      )
+      const juce = await pomjerenDanas(-1)
+      // Suppression gleda predani dan (juce), ne UTC "danas" — obavijest poslata danas
+      // ga ne pogađa, pa termin ostaje u listi.
+      expect(await istekli(t, juce)).toHaveLength(1)
+    })
+  })
+
+  it("p_danas pomjeren u prošlost mijenja predikat alarma, ne samo suppression", async () => {
+    await withSeed(async (ids) => {
+      // Istekao prije 3 dana (od stvarnog danas) — u alarmu je danas, ali NIJE u alarmu
+      // kad se preda p_danas od prije 5 dana (rok_dospijeca tada još nije bio prošao).
+      const t = await addTermin(ids, -3)
+      const petDanaRanije = await pomjerenDanas(-5)
+      expect(await istekli(t, petDanaRanije)).toHaveLength(0)
+    })
+  })
+
+  it("dana_do_ciklusa se računa u odnosu na predani p_danas, ne na current_date", async () => {
+    await withSeed(async (ids) => {
+      const t = await addTermin(ids, -30)
+      const petDanaRanije = await pomjerenDanas(-5)
+      const rows = await istekli(t, petDanaRanije)
+      expect(rows).toHaveLength(1)
+      // ciklus (danas-30) - p_danas (danas-5) = -25, a ne -30 (što current_date bi dao).
+      expect(rows[0]!.dana_do_ciklusa).toBe(-25)
+    })
+  })
+
+  it("vraća najveće kašnjenje prvo (tri termina različitog kašnjenja)", async () => {
+    await withSeed(async (ids) => {
+      const blago = await addTermin(ids, -2)
+      const najkasni = await addTermin(ids, -30)
+      const srednje = await addTermin(ids, -10)
+      const r = await db.query(
+        "select termin_id, dana_do_ciklusa from get_istekli_termini(current_date) where termin_id = any($1::uuid[])",
+        [[blago, najkasni, srednje]],
+      )
+      expect(r.rows.map((row) => row.termin_id as string)).toEqual([najkasni, srednje, blago])
+    })
+  })
+
+  it("claim_digest: dvije istovremene konekcije daju tačno jedan id i jedan null, jedan red u ledgeru", async () => {
+    const email = "concurrent-itest@x.com"
+    const datum = "2026-07-22"
+    const c1 = new Client({ connectionString: URL })
+    const c2 = new Client({ connectionString: URL })
+    await c1.connect()
+    await c2.connect()
+    try {
+      const [r1, r2] = await Promise.all([
+        c1.query("select claim_digest($1, $2::date) as id", [email, datum]),
+        c2.query("select claim_digest($1, $2::date) as id", [email, datum]),
+      ])
+      const ids = [
+        (r1.rows[0]?.id as string | null) ?? null,
+        (r2.rows[0]?.id as string | null) ?? null,
+      ]
+      expect(ids.filter((x) => x !== null)).toHaveLength(1)
+      expect(ids.filter((x) => x === null)).toHaveLength(1)
+
+      const count = await db.query(
+        "select count(*)::int as n from digest_slanja where primalac_email = $1 and datum = $2::date",
+        [email, datum],
+      )
+      expect(count.rows[0]!.n).toBe(1)
+    } finally {
+      await db.query("delete from digest_slanja where primalac_email = $1 and datum = $2::date", [email, datum])
+      await c1.end()
+      await c2.end()
+    }
   })
 
   it("claim_digest: prvi poziv daje id, drugi null", async () => {

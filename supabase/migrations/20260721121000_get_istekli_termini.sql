@@ -25,11 +25,11 @@ as $$
     select t.*, coalesce(t.datum_zakazan, t.rok_dospijeca) as ciklus
     from termini t
     where t.status in ('planirano','zakazano')
-      and t.rok_dospijeca < current_date
-      and coalesce(t.datum_zakazan, t.rok_dospijeca) < current_date
+      and t.rok_dospijeca < p_danas
+      and coalesce(t.datum_zakazan, t.rok_dospijeca) < p_danas
   )
   select ef.id, k.id, k.naziv, vp.naziv, ef.rok_dospijeca, ef.datum_zakazan, ef.ciklus,
-         (ef.ciklus - current_date), l.naziv
+         (ef.ciklus - p_danas), l.naziv
   from ef
   join klijenti k        on k.id = ef.klijent_id
   join vrste_provjera vp on vp.id = ef.vrsta_provjere_id
@@ -37,9 +37,11 @@ as $$
   -- Termin koji je DANAS dobio pojedinačnu obavijest ne ulazi u današnji digest.
   -- poslat_at je popunjen samo za stvarno poslate; 'preskoceno' redovi ga nemaju,
   -- pa termin koji je danas preskočen (nema primalaca) i dalje pripada digestu.
+  -- Kastuje se u bečku zonu, ne sesijsku (UTC na Supabase-u), da se poredi sa istim
+  -- danom kao i p_danas.
   where not exists (
     select 1 from post_due_obavijesti o
-    where o.termin_id = ef.id and o.poslat_at::date = p_danas
+    where o.termin_id = ef.id and (o.poslat_at at time zone 'Europe/Vienna')::date = p_danas
   )
   order by ef.ciklus, k.naziv;
 $$;

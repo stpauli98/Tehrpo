@@ -22,7 +22,10 @@
     },
     "sacuvano": "Saved",
     "obrisano": "Deleted",
-    "greska": "Something went wrong"
+    "greska": "Something went wrong",
+    "greskaNeocekivana": "An unexpected error occurred.",
+    "greskaUcitavanja": "Failed to load data.",
+    "pokusajPonovo": "Try again"
   },
   "shell": {
     "nav": {

@@ -22,7 +22,10 @@
     },
     "sacuvano": "Sačuvano",
     "obrisano": "Obrisano",
-    "greska": "Došlo je do greške"
+    "greska": "Došlo je do greške",
+    "greskaNeocekivana": "Došlo je do neočekivane greške.",
+    "greskaUcitavanja": "Greška pri učitavanju podataka.",
+    "pokusajPonovo": "Pokušaj ponovo"
   },
   "shell": {
     "nav": {

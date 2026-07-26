@@ -22,7 +22,10 @@
     },
     "sacuvano": "Gespeichert",
     "obrisano": "Gelöscht",
-    "greska": "Ein Fehler ist aufgetreten"
+    "greska": "Ein Fehler ist aufgetreten",
+    "greskaNeocekivana": "Ein unerwarteter Fehler ist aufgetreten.",
+    "greskaUcitavanja": "Fehler beim Laden der Daten.",
+    "pokusajPonovo": "Erneut versuchen"
   },
   "shell": {
     "nav": {

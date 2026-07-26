@@ -132,3 +132,50 @@ describe("tekuciNarednomMjesecuRange", () => {
     expect(tekuciNarednomMjesecuRange(new Date(Date.UTC(2026, 1, 10)))).toEqual({ from: "2026-02-01", to: "2026-03-31" })
   })
 })
+
+import { formatDatumVrijeme, utcGranicaSarajevskogDana, dodajDan } from "./date"
+
+describe("formatDatumVrijeme", () => {
+  // (a) ljetnje računanje: Sarajevo = UTC+2 → 10:00Z = 12:00
+  // Očekivani string fiksiran po stvarnom Intl izlazu (Node 24, sr-Latn): "26. 7. 2026. 12:00"
+  it("ljetnji timestamp → Europe/Sarajevo UTC+2 (12:00)", () => {
+    expect(formatDatumVrijeme("2026-07-26T10:00:00Z")).toBe("26. 7. 2026. 12:00")
+  })
+  // (b) zimski slučaj: Sarajevo = UTC+1 → 10:00Z = 11:00
+  it("zimski timestamp → Europe/Sarajevo UTC+1 (11:00)", () => {
+    expect(formatDatumVrijeme("2026-01-15T10:00:00Z")).toBe("15. 1. 2026. 11:00")
+  })
+  // (c) null/""/nevažeći → "—"
+  it("null/prazan/nevažeći → em-dash", () => {
+    expect(formatDatumVrijeme(null)).toBe("—")
+    expect(formatDatumVrijeme(undefined)).toBe("—")
+    expect(formatDatumVrijeme("")).toBe("—")
+    expect(formatDatumVrijeme("garbage")).toBe("—")
+  })
+  // (d) izlaz ne sadrži sekunde
+  it("izlaz ne sadrži sekunde", () => {
+    const out = formatDatumVrijeme("2026-07-26T10:00:45Z")
+    expect(out).not.toMatch(/\d{1,2}:\d{2}:\d{2}/)
+    expect(out).toBe("26. 7. 2026. 12:00")
+  })
+})
+
+describe("utcGranicaSarajevskogDana", () => {
+  // (e) ljeto (UTC+2) i zima (UTC+1)
+  it("ljetnji datum → ponoć Sarajeva = 22:00Z prethodnog dana", () => {
+    expect(utcGranicaSarajevskogDana("2026-07-26")).toBe("2026-07-25T22:00:00.000Z")
+  })
+  it("zimski datum → ponoć Sarajeva = 23:00Z prethodnog dana", () => {
+    expect(utcGranicaSarajevskogDana("2026-01-15")).toBe("2026-01-14T23:00:00.000Z")
+  })
+})
+
+describe("dodajDan", () => {
+  // (f) prestupni februar + granica godine
+  it("prestupna godina: 28.02.2024 + 1 → 29.02.2024", () => {
+    expect(dodajDan("2024-02-28")).toBe("2024-02-29")
+  })
+  it("granica godine: 31.12.2026 + 1 → 01.01.2027", () => {
+    expect(dodajDan("2026-12-31")).toBe("2027-01-01")
+  })
+})

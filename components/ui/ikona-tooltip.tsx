@@ -19,7 +19,7 @@ export function Tooltip({
   return (
     <span
       className={cn(
-        "pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-md group-hover/tt:block group-focus-visible/tt:block",
+        "pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md ring-1 ring-foreground/10 group-hover/tt:block group-focus-visible/tt:block",
         className,
       )}
     >

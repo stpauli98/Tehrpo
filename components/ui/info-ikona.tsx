@@ -28,7 +28,7 @@ export function InfoIkona({
   const tooltip = (
     <span
       className={cn(
-        "pointer-events-none absolute top-full z-50 mt-1.5 hidden w-max max-w-72 whitespace-normal rounded-md bg-slate-900 px-2.5 py-1.5 text-left text-xs font-medium leading-relaxed text-white shadow-md group-hover/info:block",
+        "pointer-events-none absolute top-full z-50 mt-1.5 hidden w-max max-w-72 whitespace-normal rounded-md bg-popover px-2.5 py-1.5 text-left text-xs font-medium leading-relaxed text-popover-foreground shadow-md ring-1 ring-foreground/10 group-hover/info:block",
         !dekorativno && "group-focus-visible/info:block",
         strana === "desno" ? "right-0" : "left-0",
       )}

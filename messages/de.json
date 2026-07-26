@@ -516,7 +516,6 @@
       "sviNacini": "Alle Methoden",
       "nacinIzvrsava": "Führt aus",
       "nacinPracenje": "Nur Verfolgung",
-      "svi": "Alle",
       "godina": "Jahr",
       "pretragaPlaceholder": "Firma suchen...",
       "tekuciNaredni": "Aktueller + nächster Monat"
@@ -582,6 +581,8 @@
     }
   },
   "status": {
+    "svi": "Alle",
+    "aktivni": "Aktiv",
     "planirano": "Geplant",
     "zakazano": "Terminiert",
     "izvrseno": "Durchgeführt",
@@ -596,8 +597,6 @@
       "periodMjesec": "Monat",
       "periodKvartal": "Quartal",
       "periodGodina": "Jahr",
-      "statusAktivni": "Aktiv",
-      "statusSvi": "Alle",
       "gradSvi": "Alle Städte",
       "gradBez": "Ohne Stadt",
       "placeholderMjesec": "Monat",

@@ -516,7 +516,6 @@
       "sviNacini": "All methods",
       "nacinIzvrsava": "Performs",
       "nacinPracenje": "Tracking only",
-      "svi": "All",
       "godina": "Year",
       "pretragaPlaceholder": "Search company...",
       "tekuciNaredni": "Current + next month"
@@ -582,6 +581,8 @@
     }
   },
   "status": {
+    "svi": "All",
+    "aktivni": "Active",
     "planirano": "Planned",
     "zakazano": "Scheduled",
     "izvrseno": "Completed",
@@ -596,8 +597,6 @@
       "periodMjesec": "Month",
       "periodKvartal": "Quarter",
       "periodGodina": "Year",
-      "statusAktivni": "Active",
-      "statusSvi": "All",
       "gradSvi": "All cities",
       "gradBez": "No city",
       "placeholderMjesec": "Month",

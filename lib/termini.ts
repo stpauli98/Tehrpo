@@ -78,13 +78,14 @@ export const STATUS_CELL_CLASS: Record<DerivedStatus, string> = {
 /** Redoslijed statusa za legendu/prikaz. */
 export const STATUS_ORDER = ["izvrseno", "planirano", "zakazano", "kasni", "otkazano"] as const
 
+/** Opcije status filtera. labelKey = ključ u i18n namespace-u "status". */
 export const STATUS_FILTER_OPTIONS = [
-  { value: "svi", label: "Svi" },
-  { value: "kasni", label: "Kasni" },
-  { value: "planirano", label: "Planirano" },
-  { value: "zakazano", label: "Zakazano" },
-  { value: "izvrseno", label: "Izvršeno" },
-  { value: "otkazano", label: "Otkazano" },
+  { value: "svi", labelKey: "svi" },
+  { value: "kasni", labelKey: "kasni" },
+  { value: "planirano", labelKey: "planirano" },
+  { value: "zakazano", labelKey: "zakazano" },
+  { value: "izvrseno", labelKey: "izvrseno" },
+  { value: "otkazano", labelKey: "otkazano" },
 ] as const
 
 const VALID: ReadonlySet<string> = new Set<DerivedStatus>([

@@ -516,7 +516,6 @@
       "sviNacini": "Svi načini",
       "nacinIzvrsava": "Izvršava",
       "nacinPracenje": "Samo praćenje",
-      "svi": "Svi",
       "godina": "Godina",
       "pretragaPlaceholder": "Pretraga firme...",
       "tekuciNaredni": "Tekući + naredni mjesec"
@@ -582,6 +581,8 @@
     }
   },
   "status": {
+    "svi": "Svi",
+    "aktivni": "Aktivni",
     "planirano": "Planirano",
     "zakazano": "Zakazano",
     "izvrseno": "Izvršeno",
@@ -596,8 +597,6 @@
       "periodMjesec": "Mjesec",
       "periodKvartal": "Kvartal",
       "periodGodina": "Godina",
-      "statusAktivni": "Aktivni",
-      "statusSvi": "Svi",
       "gradSvi": "Svi gradovi",
       "gradBez": "Bez grada",
       "placeholderMjesec": "Mjesec",

@@ -25,6 +25,7 @@
     "greska": "Ein Fehler ist aufgetreten",
     "greskaNeocekivana": "Ein unerwarteter Fehler ist aufgetreten.",
     "greskaUcitavanja": "Fehler beim Laden der Daten.",
+    "samoAdministrator": "Nur Administrator.",
     "pokusajPonovo": "Erneut versuchen"
   },
   "shell": {
@@ -1022,7 +1023,6 @@
     "actions": {
       "pragObavezan": "Geben Sie mindestens eine Schwelle ein",
       "pragoviNeispravni": "Schwellenwerte müssen ganze Zahlen 0–365 sein, durch Komma getrennt",
-      "samoAdministrator": "Nur Administrator.",
       "intervalGreskaVrijednost": "Intervall muss eine ganze Zahl 1–120 oder leer sein (Fehler: \"{vrijednost}\")",
       "nazivObavezan": "Name ist erforderlich",
       "intervalNeispravan": "Intervall muss eine ganze Zahl 1–120 oder leer sein",

@@ -7,6 +7,7 @@ import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { zahtijevajAdmina } from "@/lib/auth/zahtijevaj-admina"
 import { validirajNovuLozinku } from "@/lib/auth/lozinka"
 import { revalidateVrste } from "@/lib/cache"
 import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
@@ -159,12 +160,6 @@ export async function createVrsta(
 }
 
 // ─── Admin: upravljanje korisnicima ──────────────────────────────────────────
-
-export async function zahtijevajAdmina() {
-  const k = await getTrenutniKorisnik()
-  if (!k || k.uloga !== "admin") throw new Error(t("samoAdministrator"))
-  return k
-}
 
 // Vrati broj aktivnih administratora (za zaštitu od zaključavanja sistema).
 // Prima SSR (RLS) klijent — admin kroz korisnici_sel (je_admin()) vidi sve korisnike.

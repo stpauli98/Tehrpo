@@ -25,6 +25,7 @@
     "greska": "Something went wrong",
     "greskaNeocekivana": "An unexpected error occurred.",
     "greskaUcitavanja": "Failed to load data.",
+    "samoAdministrator": "Administrator only.",
     "pokusajPonovo": "Try again"
   },
   "shell": {
@@ -1022,7 +1023,6 @@
     "actions": {
       "pragObavezan": "Enter at least one threshold",
       "pragoviNeispravni": "Thresholds must be whole numbers 0–365, separated by commas",
-      "samoAdministrator": "Administrator only.",
       "intervalGreskaVrijednost": "Interval must be a whole number 1–120 or empty (error: \"{vrijednost}\")",
       "nazivObavezan": "Name is required",
       "intervalNeispravan": "Interval must be a whole number 1–120 or empty",

@@ -25,6 +25,7 @@
     "greska": "Došlo je do greške",
     "greskaNeocekivana": "Došlo je do neočekivane greške.",
     "greskaUcitavanja": "Greška pri učitavanju podataka.",
+    "samoAdministrator": "Samo administrator.",
     "pokusajPonovo": "Pokušaj ponovo"
   },
   "shell": {
@@ -1022,7 +1023,6 @@
     "actions": {
       "pragObavezan": "Unesite barem jedan prag",
       "pragoviNeispravni": "Pragovi moraju biti cijeli brojevi 0–365, odvojeni zarezom",
-      "samoAdministrator": "Samo administrator.",
       "intervalGreskaVrijednost": "Interval mora biti cijeli broj 1–120 ili prazno (greška: \"{vrijednost}\")",
       "nazivObavezan": "Naziv je obavezan",
       "intervalNeispravan": "Interval mora biti cijeli broj 1–120 ili prazno",

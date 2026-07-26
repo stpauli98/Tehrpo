@@ -21,8 +21,8 @@ type Vrsta = {
 }
 
 export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
-  const t = useTranslations("termini.vrstePregleda")
-  const tKolone = useTranslations("termini.vrstePregleda.kolone")
+  const t = useTranslations("postavke.vrstePregleda")
+  const tKolone = useTranslations("postavke.vrstePregleda.kolone")
   const [prikaziNeaktivne, setPrikaziNeaktivne] = useState(false)
   const brNeaktivnih = vrste.filter((v) => !v.aktivna).length
   const vidljive = prikaziNeaktivne ? vrste : vrste.filter((v) => v.aktivna)
@@ -100,7 +100,7 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
 // lokalnog stanja kroz effect.
 function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
   const router = useRouter()
-  const t = useTranslations("termini.vrstePregleda")
+  const t = useTranslations("postavke.vrstePregleda")
   const serverVal = vrsta.interval?.toString() ?? ""
   const [val, setVal] = useState(serverVal)
   const [pending, startSave] = useTransition()
@@ -168,7 +168,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
 
 function StatusPill({ vrsta }: { vrsta: Vrsta }) {
   const router = useRouter()
-  const t = useTranslations("termini.vrstePregleda")
+  const t = useTranslations("postavke.vrstePregleda")
   const tc = useTranslations("common")
   const [pending, startToggle] = useTransition()
 

@@ -28,7 +28,7 @@ export function DodjelaKlijenata({
   klijenti: { id: string; naziv: string }[]
   izabrani: string[]
 }) {
-  const t = useTranslations("klijenti.dodjelaKlijenata")
+  const t = useTranslations("postavke.dodjelaKlijenata")
   const tc = useTranslations("common")
   const router = useRouter()
   const [open, setOpen] = useState(false)

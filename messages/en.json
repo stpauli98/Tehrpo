@@ -45,7 +45,8 @@
       "prosiriNavigaciju": "Expand navigation",
       "skupiNavigaciju": "Collapse navigation",
       "skupi": "Collapse",
-      "resizeHint": "Drag to resize · double-click to collapse"
+      "resizeHint": "Drag to resize · double-click to collapse",
+      "bedzGreske": "Unresolved errors"
     },
     "topBar": {
       "odjava": "Sign out",
@@ -141,14 +142,6 @@
       },
       "barTitle": "{naziv}: {count, plural, =1 {# appointment} other {# appointments}}",
       "barAriaLabel": "{naziv}: {count, plural, =1 {# appointment} other {# appointments}} — open month in matrix"
-    },
-    "prikaz": {
-      "modKlijent": "By client",
-      "modMjesec": "By month",
-      "sviKlijenti": "— all clients —",
-      "izaberiKlijenta": "Select a client",
-      "izaberiMjesec": "Select a month",
-      "godina": "Year"
     }
   },
   "klijenti": {
@@ -426,18 +419,6 @@
       "submit": "Add document",
       "uspjeh": "Document added"
     },
-    "dodjelaKlijenata": {
-      "dugme": "Companies ({count})",
-      "naslov": "Assigned companies",
-      "opis": "The user only sees and works with companies assigned to them here.",
-      "pretragaPlaceholder": "Search companies…",
-      "prazno": "No results.",
-      "brojac": "{count} selected",
-      "submitPending": "Saving…",
-      "toastSuccess": "Companies assigned.",
-      "toastErrorFallback": "Error.",
-      "checkboxAriaLabel": "Select company {naziv}"
-    },
     "profil": {
       "prazno": "No checks in the profile. Add a check to generate appointments.",
       "kolone": {
@@ -483,6 +464,32 @@
       "snimam": "Saving…",
       "spaseno": "Assignment saved.",
       "checkboxAriaLabel": "Select worker {ime}"
+    },
+    "dodajProvjeru": {
+      "dugme": "Add check",
+      "naslov": "Add check to profile",
+      "opis": "Link a service to a location — the appointment and deadline are generated automatically.",
+      "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
+      "bezLokacijaLink": "Add a client location first.",
+      "poljeVrsta": "Type *",
+      "placeholderVrsta": "Select type",
+      "poljeLokacija": "Location *",
+      "placeholderLokacija": "Select location",
+      "poljeInterval": "Interval (months) — taken from type",
+      "bezIntervalaTekst": "This type has no default interval — set it in",
+      "bezIntervalaLink": "Settings",
+      "bezIntervalaKraj": "before adding it to the profile.",
+      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding it to the profile.",
+      "poljeRadjenoRanije": "Has this check already been done? *",
+      "opcijaVecRadeno": "Yes — I'll enter the last date",
+      "opcijaPrviPut": "No — first time (I'll enter the first deadline)",
+      "poljeZadnjiDatum": "Last done *",
+      "poljePrviRok": "First deadline *",
+      "poljeNacinIzvrsenja": "Execution method *",
+      "nacinIzvrsava": "{appName} performs it",
+      "nacinPracenje": "Deadline tracking only",
+      "dodajem": "Adding…",
+      "dodajIGenerisi": "Add and generate appointment"
     }
   },
   "termini": {
@@ -561,80 +568,6 @@
       "placeholderZaduzeni": "e.g. Marija K.",
       "kreiram": "Creating…",
       "kreirajTermin": "Create appointment"
-    },
-    "dodajProvjeru": {
-      "dugme": "Add check",
-      "naslov": "Add check to profile",
-      "opis": "Link a service to a location — the appointment and deadline are generated automatically.",
-      "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
-      "bezLokacijaLink": "Add a client location first.",
-      "poljeVrsta": "Type *",
-      "placeholderVrsta": "Select type",
-      "poljeLokacija": "Location *",
-      "placeholderLokacija": "Select location",
-      "poljeInterval": "Interval (months) — taken from type",
-      "bezIntervalaTekst": "This type has no default interval — set it in",
-      "bezIntervalaLink": "Settings",
-      "bezIntervalaKraj": "before adding it to the profile.",
-      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding it to the profile.",
-      "poljeRadjenoRanije": "Has this check already been done? *",
-      "opcijaVecRadeno": "Yes — I'll enter the last date",
-      "opcijaPrviPut": "No — first time (I'll enter the first deadline)",
-      "poljeZadnjiDatum": "Last done *",
-      "poljePrviRok": "First deadline *",
-      "poljeNacinIzvrsenja": "Execution method *",
-      "nacinIzvrsava": "{appName} performs it",
-      "nacinPracenje": "Deadline tracking only",
-      "dodajem": "Adding…",
-      "dodajIGenerisi": "Add and generate appointment"
-    },
-    "novaVrsta": {
-      "dugme": "New type",
-      "naslov": "New check type",
-      "poljeNaziv": "Name *",
-      "placeholderNaziv": "e.g. Ventilation system check",
-      "poljeInterval": "Interval (months)",
-      "placeholderInterval": "empty = no auto-scheduling",
-      "poljeZakonskiOsnov": "Legal basis",
-      "placeholderZakonskiOsnov": "e.g. Regulation… (optional)",
-      "kreiram": "Creating…",
-      "kreirajVrstu": "Create type"
-    },
-    "vrstaSheet": {
-      "urediAriaLabel": "Edit",
-      "naslov": "Edit check type",
-      "poljeNaziv": "Name *",
-      "poljeZakonskiOsnov": "Legal basis",
-      "poljeVodiDokumentaciju": "Documentation is kept for this service",
-      "spremam": "Saving…",
-      "spremiIzmjene": "Save changes",
-      "deaktiviraj": "Deactivate",
-      "aktiviraj": "Activate",
-      "aktiviranaUspjeh": "Type activated",
-      "deaktiviranaUspjeh": "Type deactivated"
-    },
-    "vrstePregleda": {
-      "prikaziNeaktivne": "Show inactive too",
-      "brojVrsta": "{count} types",
-      "kolone": {
-        "vrsta": "Check type",
-        "interval": "Interval (mo)",
-        "dokumentacija": "Doc.",
-        "status": "Status",
-        "akcije": "Actions"
-      },
-      "vodiDokumentacijuTitle": "Documentation is kept",
-      "bezDokumentacijeTitle": "No documentation",
-      "prazno": "No types to display.",
-      "intervalGreska": "1–120 or empty",
-      "intervalSpremljeno": "✓ saved",
-      "intervalGreskaFallback": "Error saving",
-      "klikDeaktivacija": "Click to deactivate",
-      "klikAktivacija": "Click to activate",
-      "aktivna": "Active",
-      "neaktivna": "Inactive",
-      "aktiviranaUspjeh": "Type activated",
-      "deaktiviranaUspjeh": "Type deactivated"
     },
     "actions": {
       "datumNeispravan": "Invalid date",
@@ -738,6 +671,14 @@
       "izaberiteKlijenta": "Select a client to view the annual matrix.",
       "nemaTerminaMjesec": "No appointments for the selected month.",
       "nemaTerminaGodina": "This client has no appointments in the selected year."
+    },
+    "prikaz": {
+      "modKlijent": "By client",
+      "modMjesec": "By month",
+      "sviKlijenti": "— all clients —",
+      "izaberiKlijenta": "Select a client",
+      "izaberiMjesec": "Select a month",
+      "godina": "Year"
     }
   },
   "aktivnost": {
@@ -761,13 +702,11 @@
       "FILTER": "Filtered"
     },
     "filteri": {
-      "korisnik": "User",
       "akcija": "Action type",
       "svi": "All",
       "od": "From",
       "do": "To",
       "pretraga": "Search",
-      "primijeni": "Apply",
       "ocisti": "Clear"
     },
     "prazno": "No recorded events for the selected filters.",
@@ -1050,6 +989,66 @@
       "vrijemeSatNeispravan": "Hour must be an integer 0–23.",
       "saljiKlijentimaGreska": "Failed to change sending to clients.",
       "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice."
+    },
+    "novaVrsta": {
+      "dugme": "New type",
+      "naslov": "New check type",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "e.g. Ventilation system check",
+      "poljeInterval": "Interval (months)",
+      "placeholderInterval": "empty = no auto-scheduling",
+      "poljeZakonskiOsnov": "Legal basis",
+      "placeholderZakonskiOsnov": "e.g. Regulation… (optional)",
+      "kreiram": "Creating…",
+      "kreirajVrstu": "Create type"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Edit",
+      "naslov": "Edit check type",
+      "poljeNaziv": "Name *",
+      "poljeZakonskiOsnov": "Legal basis",
+      "poljeVodiDokumentaciju": "Documentation is kept for this service",
+      "spremam": "Saving…",
+      "spremiIzmjene": "Save changes",
+      "deaktiviraj": "Deactivate",
+      "aktiviraj": "Activate",
+      "aktiviranaUspjeh": "Type activated",
+      "deaktiviranaUspjeh": "Type deactivated"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Show inactive too",
+      "brojVrsta": "{count} types",
+      "kolone": {
+        "vrsta": "Check type",
+        "interval": "Interval (mo)",
+        "dokumentacija": "Doc.",
+        "status": "Status",
+        "akcije": "Actions"
+      },
+      "vodiDokumentacijuTitle": "Documentation is kept",
+      "bezDokumentacijeTitle": "No documentation",
+      "prazno": "No types to display.",
+      "intervalGreska": "1–120 or empty",
+      "intervalSpremljeno": "✓ saved",
+      "intervalGreskaFallback": "Error saving",
+      "klikDeaktivacija": "Click to deactivate",
+      "klikAktivacija": "Click to activate",
+      "aktivna": "Active",
+      "neaktivna": "Inactive",
+      "aktiviranaUspjeh": "Type activated",
+      "deaktiviranaUspjeh": "Type deactivated"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Companies ({count})",
+      "naslov": "Assigned companies",
+      "opis": "The user only sees and works with companies assigned to them here.",
+      "pretragaPlaceholder": "Search companies…",
+      "prazno": "No results.",
+      "brojac": "{count} selected",
+      "submitPending": "Saving…",
+      "toastSuccess": "Companies assigned.",
+      "toastErrorFallback": "Error.",
+      "checkboxAriaLabel": "Select company {naziv}"
     }
   },
   "asistent": {
@@ -1180,7 +1179,6 @@
       "naslov": "Subject",
       "slanje": "Sending",
       "dostava": "Delivery",
-      "greska": "Error",
       "klijent": "Client"
     },
     "tip": {
@@ -1214,8 +1212,7 @@
       "svi": "All",
       "filtriraj": "Filter"
     },
-    "oznaciPregledanim": "Mark as reviewed",
-    "bedzGreske": "Unresolved errors"
+    "oznaciPregledanim": "Mark as reviewed"
   },
   "izvoz": {
     "plan": {

@@ -45,7 +45,8 @@
       "prosiriNavigaciju": "Proširi navigaciju",
       "skupiNavigaciju": "Skupi navigaciju",
       "skupi": "Skupi",
-      "resizeHint": "Povuci za promjenu širine · dvoklik za skupljanje"
+      "resizeHint": "Povuci za promjenu širine · dvoklik za skupljanje",
+      "bedzGreske": "Neriješene greške"
     },
     "topBar": {
       "odjava": "Odjava",
@@ -141,14 +142,6 @@
       },
       "barTitle": "{naziv}: {count} termina",
       "barAriaLabel": "{naziv}: {count} termina — otvori mjesec u matrici"
-    },
-    "prikaz": {
-      "modKlijent": "Po klijentu",
-      "modMjesec": "Po mjesecu",
-      "sviKlijenti": "— svi klijenti —",
-      "izaberiKlijenta": "Izaberi klijenta",
-      "izaberiMjesec": "Izaberi mjesec",
-      "godina": "Godina"
     }
   },
   "klijenti": {
@@ -426,18 +419,6 @@
       "submit": "Dodaj dokument",
       "uspjeh": "Dokument dodat"
     },
-    "dodjelaKlijenata": {
-      "dugme": "Firme ({count})",
-      "naslov": "Dodijeljene firme",
-      "opis": "Korisnik vidi i radi samo na firmama koje su mu ovdje dodijeljene.",
-      "pretragaPlaceholder": "Pretraži firme…",
-      "prazno": "Nema rezultata.",
-      "brojac": "{count} izabrano",
-      "submitPending": "Snimam…",
-      "toastSuccess": "Firme dodijeljene.",
-      "toastErrorFallback": "Greška.",
-      "checkboxAriaLabel": "Izaberi firmu {naziv}"
-    },
     "profil": {
       "prazno": "Nema provjera u profilu. Dodajte provjeru da generišete termine.",
       "kolone": {
@@ -483,6 +464,32 @@
       "snimam": "Snimam…",
       "spaseno": "Dodjela sačuvana.",
       "checkboxAriaLabel": "Izaberi radnika {ime}"
+    },
+    "dodajProvjeru": {
+      "dugme": "Dodaj provjeru",
+      "naslov": "Dodaj provjeru u profil",
+      "opis": "Veži uslugu za lokaciju — termin i rok se generišu automatski.",
+      "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
+      "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
+      "poljeVrsta": "Vrsta *",
+      "placeholderVrsta": "Izaberi vrstu",
+      "poljeLokacija": "Lokacija *",
+      "placeholderLokacija": "Izaberi lokaciju",
+      "poljeInterval": "Interval (mjeseci) — povučeno iz vrste",
+      "bezIntervalaTekst": "Ova vrsta nema podrazumijevani interval — postavite ga u",
+      "bezIntervalaLink": "Postavkama",
+      "bezIntervalaKraj": "prije dodavanja u profil.",
+      "bezIntervalaOperater": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi prije dodavanja u profil.",
+      "poljeRadjenoRanije": "Da li je provjera već rađena? *",
+      "opcijaVecRadeno": "Da — unosim zadnji datum",
+      "opcijaPrviPut": "Ne — prvi put (unosim prvi rok)",
+      "poljeZadnjiDatum": "Zadnji put rađeno *",
+      "poljePrviRok": "Prvi rok *",
+      "poljeNacinIzvrsenja": "Način izvršenja *",
+      "nacinIzvrsava": "{appName} izvršava",
+      "nacinPracenje": "Samo praćenje roka",
+      "dodajem": "Dodajem…",
+      "dodajIGenerisi": "Dodaj i generiši termin"
     }
   },
   "termini": {
@@ -561,80 +568,6 @@
       "placeholderZaduzeni": "npr. Marija K.",
       "kreiram": "Kreiram…",
       "kreirajTermin": "Kreiraj termin"
-    },
-    "dodajProvjeru": {
-      "dugme": "Dodaj provjeru",
-      "naslov": "Dodaj provjeru u profil",
-      "opis": "Veži uslugu za lokaciju — termin i rok se generišu automatski.",
-      "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
-      "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
-      "poljeVrsta": "Vrsta *",
-      "placeholderVrsta": "Izaberi vrstu",
-      "poljeLokacija": "Lokacija *",
-      "placeholderLokacija": "Izaberi lokaciju",
-      "poljeInterval": "Interval (mjeseci) — povučeno iz vrste",
-      "bezIntervalaTekst": "Ova vrsta nema podrazumijevani interval — postavite ga u",
-      "bezIntervalaLink": "Postavkama",
-      "bezIntervalaKraj": "prije dodavanja u profil.",
-      "bezIntervalaOperater": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi prije dodavanja u profil.",
-      "poljeRadjenoRanije": "Da li je provjera već rađena? *",
-      "opcijaVecRadeno": "Da — unosim zadnji datum",
-      "opcijaPrviPut": "Ne — prvi put (unosim prvi rok)",
-      "poljeZadnjiDatum": "Zadnji put rađeno *",
-      "poljePrviRok": "Prvi rok *",
-      "poljeNacinIzvrsenja": "Način izvršenja *",
-      "nacinIzvrsava": "{appName} izvršava",
-      "nacinPracenje": "Samo praćenje roka",
-      "dodajem": "Dodajem…",
-      "dodajIGenerisi": "Dodaj i generiši termin"
-    },
-    "novaVrsta": {
-      "dugme": "Nova vrsta",
-      "naslov": "Nova vrsta pregleda",
-      "poljeNaziv": "Naziv *",
-      "placeholderNaziv": "npr. Pregled ventilacionog sistema",
-      "poljeInterval": "Interval (mjeseci)",
-      "placeholderInterval": "prazno = bez auto-zakazivanja",
-      "poljeZakonskiOsnov": "Zakonski osnov",
-      "placeholderZakonskiOsnov": "npr. Pravilnik… (opciono)",
-      "kreiram": "Kreiram…",
-      "kreirajVrstu": "Kreiraj vrstu"
-    },
-    "vrstaSheet": {
-      "urediAriaLabel": "Uredi",
-      "naslov": "Uredi vrstu pregleda",
-      "poljeNaziv": "Naziv *",
-      "poljeZakonskiOsnov": "Zakonski osnov",
-      "poljeVodiDokumentaciju": "Za ovu uslugu se vodi dokumentacija",
-      "spremam": "Spremam…",
-      "spremiIzmjene": "Spremi izmjene",
-      "deaktiviraj": "Deaktiviraj",
-      "aktiviraj": "Aktiviraj",
-      "aktiviranaUspjeh": "Vrsta aktivirana",
-      "deaktiviranaUspjeh": "Vrsta deaktivirana"
-    },
-    "vrstePregleda": {
-      "prikaziNeaktivne": "Prikaži i neaktivne",
-      "brojVrsta": "{count} vrsta",
-      "kolone": {
-        "vrsta": "Vrsta pregleda",
-        "interval": "Interval (mj)",
-        "dokumentacija": "Dok.",
-        "status": "Status",
-        "akcije": "Akcije"
-      },
-      "vodiDokumentacijuTitle": "Vodi se dokumentacija",
-      "bezDokumentacijeTitle": "Bez dokumentacije",
-      "prazno": "Nema vrsta za prikaz.",
-      "intervalGreska": "1–120 ili prazno",
-      "intervalSpremljeno": "✓ spremljeno",
-      "intervalGreskaFallback": "Greška pri snimanju",
-      "klikDeaktivacija": "Klik za deaktivaciju",
-      "klikAktivacija": "Klik za aktivaciju",
-      "aktivna": "Aktivna",
-      "neaktivna": "Neaktivna",
-      "aktiviranaUspjeh": "Vrsta aktivirana",
-      "deaktiviranaUspjeh": "Vrsta deaktivirana"
     },
     "actions": {
       "datumNeispravan": "Neispravan datum",
@@ -738,6 +671,14 @@
       "izaberiteKlijenta": "Izaberite klijenta za prikaz godišnje matrice.",
       "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
       "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
+    },
+    "prikaz": {
+      "modKlijent": "Po klijentu",
+      "modMjesec": "Po mjesecu",
+      "sviKlijenti": "— svi klijenti —",
+      "izaberiKlijenta": "Izaberi klijenta",
+      "izaberiMjesec": "Izaberi mjesec",
+      "godina": "Godina"
     }
   },
   "aktivnost": {
@@ -761,13 +702,11 @@
       "FILTER": "Filtrirao"
     },
     "filteri": {
-      "korisnik": "Korisnik",
       "akcija": "Tip akcije",
       "svi": "Svi",
       "od": "Od",
       "do": "Do",
       "pretraga": "Pretraga",
-      "primijeni": "Primijeni",
       "ocisti": "Očisti"
     },
     "prazno": "Nema zabilježenih događaja za odabrane filtere.",
@@ -1050,6 +989,66 @@
       "vrijemeSatNeispravan": "Sat mora biti cijeli broj 0–23.",
       "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama.",
       "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka."
+    },
+    "novaVrsta": {
+      "dugme": "Nova vrsta",
+      "naslov": "Nova vrsta pregleda",
+      "poljeNaziv": "Naziv *",
+      "placeholderNaziv": "npr. Pregled ventilacionog sistema",
+      "poljeInterval": "Interval (mjeseci)",
+      "placeholderInterval": "prazno = bez auto-zakazivanja",
+      "poljeZakonskiOsnov": "Zakonski osnov",
+      "placeholderZakonskiOsnov": "npr. Pravilnik… (opciono)",
+      "kreiram": "Kreiram…",
+      "kreirajVrstu": "Kreiraj vrstu"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Uredi",
+      "naslov": "Uredi vrstu pregleda",
+      "poljeNaziv": "Naziv *",
+      "poljeZakonskiOsnov": "Zakonski osnov",
+      "poljeVodiDokumentaciju": "Za ovu uslugu se vodi dokumentacija",
+      "spremam": "Spremam…",
+      "spremiIzmjene": "Spremi izmjene",
+      "deaktiviraj": "Deaktiviraj",
+      "aktiviraj": "Aktiviraj",
+      "aktiviranaUspjeh": "Vrsta aktivirana",
+      "deaktiviranaUspjeh": "Vrsta deaktivirana"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Prikaži i neaktivne",
+      "brojVrsta": "{count} vrsta",
+      "kolone": {
+        "vrsta": "Vrsta pregleda",
+        "interval": "Interval (mj)",
+        "dokumentacija": "Dok.",
+        "status": "Status",
+        "akcije": "Akcije"
+      },
+      "vodiDokumentacijuTitle": "Vodi se dokumentacija",
+      "bezDokumentacijeTitle": "Bez dokumentacije",
+      "prazno": "Nema vrsta za prikaz.",
+      "intervalGreska": "1–120 ili prazno",
+      "intervalSpremljeno": "✓ spremljeno",
+      "intervalGreskaFallback": "Greška pri snimanju",
+      "klikDeaktivacija": "Klik za deaktivaciju",
+      "klikAktivacija": "Klik za aktivaciju",
+      "aktivna": "Aktivna",
+      "neaktivna": "Neaktivna",
+      "aktiviranaUspjeh": "Vrsta aktivirana",
+      "deaktiviranaUspjeh": "Vrsta deaktivirana"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Firme ({count})",
+      "naslov": "Dodijeljene firme",
+      "opis": "Korisnik vidi i radi samo na firmama koje su mu ovdje dodijeljene.",
+      "pretragaPlaceholder": "Pretraži firme…",
+      "prazno": "Nema rezultata.",
+      "brojac": "{count} izabrano",
+      "submitPending": "Snimam…",
+      "toastSuccess": "Firme dodijeljene.",
+      "toastErrorFallback": "Greška.",
+      "checkboxAriaLabel": "Izaberi firmu {naziv}"
     }
   },
   "asistent": {
@@ -1180,7 +1179,6 @@
       "naslov": "Naslov",
       "slanje": "Slanje",
       "dostava": "Dostava",
-      "greska": "Greška",
       "klijent": "Klijent"
     },
     "tip": {
@@ -1214,8 +1212,7 @@
       "svi": "Svi",
       "filtriraj": "Filtriraj"
     },
-    "oznaciPregledanim": "Označi pregledanim",
-    "bedzGreske": "Neriješene greške"
+    "oznaciPregledanim": "Označi pregledanim"
   },
   "izvoz": {
     "plan": {

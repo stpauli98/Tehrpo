@@ -33,7 +33,7 @@ export function DodajProvjeruButton({
   admini: { ime: string; email: string }[]
 }) {
   const router = useRouter()
-  const t = useTranslations("termini.dodajProvjeru")
+  const t = useTranslations("klijenti.dodajProvjeru")
   const tc = useTranslations("common")
   const mozeUrediti = useMozeUrediti()
   const uloga = useUloga()

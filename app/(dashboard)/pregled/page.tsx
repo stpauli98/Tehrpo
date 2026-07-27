@@ -7,15 +7,19 @@ import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/Opter
 import { HitnoKasniList } from "@/components/domain/HitnoKasniList"
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { getPredstojeciCount, getHitnoKasni } from "@/lib/queries/pregled"
-import { currentYear, todayIso } from "@/lib/date"
+import { todayIso } from "@/lib/date"
 import { href } from "@/i18n/routes"
 import { cn, FOCUS_RING } from "@/lib/utils"
 
 export default async function PregledPage() {
   const t = await getTranslations("pregled")
   const supabase = await createServerSupabaseClient()
-  const godina = currentYear()
-  const mjesec = Number(todayIso().slice(5, 7))
+  // Godina i mjesec IZ ISTOG izvora (UTC, kao DB `current_date`) — `currentYear()`
+  // čita lokalni sat, pa bi oko Nove godine prsten „tekućeg mjeseca" pao na
+  // pogrešan bar (nova godina + mjesec 12).
+  const danas = todayIso()
+  const godina = Number(danas.slice(0, 4))
+  const mjesec = Number(danas.slice(5, 7))
 
   const [statsRes, opterecenjeRes, predstojeciRes, hitnoKasniRes] = await Promise.all([
     supabase.rpc("get_termini_stats"),
@@ -113,12 +117,12 @@ export default async function PregledPage() {
       <HitnoKasniList
         items={hitnoKasni}
         ukupnoKasni={stats.kasni}
-        today={todayIso()}
+        today={danas}
       />
 
       {/* Grafik na dnu, pune širine — pregledniji uvid u godišnje opterećenje */}
       <div
-        className="rounded-xl border border-border bg-card p-5"
+        className="rounded-xl ring-1 ring-foreground/10 bg-card p-4"
         data-testid="dashboard-chart"
       >
         <OpterecenjeChart

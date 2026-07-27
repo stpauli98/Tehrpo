@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useRef } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
@@ -47,6 +47,9 @@ export function DokumentiSekcija({
   useAkcijaToast(genState, { uspjeh: t("zapisnikUspjeh"), greska: tc("greska") })
   useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
   const fileRef = useRef<HTMLInputElement>(null)
+  // S3/O3: brisanje unutar već otvorenog TerminSheet dialoga ide dvostepenim arm
+  // obrascem (ne dialog-preko-dialoga). Arm je per-dokument.
+  const [armedId, setArmedId] = useState<string | null>(null)
   const MAX_MB = 10
 
   // Refresh liste kad SE PROMIJENI ishod bilo koje akcije i taj (promijenjeni) ishod je uspjeh.
@@ -63,6 +66,7 @@ export function DokumentiSekcija({
     prev.current = { u: uploadState, g: genState, d: delState }
     if (uspjeh) {
       if (uChanged && uploadState.ok && fileRef.current) fileRef.current.value = ""
+      if (dChanged && delState.ok) setArmedId(null)
       // router.refresh() osvježava server caches/zapisnici (revalidatePath), ali NE refetch-uje
       // TanStack ["termin-detail", id] query koji sada hrani `dokumenti` prop u sheet-u — pa
       // eksplicitno invalidiraj taj keš da nova/generisana/obrisana stavka odmah bude vidljiva.
@@ -156,13 +160,37 @@ export function DokumentiSekcija({
                   <Tooltip>{t("preuzmi")}</Tooltip>
                 </a>
                 {mozeBrisati && (
-                  <form action={delAction}>
-                    <input type="hidden" name="dokument_id" value={d.id} />
+                  armedId === d.id ? (
+                    /* Naoružano: tek drugi klik zaista briše. Potvrdno dugme nosi
+                       `variant="destructive"` (O3) umjesto ručnih klasa. */
+                    <form action={delAction} className="flex items-center gap-1">
+                      <input type="hidden" name="dokument_id" value={d.id} />
+                      <Button
+                        type="submit"
+                        variant="destructive"
+                        size="sm"
+                        disabled={delPending}
+                        data-testid="dokument-delete-potvrdi"
+                      >
+                        {tc("obrisi")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setArmedId(null)}
+                        data-testid="dokument-delete-odustani"
+                      >
+                        {tc("otkazi")}
+                      </Button>
+                    </form>
+                  ) : (
                     <Button
-                      type="submit"
+                      type="button"
                       variant="ghost"
                       size="icon"
                       disabled={delPending}
+                      onClick={() => setArmedId(d.id)}
                       data-testid="dokument-delete"
                       aria-label={t("obrisiDokument")}
                       className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"
@@ -170,7 +198,7 @@ export function DokumentiSekcija({
                       <Trash2 className="h-4 w-4" aria-hidden />
                       <Tooltip>{t("obrisiDokument")}</Tooltip>
                     </Button>
-                  </form>
+                  )
                 )}
               </span>
             </li>

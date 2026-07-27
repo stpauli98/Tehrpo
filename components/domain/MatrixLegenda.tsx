@@ -19,7 +19,7 @@ export function MatrixLegenda() {
       <span className="mx-1 inline-block h-3 w-px bg-border" />
       {STATUS_ORDER.map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
-          <span className={`inline-block h-3 w-3 rounded ${STATUS_CELL_CLASS[s]} ring-1 ring-inset ring-black/5`} />
+          <span className={`inline-block h-3 w-3 rounded ${STATUS_CELL_CLASS[s]} ring-1 ring-inset ring-foreground/10`} />
           {tStatus(s)}
         </span>
       ))}

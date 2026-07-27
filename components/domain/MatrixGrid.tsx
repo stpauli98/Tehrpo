@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
+import { Check } from "lucide-react"
 import { STATUS_CELL_CLASS } from "@/lib/termini"
 import { href as localizedHref } from "@/i18n/routes"
 import { cn, FOCUS_RING } from "@/lib/utils"
@@ -16,13 +17,16 @@ function withParam(search: string, key: string, value: string): string {
   return p.toString()
 }
 
-// Sadržaj ćelije po statusu (§7.2 C: ✓ za izvršeno, ! za kasni).
+/**
+ * Tekstualni sadržaj ćelije (§7.2 C: „!" za kasni, „(+N)" za više termina).
+ * Glif „✓" za izvršeno se NE vraća ovdje — renderuje se kao lucide `Check`
+ * (S11), a puni tekstualni ekvivalent statusa nosi `aria-label` (S12).
+ */
 function cellLabel(cell: MatrixCell): string {
   const dan = String(cell.dan).padStart(2, "0") + "."
-  const prefix = cell.status === "izvrseno" ? "✓ " : ""
   const kasni = cell.status === "kasni" ? "!" : ""
   const vise = cell.brojUCeliji > 1 ? ` (+${cell.brojUCeliji - 1})` : ""
-  return `${prefix}${dan}${kasni}${vise}`
+  return `${dan}${kasni}${vise}`
 }
 
 export function MatrixGrid({
@@ -43,18 +47,19 @@ export function MatrixGrid({
   fillWidth?: boolean
 }) {
   const t = useTranslations("plan.matrixGrid")
+  const tStatus = useTranslations("status")
   if (rows.length === 0) {
     return (
       <div
         data-testid="matrix-empty"
-        className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
+        className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10"
       >
         {emptyMessage ?? t("prazno")}
       </div>
     )
   }
   return (
-    <div className="rounded-xl border border-border overflow-x-auto">
+    <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
       <table
         className={cn("text-xs border-collapse", fillWidth && "w-full table-fixed")}
         data-testid="prikaz-matrix"
@@ -106,17 +111,36 @@ export function MatrixGrid({
                         href={href}
                         data-testid="matrix-cell-filled"
                         data-status={cell.status}
+                        // S12: informacija nikad SAMO u `title` — puni tekstualni
+                        // ekvivalent (vrsta, dan, status, broj termina) je u aria-label.
                         title={cell.brojUCeliji > 1 ? t("viseTerminaTitle") : undefined}
+                        aria-label={
+                          cell.brojUCeliji > 1
+                            ? t("celijaViseAriaLabel", {
+                                vrsta: row.rowLabel,
+                                dan: cell.dan,
+                                status: tStatus(cell.status),
+                                broj: cell.brojUCeliji - 1,
+                              })
+                            : t("celijaAriaLabel", {
+                                vrsta: row.rowLabel,
+                                dan: cell.dan,
+                                status: tStatus(cell.status),
+                              })
+                        }
                         className={cn(
-                          "inline-block w-full rounded px-1.5 py-1 tabular-nums",
+                          "inline-flex w-full items-center justify-center gap-0.5 rounded px-1.5 py-1 tabular-nums",
                           STATUS_CELL_CLASS[cell.status],
                           FOCUS_RING,
                         )}
                       >
-                        {cellLabel(cell)}
+                        {cell.status === "izvrseno" && (
+                          <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                        )}
+                        <span aria-hidden>{cellLabel(cell)}</span>
                       </Link>
                     ) : (
-                      <span className="text-muted-foreground/30">·</span>
+                      <span className="text-muted-foreground/30" aria-hidden>·</span>
                     )}
                   </td>
                 )

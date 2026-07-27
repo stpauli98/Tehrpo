@@ -341,7 +341,9 @@
       "obilazMjesecno": " · {count} visits/mo.",
       "vazenjeMjeseci": " · duration {count} mo.",
       "autoObnavljanjeDa": " · auto-renewal",
-      "autoObnavljanjeNe": " · no auto-renewal"
+      "autoObnavljanjeNe": " · no auto-renewal",
+      "obrisiDialogNaslov": "Delete contract?",
+      "obrisiDialogOpis": "The contract and its data are permanently deleted. This action cannot be undone."
     },
     "tipOdnosa": {
       "ugovor": "under contract",
@@ -366,7 +368,9 @@
       "prazno": "No company contacts.",
       "praznoPretraga": "No contacts found for “{q}”.",
       "obrisiAriaLabel": "Delete contact",
-      "vidiSve": "See all ({count}) →"
+      "vidiSve": "See all ({count}) →",
+      "obrisiDialogNaslov": "Delete contact person?",
+      "obrisiDialogOpis": "The contact is permanently deleted. If marked as a reminder recipient, it stops receiving reminders."
     },
     "lokacijaSheet": {
       "uredi": "Edit",

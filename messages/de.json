@@ -341,7 +341,9 @@
       "obilazMjesecno": " · {count} Begehungen/Mon.",
       "vazenjeMjeseci": " · Laufzeit {count} Mon.",
       "autoObnavljanjeDa": " · automatische Verlängerung",
-      "autoObnavljanjeNe": " · keine automatische Verlängerung"
+      "autoObnavljanjeNe": " · keine automatische Verlängerung",
+      "obrisiDialogNaslov": "Vertrag löschen?",
+      "obrisiDialogOpis": "Der Vertrag und seine Daten werden dauerhaft gelöscht. Die Aktion kann nicht rückgängig gemacht werden."
     },
     "tipOdnosa": {
       "ugovor": "per Vertrag",
@@ -366,7 +368,9 @@
       "prazno": "Keine Unternehmenskontakte.",
       "praznoPretraga": "Keine Kontakte für „{q}” gefunden.",
       "obrisiAriaLabel": "Kontakt löschen",
-      "vidiSve": "Alle anzeigen ({count}) →"
+      "vidiSve": "Alle anzeigen ({count}) →",
+      "obrisiDialogNaslov": "Kontaktperson löschen?",
+      "obrisiDialogOpis": "Der Kontakt wird dauerhaft gelöscht. Ist er als Empfänger von Erinnerungen markiert, erhält er keine mehr."
     },
     "lokacijaSheet": {
       "uredi": "Bearbeiten",

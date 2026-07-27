@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { KontaktSheet } from "@/components/domain/KontaktSheet"
-import { useAkcijaToast } from "@/components/akcija-toast"
-import { deleteKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { PotvrdiBrisanjeDialog } from "@/components/domain/PotvrdiBrisanjeDialog"
+import { toastRezultat } from "@/components/akcija-toast"
+import { deleteKontakt } from "@/app/(dashboard)/klijenti/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
 
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
-const initial: ActionResult = { ok: true }
 
 export function KontaktiKlijentList({
   klijentId,
@@ -36,13 +36,19 @@ export function KontaktiKlijentList({
   const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
-  const [delState, delAction, delPending] = useActionState(deleteKontakt, initial)
-  const prev = useRef(delState)
   const [q, setQ] = useState("")
-  useEffect(() => {
-    if (delState !== prev.current) { prev.current = delState; if (delState.ok) router.refresh() }
-  }, [delState, router])
-  useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
+
+  // Per-red brisanje (S3/O3) — pending i greška žive u dijalogu tog kontakta,
+  // ostali redovi ostaju upotrebljivi.
+  async function obrisi(kontaktId: string) {
+    const fd = new FormData()
+    fd.set("id", kontaktId)
+    fd.set("klijent_id", klijentId)
+    return toastRezultat(await deleteKontakt({ ok: true }, fd), {
+      uspjeh: tc("obrisano"),
+      greska: tc("greska"),
+    })
+  }
 
   const upit = q.trim().toLowerCase()
   const filtrirani =
@@ -56,7 +62,7 @@ export function KontaktiKlijentList({
     <div className="space-y-3" data-testid="kontakti-klijent-sekcija">
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Users className="h-4 w-4 text-muted-foreground" aria-hidden /> {t("naslov")}
+          <Users className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden /> {t("naslov")}
           {info && <InfoIkona tekst={info} testId="info-sekcija-kontakti-firma" />}
         </h3>
         <KontaktSheet klijentId={klijentId} />
@@ -64,11 +70,12 @@ export function KontaktiKlijentList({
 
       {searchable && kontakti.length > 0 && (
         <div className="relative max-w-sm">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] shrink-0 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("pretragaPlaceholder")}
+            aria-label={t("pretragaPlaceholder")}
             className="pl-8"
             data-testid="kontakti-pretraga"
           />
@@ -82,7 +89,7 @@ export function KontaktiKlijentList({
       ) : (
         <ul className="space-y-2">
           {vidljivi.map((k) => (
-            <li key={k.id} data-testid="kontakt-red" className="rounded-xl border border-border p-3 text-sm transition-colors hover:border-border hover:bg-muted/60">
+            <li key={k.id} data-testid="kontakt-red" className="rounded-xl border border-border p-3 text-sm transition-colors motion-reduce:transition-none hover:border-border hover:bg-muted/60">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {k.ime}
@@ -91,13 +98,18 @@ export function KontaktiKlijentList({
                 <span className="flex items-center gap-2">
                   <KontaktSheet klijentId={klijentId} kontakt={k} />
                   {mozeUrediti && (
-                    <form action={delAction}>
-                      <input type="hidden" name="id" value={k.id} />
-                      <input type="hidden" name="klijent_id" value={klijentId} />
-                      <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-kontakt-${k.id}`}>
-                        <Trash2 className="w-4 h-4 text-destructive" aria-hidden />
-                      </Button>
-                    </form>
+                    <PotvrdiBrisanjeDialog
+                      trigger={
+                        <Button variant="ghost" size="icon-sm" aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-kontakt-${k.id}`}>
+                          <Trash2 className="h-[18px] w-[18px] shrink-0 text-destructive" aria-hidden />
+                        </Button>
+                      }
+                      naslov={t("obrisiDialogNaslov")}
+                      opis={t("obrisiDialogOpis")}
+                      onPotvrdi={() => obrisi(k.id)}
+                      onUspjeh={() => router.refresh()}
+                      testId="obrisi-kontakt-dialog"
+                    />
                   )}
                 </span>
               </div>
@@ -117,10 +129,6 @@ export function KontaktiKlijentList({
         >
           {t("vidiSve", { count: filtrirani.length })}
         </Link>
-      )}
-
-      {delState.ok === false && delState.message && (
-        <p className="text-sm text-destructive" role="alert">{delState.message}</p>
       )}
     </div>
   )

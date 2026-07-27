@@ -1,6 +1,5 @@
 "use client"
 
-import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Trash2, FileText } from "lucide-react"
@@ -8,32 +7,39 @@ import { Button } from "@/components/ui/button"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { UgovorSheet } from "@/components/domain/UgovorSheet"
 import { PrikaziJosLista } from "@/components/domain/PrikaziJosLista"
-import { useAkcijaToast } from "@/components/akcija-toast"
-import { deleteUgovor, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
+import { PotvrdiBrisanjeDialog } from "@/components/domain/PotvrdiBrisanjeDialog"
+import { toastRezultat } from "@/components/akcija-toast"
+import { deleteUgovor } from "@/app/(dashboard)/klijenti/actions"
 import { formatDatum } from "@/lib/date"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
 
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
-const initial: ActionResult = { ok: true }
 
 export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ugovori: UgovorRow[]; info?: string }) {
   const t = useTranslations("klijenti.ugovori")
   const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
-  const [delState, delAction, delPending] = useActionState(deleteUgovor, initial)
-  const prev = useRef(delState)
-  useEffect(() => {
-    if (delState !== prev.current) { prev.current = delState; if (delState.ok) router.refresh() }
-  }, [delState, router])
-  useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
+
+  // Per-red brisanje (S3/O3): svaki red ima vlastitu instancu dijaloga, pa pending
+  // jednog reda ne blokira dugmad ostalih redova (raniji zajednički useActionState
+  // je disable-ovao cijelu listu), a greška živi u dijalogu tog reda.
+  async function obrisi(ugovorId: string) {
+    const fd = new FormData()
+    fd.set("id", ugovorId)
+    fd.set("klijent_id", klijentId)
+    return toastRezultat(await deleteUgovor({ ok: true }, fd), {
+      uspjeh: tc("obrisano"),
+      greska: tc("greska"),
+    })
+  }
 
   return (
     <div className="space-y-3" data-testid="ugovori-sekcija">
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <FileText className="h-4 w-4 text-muted-foreground" aria-hidden /> {t("naslov")}
+          <FileText className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden /> {t("naslov")}
           {info && <InfoIkona tekst={info} testId="info-sekcija-ugovori" />}
         </h3>
         <UgovorSheet klijentId={klijentId} />
@@ -46,12 +52,12 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
           imenicaGenitiv={t("imenica")}
           testId="ugovori-prikazi-jos"
           items={ugovori.map((u) => (
-            <li key={u.id} data-testid="ugovor-red" className="rounded-xl border border-border p-3 text-sm transition-colors hover:border-border hover:bg-muted/60">
+            <li key={u.id} data-testid="ugovor-red" className="rounded-xl border border-border p-3 text-sm transition-colors motion-reduce:transition-none hover:border-border hover:bg-muted/60">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {u.zavodni_broj || t("bezBroja")}
                   {u.aktivan ? (
-                    <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">{t("aktivan")}</span>
+                    <span className="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-xs text-success">{t("aktivan")}</span>
                   ) : (
                     <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{t("neaktivan")}</span>
                   )}
@@ -59,13 +65,18 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
                 <span className="flex items-center gap-2">
                   <UgovorSheet klijentId={klijentId} ugovor={u} />
                   {mozeUrediti && (
-                    <form action={delAction}>
-                      <input type="hidden" name="id" value={u.id} />
-                      <input type="hidden" name="klijent_id" value={klijentId} />
-                      <Button type="submit" variant="ghost" disabled={delPending} aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-ugovor-${u.id}`}>
-                        <Trash2 className="w-4 h-4 text-destructive" aria-hidden />
-                      </Button>
-                    </form>
+                    <PotvrdiBrisanjeDialog
+                      trigger={
+                        <Button variant="ghost" size="icon-sm" aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-ugovor-${u.id}`}>
+                          <Trash2 className="h-[18px] w-[18px] shrink-0 text-destructive" aria-hidden />
+                        </Button>
+                      }
+                      naslov={t("obrisiDialogNaslov")}
+                      opis={t("obrisiDialogOpis")}
+                      onPotvrdi={() => obrisi(u.id)}
+                      onUspjeh={() => router.refresh()}
+                      testId="obrisi-ugovor-dialog"
+                    />
                   )}
                 </span>
               </div>
@@ -79,9 +90,6 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
             </li>
           ))}
         />
-      )}
-      {delState.ok === false && delState.message && (
-        <p className="text-sm text-destructive" role="alert">{delState.message}</p>
       )}
     </div>
   )

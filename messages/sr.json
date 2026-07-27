@@ -341,7 +341,9 @@
       "obilazMjesecno": " · {count} obilaz./mj.",
       "vazenjeMjeseci": " · važenje {count} mj.",
       "autoObnavljanjeDa": " · automatsko obnavljanje",
-      "autoObnavljanjeNe": " · bez automatskog obnavljanja"
+      "autoObnavljanjeNe": " · bez automatskog obnavljanja",
+      "obrisiDialogNaslov": "Obrisati ugovor?",
+      "obrisiDialogOpis": "Ugovor i njegovi podaci se trajno brišu. Radnja se ne može poništiti."
     },
     "tipOdnosa": {
       "ugovor": "po ugovoru",
@@ -366,7 +368,9 @@
       "prazno": "Nema kontakata firme.",
       "praznoPretraga": "Nema kontakata za „{q}”.",
       "obrisiAriaLabel": "Obriši kontakt",
-      "vidiSve": "Vidi sve ({count}) →"
+      "vidiSve": "Vidi sve ({count}) →",
+      "obrisiDialogNaslov": "Obrisati kontakt osobu?",
+      "obrisiDialogOpis": "Kontakt se trajno briše. Ako je označen kao primalac podsjetnika, prestaje da ih prima."
     },
     "lokacijaSheet": {
       "uredi": "Uredi",

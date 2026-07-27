@@ -186,6 +186,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
               <RadioGroup
                 value={periodMod}
                 onValueChange={(v) => setPeriodMod(v as PeriodMod)}
+                aria-label={t("period")}
                 className="gap-2"
               >
                 <label className="flex items-center gap-2 text-sm">
@@ -259,6 +260,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
               <RadioGroup
                 value={opseg}
                 onValueChange={(v) => setOpseg(v as "sve" | "filtrirano")}
+                aria-label={t("opseg")}
                 className="gap-2"
               >
                 <label className="flex items-center gap-2 text-sm">

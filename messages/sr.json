@@ -814,6 +814,7 @@
     "tipLabel": "Tip dokumenta",
     "fajlPolje": "Fajl dokumenta",
     "neispravniPodaci": "Neispravni podaci — osvježite stranicu i pokušajte ponovo.",
+    "preuzimanjeNijeUspjelo": "Preuzimanje nije uspjelo. Pokušajte ponovo.",
     "potvrdaBrisanjaNaslov": "Obrisati dokument?",
     "potvrdaBrisanjaOpis": "Dokument i fajl se trajno brišu. Ovo se ne može poništiti.",
     "tipovi": {

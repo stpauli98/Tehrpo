@@ -4,15 +4,16 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
-import { FileText, Sparkles, Trash2, Download } from "lucide-react"
+import { FileText, Sparkles, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { FieldError } from "./FieldError"
+import { PreuzmiDokumentButton } from "./PreuzmiDokumentButton"
 import {
   uploadDokumentAction,
   generateZapisnikAction,
@@ -171,15 +172,11 @@ export function DokumentiSekcija({
                 )}
               </span>
               <span className="flex shrink-0 items-center gap-1">
-                <a
-                  href={`/api/dokumenti/${d.id}`}
-                  className={IKONA_INLINE_KLASA}
-                  data-testid="dokument-download"
-                  aria-label={t("preuzmi")}
-                >
-                  <Download className="h-4 w-4" aria-hidden />
-                  <Tooltip>{t("preuzmi")}</Tooltip>
-                </a>
+                <PreuzmiDokumentButton
+                  dokumentId={d.id}
+                  label={t("preuzmi")}
+                  testId="dokument-download"
+                />
                 {mozeBrisati && (
                   <form action={delAction}>
                     <input type="hidden" name="dokument_id" value={d.id} />

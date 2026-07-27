@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises"
 import { test, expect } from "@playwright/test"
 
 test.describe.configure({ mode: "serial" })
@@ -61,14 +62,30 @@ test.describe("Faza Dokumenti — termin sheet", () => {
     ).toBeVisible()
   })
 
-  test("download link vodi na fajl (HTTP 200)", async ({ page }) => {
+  test("preuzimanje pokreće download neprazan fajl", async ({ page }) => {
     await otvoriPrviTermin(page)
-    const link = page.getByTestId("dokument-download").first()
-    await expect(link).toBeVisible()
-    const href = await link.getAttribute("href")
-    expect(href).toMatch(/^\/api\/dokumenti\//)
-    const resp = await page.request.get(href!)
-    expect(resp.status()).toBe(200)
+    const dugme = page.getByTestId("dokument-download").first()
+    await expect(dugme).toBeVisible()
+    const [download] = await Promise.all([page.waitForEvent("download"), dugme.click()])
+    const putanja = await download.path()
+    expect(putanja).toBeTruthy()
+    const { size } = await stat(putanja!)
+    expect(size).toBeGreaterThan(0)
+  })
+
+  test("greška rute → toast, bez navigacije na sirovi JSON", async ({ page }) => {
+    await otvoriPrviTermin(page)
+    const urlPrije = page.url()
+    await page.route("**/api/dokumenti/*", (route) =>
+      route.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Dokument ne postoji." }),
+      }),
+    )
+    await page.getByTestId("dokument-download").first().click()
+    await expect(page.getByText("Dokument ne postoji.")).toBeVisible()
+    expect(page.url()).toBe(urlPrije)
   })
 })
 

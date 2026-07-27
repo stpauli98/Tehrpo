@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange, addMjeseci, monthName } from "./date"
+import { formatDatum, monthRange, MONTHS_BS, todayIso, periodRange, addMjeseci, monthName, jeIsoDatum } from "./date"
 
 describe("formatDatum", () => {
   it("ISO datum → DD.MM.YYYY.", () => {
@@ -177,5 +177,62 @@ describe("dodajDan", () => {
   })
   it("granica godine: 31.12.2026 + 1 → 01.01.2027", () => {
     expect(dodajDan("2026-12-31")).toBe("2027-01-01")
+  })
+})
+
+// ── Očvršćavanje datumskih helpera ────────────────────────────────────────────
+// Povod: dvije grane Talasa 1 (Aktivnost, Poslati mejlovi) nezavisno su otkrile
+// da nevaljan URL parametar (?od=abc) ruši cijelu rutu, i svaka je napisala
+// vlastitu zaštitu. Validacija je sada ovdje — jedan izvor za sve pozivaoce.
+describe("jeIsoDatum", () => {
+  it("prihvata strogi YYYY-MM-DD", () => {
+    expect(jeIsoDatum("2026-07-15")).toBe(true)
+    expect(jeIsoDatum("2024-02-29")).toBe(true) // prestupna
+  })
+  it("odbacuje pogrešan oblik", () => {
+    expect(jeIsoDatum("2026-7-15")).toBe(false)
+    expect(jeIsoDatum("15.07.2026")).toBe(false)
+    expect(jeIsoDatum("2026-07-15T10:00:00Z")).toBe(false)
+    expect(jeIsoDatum("abc")).toBe(false)
+    expect(jeIsoDatum("")).toBe(false)
+    expect(jeIsoDatum(undefined)).toBe(false)
+    expect(jeIsoDatum(null)).toBe(false)
+  })
+  it("odbacuje nepostojeće datume koje Date.parse propušta", () => {
+    expect(jeIsoDatum("2026-02-30")).toBe(false)
+    expect(jeIsoDatum("2026-13-45")).toBe(false)
+    expect(jeIsoDatum("2026-04-31")).toBe(false)
+    expect(jeIsoDatum("2026-00-10")).toBe(false)
+  })
+})
+
+describe("datumski helperi odbijaju nevaljan ulaz umjesto tihe korupcije", () => {
+  const nevaljani = ["abc", "", "2026-13-45", "2026-02-30", "15.07.2026", "2026-7-15"]
+
+  it("dodajDan baca umjesto da vrati 'NaN-NaN-NaN'", () => {
+    for (const v of nevaljani) {
+      expect(() => dodajDan(v)).toThrow(/ISO datum/)
+      // regresija: ranije je tiho vraćao string sa NaN-ovima
+    }
+  })
+
+  it("utcGranicaSarajevskogDana baca jasnu grešku, ne sirovi RangeError", () => {
+    for (const v of nevaljani) {
+      expect(() => utcGranicaSarajevskogDana(v)).toThrow(/ISO datum/)
+    }
+  })
+
+  it("poruka greške imenuje funkciju i vrijednost, i upućuje na jeIsoDatum", () => {
+    expect(() => utcGranicaSarajevskogDana("abc")).toThrow(/utcGranicaSarajevskogDana/)
+    expect(() => utcGranicaSarajevskogDana("abc")).toThrow(/"abc"/)
+    expect(() => dodajDan("abc")).toThrow(/jeIsoDatum/)
+  })
+
+  it("invarijanta: svaka vrijednost koju jeIsoDatum prihvati je bezbjedna za oba helpera", () => {
+    for (const v of ["2026-01-01", "2026-07-15", "2024-02-29", "2026-12-31", "2026-03-30"]) {
+      expect(jeIsoDatum(v)).toBe(true)
+      expect(() => utcGranicaSarajevskogDana(v)).not.toThrow()
+      expect(() => utcGranicaSarajevskogDana(dodajDan(v))).not.toThrow()
+    }
   })
 })

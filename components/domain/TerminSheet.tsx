@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -112,10 +111,11 @@ export function TerminSheet({
   return (
     <Dialog open onOpenChange={(o) => { if (!o) close() }}>
       <DialogContent
-        // Tri reda: zaglavlje i podnožje su fiksni, skroluje SAMO srednji dio — tako
-        // kartica uvijek stane u prozor (bez skrola cijelog dijaloga lijevo/desno/gore/dolje).
-        // Visinu ograničava `max-h` iz `DialogContent` (100dvh − 2rem).
-        className="max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
+        // Dva reda: zaglavlje je fiksno, skroluje SAMO tijelo — tako kartica uvijek
+        // stane u prozor (bez skrola cijelog dijaloga lijevo/desno/gore/dolje).
+        // Visinu ograničava `max-h` iz `DialogContent` (100dvh − 2rem). Zatvara se
+        // preko X-a u uglu (fiksan, van skrolabilnog dijela) ili tasterom Escape.
+        className="max-w-2xl grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
         data-testid="termin-sheet"
       >
         <DialogHeader>
@@ -330,12 +330,6 @@ export function TerminSheet({
             )}
           </section>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={close} data-testid="sheet-close">
-            {tc("zatvori")}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

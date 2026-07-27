@@ -112,7 +112,10 @@ export function TerminSheet({
   return (
     <Dialog open onOpenChange={(o) => { if (!o) close() }}>
       <DialogContent
-        className="max-w-lg max-h-[85vh] overflow-y-auto"
+        // Tri reda: zaglavlje i podnožje su fiksni, skroluje SAMO srednji dio — tako
+        // kartica uvijek stane u prozor (bez skrola cijelog dijaloga lijevo/desno/gore/dolje).
+        // Visinu ograničava `max-h` iz `DialogContent` (100dvh − 2rem).
+        className="max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
         data-testid="termin-sheet"
       >
         <DialogHeader>
@@ -127,7 +130,8 @@ export function TerminSheet({
           <p className="text-xs text-muted-foreground">{t("rok", { datum: formatDatum(termin.rok_dospijeca) })}</p>
         </DialogHeader>
 
-        <div className="space-y-6">
+        {/* Jedini skrolabilni dio kartice (zaglavlje/podnožje ostaju fiksni). */}
+        <div className="space-y-6 overflow-y-auto">
           {/* Edit forma — key ovisi o SVIM vrijednostima koje pune defaultValue (ne samo id),
               pa se uncontrolled Input-i remountuju i kad se isti termin osvježi (npr. nakon
               save-a → revalidate → react-query refetch vrati nove vrijednosti). Inače base-ui
@@ -159,7 +163,7 @@ export function TerminSheet({
               </div>
               {jeZakazanoPoslijeRoka(termin.rok_dospijeca, zakazanInput) && (
                 <p
-                  className="col-span-2 text-xs text-warning"
+                  className="col-span-full text-xs text-warning"
                   role="status"
                   data-testid="zakazano-poslije-roka"
                 >
@@ -200,7 +204,7 @@ export function TerminSheet({
                 </label>
                 <FieldError id="greska-edit-zaduzeni" errors={updateGreske.zaduzeni} />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <label className="block text-sm">
                   <span className="text-muted-foreground">{t("poljeNapomena")}</span>
                   <Input
@@ -226,7 +230,7 @@ export function TerminSheet({
           {mozeUrediti && termin.status !== "izvrseno" && (
             <section className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("akcijeNaslov")}</p>
-              <div className="grid grid-cols-2 gap-3 items-start">
+              <div className="grid grid-cols-2 items-start gap-3">
                 <form
                   action={markAction}
                   className="space-y-2 rounded-lg border border-border p-3"

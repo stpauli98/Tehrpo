@@ -110,8 +110,10 @@ export function DokumentiSekcija({
           </p>
         )}
 
+        {/* `flex-wrap` + `min-w-0`: native `input[type=file]` ima veliku intrinzičnu
+            širinu (~300px) i bez ovoga razvuče cijeli dialog → horizontalni skrol. */}
         {mozeUredjivati && (
-          <form action={uploadAction} className="flex min-w-0 items-center gap-2">
+          <form action={uploadAction} className="flex min-w-0 flex-wrap items-center gap-2">
             <input type="hidden" name="termin_id" value={terminId} />
             <input
               ref={fileRef}

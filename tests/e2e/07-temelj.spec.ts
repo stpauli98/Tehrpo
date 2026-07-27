@@ -1,15 +1,29 @@
 import { test, expect } from "@playwright/test"
+import { kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
 
 test.describe.configure({ mode: "serial" })
 
+// Firma sa 2 lokacije i po jednim terminom na svakoj (u tekućem mjesecu, tj.
+// unutar podrazumijevanog "tekući+naredni" filtera liste) — test sam pravi
+// preduslove umjesto da traži konkretnu zasijanu firmu.
+let fx: FirmaFikstura
+
+test.beforeAll(async () => {
+  fx = await kreirajFirmuFiksturu({ oznaka: "F07" })
+})
+
+test.afterAll(async () => {
+  await fx?.obrisi()
+})
+
 test.describe("Temelj — Lokacija kolona u termini tabeli", () => {
-  test("bar jedan WAIKIKI termin ima popunjenu lokaciju (ne '—')", async ({ page }) => {
+  test("bar jedan termin fiksture ima popunjenu lokaciju (ne '—')", async ({ page }) => {
     await page.goto("/termini")
-    // Filtriraj po firmi WAIKIKI koristeći filter-search koji pretražuje i lokaciju_naziv
+    // Filtriraj po firmi koristeći filter-search koji pretražuje i lokaciju_naziv
     const search = page.getByTestId("filter-search")
-    await search.fill("WAIKIKI")
+    await search.fill(fx.naziv)
     await search.press("Enter")
-    await page.waitForURL(/q=WAIKIKI/)
+    await page.waitForURL(/q=E2E-TMP/)
     const rows = page.getByTestId("termin-row")
     await expect(rows.first()).toBeVisible()
     // Treća ćelija (lokacija, index 2) u barem prvom redu ne smije biti "—"
@@ -23,17 +37,17 @@ test.describe("Temelj — Lokacija kolona u termini tabeli", () => {
 })
 
 test.describe("Temelj — Lokacija filter u /termini", () => {
-  test("izaberi firmu WAIKIKI → filter-lokacija se pojavljuje → izaberi lokaciju → lista se filtrira", async ({ page }) => {
+  test("izaberi firmu → filter-lokacija se pojavljuje → izaberi lokaciju → lista se filtrira", async ({ page }) => {
     await page.goto("/termini")
 
     // Klikni firma dropdown
     await page.getByTestId("filter-klijent").click()
-    const waikikiOpt = page.getByRole("option", { name: /^WAIKIKI$/ })
-    await expect(waikikiOpt).toBeVisible()
-    await waikikiOpt.click()
+    const firmaOpt = page.getByRole("option", { name: fx.naziv, exact: true })
+    await expect(firmaOpt).toBeVisible()
+    await firmaOpt.click()
     await page.waitForURL(/klijent_id=/)
 
-    // filter-lokacija mora biti vidljiv (WAIKIKI ima lokacije)
+    // filter-lokacija mora biti vidljiv (firma iz fiksture ima lokacije)
     await expect(page.getByTestId("filter-lokacija")).toBeVisible()
 
     // Izaberi prvu lokaciju
@@ -51,19 +65,18 @@ test.describe("Temelj — Lokacija filter u /termini", () => {
     const rows = page.getByTestId("termin-row")
     await expect(rows).not.toHaveCount(0)
 
-    // Svaki vidljivi red sadrži naziv lokacije ILI klijenta (WAIKIKI)
+    // Svaki vidljivi red sadrži naziv lokacije ILI klijenta
     // (Dovoljno je da rezultati nisu prazni i da URL filter radi)
     console.log(`Lokacija filter test — izabrana lokacija: ${lokNaziv}, redova: ${await rows.count()}`)
   })
 })
 
 test.describe("Temelj — Klijenti (firme) pregled", () => {
-  test("WAIKIKI kartica ima broj_lokacija > 0", async ({ page }) => {
-    await page.goto("/klijenti?q=WAIKIKI")
-    await page.waitForURL(/q=WAIKIKI/)
+  test("kartica firme ima broj_lokacija > 0", async ({ page }) => {
+    await page.goto("/klijenti?q=" + encodeURIComponent(fx.naziv))
     const cards = page.getByTestId("klijent-card")
     await expect(cards.first()).toBeVisible()
-    await expect(cards.first()).toContainText(/WAIKIKI/i)
+    await expect(cards.first()).toContainText(fx.naziv)
     // Kartica prikazuje "X lok." — mora biti > 0
     const cardText = (await cards.first().textContent()) ?? ""
     const lokMatch = cardText.match(/(\d+)\s*lok\./)
@@ -72,17 +85,16 @@ test.describe("Temelj — Klijenti (firme) pregled", () => {
     expect(lokCount).toBeGreaterThan(0)
   })
 
-  test("WAIKIKI detalji → Lokacije tab nije prazan", async ({ page }) => {
-    await page.goto("/klijenti?q=WAIKIKI")
-    await page.waitForURL(/q=WAIKIKI/)
-    await page.getByTestId("klijent-card").first().click()
+  test("detalji firme → Lokacije tab nije prazan", async ({ page }) => {
+    await page.goto("/klijenti?q=" + encodeURIComponent(fx.naziv))
+    await page.getByTestId("klijent-card").filter({ hasText: fx.naziv }).first().click()
     await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
 
-    await page.getByRole("tab", { name: "Lokacije" }).click()
+    await page.getByTestId("tab-lokacije").click()
     await page.waitForURL(/tab=lokacije/)
     await expect(page.getByTestId("tab-lokacije-content")).toBeVisible()
 
-    // Tabla treba da ima bar jedan red (WAIKIKI ima 13+ lokacija)
+    // Tabla treba da ima bar jedan red (fikstura pravi 2 lokacije)
     const lokRows = page.getByTestId("lokacija-row")
     expect(await lokRows.count()).toBeGreaterThan(0)
   })

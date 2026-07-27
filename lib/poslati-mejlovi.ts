@@ -72,6 +72,23 @@ export type MejlRed = {
   delivery_status: MejlDostava
 }
 
+/**
+ * Type-guard za datumske URL parametre (`od`/`do`) prije slanja u
+ * `utcGranicaSarajevskogDana`: helper na nevaljanom ulazu baca `RangeError`
+ * (Intl nad Invalid Date), što bi cijelu rutu srušilo u `error.tsx` umjesto da
+ * greška ostane u stranici (S1). Traži strogi `yyyy-MM-dd` i odbacuje nepostojeće
+ * datume ("2026-13-45" bi se inače tiho prelio u februar 2027).
+ */
+export function jeIsoDatum(v: string | undefined): v is string {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+  // Round-trip: `Date.UTC` prelijeva prekoračenje (31.02. → 03.03.), pa se
+  // vrijednost prihvata samo ako se vrati identična. `Date.parse` ovo NE hvata:
+  // ISO gramatika dozvoljava DD do 31 u svakom mjesecu.
+  const [g, m, d] = v.split("-").map(Number) as [number, number, number]
+  const dt = new Date(Date.UTC(g, m - 1, d))
+  return dt.getUTCFullYear() === g && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+}
+
 /** Red je "neriješena greška" ako je slanje palo ILI je dostava neuspjela. */
 export function jeGreska(r: Pick<MejlRed, "status" | "delivery_status">): boolean {
   return (

@@ -7,6 +7,7 @@ import {
   DOSTAVA_KEY,
   DOSTAVA_VARIJANTA,
   jeGreska,
+  jeIsoDatum,
   type MejlRed,
 } from "./poslati-mejlovi"
 
@@ -67,6 +68,32 @@ describe("mape enum → i18n ključ", () => {
   it("i18n ključevi su jedinstveni po mapi (nema slučajnog dupliranja labele)", () => {
     expect(new Set(Object.values(TIP_KEY)).size).toBe(Object.keys(TIP_KEY).length)
     expect(new Set(Object.values(DOSTAVA_KEY)).size).toBe(Object.keys(DOSTAVA_KEY).length)
+  })
+})
+
+describe("jeIsoDatum — zaštita od/do parametara", () => {
+  it("prihvata isključivo strogi yyyy-MM-dd", () => {
+    expect(jeIsoDatum("2026-07-15")).toBe(true)
+    expect(jeIsoDatum("2026-7-15")).toBe(false)
+    expect(jeIsoDatum("15.07.2026")).toBe(false)
+    expect(jeIsoDatum("2026-07-15T10:00:00Z")).toBe(false)
+    expect(jeIsoDatum("abc")).toBe(false)
+    expect(jeIsoDatum("")).toBe(false)
+    expect(jeIsoDatum(undefined)).toBe(false)
+  })
+
+  it("odbacuje nepostojeće datume (inače bi se tiho prelili u drugi mjesec)", () => {
+    expect(jeIsoDatum("2026-13-45")).toBe(false)
+    expect(jeIsoDatum("2026-02-30")).toBe(false)
+    expect(jeIsoDatum("2024-02-29")).toBe(true) // prestupna
+  })
+
+  it("svaki prihvaćen datum je bezbjedan ulaz za granične helpere (ne baca)", () => {
+    for (const v of ["2026-01-01", "2026-07-15", "2026-12-31", "2024-02-29"]) {
+      expect(jeIsoDatum(v)).toBe(true)
+      expect(() => utcGranicaSarajevskogDana(v)).not.toThrow()
+      expect(() => utcGranicaSarajevskogDana(dodajDan(v))).not.toThrow()
+    }
   })
 })
 

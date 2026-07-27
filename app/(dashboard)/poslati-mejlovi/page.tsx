@@ -6,6 +6,7 @@ import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
 import { href } from "@/i18n/routes"
 import { dodajDan, utcGranicaSarajevskogDana } from "@/lib/date"
+import { jeIsoDatum } from "@/lib/poslati-mejlovi"
 import { Constants, type Database } from "@/db/types"
 
 type MejlTip = Database["public"]["Enums"]["mejl_tip"]
@@ -38,6 +39,8 @@ export default async function PoslatiMejloviPage({
 
   const tip = jeMejlTip(sp.tip) ? sp.tip : null
   const status = jeMejlStatus(sp.status) ? sp.status : null
+  const od = jeIsoDatum(sp.od) ? sp.od : null
+  const do_ = jeIsoDatum(sp.do) ? sp.do : null
   const pageNum = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1)
   const offset = (pageNum - 1) * PER_PAGE
 
@@ -47,8 +50,8 @@ export default async function PoslatiMejloviPage({
     // Granice sarajevskog dana sa eksplicitnom zonom (S7): `od` = ponoć izabranog
     // dana, `do` = ponoć SLJEDEĆEG dana. RPC poredi `created_at >= p_od AND < p_do`,
     // pa ekskluzivna gornja granica obuhvata cijeli izabrani dan (uklj. 23:59:59.999).
-    od: sp.od ? utcGranicaSarajevskogDana(sp.od) : null,
-    do: sp.do ? utcGranicaSarajevskogDana(dodajDan(sp.do)) : null,
+    od: od ? utcGranicaSarajevskogDana(od) : null,
+    do: do_ ? utcGranicaSarajevskogDana(dodajDan(do_)) : null,
     samoGreske: sp.samo_greske === "1",
     samoNepregledane: sp.nepregledano === "1",
     limit: PER_PAGE,
@@ -59,7 +62,7 @@ export default async function PoslatiMejloviPage({
   // Razdvaja "dnevnik je prazan" od "filteri nemaju pogodaka" (S1-duh).
   // `pageNum > 1` pokriva i `?page=999` iznad zadnje strane (nema server-side clamp-a).
   const imaFiltera =
-    Boolean(tip || status || sp.od || sp.do || sp.samo_greske === "1" || sp.nepregledano === "1") ||
+    Boolean(tip || status || od || do_ || sp.samo_greske === "1" || sp.nepregledano === "1") ||
     pageNum > 1
 
   const currentSearch = new URLSearchParams(
@@ -82,8 +85,8 @@ export default async function PoslatiMejloviPage({
       <PoslatiMejloviFilteri
         tip={tip}
         status={status}
-        od={sp.od ?? ""}
-        do_={sp.do ?? ""}
+        od={od ?? ""}
+        do_={do_ ?? ""}
         samoGreske={sp.samo_greske === "1"}
         nepregledano={sp.nepregledano === "1"}
       />

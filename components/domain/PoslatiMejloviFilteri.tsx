@@ -62,7 +62,10 @@ export function PoslatiMejloviFilteri({
   const imaFiltera =
     tip !== SVI || status !== SVI || od !== "" || do_ !== "" || samoGreske || nepregledano
 
-  // items mape (value→label) — base-ui SelectValue prikazuje labelu kad je dropdown zatvoren
+  // items mape (value→label) — base-ui SelectValue prikazuje labelu kad je dropdown
+  // zatvoren; iste mape hrane i SelectItem-e, pa su `t(... as never)` cast-ovi (N15,
+  // svjesno odgođeni) samo preseljeni iz page.tsx, ne umnoženi, a labela u trigeru
+  // i labela u listi ne mogu razići.
   const tipItems: Record<string, string> = {
     [SVI]: t("filteri.svi"),
     ...Object.fromEntries(SVI_TIPOVI.map((v) => [v, t(`tip.${TIP_KEY[v]}` as never)])),
@@ -115,7 +118,7 @@ export function PoslatiMejloviFilteri({
           <SelectContent>
             <SelectItem value={SVI}>{t("filteri.svi")}</SelectItem>
             {SVI_TIPOVI.map((v) => (
-              <SelectItem key={v} value={v}>{t(`tip.${TIP_KEY[v]}` as never)}</SelectItem>
+              <SelectItem key={v} value={v}>{tipItems[v]}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -130,7 +133,7 @@ export function PoslatiMejloviFilteri({
           <SelectContent>
             <SelectItem value={SVI}>{t("filteri.svi")}</SelectItem>
             {SVI_STATUSI.map((v) => (
-              <SelectItem key={v} value={v}>{t(`status.${STATUS_KEY[v]}` as never)}</SelectItem>
+              <SelectItem key={v} value={v}>{statusItems[v]}</SelectItem>
             ))}
           </SelectContent>
         </Select>

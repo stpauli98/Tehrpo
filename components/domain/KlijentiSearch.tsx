@@ -1,16 +1,15 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
-import { useTransition } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
+import { usePendingFilteri } from "@/lib/use-pending-filteri"
 import { href } from "@/i18n/routes"
 
 export function KlijentiSearch() {
   const t = useTranslations("klijenti.pretraga")
-  const router = useRouter()
   const params = useSearchParams()
-  const [pending, startTransition] = useTransition()
+  const { isPending, push } = usePendingFilteri()
   const q = params.get("q") ?? ""
 
   function commit(value: string) {
@@ -18,21 +17,27 @@ export function KlijentiSearch() {
     if (value.trim()) next.set("q", value.trim())
     else next.delete("q")
     next.delete("page")
-    startTransition(() => router.push(href(`/klijenti?${next.toString()}`)))
+    push(href(`/klijenti?${next.toString()}`))
   }
 
+  // S10: pending mora biti vidljiv (aria-busy + prigušenje + disable), ne samo
+  // data-pending atribut za testove.
   return (
-    <Input
-      key={q}
-      type="search"
-      placeholder={t("placeholder")}
-      defaultValue={q}
-      data-testid="klijenti-search"
-      data-pending={pending}
-      className="w-64"
-      onKeyDown={(e) => {
-        if (e.key === "Enter") commit((e.target as HTMLInputElement).value)
-      }}
-    />
+    <div aria-busy={isPending} className={isPending ? "opacity-60" : undefined}>
+      <Input
+        key={q}
+        type="search"
+        placeholder={t("placeholder")}
+        aria-label={t("ariaLabel")}
+        defaultValue={q}
+        data-testid="klijenti-search"
+        data-pending={isPending}
+        disabled={isPending}
+        className="w-64"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit((e.target as HTMLInputElement).value)
+        }}
+      />
+    </div>
   )
 }

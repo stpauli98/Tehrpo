@@ -274,7 +274,8 @@
       }
     },
     "pretraga": {
-      "placeholder": "Search companies..."
+      "placeholder": "Search companies...",
+      "ariaLabel": "Search clients"
     },
     "noviKlijent": {
       "dugme": "New client",

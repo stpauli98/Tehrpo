@@ -274,7 +274,8 @@
       }
     },
     "pretraga": {
-      "placeholder": "Firmensuche..."
+      "placeholder": "Firmensuche...",
+      "ariaLabel": "Kunden suchen"
     },
     "noviKlijent": {
       "dugme": "Neuer Kunde",

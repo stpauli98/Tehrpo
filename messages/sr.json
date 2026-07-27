@@ -274,7 +274,8 @@
       }
     },
     "pretraga": {
-      "placeholder": "Pretraga firme..."
+      "placeholder": "Pretraga firme...",
+      "ariaLabel": "Pretraga klijenata"
     },
     "noviKlijent": {
       "dugme": "Novi klijent",

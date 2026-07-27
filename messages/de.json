@@ -813,6 +813,7 @@
     "zapisnikUspjeh": "Protokoll erstellt",
     "tipLabel": "Dokumenttyp",
     "fajlPolje": "Dokumentdatei",
+    "neispravniPodaci": "Ungültige Daten — aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "tipovi": {
       "strucni_nalaz": "Fachgutachten",
       "zapisnik": "Protokoll",

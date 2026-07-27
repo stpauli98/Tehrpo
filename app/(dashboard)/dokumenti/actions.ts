@@ -47,7 +47,11 @@ export async function uploadDokumentAction(
     // default čuva ponašanje starih formi/testova bez `tip` polja
     tip: formData.get("tip") ?? "strucni_nalaz",
   })
-  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  if (!parsed.success) {
+    // Hidden polja (termin_id/dokument_id/klijent_id) korisnik ne može ispraviti → `message`
+    // je smisleni kanal (toast); `errors` ostaju za polja koja bira (tip) i dijagnostiku (S2).
+    return { ok: false, message: t("neispravniPodaci"), errors: parsed.error.flatten().fieldErrors }
+  }
   const { termin_id, tip } = parsed.data
 
   const file = formData.get("file")
@@ -111,7 +115,11 @@ export async function generateZapisnikAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const parsed = genSchema.safeParse({ termin_id: formData.get("termin_id") })
-  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  if (!parsed.success) {
+    // Hidden polja (termin_id/dokument_id/klijent_id) korisnik ne može ispraviti → `message`
+    // je smisleni kanal (toast); `errors` ostaju za polja koja bira (tip) i dijagnostiku (S2).
+    return { ok: false, message: t("neispravniPodaci"), errors: parsed.error.flatten().fieldErrors }
+  }
   const { termin_id } = parsed.data
 
   const supabase = await createServerSupabaseClient()
@@ -185,7 +193,11 @@ export async function deleteDokumentAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const parsed = delSchema.safeParse({ dokument_id: formData.get("dokument_id") })
-  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  if (!parsed.success) {
+    // Hidden polja (termin_id/dokument_id/klijent_id) korisnik ne može ispraviti → `message`
+    // je smisleni kanal (toast); `errors` ostaju za polja koja bira (tip) i dijagnostiku (S2).
+    return { ok: false, message: t("neispravniPodaci"), errors: parsed.error.flatten().fieldErrors }
+  }
   const { dokument_id } = parsed.data
 
   // Poslovno pravilo: dokumente briše ISKLJUČIVO administrator. Provjera mora biti
@@ -244,7 +256,11 @@ export async function uploadKlijentDokumentAction(
     ugovor_id: formData.get("ugovor_id") ?? "",
     tip: formData.get("tip") ?? "ostalo",
   })
-  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  if (!parsed.success) {
+    // Hidden polja (termin_id/dokument_id/klijent_id) korisnik ne može ispraviti → `message`
+    // je smisleni kanal (toast); `errors` ostaju za polja koja bira (tip) i dijagnostiku (S2).
+    return { ok: false, message: t("neispravniPodaci"), errors: parsed.error.flatten().fieldErrors }
+  }
   const { klijent_id, ugovor_id, tip } = parsed.data
 
   const file = formData.get("file")

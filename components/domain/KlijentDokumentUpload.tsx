@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { useAkcijaToast } from "@/components/akcija-toast"
+import { FieldError } from "./FieldError"
 import { uploadKlijentDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
 import { ACCEPT_ATTR, DOKUMENT_TIPOVI, MAX_MB, validirajFajl } from "@/lib/dokumenti"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -41,6 +42,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   const tipItems: Record<string, string> = Object.fromEntries(
     DOKUMENT_TIPOVI.map((tip) => [tip, t(`tipovi.${tip}`)]),
   )
+  const tipGreske = state.ok === false ? state.errors?.tip : undefined
 
   useEffect(() => {
     if (state !== prev.current) {
@@ -164,22 +166,26 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
         <div className="space-y-1 text-sm">
           <span className="block text-muted-foreground">{t("tipDokumentaLabel")}</span>
           <Select name="tip" defaultValue="ugovor" items={tipItems}>
-            <SelectTrigger className="w-48" data-testid="klijent-dok-tip">
+            <SelectTrigger
+              className="w-48"
+              aria-describedby={tipGreske ? "greska-klijent-dok-tip" : undefined}
+              data-testid="klijent-dok-tip"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {DOKUMENT_TIPOVI.map((tip) => <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>)}
             </SelectContent>
           </Select>
+          <FieldError id="greska-klijent-dok-tip" errors={tipGreske} />
         </div>
         <Button type="submit" disabled={pending || !file} data-testid="klijent-dok-submit">
           {pending ? t("submitPending") : t("submit")}
         </Button>
       </div>
 
-      {(greska || (state.ok === false && state.message)) && (
-        <p className="w-full text-sm text-destructive" role="alert">{greska ?? (state.ok === false ? state.message : "")}</p>
-      )}
+      {/* Samo KLIJENTSKA validacija (prije round-tripa) — `state.message` ide toastom (S2). */}
+      {greska && <p className="w-full text-sm text-destructive" role="alert">{greska}</p>}
     </form>
   )
 }

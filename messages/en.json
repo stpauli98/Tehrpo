@@ -813,6 +813,7 @@
     "zapisnikUspjeh": "Record generated",
     "tipLabel": "Document type",
     "fajlPolje": "Document file",
+    "neispravniPodaci": "Invalid data — refresh the page and try again.",
     "tipovi": {
       "strucni_nalaz": "Expert report",
       "zapisnik": "Record",

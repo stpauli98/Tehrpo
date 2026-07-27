@@ -12,6 +12,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { useAkcijaToast } from "@/components/akcija-toast"
+import { FieldError } from "./FieldError"
 import {
   uploadDokumentAction,
   generateZapisnikAction,
@@ -79,11 +80,9 @@ export function DokumentiSekcija({
     }
   }, [uploadState, genState, delState, router, queryClient, terminId])
 
-  const greska =
-    (uploadState.ok === false && uploadState.message) ||
-    (genState.ok === false && genState.message) ||
-    (delState.ok === false && delState.message) ||
-    null
+  // `message` iz svih akcija ide ISKLJUČIVO toastom (useAkcijaToast gore) — inline
+  // duplikat bi bio dupli kanal (S2). Inline ostaje samo `errors` za polje `tip`.
+  const tipGreske = uploadState.ok === false ? uploadState.errors?.tip : undefined
 
   return (
     <section data-testid="sheet-dokumenti">
@@ -129,32 +128,30 @@ export function DokumentiSekcija({
                 e.target.value = ""
               }}
             />
-            <Select name="tip" defaultValue="strucni_nalaz" items={tipItems}>
-              <SelectTrigger
-                className="w-44"
-                aria-label={t("tipLabel")}
-                data-testid="dokument-tip"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DOKUMENT_TIPOVI.map((tip) => (
-                  <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <Select name="tip" defaultValue="strucni_nalaz" items={tipItems}>
+                <SelectTrigger
+                  className="w-44"
+                  aria-label={t("tipLabel")}
+                  aria-describedby={tipGreske ? "greska-dokument-tip" : undefined}
+                  data-testid="dokument-tip"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOKUMENT_TIPOVI.map((tip) => (
+                    <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError id="greska-dokument-tip" errors={tipGreske} />
+            </div>
             <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
               {uploadPending ? t("saljem") : t("uploadDugme")}
             </Button>
           </form>
         )}
       </div>
-
-      {greska && (
-        <p className="mt-2 text-sm text-destructive" role="alert">
-          {greska}
-        </p>
-      )}
 
       {dokumenti.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">{t("prazno")}</p>

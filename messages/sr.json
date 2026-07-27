@@ -813,6 +813,7 @@
     "zapisnikUspjeh": "Zapisnik generisan",
     "tipLabel": "Tip dokumenta",
     "fajlPolje": "Fajl dokumenta",
+    "neispravniPodaci": "Neispravni podaci — osvježite stranicu i pokušajte ponovo.",
     "tipovi": {
       "strucni_nalaz": "Stručni nalaz",
       "zapisnik": "Zapisnik",

@@ -763,7 +763,8 @@
       "klijent_provjere": "Client checks",
       "kontakt_osobe": "Contact persons",
       "ugovori": "Contracts"
-    }
+    },
+    "ukupno": "Total: {count}"
   },
   "zapisnici": {
     "naslov": "Records",

@@ -28,9 +28,17 @@ export interface AktivnostRed {
   ukupno: number
 }
 
-export async function dohvatiAktivnost(
-  f: AktivnostFilter,
-): Promise<{ redovi: AktivnostRed[]; ukupno: number }> {
+/**
+ * Diskriminisani rezultat čitanja (S1): pozivalac mora razlikovati „upit je uspio
+ * i vratio 0 redova" (empty state) od „upit je pao" (GreskaUcitavanja). Poruka
+ * greške se NE prosljeđuje u UI — sirovi `PostgrestError` je zabranjen po S1;
+ * detalj ostaje u server logu.
+ */
+export type AktivnostRezultat =
+  | { ok: true; redovi: AktivnostRed[]; ukupno: number }
+  | { ok: false }
+
+export async function dohvatiAktivnost(f: AktivnostFilter): Promise<AktivnostRezultat> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase.rpc("get_aktivnost", {
     p_od: f.od ?? undefined,
@@ -42,7 +50,10 @@ export async function dohvatiAktivnost(
     p_limit: f.limit ?? 50,
     p_offset: f.offset ?? 0,
   })
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("get_aktivnost:", error.message)
+    return { ok: false }
+  }
   const redovi = (data ?? []) as AktivnostRed[]
-  return { redovi, ukupno: redovi[0]?.ukupno ?? 0 }
+  return { ok: true, redovi, ukupno: redovi[0]?.ukupno ?? 0 }
 }

@@ -763,7 +763,8 @@
       "klijent_provjere": "Kundenprüfungen",
       "kontakt_osobe": "Kontaktpersonen",
       "ugovori": "Verträge"
-    }
+    },
+    "ukupno": "Gesamt: {count}"
   },
   "zapisnici": {
     "naslov": "Protokolle",

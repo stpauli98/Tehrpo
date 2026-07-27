@@ -1064,22 +1064,27 @@
       "prazno": "Stellen Sie eine Frage zu Terminen, Firmen, oder fordern Sie einen Protokollentwurf an.",
       "nemaStream": "Kein Stream",
       "greskaEvent": "\n[Fehler: {poruka}]",
+      "greskaHttp": "\n[Anfrage fehlgeschlagen: {poruka}]",
       "greskaVeze": "\n[Verbindungsfehler: {poruka}]",
       "nepoznatoGreska": "unbekannt"
     },
     "chatInput": {
       "placeholder": "Frage eingeben…",
+      "oznaka": "Nachricht an den Assistenten",
       "posalji": "Senden"
     },
     "chatMessage": {
       "alati": "Werkzeuge: {lista}",
+      "pisanje": "Der Assistent schreibt…",
       "proposal": {
         "naslov": "Protokollentwurf · {klijent} · {vrsta}",
         "nalaz": "Befund:",
         "zakljucak": "Schlussfolgerung:",
         "snimi": "Protokoll speichern",
         "snimam": "Wird gespeichert…",
-        "snimljeno": "Gespeichert ✓"
+        "snimljeno": "Gespeichert",
+        "uspjeh": "Das Protokoll wurde gespeichert.",
+        "greska": "Speichern des Protokolls fehlgeschlagen."
       }
     },
     "noviRazgovor": {
@@ -1092,6 +1097,8 @@
     },
     "actions": {
       "neispravanTermin": "Ungültiger Termin",
+      "neispravniPodaci": "Die Entwurfsdaten sind ungültig.",
+      "greskaCitanja": "Das Laden des Termins ist fehlgeschlagen.",
       "terminNePostoji": "Der Termin existiert nicht.",
       "snimanjeNijeUspjelo": "Speichern fehlgeschlagen."
     },

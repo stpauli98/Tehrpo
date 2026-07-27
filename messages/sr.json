@@ -1064,22 +1064,27 @@
       "prazno": "Postavi pitanje o terminima, firmama ili zatraži prijedlog zapisnika.",
       "nemaStream": "Nema stream-a",
       "greskaEvent": "\n[Greška: {poruka}]",
+      "greskaHttp": "\n[Zahtjev nije uspio: {poruka}]",
       "greskaVeze": "\n[Greška veze: {poruka}]",
       "nepoznatoGreska": "nepoznato"
     },
     "chatInput": {
       "placeholder": "Napiši pitanje…",
+      "oznaka": "Poruka asistentu",
       "posalji": "Pošalji"
     },
     "chatMessage": {
       "alati": "Alati: {lista}",
+      "pisanje": "Asistent piše…",
       "proposal": {
         "naslov": "Prijedlog zapisnika · {klijent} · {vrsta}",
         "nalaz": "Nalaz:",
         "zakljucak": "Zaključak:",
         "snimi": "Snimi zapisnik",
         "snimam": "Snimam…",
-        "snimljeno": "Snimljeno ✓"
+        "snimljeno": "Snimljeno",
+        "uspjeh": "Zapisnik je sačuvan.",
+        "greska": "Snimanje zapisnika nije uspjelo."
       }
     },
     "noviRazgovor": {
@@ -1092,6 +1097,8 @@
     },
     "actions": {
       "neispravanTermin": "Neispravan termin",
+      "neispravniPodaci": "Neispravni podaci prijedloga.",
+      "greskaCitanja": "Učitavanje termina nije uspjelo.",
       "terminNePostoji": "Termin ne postoji.",
       "snimanjeNijeUspjelo": "Snimanje nije uspjelo."
     },

@@ -27,6 +27,25 @@ const optionalDate = z
 
 const NE_U_BUDUCNOSTI = t("datumUBuducnosti")
 
+/**
+ * Zod pad → `ActionResult`, uz jedno pravilo (S2): greška na SKRIVENOM polju `id`
+ * nije field-greška korisnika nego neispravan zahtjev, pa ide u toast (`message`).
+ * Forme ne renderuju `FieldError` za `id` (nema vidljive kontrole), pa bi je slanje
+ * kroz `errors` progutalo bez ikakvog feedbacka — `odlukaToast` na errors-only
+ * rezultat namjerno ne prikazuje toast. Isti kanon kao `otkaziTermin`.
+ * Kanali ostaju međusobno isključivi — nikad i toast i inline za istu poruku.
+ */
+function zodRezultat<T>(greska: z.ZodError<T>): ActionResult {
+  const { id: idGreske, ...poljaGreske } = greska.flatten().fieldErrors as Record<
+    string,
+    string[] | undefined
+  >
+  if (idGreske && idGreske.length > 0) {
+    return { ok: false, message: t("neispravanZahtjev") }
+  }
+  return { ok: false, errors: poljaGreske }
+}
+
 const updateSchema = z.object({
   id: z.string().uuid(),
   datum_zakazan: optionalDate,
@@ -44,7 +63,7 @@ export async function updateTermin(
   if (!parsed.success) {
     // S2: Zod field-greške idu ISKLJUČIVO inline (FieldError) — bez `message`,
     // inače bi ista poruka išla i u toast (dupli kanal).
-    return { ok: false, errors: parsed.error.flatten().fieldErrors }
+    return zodRezultat(parsed.error)
   }
   const { id, ...fields } = parsed.data
 
@@ -192,7 +211,7 @@ export async function markIzvrseno(
   if (!parsed.success) {
     // S2: Zod field-greške idu ISKLJUČIVO inline (FieldError) — bez `message`,
     // inače bi ista poruka išla i u toast (dupli kanal).
-    return { ok: false, errors: parsed.error.flatten().fieldErrors }
+    return zodRezultat(parsed.error)
   }
   const { id, datum_izvrsenja } = parsed.data
 

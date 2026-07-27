@@ -1180,7 +1180,8 @@
       "naslov": "Naslov",
       "slanje": "Slanje",
       "dostava": "Dostava",
-      "klijent": "Klijent"
+      "klijent": "Klijent",
+      "akcije": "Akcije"
     },
     "tip": {
       "podsjetnikInterni": "Podsjetnik (interni)",
@@ -1211,9 +1212,13 @@
       "samoGreske": "Samo greške",
       "samoNerijesene": "Samo neriješene",
       "svi": "Svi",
-      "filtriraj": "Filtriraj"
+      "filtriraj": "Filtriraj",
+      "ponisti": "Poništi filtere"
     },
-    "oznaciPregledanim": "Označi pregledanim"
+    "oznaciPregledanim": "Označi pregledanim",
+    "praznoFilteri": "Nema rezultata za zadate filtere.",
+    "oznacenoPregledanim": "Označeno kao pregledano.",
+    "greskaOznacavanja": "Označavanje nije uspjelo. Pokušajte ponovo."
   },
   "izvoz": {
     "plan": {

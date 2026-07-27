@@ -1180,7 +1180,8 @@
       "naslov": "Betreff",
       "slanje": "Versand",
       "dostava": "Zustellung",
-      "klijent": "Kunde"
+      "klijent": "Kunde",
+      "akcije": "Aktionen"
     },
     "tip": {
       "podsjetnikInterni": "Erinnerung (intern)",
@@ -1211,9 +1212,13 @@
       "samoGreske": "Nur Fehler",
       "samoNerijesene": "Nur ungelöste",
       "svi": "Alle",
-      "filtriraj": "Filtern"
+      "filtriraj": "Filtern",
+      "ponisti": "Filter zurücksetzen"
     },
-    "oznaciPregledanim": "Als geprüft markieren"
+    "oznaciPregledanim": "Als geprüft markieren",
+    "praznoFilteri": "Keine Ergebnisse für die gewählten Filter.",
+    "oznacenoPregledanim": "Als geprüft markiert.",
+    "greskaOznacavanja": "Markieren als geprüft fehlgeschlagen. Bitte erneut versuchen."
   },
   "izvoz": {
     "plan": {

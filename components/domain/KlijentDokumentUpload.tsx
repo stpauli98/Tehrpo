@@ -96,7 +96,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
     <form
       action={action}
       data-testid="klijent-dok-upload"
-      className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="space-y-4 rounded-xl ring-1 ring-foreground/10 bg-card p-5"
     >
       <input type="hidden" name="klijent_id" value={klijentId} />
 

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Sparkles, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { FieldError } from "./FieldError"
+import { FajlDropzone } from "./FajlDropzone"
 import { PreuzmiDokumentButton } from "./PreuzmiDokumentButton"
 import {
   uploadDokumentAction,
@@ -22,7 +22,7 @@ import {
 } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
 import { jeAdmin, mozeUrediti } from "@/lib/auth/roles"
-import { ACCEPT_ATTR, DOKUMENT_TIPOVI, MAX_MB, validirajFajl } from "@/lib/dokumenti"
+import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -52,7 +52,8 @@ export function DokumentiSekcija({
   useAkcijaToast(uploadState, { uspjeh: t("uploadUspjeh"), greska: tc("greska") })
   useAkcijaToast(genState, { uspjeh: t("zapisnikUspjeh"), greska: tc("greska") })
   useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
-  const fileRef = useRef<HTMLInputElement>(null)
+  // Bump poslije uspješnog uploada → remount `FajlDropzone` → izabrani fajl očišćen.
+  const [dropzoneKey, setDropzoneKey] = useState(0)
   // S3/O3: brisanje unutar već otvorenog TerminSheet dialoga ide dvostepenim arm
   // obrascem (ne dialog-preko-dialoga). Arm je per-dokument.
   const [armedId, setArmedId] = useState<string | null>(null)
@@ -76,7 +77,7 @@ export function DokumentiSekcija({
       (uChanged && uploadState.ok) || (gChanged && genState.ok) || (dChanged && delState.ok)
     prev.current = { u: uploadState, g: genState, d: delState }
     if (uspjeh) {
-      if (uChanged && uploadState.ok && fileRef.current) fileRef.current.value = ""
+      if (uChanged && uploadState.ok) setDropzoneKey((k) => k + 1)
       if (dChanged && delState.ok) setArmedId(null)
       // router.refresh() osvježava server caches/zapisnici (revalidatePath), ali NE refetch-uje
       // TanStack ["termin-detail", id] query koji sada hrani `dokumenti` prop u sheet-u — pa
@@ -94,7 +95,7 @@ export function DokumentiSekcija({
     <section data-testid="sheet-dokumenti">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("naslov")}</p>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="mt-2 space-y-3">
         {izvrsen ? (
           mozeUredjivati && (
             <form action={genAction}>
@@ -110,53 +111,40 @@ export function DokumentiSekcija({
           </p>
         )}
 
-        {/* `flex-wrap` + `min-w-0`: native `input[type=file]` ima veliku intrinzičnu
-            širinu (~300px) i bez ovoga razvuče cijeli dialog → horizontalni skrol. */}
         {mozeUredjivati && (
-          <form action={uploadAction} className="flex min-w-0 flex-wrap items-center gap-2">
+          <form action={uploadAction} className="min-w-0 space-y-2">
             <input type="hidden" name="termin_id" value={terminId} />
-            <input
-              ref={fileRef}
-              type="file"
+            {/* `key` resetuje izabrani fajl poslije uspješnog uploada — dropzone drži
+                svoje stanje, pa remount zamjenjuje raniji `fileRef.current.value = ""`. */}
+            <FajlDropzone
+              key={dropzoneKey}
               name="file"
-              accept={ACCEPT_ATTR}
-              aria-label={t("fajlPolje")}
-              data-testid="dokument-file"
-              className="min-w-0 max-w-full text-sm"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (!file) return
-                const provjera = validirajFajl(file)
-                if (provjera.ok) return
-                toast.error(
-                  provjera.razlog === "tip"
-                    ? t("nedozvoljenTip")
-                    : t("fajlPrevelik", { max: MAX_MB }),
-                )
-                e.target.value = ""
-              }}
+              ariaLabel={t("fajlPolje")}
+              testId="dokument-file"
             />
-            <div className="space-y-1">
-              <Select name="tip" defaultValue="strucni_nalaz" items={tipItems}>
-                <SelectTrigger
-                  className="w-44"
-                  aria-label={t("tipLabel")}
-                  aria-describedby={tipGreske ? "greska-dokument-tip" : undefined}
-                  data-testid="dokument-tip"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DOKUMENT_TIPOVI.map((tip) => (
-                    <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError id="greska-dokument-tip" errors={tipGreske} />
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <div className="space-y-1">
+                <Select name="tip" defaultValue="strucni_nalaz" items={tipItems}>
+                  <SelectTrigger
+                    className="w-44"
+                    aria-label={t("tipLabel")}
+                    aria-describedby={tipGreske ? "greska-dokument-tip" : undefined}
+                    data-testid="dokument-tip"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DOKUMENT_TIPOVI.map((tip) => (
+                      <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError id="greska-dokument-tip" errors={tipGreske} />
+              </div>
+              <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
+                {uploadPending ? t("saljem") : t("uploadDugme")}
+              </Button>
             </div>
-            <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
-              {uploadPending ? t("saljem") : t("uploadDugme")}
-            </Button>
           </form>
         )}
       </div>

@@ -30,20 +30,34 @@ export default async function ZapisniciPage({
   const tPag = await getTranslations("common.pagination")
   const sp = await searchParams
   const previewId = typeof sp.preview === "string" ? sp.preview : null
-  const pageNum = Math.max(1, Number(typeof sp.strana === "string" ? sp.strana : "1") || 1)
-  const offset = (pageNum - 1) * PER_PAGE
+  const trazenaStrana = Math.max(1, Number(typeof sp.strana === "string" ? sp.strana : "1") || 1)
 
   const supabase = await createServerSupabaseClient()
-  const {
-    data: dokData,
-    error: dokError,
-    count,
-  } = await supabase
-    .from("dokumenti")
-    .select("id, naziv, storage_path, uploaded_at, termin_id", { count: "exact" })
-    .eq("generated_by_ai", true)
-    .order("uploaded_at", { ascending: false })
-    .range(offset, offset + PER_PAGE - 1)
+  const ucitajStranu = (strana: number) => {
+    const offset = (strana - 1) * PER_PAGE
+    return supabase
+      .from("dokumenti")
+      .select("id, naziv, storage_path, uploaded_at, termin_id", { count: "exact" })
+      .eq("generated_by_ai", true)
+      .order("uploaded_at", { ascending: false })
+      .range(offset, offset + PER_PAGE - 1)
+  }
+
+  let pageNum = trazenaStrana
+  let dokUpit = await ucitajStranu(pageNum)
+  // PostgREST vraća PGRST103 (416) kad `range` počinje iza kraja liste
+  // (`?strana=999`, ili strana koja se ispraznila brisanjem). To je nepostojeća
+  // strana, a ne pad čitanja — S1 traži razlikovanje u oba smjera, pa se
+  // zahtjev svodi na zadnju postojeću stranu umjesto na poruku o grešci.
+  if (dokUpit.error?.code === "PGRST103") {
+    const { count: ukupnoRedova } = await supabase
+      .from("dokumenti")
+      .select("id", { count: "exact", head: true })
+      .eq("generated_by_ai", true)
+    pageNum = Math.max(1, Math.ceil((ukupnoRedova ?? 0) / PER_PAGE))
+    dokUpit = await ucitajStranu(pageNum)
+  }
+  const { data: dokData, error: dokError, count } = dokUpit
   const dokRedovi = dokData ?? []
   const ukupno = count ?? 0
   const totalPages = Math.max(1, Math.ceil(ukupno / PER_PAGE))

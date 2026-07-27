@@ -35,7 +35,10 @@ export default async function KlijentiPage({
   query = query.range(from, to)
 
   // S1: bez provjere `error` pad upita se renderuje kao lažno „Nema klijenata".
+  // PGRST103 = tražena `.range()` stranica je van opsega (npr. ?page=99) — to
+  // nije pad upita nego prazna stranica.
   const { data, count, error } = await query
+  const greskaUpita = error != null && error.code !== "PGRST103"
   const rows = (data ?? []) as KlijentRow[]
   const total = count ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
@@ -62,7 +65,7 @@ export default async function KlijentiPage({
       </div>
 
       <div className="flex-1">
-        {error ? (
+        {greskaUpita ? (
           <GreskaUcitavanja testId="klijenti-greska" />
         ) : rows.length === 0 ? (
           <div data-testid="klijenti-empty" className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
@@ -75,7 +78,7 @@ export default async function KlijentiPage({
         )}
       </div>
 
-      {!error && (
+      {!greskaUpita && (
         <div className="mt-6 flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground" data-testid="klijenti-pagination">
           <span data-testid="klijenti-total">{t("ukupno", { count: total })}</span>
           <Pagination

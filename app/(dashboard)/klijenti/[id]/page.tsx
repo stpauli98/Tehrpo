@@ -38,6 +38,14 @@ const KARTICA = "rounded-xl bg-card ring-1 ring-foreground/10"
 const TABELA_OKVIR = `${KARTICA} overflow-hidden`
 const TH = "px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground"
 
+// PostgREST vraća ovaj kod kad je tražena `.range()` stranica van opsega
+// (npr. bookmark na str. 3 poslije brisanja redova). To NIJE pad upita —
+// tretiramo ga kao praznu stranicu, ne kao grešku učitavanja (S1).
+const RANGE_VAN_OPSEGA = "PGRST103"
+function jeGreskaUpita(e: { code?: string } | null): boolean {
+  return e != null && e.code !== RANGE_VAN_OPSEGA
+}
+
 function strana(v: string | string[] | undefined): number {
   return Math.max(1, Number(typeof v === "string" ? v : "1") || 1)
 }
@@ -160,7 +168,7 @@ export default async function KlijentDetailPage({
     trebaUgovore ? ugovoriRes.error : null,
     trebaKontakte ? kontaktiRes.error : null,
     trebaDokumente ? dokumentiRes.error : null,
-  ].some((e) => e != null)
+  ].some(jeGreskaUpita)
 
   const termini = (terminiRes.data ?? []) as TerminViewRow[]
   const terminiStrane = (terminiStranaRes.data ?? []) as TerminViewRow[]

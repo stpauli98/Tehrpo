@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Check, Minus } from "lucide-react"
+import { Check, Loader2, Minus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
@@ -41,15 +41,15 @@ export function VrstePregledaTabela({ vrste }: { vrste: Vrsta[] }) {
         <span className="text-muted-foreground">{t("brojVrsta", { count: vidljive.length })}</span>
       </div>
 
-      <div className="max-h-96 overflow-auto rounded-lg border border-border">
+      <div className="max-h-96 overflow-auto rounded-xl bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-muted text-left text-muted-foreground">
             <tr>
-              <th className="px-3 py-2 font-medium">{tKolone("vrsta")}</th>
-              <th className="w-44 px-3 py-2 font-medium">{tKolone("interval")}</th>
-              <th className="w-16 px-3 py-2 text-center font-medium">{tKolone("dokumentacija")}</th>
-              <th className="w-32 px-3 py-2 font-medium">{tKolone("status")}</th>
-              <th className="w-20 px-3 py-2 text-right font-medium">{tKolone("akcije")}</th>
+              <th scope="col" className="px-3 py-2 font-medium">{tKolone("vrsta")}</th>
+              <th scope="col" className="w-44 px-3 py-2 font-medium">{tKolone("interval")}</th>
+              <th scope="col" className="w-16 px-3 py-2 text-center font-medium">{tKolone("dokumentacija")}</th>
+              <th scope="col" className="w-32 px-3 py-2 font-medium">{tKolone("status")}</th>
+              <th scope="col" className="w-20 px-3 py-2 text-right font-medium">{tKolone("akcije")}</th>
             </tr>
           </thead>
           <tbody data-testid="vrste-lista">
@@ -107,7 +107,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
   const [saved, setSaved] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  // "✓ spremljeno" se sakrije nakon 2s.
+  // Potvrda "spremljeno" se sakrije nakon 2s.
   useEffect(() => {
     if (!saved) return
     const t = setTimeout(() => setSaved(false), 2000)
@@ -152,14 +152,24 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
             ;(e.target as HTMLInputElement).blur()
           }
         }}
-        placeholder="—"
         className="w-20"
+        aria-label={t("intervalAriaLabel", { naziv: vrsta.naziv })}
         aria-invalid={err ? true : undefined}
         data-testid={`interval-${vrsta.id}`}
       />
       <span className="w-24 text-xs">
-        {pending && <span className="text-muted-foreground">…</span>}
-        {!pending && saved && <span className="text-green-600">{t("intervalSpremljeno")}</span>}
+        {pending && (
+          <Loader2
+            className="h-[18px] w-[18px] shrink-0 animate-spin motion-reduce:animate-none text-muted-foreground"
+            aria-hidden
+          />
+        )}
+        {!pending && saved && (
+          <span className="inline-flex items-center gap-1 text-success">
+            <Check className="h-[18px] w-[18px] shrink-0" aria-hidden />
+            {t("intervalSpremljeno")}
+          </span>
+        )}
         {!pending && err && <span className="text-destructive">{err}</span>}
       </span>
     </div>
@@ -191,11 +201,11 @@ function StatusPill({ vrsta }: { vrsta: Vrsta }) {
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50",
         vrsta.aktivna
-          ? "bg-green-50 text-green-700 hover:bg-green-100"
+          ? "bg-success/10 text-success hover:bg-success/20"
           : "bg-muted text-muted-foreground hover:bg-accent",
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", vrsta.aktivna ? "bg-green-500" : "bg-muted-foreground")} />
+      <span className={cn("h-1.5 w-1.5 rounded-full", vrsta.aktivna ? "bg-success" : "bg-muted-foreground")} />
       {vrsta.aktivna ? t("aktivna") : t("neaktivna")}
     </button>
   )

@@ -119,7 +119,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
                     FOCUS_RING,
                   )}
                 >
-                  <X className="h-3.5 w-3.5" aria-hidden />
+                  <X className="h-[18px] w-[18px] shrink-0" aria-hidden />
                 </button>
               </span>
             )
@@ -148,7 +148,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
           />
           <span className="text-sm text-muted-foreground">{t("danaPrije")}</span>
           <Button type="button" variant="outline" size="sm" onClick={dodaj} data-testid="reminder-custom-add">
-            <Plus className="h-4 w-4" aria-hidden /> {t("dodaj")}
+            <Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dodaj")}
           </Button>
         </div>
         {customError && (
@@ -159,7 +159,7 @@ export function ReminderForm({ danaPrije }: { danaPrije: number[] }) {
       </div>
 
       {aktivni.length === 0 && (
-        <p className="text-sm text-amber-600" data-testid="reminder-empty">
+        <p className="text-sm text-warning" data-testid="reminder-empty">
           {t("prazno")}
         </p>
       )}

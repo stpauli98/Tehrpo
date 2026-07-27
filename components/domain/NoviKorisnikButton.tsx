@@ -38,7 +38,7 @@ export function NoviKorisnikButton() {
         setOpen(o)
       }}
     >
-      <DialogTrigger render={<Button size="sm"><Plus className="w-4 h-4" aria-hidden /> {t("dugme")}</Button>} />
+      <DialogTrigger render={<Button size="sm"><Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme")}</Button>} />
       <DialogContent>
         <DialogHeader><DialogTitle>{t("naslov")}</DialogTitle></DialogHeader>
         <NoviKorisnikForma key={instanca} onGotovo={zatvori} />

@@ -75,7 +75,7 @@ export function DodjelaKlijenata({
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid={`dodjela-${korisnikId}`}>
-            <Building2 className="h-3.5 w-3.5" aria-hidden /> {t("dugme", { count: izabrani.length })}
+            <Building2 className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme", { count: izabrani.length })}
           </Button>
         }
       />
@@ -95,7 +95,7 @@ export function DodjelaKlijenata({
           data-testid={`dodjela-pretraga-${korisnikId}`}
         />
 
-        <div className="max-h-72 divide-y divide-border overflow-auto rounded-lg border border-border">
+        <div className="max-h-72 divide-y divide-border overflow-auto rounded-xl bg-card ring-1 ring-foreground/10">
           {filtrirani.map((k) => (
             <label key={k.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted">
               <Checkbox

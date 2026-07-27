@@ -47,7 +47,7 @@ export function VrstaSheet({ vrsta }: { vrsta: Vrsta }) {
     >
       <DialogTrigger render={
         <Button variant="outline" size="icon-sm" data-testid={`uredi-vrstu-${vrsta.id}`} aria-label={t("urediAriaLabel")} className="group/tt relative">
-          <Pencil className="h-4 w-4" aria-hidden />
+          <Pencil className="h-[18px] w-[18px] shrink-0" aria-hidden />
           <Tooltip>{t("urediAriaLabel")}</Tooltip>
         </Button>
       } />
@@ -60,7 +60,7 @@ export function VrstaSheet({ vrsta }: { vrsta: Vrsta }) {
             variant="outline"
             disabled={togglePending}
             data-testid="vrsta-toggle-aktivna"
-            className={vrsta.aktivna ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-green-700 border-green-200 hover:bg-green-50"}
+            className={vrsta.aktivna ? "text-destructive border-destructive/30 hover:bg-destructive/10" : "text-success border-success/30 hover:bg-success/10"}
             onClick={() => startToggle(async () => {
               const next = !vrsta.aktivna
               toastRezultat(await postaviVrstaAktivna(vrsta.id, next), {

@@ -48,12 +48,13 @@ export function KorisniciTabela({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] shrink-0 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("pretragaPlaceholder")}
-            className="pl-8"
+            // pl-9 (a ne pl-8): ikona je narasla na 18px, uži padding bi je preklopio tekstom.
+            className="pl-9"
             data-testid="korisnici-pretraga"
           />
         </div>
@@ -62,15 +63,15 @@ export function KorisniciTabela({
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg bg-card ring-1 ring-foreground/10">
+      <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-xs text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("kolone.korisnik")}</th>
-              <th className="px-4 py-2 font-medium">{t("kolone.uloga")}</th>
-              <th className="px-4 py-2 text-center font-medium">{t("kolone.podsjetnici")}</th>
-              <th className="px-4 py-2 font-medium">{t("kolone.firme")}</th>
-              <th className="w-12 px-4 py-2" aria-label={t("kolone.akcije")} />
+              <th scope="col" className="px-4 py-2 font-medium">{t("kolone.korisnik")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("kolone.uloga")}</th>
+              <th scope="col" className="px-4 py-2 text-center font-medium">{t("kolone.podsjetnici")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("kolone.firme")}</th>
+              <th scope="col" className="w-12 px-4 py-2" aria-label={t("kolone.akcije")} />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -119,7 +120,7 @@ export function KorisniciTabela({
                       <DodjelaKlijenata korisnikId={k.id} klijenti={klijenti} izabrani={k.izabrani} />
                     )}
                     {k.uloga !== "admin" && brFirmi === 0 && (
-                      <span className="ml-2 text-xs text-amber-600">{t("nemaDodijeljenih")}</span>
+                      <span className="ml-2 text-xs text-warning">{t("nemaDodijeljenih")}</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right">

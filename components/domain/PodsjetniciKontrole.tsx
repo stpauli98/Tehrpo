@@ -115,7 +115,7 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
         </div>
       </form>
       {toggleState.ok === false && toggleState.message && (
-        <p className="text-xs text-destructive" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {toggleState.message}
         </p>
       )}
@@ -138,7 +138,7 @@ export function PodsjetniciKontrole({ aktivni }: { aktivni: boolean }) {
           <DialogHeader>
             <DialogTitle>{t("potvrda")}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-amber-600" role="alert">
+          <p className="text-sm text-warning" role="alert">
             {t("pokreniUpozorenje")}
           </p>
           <DialogFooter>

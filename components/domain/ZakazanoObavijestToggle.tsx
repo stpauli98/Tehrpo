@@ -58,7 +58,7 @@ export function ZakazanoObavijestToggle({ aktivna }: { aktivna: boolean }) {
         </div>
       </form>
       {state.ok === false && state.message && (
-        <p className="text-xs text-destructive" role="alert">{state.message}</p>
+        <p className="text-sm text-destructive" role="alert">{state.message}</p>
       )}
     </div>
   )

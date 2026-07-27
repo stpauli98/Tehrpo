@@ -186,6 +186,8 @@ export function PrimaociCombobox({
           type="text" role="combobox" aria-expanded={open} aria-controls="primaoci-lista"
           data-testid="primaoci-combobox-input"
           placeholder={t("comboPlaceholder")}
+          // S12: placeholder nije pristupačno ime — combobox mora imati aria-label.
+          aria-label={t("comboPlaceholder")}
           value={q} disabled={pending}
           onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0) }}
           onFocus={() => { setOpen(true); setHi(0) }}

@@ -176,7 +176,10 @@ export async function createLokacija(
   const supabase = await createServerSupabaseClient()
   // App-nivo dedup (S8.7): DB još nema UNIQUE (klijent_id, naziv), a bez ovoga
   // se ista lokacija unosi dvaput samo zbog razmaka/veličine slova.
-  const { data: postojece } = await supabase.from("lokacije").select("id, naziv").eq("klijent_id", klijent_id)
+  // S1: pad ovog upita se NE smije protumačiti kao „nema duplikata" — prazan
+  // odgovor zbog greške bi tiho propustio unos koji provjera treba da odbije.
+  const { data: postojece, error: dupErr } = await supabase.from("lokacije").select("id, naziv").eq("klijent_id", klijent_id)
+  if (dupErr) return { ok: false, message: friendlyDbError(dupErr) }
   if ((postojece ?? []).some((l) => normalizujNaziv(l.naziv) === normalizujNaziv(f.naziv))) {
     return { ok: false, errors: { naziv: [t("lokacijaPostoji")] } }
   }
@@ -411,8 +414,9 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { klijent_id, ...f } = parsed.data
   const supabase = await createServerSupabaseClient()
-  // App-nivo dedup (S8.7) — v. createLokacija.
-  const { data: postojeci } = await supabase.from("kontakt_osobe").select("id, ime").eq("klijent_id", klijent_id)
+  // App-nivo dedup (S8.7) — v. createLokacija (uklj. S1 provjeru greške).
+  const { data: postojeci, error: dupErr } = await supabase.from("kontakt_osobe").select("id, ime").eq("klijent_id", klijent_id)
+  if (dupErr) return { ok: false, message: friendlyDbError(dupErr) }
   if ((postojeci ?? []).some((k) => normalizujNaziv(k.ime) === normalizujNaziv(f.ime))) {
     return { ok: false, errors: { ime: [t("kontaktPostoji")] } }
   }

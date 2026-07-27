@@ -35,11 +35,11 @@ export function PrikaziJosLista({
           aria-expanded={expanded}
           data-testid={testId}
           className={cn(
-            "mt-3 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-brand transition-colors hover:underline",
+            "mt-3 inline-flex items-center gap-1 rounded-sm text-sm font-medium text-brand transition-colors motion-reduce:transition-none hover:underline",
             FOCUS_RING,
           )}
         >
-          <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} aria-hidden />
+          <ChevronDown className={cn("h-4 w-4 transition-transform motion-reduce:transition-none", expanded && "rotate-180")} aria-hidden />
           {expanded ? t("prikaziManje") : t("prikaziJos", { count: items.length - limit, imenica: imenicaGenitiv })}
         </button>
       )}

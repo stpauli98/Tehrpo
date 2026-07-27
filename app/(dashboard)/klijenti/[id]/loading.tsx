@@ -21,7 +21,9 @@ export default function KlijentDetaljLoading() {
         </div>
       </div>
 
-      <Skeleton className="h-10 w-full" />
+      {/* TabsList je h-8 (ui/tabs `group-data-horizontal/tabs:h-8`) — viši
+          skeleton bi pomjerio sadržaj naniže kad se stranica izrenderuje. */}
+      <Skeleton className="h-8 w-full" />
 
       <Skeleton className="h-64 w-full" />
     </div>

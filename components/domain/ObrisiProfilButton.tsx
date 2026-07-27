@@ -36,7 +36,7 @@ export function ObrisiProfilButton({ id }: { id: string }) {
     <Dialog>
       <DialogTrigger
         render={
-          <Button variant="outline" size="icon-sm" data-testid="obrisi-profil-btn" aria-label={tc("obrisi")} className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"><Trash2 className="h-4 w-4" aria-hidden /><Tooltip>{t("tooltip")}</Tooltip></Button>
+          <Button variant="outline" size="icon-sm" data-testid="obrisi-profil-btn" aria-label={tc("obrisi")} className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"><Trash2 className="h-[18px] w-[18px] shrink-0" aria-hidden /><Tooltip>{t("tooltip")}</Tooltip></Button>
         }
       />
       <DialogContent data-testid="obrisi-profil-dialog">

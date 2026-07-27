@@ -19,6 +19,8 @@ export const dynamic = "force-dynamic"
 
 const tStatus = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "status" })
 const tIzvoz = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "izvoz.plan" })
+// S1: ruta vraća jedinstven `{ error: <i18n string> }` envelope (nikad `greska`, nikad sirovi PG tekst).
+const tCommon = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "common" })
 
 /** Legacy label (mjesec=tn/svi/1-12) — zadržan radi backward-compat. */
 function legacyPeriodLabel(mjesec: string, godina: number): string {
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams
   const parsed = parseIzvozParams(sp)
   if (!parsed.ok) {
-    return NextResponse.json({ greska: tIzvoz("raspon.nevazeci") }, { status: 400 })
+    return NextResponse.json({ error: tIzvoz("raspon.nevazeci") }, { status: 400 })
   }
 
   const supabase = await createServerSupabaseClient()
@@ -66,7 +68,7 @@ export async function GET(req: NextRequest) {
       cq = applyIzvozNeLegacy(cq, parsed.opseg, parsed.period, sp)
     }
     const { count, error } = await cq
-    if (error) return NextResponse.json({ greska: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: tCommon("greskaUcitavanja") }, { status: 500 })
     return NextResponse.json({ broj: count ?? 0 })
   }
 
@@ -83,7 +85,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await q
-  if (error) return NextResponse.json({ greska: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: tCommon("greskaUcitavanja") }, { status: 500 })
 
   const rows: PlanRed[] = (data ?? []).map((red) => ({
     klijent: red.klijent_naziv ?? "—",
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest) {
     buf = parsed.format === "pdf" ? await planToPdf(rows, meta) : await planToXlsx(rows, meta)
   } catch (e) {
     const message = e instanceof Error ? e.message : tIzvoz("greska")
-    return NextResponse.json({ greska: tIzvoz("greskaGenerisanje", { poruka: message }) }, { status: 500 })
+    return NextResponse.json({ error: tIzvoz("greskaGenerisanje", { poruka: message }) }, { status: 500 })
   }
   const ext = parsed.format === "pdf" ? "pdf" : "xlsx"
   const ct = parsed.format === "pdf"

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { monthRange, todayIso } from "@/lib/date"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
+// S1: ruta nikad ne vraća sirovi PostgrestError — samo `{ error: <i18n string> }`.
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "common" })
 
 /**
  * GET /api/plan-aktivnosti/kalendar
@@ -39,7 +45,7 @@ export async function GET(req: NextRequest) {
     .order("datum_prikaza")
 
   if (error) {
-    return NextResponse.json({ error }, { status: 400 })
+    return NextResponse.json({ error: t("greskaUcitavanja") }, { status: 400 })
   }
 
   return NextResponse.json({ termini: data ?? [] })

@@ -3,6 +3,7 @@
   "regions": ["dub1"],
   "crons": [
     { "path": "/api/cron/reminders", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/reminders", "schedule": "0 13 * * *" }
+    { "path": "/api/cron/reminders", "schedule": "0 13 * * *" },
+    { "path": "/api/cron/ciscenje-audita", "schedule": "0 4 * * *" }
   ]
 }

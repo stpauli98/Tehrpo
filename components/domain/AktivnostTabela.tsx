@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import type { AktivnostRed } from "@/lib/queries/aktivnost"
-import { formatDatum } from "@/lib/date"
+import { formatDatum, formatDatumVrijeme } from "@/lib/date"
 import { delokalizujSegment } from "@/i18n/routes"
 
 type T = Awaited<ReturnType<typeof getTranslations<"aktivnost">>>
@@ -71,23 +71,25 @@ export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
   if (redovi.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("prazno")}</p>
   }
+  // Kanon površine S6 (rounded-xl + bg-card + ring), ali overflow-x-auto umjesto
+  // overflow-hidden iz ZapisniciTabela — ova tabela može biti šira od viewporta.
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
       <table className="w-full text-sm">
         <thead className="bg-muted/50 text-left">
           <tr>
-            <th className="px-3 py-2">{t("kolone.vrijeme")}</th>
-            <th className="px-3 py-2">{t("kolone.korisnik")}</th>
-            <th className="px-3 py-2">{t("kolone.akcija")}</th>
-            <th className="px-3 py-2">{t("kolone.cilj")}</th>
-            <th className="px-3 py-2">{t("kolone.detalji")}</th>
+            <th scope="col" className="px-3 py-2">{t("kolone.vrijeme")}</th>
+            <th scope="col" className="px-3 py-2">{t("kolone.korisnik")}</th>
+            <th scope="col" className="px-3 py-2">{t("kolone.akcija")}</th>
+            <th scope="col" className="px-3 py-2">{t("kolone.cilj")}</th>
+            <th scope="col" className="px-3 py-2">{t("kolone.detalji")}</th>
           </tr>
         </thead>
         <tbody>
           {redovi.map((r) => (
             <tr key={r.id} className="border-t border-border">
               <td className="px-3 py-2 whitespace-nowrap">
-                {new Date(r.vrijeme).toLocaleString("sr-Latn")}
+                {formatDatumVrijeme(r.vrijeme)}
               </td>
               <td className="px-3 py-2">{r.korisnik_ime ?? t("sistemski")}</td>
               <td className="px-3 py-2">{t(`akcije.${r.akcija}` as never)}</td>

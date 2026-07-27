@@ -764,7 +764,8 @@
       "klijent_provjere": "Provjere klijenta",
       "kontakt_osobe": "Kontakt osobe",
       "ugovori": "Ugovori"
-    }
+    },
+    "ukupno": "Ukupno: {count}"
   },
   "zapisnici": {
     "naslov": "Zapisnici",

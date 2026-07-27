@@ -1,17 +1,19 @@
 "use client"
-import { useEffect, useRef, useState, useTransition } from "react"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import { useSearchParams, usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Loader2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { usePendingFilteri } from "@/lib/use-pending-filteri"
 
 export function AktivnostSearch() {
   const t = useTranslations("aktivnost")
-  const router = useRouter()
   const pathname = usePathname()
   const sp = useSearchParams()
   const qUrl = sp.get("q") ?? ""
   const [value, setValue] = useState(qUrl)
-  const [pending, startTransition] = useTransition()
+  // Dijeljeni S10 hook (isti obrazac koji koriste AktivnostFilteri i ostali tabovi).
+  const { isPending, push } = usePendingFilteri()
   // Razlikuje NAŠ push (debounce) od SPOLJAŠNJE promjene URL-a (Očisti, back/forward),
   // da sync-iz-URL-a ne pregazi tekst koji korisnik trenutno kuca.
   const lastPushedRef = useRef(qUrl)
@@ -32,9 +34,7 @@ export function AktivnostSearch() {
       if (v) p.set("q", v)
       else p.delete("q")
       p.delete("strana")
-      startTransition(() =>
-        router.push(p.toString() ? `${pathname}?${p.toString()}` : pathname),
-      )
+      push(p.toString() ? `${pathname}?${p.toString()}` : pathname)
     }, 300)
     return () => clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,19 +51,21 @@ export function AktivnostSearch() {
   return (
     <label className="flex flex-col gap-1 text-xs">
       {t("filteri.pretraga")}
-      <div className="relative w-72">
-        <input
+      {/* Input se NE onemogućava tokom tranzicije (kucanje bi izgubilo fokus) —
+          vidljivi pending signal je spinner + aria-busy na kontejneru (S10). */}
+      <div className="relative w-72" aria-busy={isPending}>
+        <Input
           type="search"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={t("filteri.pretraga")}
           data-testid="aktivnost-search"
-          data-pending={pending}
-          className="w-full rounded-md border border-input bg-background px-2 py-1 pr-8 text-sm"
+          data-pending={isPending}
+          className="pr-8"
         />
-        {pending && (
+        {isPending && (
           <Loader2
-            className="absolute right-2 top-1/2 -translate-y-1/2 size-4 animate-spin text-muted-foreground"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-[18px] w-[18px] shrink-0 animate-spin motion-reduce:animate-none text-muted-foreground"
             aria-hidden
           />
         )}

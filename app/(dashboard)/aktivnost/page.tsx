@@ -1,11 +1,13 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { dohvatiAktivnost } from "@/lib/queries/aktivnost"
+import { dodajDan, utcGranicaSarajevskogDana } from "@/lib/date"
 import { AktivnostFilteri } from "@/components/domain/AktivnostFilteri"
 import { AktivnostSearch } from "@/components/domain/AktivnostSearch"
 import { AktivnostTabela } from "@/components/domain/AktivnostTabela"
+import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
+import { Pagination } from "@/components/domain/Pagination"
 
 const PO_STRANI = 50
 
@@ -18,22 +20,30 @@ export default async function AktivnostPage({
   if (korisnik?.uloga !== "admin") notFound()
 
   const t = await getTranslations("aktivnost")
+  const tPag = await getTranslations("common.pagination")
   const sp = await searchParams
   const jedan = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
   const strana = Math.max(1, Number(jedan(sp.strana) ?? "1") || 1)
-  const od = jedan(sp.od)
-  const doDatum = jedan(sp.do)
+  // Sanitacija prije `utcGranicaSarajevskogDana` (S1): helper na neispravnom
+  // datumu baca RangeError, pa bi ručno pokvaren URL (?od=xyz) srušio stranicu
+  // umjesto da padne na čitljivu granu greške. Neispravan datum = filter se ignoriše.
+  const isoDatum = (v: string | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined)
+  const od = isoDatum(jedan(sp.od))
+  const doDatum = isoDatum(jedan(sp.do))
 
-  const { redovi, ukupno } = await dohvatiAktivnost({
+  // S7: granice sarajevskog dana kao UTC instanti; `do` je ekskluzivni sljedeći dan
+  // (RPC poredi `vrijeme >= p_od AND vrijeme < p_do`), pa zadnja sekunda dana ne ispada.
+  const rezultat = await dohvatiAktivnost({
     akcija: jedan(sp.akcija),
     pretraga: jedan(sp.q),
-    od: od ? `${od}T00:00:00` : undefined,
-    do: doDatum ? `${doDatum}T23:59:59` : undefined,
+    od: od ? utcGranicaSarajevskogDana(od) : undefined,
+    do: doDatum ? utcGranicaSarajevskogDana(dodajDan(doDatum)) : undefined,
     limit: PO_STRANI,
     offset: (strana - 1) * PO_STRANI,
   })
 
+  const ukupno = rezultat.ok ? rezultat.ukupno : 0
   const straneUkupno = Math.max(1, Math.ceil(ukupno / PO_STRANI))
   const kljucFiltera = `${jedan(sp.akcija) ?? ""}|${od ?? ""}|${doDatum ?? ""}`
 
@@ -58,19 +68,27 @@ export default async function AktivnostPage({
         <AktivnostSearch />
         <AktivnostFilteri key={kljucFiltera} />
       </div>
-      <AktivnostTabela redovi={redovi} />
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{ukupno}</span>
-        <div className="flex items-center gap-3">
-          {strana > 1
-            ? <Link href={stranaHref(strana - 1)} className="rounded-md border border-input px-3 py-1 hover:bg-muted">‹</Link>
-            : <span className="rounded-md border border-input px-3 py-1 opacity-40" aria-disabled="true">‹</span>}
-          <span>{strana} / {straneUkupno}</span>
-          {strana < straneUkupno
-            ? <Link href={stranaHref(strana + 1)} className="rounded-md border border-input px-3 py-1 hover:bg-muted">›</Link>
-            : <span className="rounded-md border border-input px-3 py-1 opacity-40" aria-disabled="true">›</span>}
-        </div>
-      </div>
+      {/* S1: greška čitanja NIJE prazan rezultat — tabela i paginacija se ne renderuju,
+          ali naslov i filteri ostaju (promjena filtera = novi pokušaj). */}
+      {rezultat.ok ? (
+        <>
+          <AktivnostTabela redovi={rezultat.redovi} />
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span data-testid="aktivnost-total">{t("ukupno", { count: ukupno })}</span>
+            <Pagination
+              pageNum={strana}
+              totalPages={straneUkupno}
+              hrefFor={stranaHref}
+              pageTestId="aktivnost-page"
+              prethodnaLabel={tPag("prethodna")}
+              sljedecaLabel={tPag("sljedeca")}
+              stranaText={tPag("strana", { pageNum: strana, totalPages: straneUkupno })}
+            />
+          </div>
+        </>
+      ) : (
+        <GreskaUcitavanja />
+      )}
     </div>
   )
 }

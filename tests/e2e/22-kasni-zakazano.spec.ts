@@ -46,6 +46,17 @@ test.describe("Validacija datuma izvršenja", () => {
       await page.goto(`/plan-aktivnosti?view=lista&klijent_id=${kid}&mjesec=svi&status=svi&selected=${tid}`)
       await expect(page.getByTestId("termin-sheet")).toBeVisible()
 
+      // Klijentska pre-validacija (S2): polje nosi `max` = danas, pa pregledač sam
+      // odbija budući datum i forma se uopšte ne šalje.
+      const danas = new Date().toISOString().slice(0, 10)
+      await expect(page.getByTestId("mark-datum")).toHaveAttribute("max", danas)
+
+      // Server ostaje izvor istine — zaobiđi native validaciju forme (`noValidate`,
+      // atribut kojim React ovdje ne upravlja) da zahtjev stvarno ode na server, pa
+      // provjeri da vraća prijateljsku poruku (a ne sirovi PG „check constraint").
+      await page
+        .getByTestId("mark-done-form")
+        .evaluate((f) => { (f as HTMLFormElement).noValidate = true })
       await page.getByTestId("mark-datum").fill(sutra)
       await page.getByTestId("mark-done-submit").click()
 

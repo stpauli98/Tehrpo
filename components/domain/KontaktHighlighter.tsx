@@ -9,7 +9,9 @@ export function KontaktHighlighter({ targetId }: { targetId: string | null }) {
     if (!targetId) return
     const el = document.getElementById(`kontakt-${targetId}`)
     if (!el) return
-    el.scrollIntoView({ behavior: "smooth", block: "center" })
+    // S12: sa OS postavkom „reduce motion" skok mora biti trenutan.
+    const smanjiPokret = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    el.scrollIntoView({ behavior: smanjiPokret ? "auto" : "smooth", block: "center" })
     el.classList.remove("kontakt-glow")
     void el.offsetWidth // reflow da animacija krene iz početka
     el.classList.add("kontakt-glow")

@@ -1,9 +1,17 @@
 'use server'
 
 import { revalidatePath } from "next/cache"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { friendlyDbError } from "@/lib/db-errors"
 import { zahtijevajAdmina } from "@/lib/auth/zahtijevaj-admina"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
 import type { ActionResult } from "@/app/(dashboard)/klijenti/actions"
+
+// Isti translator obrazac kao klijenti/actions.ts — poruke akcija ovog fajla
+// više ne izlaze kao sirovi PG tekst (S2/S14).
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "klijenti.actions" })
 
 /** Per-firma: uključi/isključi slanje podsjetnika firmi. SSR → RLS klijenti_upd (operater sa pristupom smije). */
 export async function updateKlijentSaljiPodsjetnik(
@@ -15,7 +23,7 @@ export async function updateKlijentSaljiPodsjetnik(
     .from("klijenti")
     .update({ salji_podsjetnik_klijentu: salji })
     .eq("id", klijentId)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijentId}`)
   return { ok: true }
 }
@@ -32,7 +40,7 @@ export async function updateKontaktPodsjetnikPrimalac(
     .update({ podsjetnik_primalac: primalac })
     .eq("id", kontaktId)
     .eq("klijent_id", klijentId)
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijentId}`)
   return { ok: true }
 }
@@ -43,13 +51,13 @@ export async function dodajPodsjetnikEmail(klijentId: string, email: string): Pr
   const { data: status, error } = await supabase.rpc("dodaj_podsjetnik_email", {
     p_klijent_id: klijentId, p_email: email,
   })
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   if (status !== "ok") {
     const msg =
-      status === "nevalidan" ? "Nevažeća email adresa."
-      : status === "postoji" ? "Adresa je već dodata."
-      : status === "kontakt" ? "Adresa je već primalac kao kontakt."
-      : "Nije moguće dodati adresu."
+      status === "nevalidan" ? t("podsjetnikEmailNevalidan")
+      : status === "postoji" ? t("podsjetnikEmailPostoji")
+      : status === "kontakt" ? t("podsjetnikEmailKontakt")
+      : t("podsjetnikEmailNijeDodat")
     return { ok: false, message: msg }
   }
   revalidatePath(`/klijenti/${klijentId}`)
@@ -62,7 +70,7 @@ export async function ukloniPodsjetnikEmail(klijentId: string, email: string): P
   const { error } = await supabase.rpc("ukloni_podsjetnik_email", {
     p_klijent_id: klijentId, p_email: email,
   })
-  if (error) return { ok: false, message: error.message }
+  if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijentId}`)
   return { ok: true }
 }
@@ -78,17 +86,17 @@ export async function postaviDodjeleZaKlijenta(
   const supabase = await createServerSupabaseClient()
   if (korisnikIds.length > 0) {
     const { data: valid, error: chkErr } = await supabase.from("korisnici").select("id").in("id", korisnikIds)
-    if (chkErr) return { ok: false, message: chkErr.message }
+    if (chkErr) return { ok: false, message: friendlyDbError(chkErr) }
     if (!valid || valid.length !== korisnikIds.length) {
-      return { ok: false, message: "Nepostojeći korisnik u dodjeli." }
+      return { ok: false, message: t("nepostojeciKorisnik") }
     }
   }
   const { error: delErr } = await supabase.from("korisnik_klijent").delete().eq("klijent_id", klijentId)
-  if (delErr) return { ok: false, message: delErr.message }
+  if (delErr) return { ok: false, message: friendlyDbError(delErr) }
   if (korisnikIds.length > 0) {
     const rows = korisnikIds.map((korisnik_id) => ({ korisnik_id, klijent_id: klijentId }))
     const { error: insErr } = await supabase.from("korisnik_klijent").insert(rows)
-    if (insErr) return { ok: false, message: insErr.message }
+    if (insErr) return { ok: false, message: friendlyDbError(insErr) }
   }
   revalidatePath(`/klijenti/${klijentId}`)
   revalidatePath("/postavke")

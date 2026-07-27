@@ -39,16 +39,16 @@ export async function ProfilTab({
         <DodajProvjeruButton klijentId={klijentId} vrste={vrste} lokacije={lokacije} admini={admini} />
       </div>
       {stavke.length === 0 ? (
-        <div className="rounded-xl border border-border p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl bg-card p-8 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
           {t("prazno")}
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted">
               <tr>
                 {kolone.map((c, i) => (
-                  <th key={i} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">{c}</th>
+                  <th key={i} scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">{c}</th>
                 ))}
               </tr>
             </thead>

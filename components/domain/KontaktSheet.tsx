@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FieldError } from "@/components/domain/FieldError"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { createKontakt, updateKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
@@ -29,11 +30,13 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
   const submitted = useRef(false)
   useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
-  const FIELDS: readonly [string, string, boolean][] = [
-    ["ime", t("poljeIme"), true],
-    ["funkcija", t("poljeFunkcija"), false],
-    ["telefon", t("poljeTelefon"), false],
-    ["email", t("poljeEmail"), false],
+  // [name, label, obavezno, inputType] — email polje dobija type="email" da
+  // browser uhvati nevalidan unos prije round-tripa (S2).
+  const FIELDS: readonly [string, string, boolean, "text" | "email"][] = [
+    ["ime", t("poljeIme"), true, "text"],
+    ["funkcija", t("poljeFunkcija"), false, "text"],
+    ["telefon", t("poljeTelefon"), false, "text"],
+    ["email", t("poljeEmail"), false, "email"],
   ]
 
   useEffect(() => {
@@ -42,9 +45,11 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
 
   if (!mozeUrediti) return null
 
+  const errors = state.ok === false ? state.errors : undefined
+
   const trigger = isEdit
-    ? <Button variant="outline" size="icon-sm" data-testid={`uredi-kontakt-${kontakt.id}`} aria-label={t("uredi")} className="group/tt relative"><Pencil className="h-4 w-4" aria-hidden /><Tooltip>{t("uredi")}</Tooltip></Button>
-    : <Button data-testid="novi-kontakt-btn"><Plus className="w-4 h-4" aria-hidden /> {t("novi")}</Button>
+    ? <Button variant="outline" size="icon-sm" data-testid={`uredi-kontakt-${kontakt.id}`} aria-label={t("uredi")} className="group/tt relative"><Pencil className="h-[18px] w-[18px] shrink-0" aria-hidden /><Tooltip>{t("uredi")}</Tooltip></Button>
+    : <Button data-testid="novi-kontakt-btn"><Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("novi")}</Button>
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -59,25 +64,30 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
         >
           {isEdit && <input type="hidden" name="id" value={kontakt.id} />}
           <input type="hidden" name="klijent_id" value={klijentId} />
-          {FIELDS.map(([name, label, req]) => (
+          {FIELDS.map(([name, label, req, tip]) => (
             <label key={name} className="block text-sm">
               <span className="text-muted-foreground">{label}</span>
               <Input
                 name={name}
+                type={tip}
                 required={req}
                 defaultValue={isEdit ? (kontakt[name as keyof KontaktRow] as string | null | undefined) ?? "" : ""}
                 data-testid={`kontakt-${name}`}
+                aria-describedby={errors?.[name] ? `kontakt-${name}-err` : undefined}
               />
+              <FieldError id={`kontakt-${name}-err`} errors={errors?.[name]} />
             </label>
           ))}
           {state.ok === false && state.message && (
             <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}
-          <Button type="submit" disabled={pending} data-testid="kontakt-submit">
-            {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}
-          </Button>
+          <DialogFooter className="mt-1">
+            <DialogClose render={<Button type="button" variant="outline">{tc("otkazi")}</Button>} />
+            <Button type="submit" disabled={pending} data-testid="kontakt-submit">
+              {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}
+            </Button>
+          </DialogFooter>
         </form>
-        <DialogFooter><DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} /></DialogFooter>
       </DialogContent>
     </Dialog>
   )

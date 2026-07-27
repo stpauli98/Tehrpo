@@ -12,7 +12,7 @@ import type { Database } from "@/db/types"
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
 
-const CARD = "rounded-2xl border border-border bg-card p-5 shadow-sm"
+const CARD = "rounded-xl bg-card p-5 ring-1 ring-foreground/10"
 
 export async function IdKartaTab({
   klijentId,
@@ -46,7 +46,7 @@ export async function IdKartaTab({
     <div className="space-y-5" data-testid="tab-id-karta-content">
       <section className={CARD}>
         <div className="mb-4 flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <Building2 className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
           <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             {t("osnovniPodaci.naslov")}
             <InfoIkona
@@ -87,7 +87,7 @@ export async function IdKartaTab({
 
       <section className={CARD}>
         <div className="mb-4 flex items-center gap-2">
-          <ClipboardCheck className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <ClipboardCheck className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
           <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             {t("usluge.naslov")}
             <InfoIkona

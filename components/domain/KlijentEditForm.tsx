@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FieldError } from "@/components/domain/FieldError"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { updateKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import {
@@ -54,6 +55,13 @@ export function KlijentEditForm({
     none: nijePostavljeno,
     ...Object.fromEntries(korisnici.map((k) => [k.id, k.ime])),
   }
+  // Isti razlog i za tip odnosa — bez items mape zatvoren select prikaže sirovo
+  // "none"/"ugovor"/"ponuda" umjesto prevoda.
+  const tipOdnosaItems: Record<string, string> = {
+    none: nijePostavljeno,
+    ugovor: t("tipOdnosaOpcije.ugovor"),
+    ponuda: t("tipOdnosaOpcije.ponuda"),
+  }
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
@@ -65,12 +73,15 @@ export function KlijentEditForm({
 
   if (!mozeUrediti) return null
 
+  const errors = state.ok === false ? state.errors : undefined
+  const opisano = (name: string) => (errors?.[name] ? `edit-klijent-${name}-err` : undefined)
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
           <Button variant="outline" size="sm" data-testid="uredi-klijent-btn">
-            <Pencil className="w-3.5 h-3.5" aria-hidden /> {t("dugme")}
+            <Pencil className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
@@ -103,10 +114,9 @@ export function KlijentEditForm({
               required
               defaultValue={klijent.naziv}
               data-testid="edit-klijent-naziv"
+              aria-describedby={opisano("naziv")}
             />
-            {state.ok === false && state.errors?.naziv && (
-              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.naziv[0]}</p>
-            )}
+            <FieldError id="edit-klijent-naziv-err" errors={errors?.naziv} />
           </label>
 
           <label className="block text-sm">
@@ -115,7 +125,9 @@ export function KlijentEditForm({
               name="napomena"
               defaultValue={klijent.napomena ?? ""}
               data-testid="edit-klijent-napomena"
+              aria-describedby={opisano("napomena")}
             />
+            <FieldError id="edit-klijent-napomena-err" errors={errors?.napomena} />
           </label>
 
           {([
@@ -134,10 +146,9 @@ export function KlijentEditForm({
                 required={obavezno}
                 defaultValue={(klijent[name] as string | null | undefined) ?? ""}
                 data-testid={`edit-klijent-${name}`}
+                aria-describedby={opisano(name)}
               />
-              {state.ok === false && state.errors?.[name] && (
-                <p className="text-sm text-destructive mt-1" role="alert">{state.errors[name]![0]}</p>
-              )}
+              <FieldError id={`edit-klijent-${name}-err`} errors={errors?.[name]} />
             </label>
           ))}
 
@@ -154,6 +165,7 @@ export function KlijentEditForm({
                 ))}
               </SelectContent>
             </Select>
+            <FieldError id="edit-klijent-zaduzeni-err" errors={errors?.zaduzeni_tehpro_id} />
           </div>
 
           <div className="space-y-1">
@@ -161,6 +173,7 @@ export function KlijentEditForm({
             <Select
               name="tip_odnosa"
               defaultValue={klijent.tip_odnosa ?? "none"}
+              items={tipOdnosaItems}
             >
               <SelectTrigger data-testid="klijent-tip-odnosa" className="w-full">
                 <SelectValue placeholder={nijePostavljeno} />
@@ -171,6 +184,7 @@ export function KlijentEditForm({
                 <SelectItem value="ponuda">{t("tipOdnosaOpcije.ponuda")}</SelectItem>
               </SelectContent>
             </Select>
+            <FieldError id="edit-klijent-tip-odnosa-err" errors={errors?.tip_odnosa} />
           </div>
 
           {state.ok === false && state.message && (
@@ -179,14 +193,13 @@ export function KlijentEditForm({
             </p>
           )}
 
-          <Button type="submit" disabled={pending} data-testid="edit-klijent-submit">
-            {pending ? t("submitPending") : t("submit")}
-          </Button>
+          <DialogFooter className="mt-1">
+            <DialogClose render={<Button type="button" variant="outline">{tc("otkazi")}</Button>} />
+            <Button type="submit" disabled={pending} data-testid="edit-klijent-submit">
+              {pending ? t("submitPending") : t("submit")}
+            </Button>
+          </DialogFooter>
         </form>
-
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

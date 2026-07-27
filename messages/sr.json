@@ -174,7 +174,14 @@
       "terminProvjeraOsvjezi": "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu.",
       "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
       "nedostajeId": "Nedostaje id.",
-      "imeObavezno": "Ime je obavezno"
+      "imeObavezno": "Ime je obavezno",
+      "lokacijaPostoji": "Lokacija sa tim nazivom već postoji kod ovog klijenta.",
+      "kontaktPostoji": "Kontakt osoba sa tim imenom već postoji kod ovog klijenta.",
+      "podsjetnikEmailNevalidan": "Nevažeća email adresa.",
+      "podsjetnikEmailPostoji": "Adresa je već dodata.",
+      "podsjetnikEmailKontakt": "Adresa je već primalac kao kontakt.",
+      "podsjetnikEmailNijeDodat": "Nije moguće dodati adresu.",
+      "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli."
     },
     "detalj": {
       "nazad": "Klijenti",
@@ -268,7 +275,8 @@
       }
     },
     "pretraga": {
-      "placeholder": "Pretraga firme..."
+      "placeholder": "Pretraga firme...",
+      "ariaLabel": "Pretraga klijenata"
     },
     "noviKlijent": {
       "dugme": "Novi klijent",
@@ -342,7 +350,9 @@
       "obilazMjesecno": " · {count} obilaz./mj.",
       "vazenjeMjeseci": " · važenje {count} mj.",
       "autoObnavljanjeDa": " · automatsko obnavljanje",
-      "autoObnavljanjeNe": " · bez automatskog obnavljanja"
+      "autoObnavljanjeNe": " · bez automatskog obnavljanja",
+      "obrisiDialogNaslov": "Obrisati ugovor?",
+      "obrisiDialogOpis": "Ugovor i njegovi podaci se trajno brišu. Radnja se ne može poništiti."
     },
     "tipOdnosa": {
       "ugovor": "po ugovoru",
@@ -367,7 +377,9 @@
       "prazno": "Nema kontakata firme.",
       "praznoPretraga": "Nema kontakata za „{q}”.",
       "obrisiAriaLabel": "Obriši kontakt",
-      "vidiSve": "Vidi sve ({count}) →"
+      "vidiSve": "Vidi sve ({count}) →",
+      "obrisiDialogNaslov": "Obrisati kontakt osobu?",
+      "obrisiDialogOpis": "Kontakt se trajno briše. Ako je označen kao primalac podsjetnika, prestaje da ih prima."
     },
     "lokacijaSheet": {
       "uredi": "Uredi",

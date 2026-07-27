@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FieldError } from "@/components/domain/FieldError"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { createLokacija, updateLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import type { Database } from "@/db/types"
@@ -38,14 +39,16 @@ export function LokacijaSheet({
   const mozeUrediti = useMozeUrediti()
   const isEdit = !!lokacija
 
-  const FIELDS: readonly [string, string, boolean][] = [
-    ["naziv", t("poljeNaziv"), true],
-    ["grad", t("poljeGrad"), false],
-    ["regija", t("poljeRegija"), false],
-    ["adresa", t("poljeAdresa"), false],
-    ["kontakt_osoba", t("poljeKontaktOsoba"), false],
-    ["kontakt_email", t("poljeEmail"), false],
-    ["kontakt_telefon", t("poljeTelefon"), false],
+  // [name, label, obavezno, inputType] — tip polja se grana ovdje da bi browser
+  // uhvatio nevalidan email prije round-tripa (S2).
+  const FIELDS: readonly [string, string, boolean, "text" | "email" | "tel"][] = [
+    ["naziv", t("poljeNaziv"), true, "text"],
+    ["grad", t("poljeGrad"), false, "text"],
+    ["regija", t("poljeRegija"), false, "text"],
+    ["adresa", t("poljeAdresa"), false, "text"],
+    ["kontakt_osoba", t("poljeKontaktOsoba"), false, "text"],
+    ["kontakt_email", t("poljeEmail"), false, "email"],
+    ["kontakt_telefon", t("poljeTelefon"), false, "text"],
   ]
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(
@@ -65,14 +68,16 @@ export function LokacijaSheet({
 
   if (!mozeUrediti) return null
 
+  const errors = state.ok === false ? state.errors : undefined
+
   const trigger = isEdit ? (
     <Button variant="outline" size="icon-sm" data-testid={`uredi-lokaciju-${lokacija.id}`} aria-label={t("uredi")} className="group/tt relative">
-      <Pencil className="h-4 w-4" aria-hidden />
+      <Pencil className="h-[18px] w-[18px] shrink-0" aria-hidden />
       <Tooltip>{t("uredi")}</Tooltip>
     </Button>
   ) : (
     <Button data-testid="nova-lokacija-btn">
-      <Plus className="w-4 h-4" aria-hidden /> {t("novi")}
+      <Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("novi")}
     </Button>
   )
 
@@ -102,11 +107,12 @@ export function LokacijaSheet({
             <input type="hidden" name="klijent_id" value={klijentId} />
           )}
 
-          {FIELDS.map(([name, label, req]) => (
+          {FIELDS.map(([name, label, req, tip]) => (
             <label key={name} className="block text-sm">
               <span className="text-muted-foreground">{label}</span>
               <Input
                 name={name}
+                type={tip}
                 required={req}
                 defaultValue={
                   isEdit
@@ -114,7 +120,9 @@ export function LokacijaSheet({
                     : ""
                 }
                 data-testid={`lokacija-${name}`}
+                aria-describedby={errors?.[name] ? `lokacija-${name}-err` : undefined}
               />
+              <FieldError id={`lokacija-${name}-err`} errors={errors?.[name]} />
             </label>
           ))}
 
@@ -124,14 +132,13 @@ export function LokacijaSheet({
             </p>
           )}
 
-          <Button type="submit" disabled={pending} data-testid="lokacija-submit">
-            {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}
-          </Button>
+          <DialogFooter className="mt-1">
+            <DialogClose render={<Button type="button" variant="outline">{tc("otkazi")}</Button>} />
+            <Button type="submit" disabled={pending} data-testid="lokacija-submit">
+              {pending ? t("submitPending") : isEdit ? t("submitEdit") : t("submitNovi")}
+            </Button>
+          </DialogFooter>
         </form>
-
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline">{tc("otkazi")}</Button>} />
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

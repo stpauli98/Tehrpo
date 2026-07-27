@@ -174,7 +174,14 @@
       "terminProvjeraOsvjezi": "The check was saved, but the appointment check failed — refresh the page.",
       "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
       "nedostajeId": "Missing id.",
-      "imeObavezno": "Name is required"
+      "imeObavezno": "Name is required",
+      "lokacijaPostoji": "A location with that name already exists for this client.",
+      "kontaktPostoji": "A contact person with that name already exists for this client.",
+      "podsjetnikEmailNevalidan": "Invalid email address.",
+      "podsjetnikEmailPostoji": "The address has already been added.",
+      "podsjetnikEmailKontakt": "The address is already a recipient as a contact.",
+      "podsjetnikEmailNijeDodat": "The address could not be added.",
+      "nepostojeciKorisnik": "Non-existent user in the assignment."
     },
     "detalj": {
       "nazad": "Clients",
@@ -268,7 +275,8 @@
       }
     },
     "pretraga": {
-      "placeholder": "Search companies..."
+      "placeholder": "Search companies...",
+      "ariaLabel": "Search clients"
     },
     "noviKlijent": {
       "dugme": "New client",
@@ -342,7 +350,9 @@
       "obilazMjesecno": " · {count} visits/mo.",
       "vazenjeMjeseci": " · duration {count} mo.",
       "autoObnavljanjeDa": " · auto-renewal",
-      "autoObnavljanjeNe": " · no auto-renewal"
+      "autoObnavljanjeNe": " · no auto-renewal",
+      "obrisiDialogNaslov": "Delete contract?",
+      "obrisiDialogOpis": "The contract and its data are permanently deleted. This action cannot be undone."
     },
     "tipOdnosa": {
       "ugovor": "under contract",
@@ -367,7 +377,9 @@
       "prazno": "No company contacts.",
       "praznoPretraga": "No contacts found for “{q}”.",
       "obrisiAriaLabel": "Delete contact",
-      "vidiSve": "See all ({count}) →"
+      "vidiSve": "See all ({count}) →",
+      "obrisiDialogNaslov": "Delete contact person?",
+      "obrisiDialogOpis": "The contact is permanently deleted. If marked as a reminder recipient, it stops receiving reminders."
     },
     "lokacijaSheet": {
       "uredi": "Edit",

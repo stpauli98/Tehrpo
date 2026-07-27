@@ -13,6 +13,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { deleteKlijent } from "@/app/(dashboard)/klijenti/actions"
 import { useState } from "react"
 import { href } from "@/i18n/routes"
@@ -34,18 +35,22 @@ export function ObrisiKlijentButton({
   const mozeUrediti = useMozeUrediti()
   if (!mozeUrediti) return null
 
-  // Klijent sa terminima se NE može obrisati (FK RESTRICT) — disable + objašnjenje
+  // Klijent sa terminima se NE može obrisati (FK RESTRICT) — disable + objašnjenje.
+  // Disabled dugme nije fokusabilno, pa objašnjenje nosi fokusabilan wrapper sa
+  // tooltipom (S12: informacija nikad samo u `title` atributu).
   if (brojTermina > 0) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        disabled
-        title={t("disabledTitle")}
-        data-testid="obrisi-klijent-disabled"
-      >
-        {tc("obrisi")}
-      </Button>
+      <span tabIndex={0} className="group/tt relative inline-flex rounded-lg">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          data-testid="obrisi-klijent-disabled"
+        >
+          {tc("obrisi")}
+        </Button>
+        <Tooltip>{t("disabledTitle")}</Tooltip>
+      </span>
     )
   }
 

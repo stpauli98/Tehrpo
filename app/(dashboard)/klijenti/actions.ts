@@ -6,6 +6,7 @@ import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { addMjeseci } from "@/lib/date"
 import { friendlyDbError } from "@/lib/db-errors"
+import { normalizujNaziv } from "@/lib/klijenti"
 import { validUgovorDatumi } from "@/lib/ugovori"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
@@ -22,6 +23,11 @@ export type ActionResult =
 
 const optionalText = (max: number) =>
   z.string().max(max).optional().or(z.literal("").transform(() => undefined))
+
+// Opcioni email: prazno polje → undefined, neprazno mora proći .email()
+// (S2 — server ostaje izvor istine za ono što browser validacija propusti).
+const optionalEmail = (max: number) =>
+  z.string().max(max).email(t("emailNeispravan")).optional().or(z.literal("").transform(() => undefined))
 
 const requiredText = (max: number, msg: string) =>
   z.string({ error: msg }).trim().min(1, msg).max(max)
@@ -152,7 +158,7 @@ const lokacijaFields = {
   regija: optionalText(120),
   adresa: optionalText(300),
   kontakt_osoba: optionalText(200),
-  kontakt_email: optionalText(200),
+  kontakt_email: optionalEmail(200),
   kontakt_telefon: optionalText(60),
 }
 
@@ -168,6 +174,15 @@ export async function createLokacija(
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { klijent_id, ...f } = parsed.data
   const supabase = await createServerSupabaseClient()
+  // App-nivo dedup (S8.7): DB još nema UNIQUE (klijent_id, naziv), a bez ovoga
+  // se ista lokacija unosi dvaput samo zbog razmaka/veličine slova.
+  // S1: pad ovog upita se NE smije protumačiti kao „nema duplikata" — prazan
+  // odgovor zbog greške bi tiho propustio unos koji provjera treba da odbije.
+  const { data: postojece, error: dupErr } = await supabase.from("lokacije").select("id, naziv").eq("klijent_id", klijent_id)
+  if (dupErr) return { ok: false, message: friendlyDbError(dupErr) }
+  if ((postojece ?? []).some((l) => normalizujNaziv(l.naziv) === normalizujNaziv(f.naziv))) {
+    return { ok: false, errors: { naziv: [t("lokacijaPostoji")] } }
+  }
   const { error } = await supabase.from("lokacije").insert({
     klijent_id,
     naziv: f.naziv,
@@ -388,7 +403,7 @@ const kontaktFields = {
   ime: z.string().min(1, t("imeObavezno")).max(200),
   funkcija: optionalText(120),
   telefon: optionalText(60),
-  email: optionalText(200),
+  email: optionalEmail(200),
 }
 const createKontaktSchema = z.object({ klijent_id: z.string().uuid(), ...kontaktFields })
 const updateKontaktSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid(), ...kontaktFields })
@@ -399,6 +414,12 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { klijent_id, ...f } = parsed.data
   const supabase = await createServerSupabaseClient()
+  // App-nivo dedup (S8.7) — v. createLokacija (uklj. S1 provjeru greške).
+  const { data: postojeci, error: dupErr } = await supabase.from("kontakt_osobe").select("id, ime").eq("klijent_id", klijent_id)
+  if (dupErr) return { ok: false, message: friendlyDbError(dupErr) }
+  if ((postojeci ?? []).some((k) => normalizujNaziv(k.ime) === normalizujNaziv(f.ime))) {
+    return { ok: false, errors: { ime: [t("kontaktPostoji")] } }
+  }
   const { error } = await supabase.from("kontakt_osobe").insert({
     klijent_id, ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
   })

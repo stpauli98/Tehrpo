@@ -174,7 +174,14 @@
       "terminProvjeraOsvjezi": "Die Prüfung wurde gespeichert, aber die Terminprüfung ist fehlgeschlagen — Seite aktualisieren.",
       "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
       "nedostajeId": "ID fehlt.",
-      "imeObavezno": "Name ist erforderlich"
+      "imeObavezno": "Name ist erforderlich",
+      "lokacijaPostoji": "Ein Standort mit diesem Namen existiert bereits für diesen Kunden.",
+      "kontaktPostoji": "Eine Kontaktperson mit diesem Namen existiert bereits für diesen Kunden.",
+      "podsjetnikEmailNevalidan": "Ungültige E-Mail-Adresse.",
+      "podsjetnikEmailPostoji": "Die Adresse wurde bereits hinzugefügt.",
+      "podsjetnikEmailKontakt": "Die Adresse ist bereits als Kontakt Empfänger.",
+      "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
+      "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung."
     },
     "detalj": {
       "nazad": "Kunden",
@@ -268,7 +275,8 @@
       }
     },
     "pretraga": {
-      "placeholder": "Firmensuche..."
+      "placeholder": "Firmensuche...",
+      "ariaLabel": "Kunden suchen"
     },
     "noviKlijent": {
       "dugme": "Neuer Kunde",
@@ -342,7 +350,9 @@
       "obilazMjesecno": " · {count} Begehungen/Mon.",
       "vazenjeMjeseci": " · Laufzeit {count} Mon.",
       "autoObnavljanjeDa": " · automatische Verlängerung",
-      "autoObnavljanjeNe": " · keine automatische Verlängerung"
+      "autoObnavljanjeNe": " · keine automatische Verlängerung",
+      "obrisiDialogNaslov": "Vertrag löschen?",
+      "obrisiDialogOpis": "Der Vertrag und seine Daten werden dauerhaft gelöscht. Die Aktion kann nicht rückgängig gemacht werden."
     },
     "tipOdnosa": {
       "ugovor": "per Vertrag",
@@ -367,7 +377,9 @@
       "prazno": "Keine Unternehmenskontakte.",
       "praznoPretraga": "Keine Kontakte für „{q}” gefunden.",
       "obrisiAriaLabel": "Kontakt löschen",
-      "vidiSve": "Alle anzeigen ({count}) →"
+      "vidiSve": "Alle anzeigen ({count}) →",
+      "obrisiDialogNaslov": "Kontaktperson löschen?",
+      "obrisiDialogOpis": "Der Kontakt wird dauerhaft gelöscht. Ist er als Empfänger von Erinnerungen markiert, erhält er keine mehr."
     },
     "lokacijaSheet": {
       "uredi": "Bearbeiten",

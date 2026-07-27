@@ -1,8 +1,12 @@
+import Link from "next/link"
 import { AlertTriangle, ArrowUp, Send } from "lucide-react"
 import { getTranslations } from "next-intl/server"
+import { href } from "@/i18n/routes"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { CollapsibleSection } from "./CollapsibleSection"
+import { SaljiFirmiToggle } from "./SaljiFirmiToggle"
 
 // Razlog zašto firma NE prima — koristi se za objašnjenje pored "Ne" u pregledu.
 type Razlog = "globalno" | "firma" | "nemaAdrese"
@@ -68,7 +72,16 @@ export async function KoStaPrimaTab() {
         : !k.salji_podsjetnik_klijentu
           ? "firma"
           : "nemaAdrese"
-    return { id: k.id, naziv: k.naziv, radnici, adrese, firmaPrima, razlog }
+    return {
+      id: k.id,
+      naziv: k.naziv,
+      radnici,
+      adrese,
+      firmaPrima,
+      razlog,
+      // Sirovi flag — ulazi u toggle. Razlikuje se od `firmaPrima` (izvedeno).
+      salji: k.salji_podsjetnik_klijentu ?? false,
+    }
   })
 
   const brojPrima = redovi.filter((r) => r.firmaPrima).length
@@ -104,6 +117,7 @@ export async function KoStaPrimaTab() {
             <tr>
               <th scope="col" className="px-4 py-2 font-medium">{t("firma")}</th>
               <th scope="col" className="px-4 py-2 font-medium">{t("radnici")}</th>
+              <th scope="col" className="px-4 py-2 text-center font-medium">{t("saljiFirmi")}</th>
               <th scope="col" className="px-4 py-2 font-medium">{t("firmaPrima")}</th>
               <th scope="col" className="px-4 py-2 font-medium">{t("adrese")}</th>
             </tr>
@@ -123,31 +137,61 @@ export async function KoStaPrimaTab() {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
+                <td className="px-4 py-2.5 text-center">
+                  <SaljiFirmiToggle
+                    klijentId={r.id}
+                    naziv={r.naziv}
+                    salji={r.salji}
+                    globalnoIskljuceno={!saljiGlobalno}
+                  />
+                </td>
                 <td className="px-4 py-2.5">
                   {r.firmaPrima ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+                    <span
+                      data-testid={`ksp-prima-${r.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success"
+                    >
                       <span className="size-1.5 rounded-full bg-success" aria-hidden />
                       {t("da")}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                      <span
+                        data-testid={`ksp-prima-${r.id}`}
+                        className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                      >
                         {t("ne")}
                       </span>
                       {r.razlog && (
-                        <span className="text-xs text-muted-foreground">{t(RAZLOG_KEY[r.razlog])}</span>
+                        <span data-testid={`ksp-razlog-${r.id}`} className="text-xs text-muted-foreground">
+                          {t(RAZLOG_KEY[r.razlog])}
+                        </span>
                       )}
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-muted-foreground">
-                  {r.adrese.length > 0 ? r.adrese.join(", ") : "—"}
+                <td className="px-4 py-2.5">
+                  {/* Primaoci se ne uređuju odavde — biranje kontakt-osoba i ad-hoc adresa
+                      traži kontekst (ime, funkcija, validacija), pa ćelija vodi na klijentov
+                      tab gdje `PrimaociCombobox` već postoji. */}
+                  <Link
+                    href={href(`/klijenti/${r.id}?tab=podsjetnici`)}
+                    title={t("uredi")}
+                    data-testid={`ksp-adrese-link-${r.id}`}
+                    className={cn(
+                      "rounded-sm underline-offset-2 hover:underline",
+                      r.adrese.length > 0 ? "text-muted-foreground" : "font-medium text-brand",
+                      FOCUS_RING,
+                    )}
+                  >
+                    {r.adrese.length > 0 ? r.adrese.join(", ") : t("uredi")}
+                  </Link>
                 </td>
               </tr>
             ))}
             {redovi.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                   {t("prazno")}
                 </td>
               </tr>

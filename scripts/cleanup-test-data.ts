@@ -1,16 +1,31 @@
 /**
- * Jednokratno čišćenje e2e test-artefakata iz cloud baze.
+ * Čišćenje e2e test-artefakata iz cloud baze.
  * - briše junk klijente (E2E Test Klijent / Kontakt Klijent / Brisivi Klijent / E2E-TMP) — cascade lokacije
  * - resetuje napomenu koja je test-vrijednost (E2E napomena ...)
+ *
+ * CILJ JE DEMO. E2E prolaz piše isključivo u DEMO (v. tests/e2e/global-setup.ts
+ * guard), pa i čišćenje mora tamo. Do 2026-07-27 je npm skripta učitavala samo
+ * `.env.local` (PROD), pa je skripta tiho skenirala produkciju dok se DEMO
+ * zatrpavao — 15 zaostalih `E2E-TMP` klijenata je i oborilo ~10 e2e testova
+ * koji zavise od seed podataka. Sada `package.json` učitava oba env fajla, s
+ * `.env.development.local` POSLIJE (Node: kasniji --env-file pobjeđuje), a
+ * ograda ispod odbija da radi ako meta ipak nije DEMO.
+ *
  * Pokretanje: pnpm cleanup:test-data
  */
 import { createAdminSupabaseClient } from "../lib/supabase/admin"
+import { zahtijevajCilj } from "../lib/supabase/refs"
 
 const JUNK_KLIJENT = /^(E2E Test Klijent|Kontakt Klijent|Brisivi Klijent|E2E-TMP) /
 const JUNK_NAPOMENA = /^E2E napomena /
 const JUNK_MEJL = /^\[E2E\] /
 
 async function main() {
+  // Ograda prije ijednog upisa: skripta briše redove, pa pogrešna meta nije
+  // samo beskorisna nego opasna. Isti obrazac kao scripts/apply-cloud-migration.ts.
+  zahtijevajCilj(process.env.NEXT_PUBLIC_SUPABASE_URL, "demo", "cleanup:test-data")
+  console.log("✔ cleanup guard: cilj je DEMO")
+
   const sb = createAdminSupabaseClient()
 
   // 1) junk klijenti → delete (cascade lokacije)

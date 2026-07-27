@@ -814,7 +814,6 @@
     "klijentObavezan": "Klijent je obavezan",
     "tipNeispravan": "Neispravan tip",
     "klijentNePostojiIliNemaPristupa": "Klijent ne postoji ili nemate pristup.",
-    "ugovorNePripadaKlijentu": "Ugovor ne pripada klijentu.",
     "naslov": "Dokumenti",
     "generisiZapisnik": "Generiši zapisnik (AI)",
     "generisem": "Generišem…",
@@ -826,7 +825,21 @@
     "obrisiDokument": "Obriši dokument",
     "aiOznaka": "AI",
     "uploadUspjeh": "Dokument dodat",
-    "zapisnikUspjeh": "Zapisnik generisan"
+    "zapisnikUspjeh": "Zapisnik generisan",
+    "tipLabel": "Tip dokumenta",
+    "fajlPolje": "Fajl dokumenta",
+    "neispravniPodaci": "Neispravni podaci — osvježite stranicu i pokušajte ponovo.",
+    "preuzimanjeNijeUspjelo": "Preuzimanje nije uspjelo. Pokušajte ponovo.",
+    "potvrdaBrisanjaNaslov": "Obrisati dokument?",
+    "potvrdaBrisanjaOpis": "Dokument i fajl se trajno brišu. Ovo se ne može poništiti.",
+    "tipovi": {
+      "strucni_nalaz": "Stručni nalaz",
+      "zapisnik": "Zapisnik",
+      "ugovor": "Ugovor",
+      "ponuda": "Ponuda",
+      "fotografija": "Fotografija",
+      "ostalo": "Ostalo"
+    }
   },
   "postavke": {
     "naslov": "Postavke",

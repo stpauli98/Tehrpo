@@ -87,7 +87,7 @@ export async function OpterecenjeChart({
         {/* Empty state godine — overlay, NE zamjena barova: 12 `chart-bar`
             elemenata mora ostati u DOM-u (navigacija po mjesecima i dalje radi). */}
         {prazno && (
-          <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+          <p className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-sm text-muted-foreground">
             {t("prazno")}
           </p>
         )}

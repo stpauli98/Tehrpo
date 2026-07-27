@@ -814,6 +814,8 @@
     "tipLabel": "Dokumenttyp",
     "fajlPolje": "Dokumentdatei",
     "neispravniPodaci": "Ungültige Daten — aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "potvrdaBrisanjaNaslov": "Dokument löschen?",
+    "potvrdaBrisanjaOpis": "Das Dokument und die Datei werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
     "tipovi": {
       "strucni_nalaz": "Fachgutachten",
       "zapisnik": "Protokoll",

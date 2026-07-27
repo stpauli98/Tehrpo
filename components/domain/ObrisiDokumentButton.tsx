@@ -1,17 +1,15 @@
 "use client"
 
-import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Trash2, Loader2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
-import { useAkcijaToast } from "@/components/akcija-toast"
-import { deleteDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
+import { toastRezultat } from "@/components/akcija-toast"
+import { deleteDokumentAction } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
 import { jeAdmin } from "@/lib/auth/roles"
-
-const initial: ActionResult = { ok: true }
+import { PotvrdiBrisanjeDialog } from "./PotvrdiBrisanjeDialog"
 
 export function ObrisiDokumentButton({
   dokumentId,
@@ -26,40 +24,40 @@ export function ObrisiDokumentButton({
   const tc = useTranslations("common")
   const router = useRouter()
   const uloga = useUloga()
-  const [state, action, pending] = useActionState(deleteDokumentAction, initial)
-  const prev = useRef(state)
-  useEffect(() => {
-    if (state !== prev.current) {
-      prev.current = state
-      if (state.ok) router.refresh()
-    }
-  }, [state, router])
-  useAkcijaToast(state, { uspjeh: tc("obrisano"), greska: tc("greska") })
   // Brisanje dokumenata je admin-only (server akcija to i nameće) — ne-adminima ne nudi dugme.
   if (!uloga || !jeAdmin(uloga)) return null
   const resolvedLabel = label ?? t("obrisiDokument")
+
+  // Pending i inline grešku nosi sam dialog; toast ide odavde (obrazac ObrisiKlijentButton).
+  async function obrisi() {
+    const fd = new FormData()
+    fd.append("dokument_id", dokumentId)
+    return toastRezultat(await deleteDokumentAction({ ok: true }, fd), {
+      uspjeh: tc("obrisano"),
+      greska: tc("greska"),
+    })
+  }
+
   return (
-    <form action={action}>
-      <input type="hidden" name="dokument_id" value={dokumentId} />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        disabled={pending}
-        data-testid={testId}
-        aria-label={resolvedLabel}
-        className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"
-      >
-        {pending ? (
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-        ) : (
+    <PotvrdiBrisanjeDialog
+      trigger={
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          data-testid={testId}
+          aria-label={resolvedLabel}
+          className="group/tt relative text-destructive hover:bg-destructive/20 hover:text-destructive"
+        >
           <Trash2 className="h-4 w-4" aria-hidden />
-        )}
-        <Tooltip>{resolvedLabel}</Tooltip>
-      </Button>
-      {state.ok === false && state.message && (
-        <span className="ml-2 text-xs text-destructive" role="alert">{state.message}</span>
-      )}
-    </form>
+          <Tooltip>{resolvedLabel}</Tooltip>
+        </Button>
+      }
+      naslov={t("potvrdaBrisanjaNaslov")}
+      opis={t("potvrdaBrisanjaOpis")}
+      onPotvrdi={obrisi}
+      onUspjeh={() => router.refresh()}
+      testId="dokument-obrisi-dialog"
+    />
   )
 }

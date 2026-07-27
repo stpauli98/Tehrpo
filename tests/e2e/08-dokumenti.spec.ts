@@ -81,11 +81,26 @@ test.describe("Faza Dokumenti — /zapisnici", () => {
     await expect(page.getByTestId("docx-preview")).toContainText("ZAPISNIK")
   })
 
-  test("brisanje zapisnika ga uklanja iz liste", async ({ page }) => {
+  test("odustajanje od brisanja ne uklanja red", async ({ page }) => {
     await page.goto("/zapisnici")
     const prijeRedova = await page.getByTestId("pregled-red").count()
     expect(prijeRedova).toBeGreaterThan(0)
     await page.getByTestId("pregled-delete").first().click()
+    const dialog = page.getByTestId("dokument-obrisi-dialog")
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole("button", { name: "Otkaži", exact: true }).click()
+    await expect(dialog).toBeHidden()
+    await expect(page.getByTestId("pregled-red")).toHaveCount(prijeRedova)
+  })
+
+  test("brisanje zapisnika ga uklanja iz liste (uz potvrdu u dialogu)", async ({ page }) => {
+    await page.goto("/zapisnici")
+    const prijeRedova = await page.getByTestId("pregled-red").count()
+    expect(prijeRedova).toBeGreaterThan(0)
+    await page.getByTestId("pregled-delete").first().click()
+    const dialog = page.getByTestId("dokument-obrisi-dialog")
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole("button", { name: "Obriši", exact: true }).click()
     await expect
       .poll(async () => page.getByTestId("pregled-red").count())
       .toBeLessThan(prijeRedova)

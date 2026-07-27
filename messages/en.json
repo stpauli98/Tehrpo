@@ -814,6 +814,8 @@
     "tipLabel": "Document type",
     "fajlPolje": "Document file",
     "neispravniPodaci": "Invalid data — refresh the page and try again.",
+    "potvrdaBrisanjaNaslov": "Delete document?",
+    "potvrdaBrisanjaOpis": "The document and its file are permanently deleted. This cannot be undone.",
     "tipovi": {
       "strucni_nalaz": "Expert report",
       "zapisnik": "Record",

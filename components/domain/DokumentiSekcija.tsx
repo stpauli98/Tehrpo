@@ -17,6 +17,7 @@ import {
 } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
 import { jeAdmin, mozeUrediti } from "@/lib/auth/roles"
+import { ACCEPT_ATTR, MAX_MB, validirajFajl } from "@/lib/dokumenti"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -47,7 +48,6 @@ export function DokumentiSekcija({
   useAkcijaToast(genState, { uspjeh: t("zapisnikUspjeh"), greska: tc("greska") })
   useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
   const fileRef = useRef<HTMLInputElement>(null)
-  const MAX_MB = 10
 
   // Refresh liste kad SE PROMIJENI ishod bilo koje akcije i taj (promijenjeni) ishod je uspjeh.
   // NE uslovljavati sa "sve tri ok" — zaglavljena greška iz jedne akcije bi blokirala
@@ -104,15 +104,20 @@ export function DokumentiSekcija({
               ref={fileRef}
               type="file"
               name="file"
-              accept=".docx,.pdf,image/png,image/jpeg,image/webp"
+              accept={ACCEPT_ATTR}
               data-testid="dokument-file"
               className="min-w-0 max-w-full text-sm"
               onChange={(e) => {
                 const file = e.target.files?.[0]
-                if (file && file.size > MAX_MB * 1024 * 1024) {
-                  toast.error(t("fajlPrevelik", { max: MAX_MB }))
-                  e.target.value = ""
-                }
+                if (!file) return
+                const provjera = validirajFajl(file)
+                if (provjera.ok) return
+                toast.error(
+                  provjera.razlog === "tip"
+                    ? t("nedozvoljenTip")
+                    : t("fajlPrevelik", { max: MAX_MB }),
+                )
+                e.target.value = ""
               }}
             />
             <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">

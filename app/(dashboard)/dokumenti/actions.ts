@@ -4,15 +4,16 @@ import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import {
-  uploadDokument,
-  removeDokument,
-  ALLOWED_MIME,
-  MAX_BYTES,
-} from "@/lib/supabase/storage"
+import { uploadDokument, removeDokument } from "@/lib/supabase/storage"
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { buildZapisnikDocx } from "@/lib/zapisnik/template"
-import { dokumentStoragePath, jeValidanTip } from "@/lib/dokumenti"
+import {
+  dokumentStoragePath,
+  jeValidanTip,
+  safeName,
+  validirajFajl,
+  MAX_MB,
+} from "@/lib/dokumenti"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { jeAdmin } from "@/lib/auth/roles"
 import { APP_LOCALE } from "@/lib/locale"
@@ -26,10 +27,6 @@ export type ActionResult =
   | { ok: false; errors?: Record<string, string[] | undefined>; message?: string }
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-
-function safeName(name: string): string {
-  return name.replace(/[^\w.\- ]+/g, "_").slice(0, 120) || "dokument"
-}
 
 function revalidateDokumenti(klijentId?: string | null): void {
   revalidatePath("/zapisnici")
@@ -50,11 +47,13 @@ export async function uploadDokumentAction(
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, message: t("izaberiteFajl") }
   }
-  if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
-    return { ok: false, message: t("nedozvoljenTip") }
-  }
-  if (file.size > MAX_BYTES) {
-    return { ok: false, message: t("fajlPrevelik", { max: 10 }) }
+  const provjera = validirajFajl(file)
+  if (!provjera.ok) {
+    return {
+      ok: false,
+      message:
+        provjera.razlog === "tip" ? t("nedozvoljenTip") : t("fajlPrevelik", { max: MAX_MB }),
+    }
   }
 
   const supabase = await createServerSupabaseClient()
@@ -243,10 +242,14 @@ export async function uploadKlijentDokumentAction(
 
   const file = formData.get("file")
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: t("izaberiteFajl") }
-  if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
-    return { ok: false, message: t("nedozvoljenTip") }
+  const provjera = validirajFajl(file)
+  if (!provjera.ok) {
+    return {
+      ok: false,
+      message:
+        provjera.razlog === "tip" ? t("nedozvoljenTip") : t("fajlPrevelik", { max: MAX_MB }),
+    }
   }
-  if (file.size > MAX_BYTES) return { ok: false, message: t("fajlPrevelik", { max: 10 }) }
 
   const supabase = await createServerSupabaseClient()
   // Pristup PRIJE upload-a u storage: RLS vraća null ako korisnik nema pristup klijentu

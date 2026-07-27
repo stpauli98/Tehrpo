@@ -1,7 +1,8 @@
 import { z } from "zod"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { runChat, type ChatTurn, type ChatEvent } from "@/lib/claude/chat"
+import { runChat } from "@/lib/claude/chat"
+import { MAX_PORUKA_ZNAKOVA, type ChatTurn, type ChatEvent } from "@/lib/claude/protokol"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
@@ -14,7 +15,7 @@ const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namesp
 
 const bodySchema = z.object({
   konverzacija_id: z.string().uuid(),
-  userText: z.string().min(1).max(4000),
+  userText: z.string().min(1).max(MAX_PORUKA_ZNAKOVA),
 })
 
 export async function POST(req: Request): Promise<Response> {
@@ -105,7 +106,12 @@ export async function POST(req: Request): Promise<Response> {
           sadrzaj: assistantText || t("bezTeksta"),
           alat_pozivi: toolsUsed.length ? toolsUsed : null,
         })
-        if (asstErr) console.error("Snimanje assistant poruke nije uspjelo:", asstErr.message)
+        if (asstErr) {
+          // Tihi pad bi značio da odgovor nestane iz istorije bez ikakve naznake (S1) —
+          // korisnik u mjehuru mora vidjeti da poruka nije sačuvana.
+          console.error("Snimanje assistant poruke nije uspjelo:", asstErr.message)
+          send({ type: "error", message: t("snimanjeNijeUspjelo") })
+        }
       } catch (e) {
         send({ type: "error", message: e instanceof Error ? e.message : t("greskaAsistenta") })
         send({ type: "done" })

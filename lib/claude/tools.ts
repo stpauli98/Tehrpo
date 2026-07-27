@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { grupisiPoKlijentu } from "./grouping"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
+import type { ProposalData } from "./protokol"
 
 export type ToolName = "searchTermini" | "listFirme" | "predloziZapisnik" | "suggestGrupisanje"
 
@@ -43,14 +44,6 @@ export function toolLabel(name: string, locale: Locale = APP_LOCALE): string {
   return TOOL_LABELS[locale][name as ToolName] ?? TOOL_LABEL_FALLBACK[locale]
 }
 
-export type ProposalData = {
-  terminId: string
-  klijent: string
-  vrsta: string
-  datum: string
-  nalaz: string
-  zakljucak: string
-}
 export type ToolResult = { forModel: string; proposal?: ProposalData }
 
 export const CHAT_TOOLS: Anthropic.Tool[] = [

@@ -2,17 +2,9 @@ import Anthropic from "@anthropic-ai/sdk"
 import { env } from "@/lib/env"
 import { todayIso } from "@/lib/date"
 import { SISTEM_PROMPT, datumNapomena } from "./prompts"
-import { CHAT_TOOLS, toolLabel, executeTool, type ProposalData } from "./tools"
+import { CHAT_TOOLS, toolLabel, executeTool } from "./tools"
 import { mockChatEvents } from "./mock"
-
-export type ChatEvent =
-  | { type: "text"; text: string }
-  | { type: "tool"; tool: string; label: string }
-  | { type: "proposal"; data: ProposalData }
-  | { type: "error"; message: string }
-  | { type: "done" }
-
-export type ChatTurn = { role: "user" | "assistant"; text: string }
+import type { ChatEvent, ChatTurn } from "./protokol"
 
 export function chatDryRun(): boolean {
   return env.CHAT_DRY_RUN === "1" || !env.ANTHROPIC_API_KEY

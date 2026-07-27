@@ -42,7 +42,9 @@ export async function updateTermin(
 ): Promise<ActionResult> {
   const parsed = updateSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
-    return { ok: false, errors: parsed.error.flatten().fieldErrors, message: parsed.error.issues[0]?.message }
+    // S2: Zod field-greške idu ISKLJUČIVO inline (FieldError) — bez `message`,
+    // inače bi ista poruka išla i u toast (dupli kanal).
+    return { ok: false, errors: parsed.error.flatten().fieldErrors }
   }
   const { id, ...fields } = parsed.data
 
@@ -188,7 +190,9 @@ export async function markIzvrseno(
 ): Promise<ActionResult> {
   const parsed = markSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
-    return { ok: false, errors: parsed.error.flatten().fieldErrors, message: parsed.error.issues[0]?.message }
+    // S2: Zod field-greške idu ISKLJUČIVO inline (FieldError) — bez `message`,
+    // inače bi ista poruka išla i u toast (dupli kanal).
+    return { ok: false, errors: parsed.error.flatten().fieldErrors }
   }
   const { id, datum_izvrsenja } = parsed.data
 

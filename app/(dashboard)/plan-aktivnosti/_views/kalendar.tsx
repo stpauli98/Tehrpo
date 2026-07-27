@@ -1,24 +1,31 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
+import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Skeleton } from "@/components/ui/skeleton"
 import { MonthCalendar, type DayTermin } from "@/components/domain/MonthCalendar"
 import { PlanNav } from "@/components/domain/PlanNav"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { buildMonthGrid } from "@/lib/calendar"
-import { todayIso, currentYear, formatDatum } from "@/lib/date"
+import { todayIso, formatDatum } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { PlanLegenda } from "@/components/domain/PlanLegenda"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { getTerminiKalendar, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { getTerminiKalendar, getTerminDetail, porukaGreske } from "@/lib/queries/plan-aktivnosti"
 import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
-export function KalendarView() {
+export function KalendarView({
+  godine,
+  zaduzeniPrijedlozi,
+}: {
+  godine: number[]
+  zaduzeniPrijedlozi: string[]
+}) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.kalendar")
 
@@ -36,13 +43,20 @@ export function KalendarView() {
     mjesec: Number(today.slice(5, 7)),
   }
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["termini-kalendar", godina, mjesec],
     queryFn: () => getTerminiKalendar(godina, mjesec),
     staleTime: 60_000,
+    // Promjena mjeseca ne ruši kalendar na skeleton — skeleton je samo za prvo učitavanje.
+    placeholderData: keepPreviousData,
   })
 
-  const { data: detailData } = useQuery({
+  const {
+    data: detailData,
+    isError: detailIsError,
+    error: detailError,
+    refetch: refetchDetail,
+  } = useQuery({
     queryKey: ["termin-detail", selectedId],
     queryFn: () => getTerminDetail(selectedId!),
     enabled: !!selectedId,
@@ -51,7 +65,6 @@ export function KalendarView() {
 
   const termini = (data?.termini ?? []) as TerminRow[]
   const grid = buildMonthGrid(godina, mjesec)
-  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   const terminiByDan = new Map<string, DayTermin[]>()
   for (const termin of termini) {
@@ -91,6 +104,17 @@ export function KalendarView() {
     return href(`/plan-aktivnosti?${p.toString()}`)
   }
 
+  // S1: pad upita NIJE prazan mjesec.
+  if (isError) {
+    return (
+      <GreskaUcitavanja
+        poruka={porukaGreske(error)}
+        onRetry={() => void refetch()}
+        testId="plan-greska"
+      />
+    )
+  }
+
   if (isPending) {
     return (
       <div className="space-y-6">
@@ -126,7 +150,7 @@ export function KalendarView() {
           currentSearch={currentSearch}
         />
         {selectedDan && (
-          <aside data-testid="plan-sidebar" className="rounded-xl border border-border p-4 h-fit">
+          <aside data-testid="plan-sidebar" className="h-fit rounded-xl bg-card p-4 ring-1 ring-foreground/10">
             <p className="font-medium" data-testid="plan-sidebar-datum">
               {formatDatum(selectedDan)}
             </p>
@@ -167,12 +191,21 @@ export function KalendarView() {
         )}
       </div>
       <PlanLegenda />
+      {/* Detalj upit ima vlastitu grešku — sheet se inače tiho ne otvori. */}
+      {selectedId && detailIsError && (
+        <GreskaUcitavanja
+          poruka={porukaGreske(detailError)}
+          onRetry={() => void refetchDetail()}
+          testId="termin-detail-greska"
+        />
+      )}
       {selectedTermin && (
         <TerminSheet
           termin={selectedTermin}
           istorija={istorija}
           dokumenti={dokumenti}
           closeHref={closeHref}
+          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
         />
       )}
     </div>

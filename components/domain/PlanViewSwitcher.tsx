@@ -1,19 +1,24 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
-import { useTransition } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { usePendingFilteri } from "@/lib/use-pending-filteri"
 import { PLAN_VIEWS, buildViewHref, type PlanView } from "@/lib/plan-view"
 
 export function PlanViewSwitcher({ current }: { current: PlanView }) {
-  const router = useRouter()
   const params = useSearchParams()
-  const [pending, startTransition] = useTransition()
+  // S10: pending nije samo test atribut — aria-busy + opacity + disable kontrola.
+  const { isPending: pending, push } = usePendingFilteri()
   const t = useTranslations("plan.viewSwitcher")
 
   return (
-    <div className="flex items-center gap-1" data-testid="plan-view-switcher" data-pending={pending}>
+    <div
+      className={cn("flex items-center gap-1", pending && "opacity-60")}
+      data-testid="plan-view-switcher"
+      data-pending={pending}
+      aria-busy={pending}
+    >
       {PLAN_VIEWS.map((v) => (
         <button
           key={v}
@@ -21,11 +26,10 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
           data-testid={`view-${v}`}
           data-active={current === v}
           aria-pressed={current === v}
-          onClick={() =>
-            startTransition(() => router.push(buildViewHref(new URLSearchParams(params.toString()), v)))
-          }
+          disabled={pending}
+          onClick={() => push(buildViewHref(new URLSearchParams(params.toString()), v))}
           className={cn(
-            "px-3 py-1 rounded-full text-sm border transition",
+            "px-3 py-1 rounded-full text-sm border transition-colors",
             FOCUS_RING,
             current === v
               ? "bg-brand text-white border-brand"

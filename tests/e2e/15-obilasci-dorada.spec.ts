@@ -13,6 +13,8 @@ test.describe("Obilasci dorada — status filter", () => {
     const izvrseniDefault = page.getByTestId("obilasci-card").locator('[data-status="izvrseno"]')
     await expect(izvrseniDefault).toHaveCount(0)
     // prebaci na Svi → pojave se izvršeni
+    // toolbar disable-uje Select-e dok traje filter tranzicija (S10) — sačekaj mirno stanje
+    await expect(page.getByTestId("obilasci-toolbar")).toHaveAttribute("data-pending", "false")
     const statusTrigger = page.getByTestId("obilasci-status")
     await statusTrigger.click()
     const sviOpcija = page.getByRole("option", { name: "Svi" })
@@ -41,6 +43,7 @@ test.describe("Obilasci dorada — filter po gradu", () => {
     await expect(page.getByTestId("obilasci-grupa").first()).toBeVisible()
     await page.waitForLoadState("networkidle")
     // otvori grad Select i izaberi Banja Luka
+    await expect(page.getByTestId("obilasci-toolbar")).toHaveAttribute("data-pending", "false")
     await page.getByTestId("obilasci-grad").click()
     const opt = page.getByRole("option", { name: "Banja Luka" })
     await expect(opt).toBeVisible()

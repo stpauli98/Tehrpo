@@ -4,8 +4,12 @@ export default function ObilasciLoading() {
   return (
     <div className="space-y-6">
       <div><Skeleton className="h-8 w-40 mb-2" /><Skeleton className="h-4 w-72" /></div>
-      <div className="flex items-center gap-4 flex-wrap">
-        {[0,1,2].map((i) => <Skeleton key={i} className="h-10 w-36" />)}
+      {/* Filter red = ObilasciToolbar: 5 Select-a (period, status, grad, mjesec/kvartal, godina),
+          SelectTrigger je h-8; isti raspored (flex flex-wrap items-center gap-3) da skeleton ne skače. */}
+      <div className="flex flex-wrap items-center gap-3">
+        {["w-40", "w-40", "w-44", "w-40", "w-28"].map((w, i) => (
+          <Skeleton key={i} className={`h-8 ${w}`} />
+        ))}
       </div>
       {[0,1,2].map((g) => (
         <div key={g} className="rounded-xl bg-card p-4 space-y-3 ring-1 ring-foreground/10">

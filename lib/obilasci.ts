@@ -1,6 +1,9 @@
+import { z } from "zod"
 import { createTranslator } from "next-intl"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { todayIso } from "@/lib/date"
+import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 
 // Whitelist pravih BiH gradova (fold ključ → kanonski oblik za prikaz)
 const GRADOVI_BIH: Record<string, string> = {
@@ -71,6 +74,68 @@ export type ObilazakItem = {
   lokacija_grad: string | null
   rok_dospijeca: string
   status_izvedeni: string
+  /** Sirovi `termini.status` — StatusBadge iz njega izvodi hint „kasni ali zakazan". */
+  status: string | null
+  datum_zakazan: string | null
+}
+
+/**
+ * Definicija filtera „Aktivni" na tabu Obilasci: sve osim izvršenih i otkazanih.
+ * Jedan izvor za `page.tsx` upit (`.not("status_izvedeni", "in", ...)`) i test.
+ */
+export const AKTIVNI_ISKLJUCENI = ["izvrseno", "otkazano"] as const
+
+/** PostgREST `in`-lista za „Aktivni" filter, npr. `(izvrseno,otkazano)`. */
+export const AKTIVNI_NOT_IN = `(${AKTIVNI_ISKLJUCENI.join(",")})`
+
+export type ObilasciPeriod = "mjesec" | "kvartal" | "godina"
+
+/** „aktivni" (obilasci-specifično) + zajedničke opcije status filtera. */
+export type ObilasciStatus = "aktivni" | (typeof STATUS_FILTER_OPTIONS)[number]["value"]
+
+const STATUS_VRIJEDNOSTI = [
+  "aktivni",
+  ...STATUS_FILTER_OPTIONS.map((o) => o.value),
+] as [ObilasciStatus, ...ObilasciStatus[]]
+
+export type ObilasciParams = {
+  period: ObilasciPeriod
+  godina: number
+  mjesec: number
+  kvartal: number
+  status: ObilasciStatus
+  /** Slobodan tekst: sentineli `svi`/`__bez__` ili naziv grada; upit je parametrizovan + pod RLS-om. */
+  grad: string
+  strana: number
+}
+
+/** Kvartal (1–4) kojem pripada ISO datum `yyyy-MM-dd`. */
+export function kvartalIzDatuma(isoDatum: string): number {
+  return Math.ceil(Number(isoDatum.slice(5, 7)) / 3)
+}
+
+/**
+ * Normalizacija `searchParams` taba Obilasci — čista funkcija (bez baze i bez
+ * Next konteksta), pa je unit-testabilna. Svaki nevaljan/nepostojeći parametar
+ * tiho pada na default umjesto da obori render (zod `.catch()`).
+ *
+ * Defaultovi mjeseca, kvartala i godine izvode se iz `danas` (podrazumijevano
+ * `todayIso()`) — tekući kvartal, ne fiksno Q1.
+ */
+export function parsirajObilasciParams(
+  sp: Record<string, string | string[] | undefined>,
+  danas: string = todayIso(),
+): ObilasciParams {
+  const sema = z.object({
+    period: z.enum(["mjesec", "kvartal", "godina"]).catch("mjesec"),
+    godina: z.coerce.number().int().min(2000).max(2100).catch(Number(danas.slice(0, 4))),
+    mjesec: z.coerce.number().int().min(1).max(12).catch(Number(danas.slice(5, 7))),
+    kvartal: z.coerce.number().int().min(1).max(4).catch(kvartalIzDatuma(danas)),
+    status: z.enum(STATUS_VRIJEDNOSTI).catch("aktivni"),
+    grad: z.string().catch(""),
+    strana: z.coerce.number().int().min(1).catch(1),
+  })
+  return sema.parse(sp)
 }
 
 // Interni sentinel za grupu "bez grada" — NIJE prikazni tekst (taj dolazi iz

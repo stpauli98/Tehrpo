@@ -1201,7 +1201,8 @@
       "naslov": "Subject",
       "slanje": "Sending",
       "dostava": "Delivery",
-      "klijent": "Client"
+      "klijent": "Client",
+      "akcije": "Actions"
     },
     "tip": {
       "podsjetnikInterni": "Reminder (internal)",
@@ -1232,9 +1233,13 @@
       "samoGreske": "Errors only",
       "samoNerijesene": "Unresolved only",
       "svi": "All",
-      "filtriraj": "Filter"
+      "filtriraj": "Filter",
+      "ponisti": "Clear filters"
     },
-    "oznaciPregledanim": "Mark as reviewed"
+    "oznaciPregledanim": "Mark as reviewed",
+    "praznoFilteri": "No results for the selected filters.",
+    "oznacenoPregledanim": "Marked as reviewed.",
+    "greskaOznacavanja": "Marking as reviewed failed. Please try again."
   },
   "izvoz": {
     "plan": {

@@ -42,7 +42,13 @@ export async function POST(req: Request) {
     })
     if (error) {
       console.error("[resend-webhook] azuriraj_mejl_dostavu:", error.message)
+      // Ne-2xx → Resend ponavlja isporuku eventa (backoff), pa privremeni pad DB-a
+      // ne gubi status dostave trajno. Bezbjedno za retry: RPC je idempotentan po
+      // rangu statusa (atomski update sa rangiranjem), duplikat eventa ne kvari stanje.
+      return NextResponse.json({ error: "azuriraj_mejl_dostavu failed" }, { status: 500 })
     }
   }
-  return NextResponse.json({ ok: true }) // uvijek 200 za validan potpis
+  // 200 samo kad je obrada uspjela ili je event tip ignorisan / bez email_id-a.
+  // Nevaljan potpis i dalje vraća 401 (Resend ga NE smije ponavljati).
+  return NextResponse.json({ ok: true })
 }

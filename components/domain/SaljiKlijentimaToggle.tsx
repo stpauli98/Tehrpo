@@ -80,11 +80,11 @@ export function SaljiKlijentimaToggle({ salji }: { salji: boolean }) {
         />
         <div>
           <p className="text-sm font-medium">{t("naslov")}</p>
-          <p className="text-sm text-amber-600">{t("upozorenje")}</p>
+          <p className="text-sm text-warning">{t("upozorenje")}</p>
         </div>
       </form>
       {state.ok === false && state.message && (
-        <p className="text-xs text-destructive" role="alert">{state.message}</p>
+        <p className="text-sm text-destructive" role="alert">{state.message}</p>
       )}
     </div>
   )

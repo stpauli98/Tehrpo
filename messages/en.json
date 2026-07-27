@@ -899,7 +899,11 @@
       "napomenaIskljuceniPodsjetnici": "Note: the user has reminders turned off.",
       "korisnikDeaktiviran": "User deactivated.",
       "korisnikAktiviran": "User activated.",
-      "greska": "Error."
+      "greska": "Error.",
+      "deaktivacijaPotvrdaNaslov": "Deactivate this user?",
+      "deaktivacijaPotvrdaOpis": "The user loses access to the app and stops receiving reminders. The account can be reactivated later.",
+      "resetPotvrdaNaslov": "Send a password reset?",
+      "resetPotvrdaOpis": "An email with a link to set a new password will be sent to {email}. The current password stays valid until the user changes it."
     },
     "noviKorisnik": {
       "dugme": "New user",
@@ -908,7 +912,13 @@
       "placeholderEmail": "Email",
       "placeholderLozinka": "Initial password (min 8)",
       "submitPending": "Creating…",
-      "submit": "Create"
+      "submit": "Create",
+      "poljeIme": "Full name",
+      "poljeEmail": "Email",
+      "poljeLozinka": "Initial password (min 8)",
+      "poljeUloga": "Role",
+      "prikaziLozinku": "Show password",
+      "sakrijLozinku": "Hide password"
     },
     "ulogaSelect": {
       "vlastitaUlogaTitle": "You cannot change your own role",
@@ -1004,7 +1014,9 @@
       "pokreniGreska": "Running reminders failed.",
       "vrijemeSatNeispravan": "Unknown sending time slot.",
       "saljiKlijentimaGreska": "Failed to change sending to clients.",
-      "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice."
+      "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice.",
+      "resetEmailGreska": "Failed to send the password reset email.",
+      "resetRateLimit": "Too many password reset requests. Try again in a few minutes."
     },
     "novaVrsta": {
       "dugme": "New type",
@@ -1045,7 +1057,8 @@
       "bezDokumentacijeTitle": "No documentation",
       "prazno": "No types to display.",
       "intervalGreska": "1–120 or empty",
-      "intervalSpremljeno": "✓ saved",
+      "intervalSpremljeno": "saved",
+      "intervalAriaLabel": "Interval in months for {naziv}",
       "intervalGreskaFallback": "Error saving",
       "klikDeaktivacija": "Click to deactivate",
       "klikAktivacija": "Click to activate",

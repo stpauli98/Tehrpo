@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toastRezultat } from "@/components/akcija-toast"
@@ -26,6 +26,12 @@ export function UlogaSelect({
   const tu = useTranslations("postavke.uloge")
   const router = useRouter()
   const [pending, start] = useTransition()
+  // `verzija` forsira REMOUNT Select-a nakon ODBIJENE promjene (isti rollback obrazac
+  // kao kod checkbox toggle-ova — SaljiKlijentimaToggle/PodsjetniciKontrole): Select je
+  // nekontrolisan (`defaultValue`), a `router.refresh()` ne remount-uje komponentu, pa
+  // bi bez novog `key`-a prikaz ostao na neuspjeloj ulozi (npr. kad brana "bar jedan
+  // admin" odbije). Nova instanca kreće od server-propa `uloga`.
+  const [verzija, setVerzija] = useState(0)
   // Base UI Select.Value renders the raw stored value umjesto prevedenog labela dok se
   // popup barem jednom ne otvori, OSIM ako Select.Root dobije `items` mapu — vidi
   // VrijemeSlanjaForm.tsx za isti obrazac.
@@ -33,16 +39,21 @@ export function UlogaSelect({
 
   return (
     <Select
+      key={verzija}
       items={ulogaItems}
       defaultValue={uloga}
       disabled={pending || jeJa}
       onValueChange={(v) => {
         const next = v as Uloga
         start(async () => {
-          // router.refresh() se izvršava u oba slučaja: uspjeh osvježava prikaz,
-          // greška vraća select na stvarnu vrijednost ako je brana odbila.
-          toastRezultat(await postaviUlogu(korisnikId, next), { uspjeh: t("sacuvano"), greska: t("greska") })
-          router.refresh()
+          const res = toastRezultat(await postaviUlogu(korisnikId, next), {
+            uspjeh: t("sacuvano"),
+            greska: t("greska"),
+          })
+          // Uspjeh → svjež server-prop kroz refresh; neuspjeh → remount vraća prikaz
+          // na `uloga` (refresh sam po sebi ne bi vratio nekontrolisani Select).
+          if (res.ok) router.refresh()
+          else setVerzija((n) => n + 1)
         })
       }}
     >

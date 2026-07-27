@@ -53,7 +53,13 @@ test.describe("Nalozi i lozinke", () => {
       // otvori akcije reda pa klikni Pošalji reset
       const red = page.locator('[data-testid^="akcije-"]').first()
       await red.click()
-      await page.locator('[data-testid^="posalji-reset-"]').first().click()
+      // Stavka menija (NE dugme potvrde — testid dijaloga dijeli isti prefiks).
+      await page.locator('[data-testid^="posalji-reset-"]:not([data-testid*="potvrdi"])').first().click()
+      // S3: slanje reseta ide kroz PotvrdiBrisanjeDialog — potvrdi u dijalogu.
+      await page
+        .locator('[data-testid^="posalji-reset-potvrdi-"]')
+        .getByRole("button", { name: "Pošalji reset lozinke" })
+        .click()
       await expect(page.getByText(new RegExp(`Reset link poslat na ${email}`))).toBeVisible({ timeout: 15_000 })
     } finally {
       await deleteKorisnikByEmail(email)

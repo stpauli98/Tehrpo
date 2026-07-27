@@ -64,7 +64,7 @@ export default async function PostavkePage() {
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {t("reminders.grupaPrimaoci")}
               </p>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+              <div className="divide-y divide-border overflow-hidden rounded-xl ring-1 ring-foreground/10">
                 <div className="p-4">
                   <SaljiKlijentimaToggle salji={postRes.data?.salji_klijentima ?? false} />
                 </div>

@@ -82,12 +82,12 @@ export async function KoStaPrimaTab() {
       {!saljiGlobalno && (
         <div
           data-testid="ksp-global-off-banner"
-          className="mb-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
         >
           <AlertTriangle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
           <span className="inline-flex items-center gap-1">
             {t("globalnoIskljucenoBanner", { prekidac: tSalji("naslov") })}
-            <ArrowUp className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <ArrowUp className="h-[18px] w-[18px] shrink-0" aria-hidden />
           </span>
         </div>
       )}
@@ -98,14 +98,14 @@ export async function KoStaPrimaTab() {
         </span>
       </div>
 
-      <div className="max-h-[26rem] overflow-auto rounded-lg bg-card ring-1 ring-foreground/10">
+      <div className="max-h-[26rem] overflow-auto rounded-xl bg-card ring-1 ring-foreground/10">
         <table className="w-full text-sm" data-testid="ko-sta-prima-tabela">
           <thead className="sticky top-0 z-10 bg-muted text-left text-xs text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 font-medium">{t("firma")}</th>
-              <th className="px-4 py-2 font-medium">{t("radnici")}</th>
-              <th className="px-4 py-2 font-medium">{t("firmaPrima")}</th>
-              <th className="px-4 py-2 font-medium">{t("adrese")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("firma")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("radnici")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("firmaPrima")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("adrese")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -125,8 +125,8 @@ export async function KoStaPrimaTab() {
                 </td>
                 <td className="px-4 py-2.5">
                   {r.firmaPrima ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                      <span className="size-1.5 rounded-full bg-green-500" aria-hidden />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+                      <span className="size-1.5 rounded-full bg-success" aria-hidden />
                       {t("da")}
                     </span>
                   ) : (

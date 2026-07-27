@@ -24,13 +24,15 @@ export function CollapsibleSection({
   const panelId = useId()
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
+    <section className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
       <div className="flex items-stretch">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          aria-controls={panelId}
+          // Panel se renderuje samo dok je sekcija otvorena, pa bi `aria-controls`
+          // u zatvorenom stanju pokazivao na nepostojeći id.
+          aria-controls={open ? panelId : undefined}
           // Pristupačno ime = tačno naslov (ikona/chevron/opis su dekor unutar dugmeta).
           // E2E se oslanja na getByRole("button", { name: <naslov> }).
           aria-label={title}
@@ -62,7 +64,7 @@ export function CollapsibleSection({
           <ChevronDown
             aria-hidden
             className={cn(
-              "size-[18px] shrink-0 text-muted-foreground transition-transform",
+              "size-[18px] shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none",
               open ? "text-foreground" : "-rotate-90",
             )}
           />

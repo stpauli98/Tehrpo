@@ -884,7 +884,11 @@
       "napomenaIskljuceniPodsjetnici": "Hinweis: Der Benutzer hat Erinnerungen deaktiviert.",
       "korisnikDeaktiviran": "Benutzer deaktiviert.",
       "korisnikAktiviran": "Benutzer aktiviert.",
-      "greska": "Fehler."
+      "greska": "Fehler.",
+      "deaktivacijaPotvrdaNaslov": "Benutzer deaktivieren?",
+      "deaktivacijaPotvrdaOpis": "Der Benutzer verliert den Zugang zur Anwendung und erhält keine Erinnerungen mehr. Das Konto kann später wieder aktiviert werden.",
+      "resetPotvrdaNaslov": "Passwort-Reset senden?",
+      "resetPotvrdaOpis": "An {email} wird eine E-Mail mit einem Link zum Festlegen eines neuen Passworts gesendet. Das bisherige Passwort bleibt gültig, bis der Benutzer es ändert."
     },
     "noviKorisnik": {
       "dugme": "Neuer Benutzer",
@@ -893,7 +897,13 @@
       "placeholderEmail": "E-Mail",
       "placeholderLozinka": "Anfangspasswort (mind. 8)",
       "submitPending": "Wird erstellt…",
-      "submit": "Erstellen"
+      "submit": "Erstellen",
+      "poljeIme": "Vor- und Nachname",
+      "poljeEmail": "E-Mail",
+      "poljeLozinka": "Anfangspasswort (mind. 8)",
+      "poljeUloga": "Rolle",
+      "prikaziLozinku": "Passwort anzeigen",
+      "sakrijLozinku": "Passwort verbergen"
     },
     "ulogaSelect": {
       "vlastitaUlogaTitle": "Sie können Ihre eigene Rolle nicht ändern",
@@ -989,7 +999,9 @@
       "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen.",
       "vrijemeSatNeispravan": "Unbekannter Versandzeitpunkt.",
       "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen.",
-      "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen."
+      "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen.",
+      "resetEmailGreska": "Die E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden.",
+      "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen."
     },
     "novaVrsta": {
       "dugme": "Neue Art",

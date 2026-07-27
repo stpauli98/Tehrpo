@@ -884,7 +884,11 @@
       "napomenaIskljuceniPodsjetnici": "Napomena: korisnik ima isključene podsjetnike.",
       "korisnikDeaktiviran": "Korisnik deaktiviran.",
       "korisnikAktiviran": "Korisnik aktiviran.",
-      "greska": "Greška."
+      "greska": "Greška.",
+      "deaktivacijaPotvrdaNaslov": "Deaktivirati korisnika?",
+      "deaktivacijaPotvrdaOpis": "Korisnik gubi pristup aplikaciji i prestaje primati podsjetnike. Nalog se kasnije može ponovo aktivirati.",
+      "resetPotvrdaNaslov": "Poslati reset lozinke?",
+      "resetPotvrdaOpis": "Korisniku se šalje email na {email} sa linkom za postavljanje nove lozinke. Postojeća lozinka važi dok je korisnik sam ne promijeni."
     },
     "noviKorisnik": {
       "dugme": "Novi korisnik",
@@ -893,7 +897,13 @@
       "placeholderEmail": "Email",
       "placeholderLozinka": "Početna lozinka (min 8)",
       "submitPending": "Kreiranje…",
-      "submit": "Kreiraj"
+      "submit": "Kreiraj",
+      "poljeIme": "Ime i prezime",
+      "poljeEmail": "Email",
+      "poljeLozinka": "Početna lozinka (min 8)",
+      "poljeUloga": "Uloga",
+      "prikaziLozinku": "Prikaži lozinku",
+      "sakrijLozinku": "Sakrij lozinku"
     },
     "ulogaSelect": {
       "vlastitaUlogaTitle": "Ne možeš mijenjati vlastitu ulogu",
@@ -989,7 +999,9 @@
       "pokreniGreska": "Pokretanje podsjetnika nije uspjelo.",
       "vrijemeSatNeispravan": "Nepoznat termin slanja.",
       "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama.",
-      "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka."
+      "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka.",
+      "resetEmailGreska": "Slanje emaila za reset lozinke nije uspjelo.",
+      "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta."
     },
     "novaVrsta": {
       "dugme": "Nova vrsta",

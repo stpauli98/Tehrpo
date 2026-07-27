@@ -11,7 +11,8 @@ export default function AsistentLoading() {
       <aside className="space-y-3 border-r border-border pr-4">
         <div className="flex items-center justify-between">
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-9 w-32" />
+          {/* `NoviRazgovorButton` je `Button` default veličine → h-8; h-9 bi pomjerio listu za 4px */}
+          <Skeleton className="h-8 w-32" />
         </div>
         <div className="space-y-1">
           {[0, 1, 2, 3, 4, 5].map((i) => (

@@ -149,11 +149,14 @@ export async function executeTool(name: string, input: unknown): Promise<ToolRes
   if (name === "predloziZapisnik") {
     const terminId = typeof args.termin_id === "string" ? args.termin_id : ""
     if (!terminId) return { forModel: "Nedostaje termin_id." }
-    const { data: t } = await supabase
+    const { data: t, error } = await supabase
       .from("termini_view")
       .select("klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
       .eq("id", terminId)
       .maybeSingle()
+    // S1: pad upita nije isto što i „nema reda" — bez ove grane bi kvar baze model
+    // prijavio korisniku kao „termin ne postoji" (ostala tri alata već razlikuju).
+    if (error) return { forModel: `Greška pri čitanju termina: ${error.message}` }
     if (!t) return { forModel: "Termin sa tim ID-em ne postoji." }
     const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
     const c = await generateZapisnik({

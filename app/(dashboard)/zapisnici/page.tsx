@@ -127,6 +127,7 @@ export default async function ZapisniciPage({
                 ukupno={ukupno}
                 dokumenti={dokumenti.map((d) => ({
                   id: d.id,
+                  naziv: d.naziv,
                   klijent_naziv: d.klijent_naziv,
                   vrsta_naziv: d.vrsta_naziv,
                   uploaded_at: d.uploaded_at,

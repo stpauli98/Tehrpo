@@ -133,8 +133,42 @@ function sarajevoOffsetMs(instant: Date): number {
   return zidnoVrijeme - instant.getTime()
 }
 
-/** ISO datum "YYYY-MM-DD" → UTC instant ponoći tog datuma u Europe/Sarajevo, npr. "2026-07-26" → "2026-07-25T22:00:00.000Z" (ljeto, UTC+2). Za datumske granice filtera (S7: eksplicitna zona, `do` kao ekskluzivni sljedeći dan). */
+/**
+ * Type-guard za ISO datum "YYYY-MM-DD" — JEDINI izvor validacije prije
+ * `utcGranicaSarajevskogDana` / `dodajDan`. Korisnički kontrolisan ulaz
+ * (URL parametar, polje forme) uvijek provući kroz ovo, pa nevaljan tiho
+ * ignorisati — kao što stranice već rade za `tip`/`status`.
+ *
+ * Zašto round-trip, a ne `Date.parse`: ISO gramatika dozvoljava DD do 31 u
+ * svakom mjesecu, pa `Date.parse("2026-02-30")` NE puca — `Date.UTC` to tiho
+ * prelije u 02.03. Vrijednost se prihvata samo ako se vrati identična.
+ */
+export function jeIsoDatum(v: string | null | undefined): v is string {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+  const [g, m, d] = v.split("-").map(Number) as [number, number, number]
+  const dt = new Date(Date.UTC(g, m - 1, d))
+  return dt.getUTCFullYear() === g && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+}
+
+/**
+ * Ulazna ograda datumskih helpera. Bez nje su dvije tihe katastrofe moguće:
+ * `dodajDan("abc")` je vraćao string "NaN-NaN-NaN" (korupcija koja putuje
+ * dalje u upit), a `utcGranicaSarajevskogDana("abc")` je bacao goli
+ * `RangeError` iz Intl-a nad Invalid Date — poruku iz koje se ne vidi ni koja
+ * funkcija ni koja vrijednost je kriva.
+ */
+function tvrdiIsoDatum(isoDatum: string, funkcija: string): void {
+  if (!jeIsoDatum(isoDatum)) {
+    throw new Error(
+      `${funkcija}: očekivan ISO datum "YYYY-MM-DD", dobijeno ${JSON.stringify(isoDatum)}. ` +
+        `Korisnički unos validiraj sa jeIsoDatum() prije poziva.`,
+    )
+  }
+}
+
+/** ISO datum "YYYY-MM-DD" → UTC instant ponoći tog datuma u Europe/Sarajevo, npr. "2026-07-26" → "2026-07-25T22:00:00.000Z" (ljeto, UTC+2). Za datumske granice filtera (S7: eksplicitna zona, `do` kao ekskluzivni sljedeći dan). Baca na nevaljan ulaz — v. `jeIsoDatum`. */
 export function utcGranicaSarajevskogDana(isoDatum: string): string {
+  tvrdiIsoDatum(isoDatum, "utcGranicaSarajevskogDana")
   const [g, m, d] = isoDatum.split("-").map(Number)
   const utcPonoc = Date.UTC(g!, m! - 1, d!)
   // DST prelazi u Sarajevu su u 02:00/03:00 lokalno — offset u UTC ponoć važi i za lokalnu ponoć istog dana
@@ -142,8 +176,9 @@ export function utcGranicaSarajevskogDana(isoDatum: string): string {
   return new Date(utcPonoc - offset).toISOString()
 }
 
-/** ISO datum + 1 dan, TZ-safe (obrazac kao addMjeseci). */
+/** ISO datum + 1 dan, TZ-safe (obrazac kao addMjeseci). Baca na nevaljan ulaz — v. `jeIsoDatum`. */
 export function dodajDan(isoDatum: string): string {
+  tvrdiIsoDatum(isoDatum, "dodajDan")
   const [g, m, d] = isoDatum.split("-").map(Number)
   const dt = new Date(Date.UTC(g!, m! - 1, d! + 1)) // Date.UTC normalizuje overflow dana
   const pad = (n: number) => String(n).padStart(2, "0")

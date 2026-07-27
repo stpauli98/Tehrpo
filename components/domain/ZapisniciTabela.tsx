@@ -3,12 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { Search, Download, Eye, Loader2 } from "lucide-react"
-import { toast } from "sonner"
+import { Search, Eye } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { formatDatum } from "@/lib/date"
 import { ObrisiDokumentButton } from "./ObrisiDokumentButton"
+import { PreuzmiDokumentButton } from "./PreuzmiDokumentButton"
 import { href } from "@/i18n/routes"
 
 type Zapisnik = {
@@ -27,9 +27,7 @@ type Zapisnik = {
  */
 export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; ukupno: number }) {
   const t = useTranslations("zapisnici")
-  const tCommon = useTranslations("common")
   const [q, setQ] = useState("")
-  const [preuzimaId, setPreuzimaId] = useState<string | null>(null)
   const upit = q.trim().toLowerCase()
   const vidljivi =
     upit === ""
@@ -39,32 +37,6 @@ export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; 
             (d.klijent_naziv ?? "").toLowerCase().includes(upit) ||
             (d.vrsta_naziv ?? "").toLowerCase().includes(upit),
         )
-
-  // S13: ruta /api/dokumenti/[id] na grešku vraća JSON — goli <a> bi korisnika
-  // odveo na sirovi JSON, pa se preuzima kroz fetch + blob uz toast na neuspjeh.
-  async function preuzmi(d: Zapisnik) {
-    setPreuzimaId(d.id)
-    try {
-      const res = await fetch(`/api/dokumenti/${d.id}`)
-      if (!res.ok) {
-        toast.error(tCommon("greska"))
-        return
-      }
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = d.naziv
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    } catch {
-      toast.error(tCommon("greska"))
-    } finally {
-      setPreuzimaId(null)
-    }
-  }
 
   return (
     <div className="space-y-3">
@@ -110,21 +82,7 @@ export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; 
                       <Eye className="h-[18px] w-[18px] shrink-0" aria-hidden />
                       <Tooltip>{t("pregled")}</Tooltip>
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => void preuzmi(d)}
-                      disabled={preuzimaId === d.id}
-                      className={`${IKONA_INLINE_KLASA} disabled:pointer-events-none disabled:opacity-60`}
-                      data-testid="zapisnici-download"
-                      aria-label={t("preuzmi")}
-                    >
-                      {preuzimaId === d.id ? (
-                        <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin motion-reduce:animate-none" aria-hidden />
-                      ) : (
-                        <Download className="h-[18px] w-[18px] shrink-0" aria-hidden />
-                      )}
-                      <Tooltip>{t("preuzmi")}</Tooltip>
-                    </button>
+                    <PreuzmiDokumentButton dokumentId={d.id} label={t("preuzmi")} testId="zapisnici-download" />
                     <ObrisiDokumentButton dokumentId={d.id} label={t("obrisiZapisnik")} testId="zapisnici-delete" />
                   </div>
                 </td>

@@ -3,15 +3,8 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 
 export const DOKUMENTI_BUCKET = "tehpro-dokumenti"
 
-export const ALLOWED_MIME = [
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-] as const
-
-export const MAX_BYTES = 10_485_760 // 10 MiB (ispod serverActions.bodySizeLimit=12mb u next.config.ts)
+// Upload limiti (`ALLOWED_MIME`, `MAX_BYTES`, `ACCEPT_ATTR`) žive u client-safe
+// `lib/dokumenti.ts` — ovaj modul je `server-only` pa ih forme nisu mogle dijeliti (S8.5).
 
 /** Upload (upsert) u privatni bucket. */
 export async function uploadDokument(

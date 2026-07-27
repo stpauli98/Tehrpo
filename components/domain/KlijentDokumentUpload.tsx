@@ -10,14 +10,12 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { useAkcijaToast } from "@/components/akcija-toast"
+import { FieldError } from "./FieldError"
 import { uploadKlijentDokumentAction, type ActionResult } from "@/app/(dashboard)/dokumenti/actions"
-import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
+import { ACCEPT_ATTR, DOKUMENT_TIPOVI, MAX_MB, validirajFajl } from "@/lib/dokumenti"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
-
-const MAX_MB = 10
-const MAX_BYTES = MAX_MB * 1024 * 1024
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`
@@ -27,6 +25,8 @@ function formatBytes(n: number): string {
 
 export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   const t = useTranslations("klijenti.dokumentUpload")
+  // Poruka o nedozvoljenom tipu je kanonski dokument-modul ključ (S8.5) — ne duplira se u klijenti.*
+  const td = useTranslations("dokumenti")
   const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
@@ -42,6 +42,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
   const tipItems: Record<string, string> = Object.fromEntries(
     DOKUMENT_TIPOVI.map((tip) => [tip, t(`tipovi.${tip}`)]),
   )
+  const tipGreske = state.ok === false ? state.errors?.tip : undefined
 
   useEffect(() => {
     if (state !== prev.current) {
@@ -55,11 +56,16 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
     }
   }, [state, router])
 
-  // Validira veličinu; vraća true ako je fajl prihvaćen.
+  // Validira tip i veličinu; vraća true ako je fajl prihvaćen.
   function prihvati(f: File | undefined): boolean {
     if (!f) return false
-    if (f.size > MAX_BYTES) {
-      setGreska(t("fajlPrevelik", { velicina: formatBytes(f.size), max: MAX_MB }))
+    const provjera = validirajFajl(f)
+    if (!provjera.ok) {
+      setGreska(
+        provjera.razlog === "tip"
+          ? td("nedozvoljenTip")
+          : t("fajlPrevelik", { velicina: formatBytes(f.size), max: MAX_MB }),
+      )
       if (fileRef.current) fileRef.current.value = ""
       setFile(null)
       return false
@@ -90,7 +96,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
     <form
       action={action}
       data-testid="klijent-dok-upload"
-      className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="space-y-4 rounded-xl ring-1 ring-foreground/10 bg-card p-5"
     >
       <input type="hidden" name="klijent_id" value={klijentId} />
 
@@ -150,7 +156,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
         ref={fileRef}
         type="file"
         name="file"
-        accept=".docx,.pdf,image/png,image/jpeg,image/webp"
+        accept={ACCEPT_ATTR}
         className="sr-only"
         data-testid="klijent-dok-file"
         onChange={(e) => prihvati(e.target.files?.[0])}
@@ -160,22 +166,26 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
         <div className="space-y-1 text-sm">
           <span className="block text-muted-foreground">{t("tipDokumentaLabel")}</span>
           <Select name="tip" defaultValue="ugovor" items={tipItems}>
-            <SelectTrigger className="w-48" data-testid="klijent-dok-tip">
+            <SelectTrigger
+              className="w-48"
+              aria-describedby={tipGreske ? "greska-klijent-dok-tip" : undefined}
+              data-testid="klijent-dok-tip"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {DOKUMENT_TIPOVI.map((tip) => <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>)}
             </SelectContent>
           </Select>
+          <FieldError id="greska-klijent-dok-tip" errors={tipGreske} />
         </div>
         <Button type="submit" disabled={pending || !file} data-testid="klijent-dok-submit">
           {pending ? t("submitPending") : t("submit")}
         </Button>
       </div>
 
-      {(greska || (state.ok === false && state.message)) && (
-        <p className="w-full text-sm text-destructive" role="alert">{greska ?? (state.ok === false ? state.message : "")}</p>
-      )}
+      {/* Samo KLIJENTSKA validacija (prije round-tripa) — `state.message` ide toastom (S2). */}
+      {greska && <p className="w-full text-sm text-destructive" role="alert">{greska}</p>}
     </form>
   )
 }

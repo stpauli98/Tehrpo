@@ -141,7 +141,8 @@
         "uPlanu": "U planu"
       },
       "barTitle": "{naziv}: {count} termina",
-      "barAriaLabel": "{naziv}: {count} termina — otvori mjesec u matrici"
+      "barAriaLabel": "{naziv}: {count} termina — otvori mjesec u matrici",
+      "prazno": "Nema termina za ovu godinu."
     }
   },
   "klijenti": {

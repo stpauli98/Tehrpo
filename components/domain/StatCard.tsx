@@ -7,12 +7,12 @@ type Tone = "default" | "danger" | "success" | "warning"
 const TONE_CLASS: Record<Tone, string> = {
   default: "text-foreground",
   danger: "text-destructive",
-  success: "text-green-600",
-  warning: "text-amber-600",
+  success: "text-success",
+  warning: "text-warning",
 }
 
 export function StatCard({
-  label, value, sub, icon: Icon, tone = "default", testId, interactive = false, active = false,
+  label, value, sub, icon: Icon, tone = "default", testId, interactive = false,
 }: {
   label: string
   value: string | number
@@ -21,17 +21,14 @@ export function StatCard({
   tone?: Tone
   testId?: string
   interactive?: boolean
-  active?: boolean
 }) {
   return (
     <Card
       data-testid={testId}
-      data-active={active || undefined}
       className={cn(
         "h-full",
         interactive &&
-          "cursor-pointer transition-shadow hover:shadow-md hover:border-border",
-        active && "ring-2 ring-brand border-brand"
+          "cursor-pointer transition-shadow motion-reduce:transition-none hover:shadow-md",
       )}
     >
       <CardContent className="flex items-start justify-between gap-3 p-4">
@@ -42,7 +39,7 @@ export function StatCard({
           </p>
           {sub && <p className={cn("mt-1 text-xs", TONE_CLASS[tone])}>{sub}</p>}
         </div>
-        <Icon className="w-5 h-5 shrink-0 text-muted-foreground" aria-hidden />
+        <Icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
       </CardContent>
     </Card>
   )

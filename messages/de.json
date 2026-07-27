@@ -141,7 +141,8 @@
         "uPlanu": "Geplant"
       },
       "barTitle": "{naziv}: {count, plural, =1 {# Termin} other {# Termine}}",
-      "barAriaLabel": "{naziv}: {count, plural, =1 {# Termin} other {# Termine}} — Monat in der Matrix öffnen"
+      "barAriaLabel": "{naziv}: {count, plural, =1 {# Termin} other {# Termine}} — Monat in der Matrix öffnen",
+      "prazno": "Keine Termine für dieses Jahr."
     }
   },
   "klijenti": {

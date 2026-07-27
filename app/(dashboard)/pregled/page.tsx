@@ -5,24 +5,51 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { StatCard } from "@/components/domain/StatCard"
 import { OpterecenjeChart, type OpterecenjeRow } from "@/components/domain/OpterecenjeChart"
 import { HitnoKasniList } from "@/components/domain/HitnoKasniList"
-import { getPredstojeciCount, getHitnoKasni } from "@/lib/termini"
-import { currentYear, todayIso } from "@/lib/date"
+import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
+import { getPredstojeciCount, getHitnoKasni } from "@/lib/queries/pregled"
+import { todayIso } from "@/lib/date"
 import { href } from "@/i18n/routes"
 import { cn, FOCUS_RING } from "@/lib/utils"
 
 export default async function PregledPage() {
   const t = await getTranslations("pregled")
   const supabase = await createServerSupabaseClient()
-  const godina = currentYear()
-  const mjesec = Number(todayIso().slice(5, 7))
+  // Godina i mjesec IZ ISTOG izvora (UTC, kao DB `current_date`) — `currentYear()`
+  // čita lokalni sat, pa bi oko Nove godine prsten „tekućeg mjeseca" pao na
+  // pogrešan bar (nova godina + mjesec 12).
+  const danas = todayIso()
+  const godina = Number(danas.slice(0, 4))
+  const mjesec = Number(danas.slice(5, 7))
 
-  const [statsRes, opterecenjeRes, predstojeci, hitnoKasni] = await Promise.all([
+  const [statsRes, opterecenjeRes, predstojeciRes, hitnoKasniRes] = await Promise.all([
     supabase.rpc("get_termini_stats"),
     supabase.rpc("get_opterecenje", { godina }),
     getPredstojeciCount(supabase),
     getHitnoKasni(supabase),
   ])
 
+  const zaglavlje = (
+    <div>
+      <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
+      <p className="text-sm text-muted-foreground">{t("podnaslov")}</p>
+    </div>
+  )
+
+  // S1: pad bilo kog od 4 upita → jasna greška umjesto lažnih nula i prazne liste.
+  // Parcijalni prikaz se namjerno ne renderuje — pola tačnih brojki je gore od greške.
+  const greska =
+    statsRes.error ?? opterecenjeRes.error ?? predstojeciRes.error ?? hitnoKasniRes.error
+  if (greska) {
+    return (
+      <div className="space-y-6">
+        {zaglavlje}
+        <GreskaUcitavanja />
+      </div>
+    )
+  }
+
+  // Ispod ove tačke su svi upiti uspjeli, pa su `??` fallback-ovi samo type-narrowing
+  // (prazan rezultat je stvarno prazno stanje, ne maskirana greška).
   const stats = (statsRes.data?.[0] ?? {
     ukupno: 0,
     ovog_mjeseca: 0,
@@ -35,15 +62,14 @@ export default async function PregledPage() {
     izvrseno_ovog_mjeseca: number
   }
   const opterecenje = (opterecenjeRes.data ?? []) as OpterecenjeRow[]
+  const predstojeci = predstojeciRes.count ?? 0
+  const hitnoKasni = hitnoKasniRes.data ?? []
   const terminiLabel = t("statCard.terminiOvogMjeseca.label")
   const kasniLabel = t("statCard.kasniRokovi.label")
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
-        <p className="text-sm text-muted-foreground">{t("podnaslov")}</p>
-      </div>
+      {zaglavlje}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Klikabilne: vode na filter koji TAČNO odgovara broju na kartici */}
@@ -91,12 +117,12 @@ export default async function PregledPage() {
       <HitnoKasniList
         items={hitnoKasni}
         ukupnoKasni={stats.kasni}
-        today={todayIso()}
+        today={danas}
       />
 
       {/* Grafik na dnu, pune širine — pregledniji uvid u godišnje opterećenje */}
       <div
-        className="rounded-xl border border-border bg-card p-5"
+        className="rounded-xl ring-1 ring-foreground/10 bg-card p-4"
         data-testid="dashboard-chart"
       >
         <OpterecenjeChart

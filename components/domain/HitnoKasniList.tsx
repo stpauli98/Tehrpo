@@ -3,13 +3,13 @@ import { getTranslations } from "next-intl/server"
 import { AlertTriangle } from "lucide-react"
 import { formatDatum } from "@/lib/date"
 import { rokRelativnaOznaka } from "@/lib/hitno"
-import type { HitnoKasniItem } from "@/lib/termini"
+import type { HitnoKasniItem } from "@/lib/queries/pregled"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 
 const TONE: Record<"danger" | "warning", string> = {
   danger: "text-destructive",
-  warning: "text-amber-600",
+  warning: "text-warning",
 }
 
 export async function HitnoKasniList({
@@ -23,10 +23,10 @@ export async function HitnoKasniList({
 }) {
   const t = await getTranslations("pregled.hitnoKasni")
   return (
-    <div className="rounded-xl border border-border p-4" data-testid="hitno-kasni-list">
+    <div className="rounded-xl ring-1 ring-foreground/10 bg-card p-4" data-testid="hitno-kasni-list">
       <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="w-4 h-4 text-destructive" aria-hidden />
-        <h2 className="font-semibold">{t("naslov")}</h2>
+        <AlertTriangle className="h-[18px] w-[18px] shrink-0 text-destructive" aria-hidden />
+        <h2 className="font-heading text-base font-medium">{t("naslov")}</h2>
       </div>
       {items.length === 0 ? (
         <p data-testid="hitno-kasni-empty" className="text-sm text-muted-foreground">
@@ -53,11 +53,15 @@ export async function HitnoKasniList({
                       {item.lokacija_naziv ? ` · ${item.lokacija_naziv}` : ""}
                     </span>
                   </span>
-                  <span
-                    className={cn("shrink-0 text-sm font-medium", TONE[oznaka.tone])}
-                    title={formatDatum(item.rok_dospijeca)}
-                  >
-                    {oznaka.text}
+                  {/* Pun datum je vidljiv tekst, ne `title` — tooltip ne postoji za
+                      tastaturu ni za čitače ekrana (S12). */}
+                  <span className="shrink-0 text-right">
+                    <span className={cn("block text-sm font-medium", TONE[oznaka.tone])}>
+                      {oznaka.text}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {formatDatum(item.rok_dospijeca)}
+                    </span>
                   </span>
                 </Link>
               </li>

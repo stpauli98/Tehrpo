@@ -776,7 +776,7 @@
       "datum": "Datum",
       "akcije": "Aktionen"
     },
-    "brojUkupno": "{count} Protokolle",
+    "brojUkupno": "{count, plural, =1 {1 Protokoll} other {# Protokolle}}",
     "brojFiltrirano": "{prikazano} / {ukupno}",
     "pregled": "Vorschau",
     "preuzmi": "Herunterladen",

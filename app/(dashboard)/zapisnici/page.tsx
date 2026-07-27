@@ -104,7 +104,7 @@ export default async function ZapisniciPage({
 
   const zatvoriPregled = (
     <Link href={href("/zapisnici")} className={IKONA_INLINE_KLASA} data-testid="zapisnici-zatvori" aria-label={t("zatvoriPregled")}>
-      <X className="h-4 w-4" aria-hidden />
+      <X className="h-[18px] w-[18px] shrink-0" aria-hidden />
       <Tooltip>{t("zatvoriPregled")}</Tooltip>
     </Link>
   )

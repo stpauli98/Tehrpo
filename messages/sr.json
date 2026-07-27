@@ -776,7 +776,7 @@
       "datum": "Datum",
       "akcije": "Akcije"
     },
-    "brojUkupno": "{count} zapisnika",
+    "brojUkupno": "{count, plural, =1 {1 zapisnik} other {# zapisnika}}",
     "brojFiltrirano": "{prikazano} / {ukupno}",
     "pregled": "Pregled",
     "preuzmi": "Preuzmi",

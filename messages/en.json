@@ -776,7 +776,7 @@
       "datum": "Date",
       "akcije": "Actions"
     },
-    "brojUkupno": "{count} records",
+    "brojUkupno": "{count, plural, =1 {1 record} other {# records}}",
     "brojFiltrirano": "{prikazano} / {ukupno}",
     "pregled": "Preview",
     "preuzmi": "Download",

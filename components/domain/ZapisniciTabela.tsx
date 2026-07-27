@@ -40,11 +40,12 @@ export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; 
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] shrink-0 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("pretragaPlaceholder")}
+            aria-label={t("pretragaPlaceholder")}
             className="pl-8"
             data-testid="zapisnici-pretraga"
           />
@@ -57,11 +58,11 @@ export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; 
       </div>
 
       <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-        <table className="w-full text-sm" data-testid="zapisnici-tabela">
+        <table className="w-full text-sm" aria-label={t("naslov")} data-testid="zapisnici-tabela">
           <thead className="bg-muted">
             <tr>
               {[t("kolone.klijent"), t("kolone.vrsta"), t("kolone.datum"), t("kolone.akcije")].map((c) => (
-                <th key={c} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th key={c} scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {c}
                 </th>
               ))}
@@ -76,11 +77,11 @@ export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; 
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
                     <Link href={href(`/zapisnici?preview=${d.id}`)} className={IKONA_INLINE_KLASA} data-testid="zapisnici-preview" aria-label={t("pregled")}>
-                      <Eye className="h-4 w-4" aria-hidden />
+                      <Eye className="h-[18px] w-[18px] shrink-0" aria-hidden />
                       <Tooltip>{t("pregled")}</Tooltip>
                     </Link>
                     <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="zapisnici-download" aria-label={t("preuzmi")}>
-                      <Download className="h-4 w-4" aria-hidden />
+                      <Download className="h-[18px] w-[18px] shrink-0" aria-hidden />
                       <Tooltip>{t("preuzmi")}</Tooltip>
                     </a>
                     <ObrisiDokumentButton dokumentId={d.id} label={t("obrisiZapisnik")} testId="zapisnici-delete" />

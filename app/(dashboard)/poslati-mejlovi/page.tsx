@@ -1,8 +1,11 @@
 import { getTranslations } from "next-intl/server"
 import { dohvatiPoslateMejlove } from "@/lib/queries/poslati-mejlovi"
-import { PoslatiMejloviTabela, TIP_KEY, STATUS_KEY } from "@/components/domain/PoslatiMejloviTabela"
+import { PoslatiMejloviTabela } from "@/components/domain/PoslatiMejloviTabela"
+import { PoslatiMejloviFilteri } from "@/components/domain/PoslatiMejloviFilteri"
+import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
 import { href } from "@/i18n/routes"
+import { dodajDan, utcGranicaSarajevskogDana } from "@/lib/date"
 import { Constants, type Database } from "@/db/types"
 
 type MejlTip = Database["public"]["Enums"]["mejl_tip"]
@@ -38,17 +41,26 @@ export default async function PoslatiMejloviPage({
   const pageNum = Math.max(1, Number(typeof sp.page === "string" ? sp.page : "1") || 1)
   const offset = (pageNum - 1) * PER_PAGE
 
-  const { redovi, ukupno } = await dohvatiPoslateMejlove({
+  const { redovi, ukupno, error } = await dohvatiPoslateMejlove({
     tip,
     status,
-    od: sp.od || null,
-    do: sp.do ? `${sp.do}T23:59:59` : null,
+    // Granice sarajevskog dana sa eksplicitnom zonom (S7): `od` = ponoć izabranog
+    // dana, `do` = ponoć SLJEDEĆEG dana. RPC poredi `created_at >= p_od AND < p_do`,
+    // pa ekskluzivna gornja granica obuhvata cijeli izabrani dan (uklj. 23:59:59.999).
+    od: sp.od ? utcGranicaSarajevskogDana(sp.od) : null,
+    do: sp.do ? utcGranicaSarajevskogDana(dodajDan(sp.do)) : null,
     samoGreske: sp.samo_greske === "1",
     samoNepregledane: sp.nepregledano === "1",
     limit: PER_PAGE,
     offset,
   })
   const totalPages = Math.max(1, Math.ceil(ukupno / PER_PAGE))
+
+  // Razdvaja "dnevnik je prazan" od "filteri nemaju pogodaka" (S1-duh).
+  // `pageNum > 1` pokriva i `?page=999` iznad zadnje strane (nema server-side clamp-a).
+  const imaFiltera =
+    Boolean(tip || status || sp.od || sp.do || sp.samo_greske === "1" || sp.nepregledano === "1") ||
+    pageNum > 1
 
   const currentSearch = new URLSearchParams(
     Object.entries(sp).flatMap(([k, v]) =>
@@ -67,80 +79,34 @@ export default async function PoslatiMejloviPage({
         <h1 className="text-xl font-semibold">{t("naslov")}</h1>
         <p className="text-sm text-muted-foreground">{t("opis")}</p>
       </div>
-      <form method="get" className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          {t("filteri.tip")}
-          <select
-            name="tip"
-            defaultValue={tip ?? ""}
-            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          >
-            <option value="">{t("filteri.svi")}</option>
-            {SVI_TIPOVI.map((v) => (
-              <option key={v} value={v}>
-                {t(`tip.${TIP_KEY[v]}` as never)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("filteri.status")}
-          <select
-            name="status"
-            defaultValue={status ?? ""}
-            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          >
-            <option value="">{t("filteri.svi")}</option>
-            {SVI_STATUSI.map((v) => (
-              <option key={v} value={v}>
-                {t(`status.${STATUS_KEY[v]}` as never)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("filteri.od")}
-          <input
-            type="date"
-            name="od"
-            defaultValue={sp.od ?? ""}
-            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          {t("filteri.do")}
-          <input
-            type="date"
-            name="do"
-            defaultValue={sp.do ?? ""}
-            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="samo_greske" value="1" defaultChecked={sp.samo_greske === "1"} />
-          {t("filteri.samoGreske")}
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="nepregledano" value="1" defaultChecked={sp.nepregledano === "1"} />
-          {t("filteri.samoNerijesene")}
-        </label>
-        <button type="submit" className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted">
-          {t("filteri.filtriraj")}
-        </button>
-      </form>
-      <PoslatiMejloviTabela redovi={redovi} />
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end border-t border-border pt-4 text-sm text-muted-foreground" data-testid="poslati-mejlovi-pagination">
-          <Pagination
-            pageNum={pageNum}
-            totalPages={totalPages}
-            hrefFor={pageHref}
-            pageTestId="poslati-mejlovi-page"
-            prethodnaLabel={tPag("prethodna")}
-            sljedecaLabel={tPag("sljedeca")}
-            stranaText={tPag("strana", { pageNum, totalPages })}
-          />
-        </div>
+      <PoslatiMejloviFilteri
+        tip={tip}
+        status={status}
+        od={sp.od ?? ""}
+        do_={sp.do ?? ""}
+        samoGreske={sp.samo_greske === "1"}
+        nepregledano={sp.nepregledano === "1"}
+      />
+      {error ? (
+        // Upit je pao — nikad empty state (S1). Retry pokriva route error.tsx / reload.
+        <GreskaUcitavanja />
+      ) : (
+        <>
+          <PoslatiMejloviTabela redovi={redovi} imaFiltera={imaFiltera} />
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end border-t border-border pt-4 text-sm text-muted-foreground" data-testid="poslati-mejlovi-pagination">
+              <Pagination
+                pageNum={pageNum}
+                totalPages={totalPages}
+                hrefFor={pageHref}
+                pageTestId="poslati-mejlovi-page"
+                prethodnaLabel={tPag("prethodna")}
+                sljedecaLabel={tPag("sljedeca")}
+                stranaText={tPag("strana", { pageNum, totalPages })}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   )

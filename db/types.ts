@@ -227,6 +227,21 @@ export type Database = {
           },
         ]
       }
+      gradovi: {
+        Row: {
+          created_at: string
+          naziv: string
+        }
+        Insert: {
+          created_at?: string
+          naziv: string
+        }
+        Update: {
+          created_at?: string
+          naziv?: string
+        }
+        Relationships: []
+      }
       klijent_provjere: {
         Row: {
           aktivan: boolean
@@ -1153,6 +1168,13 @@ export type Database = {
           ime: string
         }[]
       }
+      get_aktivni_korisnici: {
+        Args: never
+        Returns: {
+          id: string
+          ime: string
+        }[]
+      }
       get_aktivnost: {
         Args: {
           p_akcija?: string
@@ -1263,6 +1285,13 @@ export type Database = {
           treba_firma: boolean
           treba_interni: boolean
           vrsta_naziv: string
+        }[]
+      }
+      get_termini_godine: {
+        Args: never
+        Returns: {
+          max_godina: number
+          min_godina: number
         }[]
       }
       get_termini_stats: {

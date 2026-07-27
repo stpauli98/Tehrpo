@@ -175,7 +175,12 @@
       "nedostajeId": "Missing id.",
       "imeObavezno": "Name is required",
       "lokacijaPostoji": "A location with that name already exists for this client.",
-      "kontaktPostoji": "A contact person with that name already exists for this client."
+      "kontaktPostoji": "A contact person with that name already exists for this client.",
+      "podsjetnikEmailNevalidan": "Invalid email address.",
+      "podsjetnikEmailPostoji": "The address has already been added.",
+      "podsjetnikEmailKontakt": "The address is already a recipient as a contact.",
+      "podsjetnikEmailNijeDodat": "The address could not be added.",
+      "nepostojeciKorisnik": "Non-existent user in the assignment."
     },
     "detalj": {
       "nazad": "Clients",

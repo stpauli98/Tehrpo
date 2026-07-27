@@ -175,7 +175,12 @@
       "nedostajeId": "Nedostaje id.",
       "imeObavezno": "Ime je obavezno",
       "lokacijaPostoji": "Lokacija sa tim nazivom već postoji kod ovog klijenta.",
-      "kontaktPostoji": "Kontakt osoba sa tim imenom već postoji kod ovog klijenta."
+      "kontaktPostoji": "Kontakt osoba sa tim imenom već postoji kod ovog klijenta.",
+      "podsjetnikEmailNevalidan": "Nevažeća email adresa.",
+      "podsjetnikEmailPostoji": "Adresa je već dodata.",
+      "podsjetnikEmailKontakt": "Adresa je već primalac kao kontakt.",
+      "podsjetnikEmailNijeDodat": "Nije moguće dodati adresu.",
+      "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli."
     },
     "detalj": {
       "nazad": "Klijenti",

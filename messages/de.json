@@ -175,7 +175,12 @@
       "nedostajeId": "ID fehlt.",
       "imeObavezno": "Name ist erforderlich",
       "lokacijaPostoji": "Ein Standort mit diesem Namen existiert bereits für diesen Kunden.",
-      "kontaktPostoji": "Eine Kontaktperson mit diesem Namen existiert bereits für diesen Kunden."
+      "kontaktPostoji": "Eine Kontaktperson mit diesem Namen existiert bereits für diesen Kunden.",
+      "podsjetnikEmailNevalidan": "Ungültige E-Mail-Adresse.",
+      "podsjetnikEmailPostoji": "Die Adresse wurde bereits hinzugefügt.",
+      "podsjetnikEmailKontakt": "Die Adresse ist bereits als Kontakt Empfänger.",
+      "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
+      "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung."
     },
     "detalj": {
       "nazad": "Kunden",

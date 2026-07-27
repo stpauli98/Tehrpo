@@ -26,12 +26,16 @@ export function DodjelaRadnikaFirmi({
   }
 
   function spasi() {
+    // Snapshot prije poziva: na {ok:false} vraćamo checkboxe na stanje iz baze,
+    // inače UI tvrdi jedno a baza drugo (S2 — optimistic update mora imati rollback).
+    const prije = new Set(sel)
     startTransition(async () => {
       const res = toastRezultat(await postaviDodjeleZaKlijenta(klijentId, [...sel]), {
         uspjeh: t("spaseno"),
         greska: tc("greska"),
       })
       if (res.ok) router.refresh()
+      else setSel(prije)
     })
   }
 

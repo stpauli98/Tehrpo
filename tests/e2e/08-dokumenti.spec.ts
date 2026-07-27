@@ -54,19 +54,19 @@ test.describe("Faza Dokumenti — termin sheet", () => {
 test.describe("Faza Dokumenti — /zapisnici", () => {
   test("AI zapisnik se vidi na /zapisnici i preview renderuje HTML", async ({ page }) => {
     await page.goto("/zapisnici")
-    await expect(page.getByTestId("pregled-tabela")).toBeVisible()
-    await page.getByTestId("pregled-preview").first().click()
+    await expect(page.getByTestId("zapisnici-tabela")).toBeVisible()
+    await page.getByTestId("zapisnici-preview").first().click()
     await expect(page.getByTestId("docx-preview")).toBeVisible()
     await expect(page.getByTestId("docx-preview")).toContainText("ZAPISNIK")
   })
 
   test("brisanje zapisnika ga uklanja iz liste", async ({ page }) => {
     await page.goto("/zapisnici")
-    const prijeRedova = await page.getByTestId("pregled-red").count()
+    const prijeRedova = await page.getByTestId("zapisnici-red").count()
     expect(prijeRedova).toBeGreaterThan(0)
-    await page.getByTestId("pregled-delete").first().click()
+    await page.getByTestId("zapisnici-delete").first().click()
     await expect
-      .poll(async () => page.getByTestId("pregled-red").count())
+      .poll(async () => page.getByTestId("zapisnici-red").count())
       .toBeLessThan(prijeRedova)
   })
 })

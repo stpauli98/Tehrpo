@@ -9,7 +9,7 @@ import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
 import { href } from "@/i18n/routes"
 import mammoth from "mammoth"
 
-export default async function PregledPage({
+export default async function ZapisniciPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -62,7 +62,7 @@ export default async function PregledPage({
       <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
 
       {dokumenti.length === 0 ? (
-        <div data-testid="pregled-prazno" className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+        <div data-testid="zapisnici-prazno" className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
           {t("prazno")}
         </div>
       ) : (
@@ -80,7 +80,7 @@ export default async function PregledPage({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium">{previewNaziv}</h2>
-            <Link href={href("/zapisnici")} className={IKONA_INLINE_KLASA} data-testid="pregled-zatvori" aria-label={t("zatvoriPregled")}>
+            <Link href={href("/zapisnici")} className={IKONA_INLINE_KLASA} data-testid="zapisnici-zatvori" aria-label={t("zatvoriPregled")}>
               <X className="h-4 w-4" aria-hidden />
               <Tooltip>{t("zatvoriPregled")}</Tooltip>
             </Link>

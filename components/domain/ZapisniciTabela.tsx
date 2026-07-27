@@ -51,7 +51,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
       </div>
 
       <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-        <table className="w-full text-sm" data-testid="pregled-tabela">
+        <table className="w-full text-sm" data-testid="zapisnici-tabela">
           <thead className="bg-muted">
             <tr>
               {[t("kolone.klijent"), t("kolone.vrsta"), t("kolone.datum"), t("kolone.akcije")].map((c) => (
@@ -63,21 +63,21 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
           </thead>
           <tbody>
             {vidljivi.map((d) => (
-              <tr key={d.id} data-testid="pregled-red" className="border-t border-border">
+              <tr key={d.id} data-testid="zapisnici-red" className="border-t border-border">
                 <td className="px-3 py-2">{d.klijent_naziv ?? "—"}</td>
                 <td className="px-3 py-2 text-muted-foreground">{d.vrsta_naziv ?? "—"}</td>
                 <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
-                    <Link href={href(`/zapisnici?preview=${d.id}`)} className={IKONA_INLINE_KLASA} data-testid="pregled-preview" aria-label={t("pregled")}>
+                    <Link href={href(`/zapisnici?preview=${d.id}`)} className={IKONA_INLINE_KLASA} data-testid="zapisnici-preview" aria-label={t("pregled")}>
                       <Eye className="h-4 w-4" aria-hidden />
                       <Tooltip>{t("pregled")}</Tooltip>
                     </Link>
-                    <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-download" aria-label={t("preuzmi")}>
+                    <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="zapisnici-download" aria-label={t("preuzmi")}>
                       <Download className="h-4 w-4" aria-hidden />
                       <Tooltip>{t("preuzmi")}</Tooltip>
                     </a>
-                    <ObrisiDokumentButton dokumentId={d.id} label={t("obrisiZapisnik")} testId="pregled-delete" />
+                    <ObrisiDokumentButton dokumentId={d.id} label={t("obrisiZapisnik")} testId="zapisnici-delete" />
                   </div>
                 </td>
               </tr>

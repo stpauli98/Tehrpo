@@ -531,7 +531,14 @@
       "nacinPracenje": "Nur Verfolgung",
       "godina": "Jahr",
       "pretragaPlaceholder": "Firma suchen...",
-      "tekuciNaredni": "Aktueller + nächster Monat"
+      "tekuciNaredni": "Aktueller + nächster Monat",
+      "ariaFirma": "Firma",
+      "ariaLokacija": "Standort",
+      "ariaVrsta": "Prüfungsart",
+      "ariaMjesec": "Monat",
+      "ariaNacin": "Ausführungsart",
+      "ariaGodina": "Jahr",
+      "ariaPretraga": "Firmen suchen"
     },
     "sheet": {
       "naslovFallback": "Termin",
@@ -642,7 +649,11 @@
       "sakrij": "Ausblenden",
       "brojAktivnosti": "{broj} Aktivitäten werden exportiert",
       "racunam": "Wird berechnet…",
-      "greskaBroj": "Anzahl derzeit nicht verfügbar"
+      "greskaBroj": "Anzahl derzeit nicht verfügbar",
+      "rasponNevazeci": "Ungültiger Datumsbereich (von muss ≤ bis sein).",
+      "preuzimam": "Wird heruntergeladen…",
+      "uspjeh": "Bericht heruntergeladen.",
+      "greskaPreuzimanja": "Herunterladen fehlgeschlagen."
     },
     "viewSwitcher": {
       "kalendar": "Kalender",
@@ -666,7 +677,9 @@
     "matrixGrid": {
       "vrstaHeader": "Prüfungs-/Untersuchungsart",
       "viseTerminaTitle": "Mehrere Termine — Liste öffnen",
-      "prazno": "Keine Daten."
+      "prazno": "Keine Daten.",
+      "celijaAriaLabel": "{vrsta}, Tag {dan}, {status}",
+      "celijaViseAriaLabel": "{vrsta}, Tag {dan}, {status}, {broj, plural, =1 {# weiterer Termin} other {# weitere Termine}}"
     },
     "monthCalendar": {
       "danAriaLabel": "Tag {broj}",
@@ -691,6 +704,9 @@
       "izaberiKlijenta": "Kunden auswählen",
       "izaberiMjesec": "Monat auswählen",
       "godina": "Jahr"
+    },
+    "api": {
+      "nedostajeId": "Fehlende Aktivitätskennung."
     }
   },
   "aktivnost": {

@@ -1,13 +1,14 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { usePendingFilteri } from "@/lib/use-pending-filteri"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 import { currentYear, monthName } from "@/lib/date"
 import { href } from "@/i18n/routes"
@@ -15,15 +16,18 @@ import { href } from "@/i18n/routes"
 type Opt = { id: string; naziv: string }
 
 export function TerminiFilters({
-  klijenti, vrste, lokacijeByFirma,
+  klijenti, vrste, lokacijeByFirma, godine,
 }: {
   klijenti: Opt[]
   vrste: Opt[]
   lokacijeByFirma: Record<string, Opt[]>
+  /** S8.1: raspon iz baze (`get_termini_godine`), ne `currentYear()±1`. */
+  godine: number[]
 }) {
-  const router = useRouter()
   const params = useSearchParams()
-  const [pending, startTransition] = useTransition()
+  // S10: pending nije samo test atribut — kontejner dobija aria-busy + opacity,
+  // kontrole se onemoguće dok traje navigacija.
+  const { isPending: pending, push } = usePendingFilteri()
   const t = useTranslations("termini.filteri")
   const tStatus = useTranslations("status")
 
@@ -35,7 +39,6 @@ export function TerminiFilters({
   const lokacijaId = params.get("lokacija") ?? "svi"
   const nacin = params.get("nacin") ?? "svi"
   const godina = params.get("godina") ?? String(currentYear())
-  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
   const godinaItems: Record<string, string> = Object.fromEntries(godine.map((g) => [String(g), String(g)]))
   const firmaLokacije = klijentId !== "svi" ? lokacijeByFirma[klijentId] ?? [] : []
 
@@ -60,7 +63,7 @@ export function TerminiFilters({
     else next.set(key, value)
     next.delete("page")       // reset paginaciju
     next.delete("selected")   // zatvori detalje
-    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
+    push(href(`/plan-aktivnosti?${next.toString()}`))
   }
 
   function setStatus(value: string) {
@@ -72,7 +75,7 @@ export function TerminiFilters({
     if (value === "kasni") next.set("mjesec", "svi")
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
+    push(href(`/plan-aktivnosti?${next.toString()}`))
   }
 
   function setMjesec(value: string) {
@@ -80,7 +83,7 @@ export function TerminiFilters({
     next.set("mjesec", value) // uvijek eksplicitno (tn|svi|1..12)
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
+    push(href(`/plan-aktivnosti?${next.toString()}`))
   }
 
   // Promjena firme resetuje lokaciju (stale lokacija druge firme → prazna lista)
@@ -91,7 +94,7 @@ export function TerminiFilters({
     next.delete("lokacija")
     next.delete("page")
     next.delete("selected")
-    startTransition(() => router.push(href(`/plan-aktivnosti?${next.toString()}`)))
+    push(href(`/plan-aktivnosti?${next.toString()}`))
   }
 
   // Live search: kontrolisani input + debounce (filtrira čim se kuca, bez Entera).
@@ -118,7 +121,12 @@ export function TerminiFilters({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2" data-testid="termini-filters" data-pending={pending}>
+    <div
+      className={cn("flex flex-wrap items-center gap-2", pending && "opacity-60")}
+      data-testid="termini-filters"
+      data-pending={pending}
+      aria-busy={pending}
+    >
       {/* Status pills */}
       <div className="flex items-center gap-1">
         {STATUS_FILTER_OPTIONS.map((o) => (
@@ -128,9 +136,10 @@ export function TerminiFilters({
             data-testid={`status-pill-${o.value}`}
             data-active={status === o.value}
             aria-pressed={status === o.value}
+            disabled={pending}
             onClick={() => setStatus(o.value)}
             className={cn(
-              "px-3 py-1 rounded-full text-sm border transition",
+              "px-3 py-1 rounded-full text-sm border transition-colors",
               FOCUS_RING,
               status === o.value
                 ? "bg-brand text-white border-brand"
@@ -144,7 +153,7 @@ export function TerminiFilters({
 
       {/* Klijent (firma) dropdown */}
       <Select value={klijentId} onValueChange={(v) => setKlijent(v ?? "svi")} items={firmaItems}>
-        <SelectTrigger className="w-48" data-testid="filter-klijent">
+        <SelectTrigger className="w-48" data-testid="filter-klijent" disabled={pending} aria-label={t("ariaFirma")}>
           <SelectValue placeholder={t("sveFirme")} />
         </SelectTrigger>
         <SelectContent>
@@ -158,7 +167,7 @@ export function TerminiFilters({
       {/* Lokacija dropdown — samo kad je firma izabrana i ima lokacija */}
       {firmaLokacije.length > 0 && (
         <Select value={lokacijaId} onValueChange={(v) => setParam("lokacija", v)} items={lokacijaItems}>
-          <SelectTrigger className="w-48" data-testid="filter-lokacija">
+          <SelectTrigger className="w-48" data-testid="filter-lokacija" disabled={pending} aria-label={t("ariaLokacija")}>
             <SelectValue placeholder={t("sveLokacije")} />
           </SelectTrigger>
           <SelectContent>
@@ -172,7 +181,7 @@ export function TerminiFilters({
 
       {/* Vrsta dropdown */}
       <Select value={vrstaId} onValueChange={(v) => setParam("vrsta_id", v)} items={vrstaItems}>
-        <SelectTrigger className="w-48" data-testid="filter-vrsta">
+        <SelectTrigger className="w-48" data-testid="filter-vrsta" disabled={pending} aria-label={t("ariaVrsta")}>
           <SelectValue placeholder={t("sveVrste")} />
         </SelectTrigger>
         <SelectContent>
@@ -185,7 +194,7 @@ export function TerminiFilters({
 
       {/* Mjesec dropdown */}
       <Select value={mjesec} onValueChange={(v) => setMjesec(v ?? "tn")} items={mjesecItems}>
-        <SelectTrigger className="w-36" data-testid="filter-mjesec">
+        <SelectTrigger className="w-36" data-testid="filter-mjesec" disabled={pending} aria-label={t("ariaMjesec")}>
           <SelectValue placeholder={t("sviMjeseci")} />
         </SelectTrigger>
         <SelectContent>
@@ -198,7 +207,7 @@ export function TerminiFilters({
 
       {/* Način izvršenja dropdown */}
       <Select value={nacin} onValueChange={(v) => setParam("nacin", v)} items={nacinItems}>
-        <SelectTrigger className="w-40" data-testid="filter-nacin">
+        <SelectTrigger className="w-40" data-testid="filter-nacin" disabled={pending} aria-label={t("ariaNacin")}>
           <SelectValue placeholder={t("sviNacini")} />
         </SelectTrigger>
         <SelectContent>
@@ -211,7 +220,7 @@ export function TerminiFilters({
       {/* Godina — relevantna samo uz odabran numerički mjesec */}
       {mjesec !== "svi" && mjesec !== "tn" && (
         <Select value={godina} onValueChange={(v) => setParam("godina", v)} items={godinaItems}>
-          <SelectTrigger className="w-24" data-testid="filter-godina">
+          <SelectTrigger className="w-24" data-testid="filter-godina" disabled={pending} aria-label={t("ariaGodina")}>
             <SelectValue placeholder={t("godina")} />
           </SelectTrigger>
           <SelectContent>
@@ -222,10 +231,13 @@ export function TerminiFilters({
         </Select>
       )}
 
-      {/* Search — live (debounce); Enter samo ubrza */}
+      {/* Search — live (debounce); Enter samo ubrza. Namjerno BEZ `disabled={pending}`:
+          input je kontrolisan i debounce-ovan, pa bi ga onemogućavanje usred kucanja
+          rasfokusiralo i pojelo znakove; pending signal nosi kontejner (aria-busy + opacity). */}
       <Input
         type="search"
         placeholder={t("pretragaPlaceholder")}
+        aria-label={t("ariaPretraga")}
         value={term}
         data-testid="filter-search"
         className="w-56 ml-auto"

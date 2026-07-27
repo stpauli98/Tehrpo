@@ -77,7 +77,10 @@ test.describe("Plan aktivnosti — izvoz modal", () => {
     await page.goto("/plan-aktivnosti")
     await page.getByTestId("izvoz-trigger").click()
     await page.getByTestId("izvoz-prilagodi").click()
-    await page.getByTestId("izvoz-period-raspon").check()
+    // Radio je sada base-ui primitiv (`role="radio"` span + skriveni input), pa se
+    // bira klikom — `.check()` cilja native input element.
+    await page.getByTestId("izvoz-period-raspon").click()
+    await expect(page.getByTestId("izvoz-period-raspon")).toBeChecked()
     await page.getByTestId("izvoz-od").fill("2026-07-31")
     await page.getByTestId("izvoz-do").fill("2026-07-01")
     await expect(page.getByTestId("izvoz-preuzmi")).toBeDisabled()

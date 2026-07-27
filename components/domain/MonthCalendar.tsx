@@ -65,7 +65,7 @@ export function MonthCalendar({
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-border"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10"
       data-testid="plan-grid"
     >
       {/* Day-of-week header */}
@@ -125,7 +125,7 @@ export function MonthCalendar({
                       data-testid="cell-termin"
                       data-status={termin.status}
                       className={cn(
-                        "pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-[11px] text-muted-foreground hover:bg-muted",
+                        "pointer-events-auto flex items-center gap-1 truncate rounded px-0.5 text-xs text-muted-foreground hover:bg-muted",
                         FOCUS_RING,
                       )}
                     >
@@ -146,7 +146,7 @@ export function MonthCalendar({
                       href={dayHref(c.date)}
                       data-testid="cell-vise"
                       className={cn(
-                        "pointer-events-auto block rounded-sm text-[10px] text-brand font-medium hover:underline",
+                        "pointer-events-auto block rounded-sm text-xs font-medium text-brand hover:underline",
                         FOCUS_RING,
                       )}
                     >

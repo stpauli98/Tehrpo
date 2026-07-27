@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { monthRange, currentYear, todayIso } from "@/lib/date"
+import { APP_LOCALE } from "@/lib/locale"
+import { getMessages } from "@/i18n/messages"
+
+// S1: ruta nikad ne vraća sirovi PostgrestError — samo `{ error: <i18n string> }`.
+const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "common" })
 
 /**
  * GET /api/plan-aktivnosti/matrica
@@ -46,7 +52,7 @@ export async function GET(req: NextRequest) {
     .order("naziv")
 
   if (klijentiError) {
-    return NextResponse.json({ error: klijentiError }, { status: 400 })
+    return NextResponse.json({ error: t("greskaUcitavanja") }, { status: 400 })
   }
 
   let termini: unknown[] = []
@@ -59,7 +65,7 @@ export async function GET(req: NextRequest) {
       .select("id, vrsta_provjere_id, vrsta_naziv, klijent_id, rok_dospijeca, datum_prikaza, status_izvedeni")
       .gte("datum_prikaza", od)
       .lte("datum_prikaza", doIso)
-    if (error) return NextResponse.json({ error }, { status: 400 })
+    if (error) return NextResponse.json({ error: t("greskaUcitavanja") }, { status: 400 })
     termini = data ?? []
   } else if (klijentId) {
     // Godišnja matrica jednog klijenta — kolone su 12 mjeseci
@@ -70,7 +76,7 @@ export async function GET(req: NextRequest) {
       .gte("datum_prikaza", `${godina}-01-01`)
       .lte("datum_prikaza", `${godina}-12-31`)
       .order("vrsta_naziv")
-    if (error) return NextResponse.json({ error }, { status: 400 })
+    if (error) return NextResponse.json({ error: t("greskaUcitavanja") }, { status: 400 })
     termini = data ?? []
   }
   // else: mode="klijent" without klijentId → termini stays []

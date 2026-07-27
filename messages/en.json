@@ -531,7 +531,14 @@
       "nacinPracenje": "Tracking only",
       "godina": "Year",
       "pretragaPlaceholder": "Search company...",
-      "tekuciNaredni": "Current + next month"
+      "tekuciNaredni": "Current + next month",
+      "ariaFirma": "Company",
+      "ariaLokacija": "Location",
+      "ariaVrsta": "Inspection type",
+      "ariaMjesec": "Month",
+      "ariaNacin": "Execution method",
+      "ariaGodina": "Year",
+      "ariaPretraga": "Search companies"
     },
     "sheet": {
       "naslovFallback": "Appointment",
@@ -642,7 +649,11 @@
       "sakrij": "Hide",
       "brojAktivnosti": "{broj} activities will be exported",
       "racunam": "Calculating…",
-      "greskaBroj": "Count currently unavailable"
+      "greskaBroj": "Count currently unavailable",
+      "rasponNevazeci": "Invalid date range (from must be ≤ to).",
+      "preuzimam": "Downloading…",
+      "uspjeh": "Report downloaded.",
+      "greskaPreuzimanja": "Download failed."
     },
     "viewSwitcher": {
       "kalendar": "Calendar",
@@ -666,7 +677,9 @@
     "matrixGrid": {
       "vrstaHeader": "Inspection / test type",
       "viseTerminaTitle": "Multiple appointments — open list",
-      "prazno": "No data."
+      "prazno": "No data.",
+      "celijaAriaLabel": "{vrsta}, day {dan}, {status}",
+      "celijaViseAriaLabel": "{vrsta}, day {dan}, {status}, {broj, plural, =1 {# more appointment} other {# more appointments}}"
     },
     "monthCalendar": {
       "danAriaLabel": "Day {broj}",
@@ -691,6 +704,9 @@
       "izaberiKlijenta": "Select a client",
       "izaberiMjesec": "Select a month",
       "godina": "Year"
+    },
+    "api": {
+      "nedostajeId": "Missing activity identifier."
     }
   },
   "aktivnost": {

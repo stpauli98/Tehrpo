@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { Plus } from "lucide-react"
 import {
@@ -23,34 +22,45 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import { FieldError } from "@/components/domain/FieldError"
+import { ZaduzeniPolje } from "@/components/domain/ZaduzeniPolje"
 import { createTermin, type ActionResult } from "@/app/(dashboard)/termini/actions"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useInvalidatePlanQueries } from "@/lib/queries/plan-invalidacije"
 import { jeZakazanoPoslijeRoka, danaPoslijeRoka } from "@/lib/plan-datum"
 import { formatDatum } from "@/lib/date"
 
 type Opt = { id: string; naziv: string }
+type Greske = Record<string, string[] | undefined>
 const initial: ActionResult = { ok: true }
 
 export function NoviTerminButton({
   klijenti,
   vrste,
   lokacijeByFirma,
+  zaduzeniPrijedlozi,
 }: {
   klijenti: Opt[]
   vrste: Opt[]
   lokacijeByFirma: Record<string, Opt[]>
+  /** S8.6: imena aktivnih korisnika iz `get_aktivni_korisnici()` (prijedlozi, ne ograničenje). */
+  zaduzeniPrijedlozi: string[]
 }) {
   const router = useRouter()
-  const queryClient = useQueryClient()
+  const invalidirajPlan = useInvalidatePlanQueries()
   const t = useTranslations("termini.noviTermin")
   const tc = useTranslations("common")
+  const tAkcije = useTranslations("termini.actions")
   const [open, setOpen] = useState(false)
   const [klijentId, setKlijentId] = useState("")
   const [vrstaId, setVrstaId] = useState("")
   const [lokacijaId, setLokacijaId] = useState("")
   const [rok, setRok] = useState("")
   const [zakazan, setZakazan] = useState("")
+  // S2: predvidive greške se hvataju prije round-tripa. base-ui Select nema native
+  // `required`, pa obavezna polja provjeravamo ovdje; server (Zod) ostaje izvor istine.
+  const [lokalneGreske, setLokalneGreske] = useState<Greske>({})
   const tz = useTranslations("termini.zakazanoUpozorenje")
   const [state, action, pending] = useActionState(createTermin, initial)
   const submitted = useRef(false)
@@ -59,6 +69,12 @@ export function NoviTerminButton({
 
   const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
 
+  // S2: `errors` idu isključivo inline (FieldError), `message` isključivo u toast.
+  const greske: Greske = {
+    ...(state.ok === false ? state.errors ?? {} : {}),
+    ...lokalneGreske,
+  }
+
   // items mape (value→label) za base-ui SelectValue (prikaz labele kad je zatvoreno)
   const klijentItems: Record<string, string> = Object.fromEntries(klijenti.map((k) => [k.id, k.naziv]))
   const vrstaItems: Record<string, string> = Object.fromEntries(vrste.map((v) => [v.id, v.naziv]))
@@ -66,33 +82,22 @@ export function NoviTerminButton({
 
   // Zatvori sheet TEK nakon stvarnog submita koji je uspio (submitted ref
   // razlikuje uspjeh od initial { ok: true } stanja).
-  // Optimistički uvećaj stats.ukupno u svim cached lista upitima, pa pokreni
-  // background refetch da se potvrdi stvarna vrijednost iz baze.
   useEffect(() => {
     if (submitted.current && !pending && state.ok) {
       submitted.current = false
-      // Optimistic update — sync, tako da Playwright vidi novu vrijednost odmah
-      queryClient.setQueriesData({ queryKey: ["termini-lista"] }, (old: unknown) => {
-        if (!old || typeof old !== "object" || !("stats" in old)) return old
-        const data = old as { stats: { ukupno: number } | null }
-        if (!data.stats) return old
-        return { ...data, stats: { ...data.stats, ukupno: data.stats.ukupno + 1 } }
-      })
       setOpen(false)
       setKlijentId("")
       setVrstaId("")
       setLokacijaId("")
       setRok("")
       setZakazan("")
-      void queryClient.invalidateQueries({ queryKey: ["termini-lista"] })
-      // Novi termin pripada i matrica/kalendar prikazima (rok_dospijeca); ti su keševi
-      // perzistentni preko view-switch-a (staleTime 60s), pa ih eksplicitno invalidiraj
-      // da se novi termin vidi pri povratku na te prikaze (mirror TerminSheet handlera).
-      void queryClient.invalidateQueries({ queryKey: ["termini-matrica"] })
-      void queryClient.invalidateQueries({ queryKey: ["termini-kalendar"] })
+      setLokalneGreske({})
+      // Novi termin pripada i lista/matrica/kalendar prikazima; keševi su perzistentni
+      // preko view-switch-a (staleTime 60s) pa ih invalidira dijeljeni hook.
+      invalidirajPlan()
       router.refresh()
     }
-  }, [state, pending, router, queryClient])
+  }, [state, pending, router, invalidirajPlan])
 
   if (!mozeUrediti) return null
 
@@ -101,7 +106,7 @@ export function NoviTerminButton({
       <DialogTrigger
         render={
           <Button data-testid="novi-termin-btn">
-            <Plus className="w-4 h-4" aria-hidden /> {t("dugme")}
+            <Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
@@ -115,6 +120,14 @@ export function NoviTerminButton({
 
         <form
           action={(fd) => {
+            const lokalne: Greske = {}
+            if (!klijentId) lokalne.klijent_id = [tAkcije("klijentObavezan")]
+            if (!vrstaId) lokalne.vrsta_provjere_id = [tAkcije("vrstaObavezna")]
+            if (Object.keys(lokalne).length > 0) {
+              setLokalneGreske(lokalne)
+              return
+            }
+            setLokalneGreske({})
             fd.set("klijent_id", klijentId)
             fd.set("vrsta_provjere_id", vrstaId)
             if (lokacijaId) fd.set("lokacija_id", lokacijaId)
@@ -134,7 +147,13 @@ export function NoviTerminButton({
               }}
               items={klijentItems}
             >
-              <SelectTrigger className="w-full" data-testid="novi-klijent">
+              <SelectTrigger
+                className="w-full"
+                data-testid="novi-klijent"
+                aria-required
+                aria-invalid={greske.klijent_id ? true : undefined}
+                aria-describedby={greske.klijent_id ? "greska-novi-klijent" : undefined}
+              >
                 <SelectValue placeholder={t("placeholderKlijent")} />
               </SelectTrigger>
               <SelectContent>
@@ -146,29 +165,44 @@ export function NoviTerminButton({
               </SelectContent>
             </Select>
           </label>
+          <FieldError id="greska-novi-klijent" errors={greske.klijent_id} />
 
           {lokacije.length > 0 && (
-            <label className="block text-sm">
-              <span className="text-muted-foreground">{t("poljeLokacija")}</span>
-              <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")} items={lokacijaItems}>
-                <SelectTrigger className="w-full" data-testid="novi-lokacija">
-                  <SelectValue placeholder={t("placeholderLokacija")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {lokacije.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      <span className="whitespace-normal">{l.naziv}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
+            <>
+              <label className="block text-sm">
+                <span className="text-muted-foreground">{t("poljeLokacija")}</span>
+                <Select value={lokacijaId} onValueChange={(v) => setLokacijaId(v ?? "")} items={lokacijaItems}>
+                  <SelectTrigger
+                    className="w-full"
+                    data-testid="novi-lokacija"
+                    aria-invalid={greske.lokacija_id ? true : undefined}
+                    aria-describedby={greske.lokacija_id ? "greska-novi-lokacija" : undefined}
+                  >
+                    <SelectValue placeholder={t("placeholderLokacija")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lokacije.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        <span className="whitespace-normal">{l.naziv}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <FieldError id="greska-novi-lokacija" errors={greske.lokacija_id} />
+            </>
           )}
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeVrsta")}</span>
             <Select value={vrstaId} onValueChange={(v) => setVrstaId(v ?? "")} items={vrstaItems}>
-              <SelectTrigger className="w-full" data-testid="novi-vrsta">
+              <SelectTrigger
+                className="w-full"
+                data-testid="novi-vrsta"
+                aria-required
+                aria-invalid={greske.vrsta_provjere_id ? true : undefined}
+                aria-describedby={greske.vrsta_provjere_id ? "greska-novi-vrsta" : undefined}
+              >
                 <SelectValue placeholder={t("placeholderVrsta")} />
               </SelectTrigger>
               <SelectContent>
@@ -180,34 +214,39 @@ export function NoviTerminButton({
               </SelectContent>
             </Select>
           </label>
+          <FieldError id="greska-novi-vrsta" errors={greske.vrsta_provjere_id} />
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeRok")}</span>
             <Input type="date" name="rok_dospijeca" required value={rok}
+              aria-describedby={greske.rok_dospijeca ? "greska-novi-rok" : undefined}
               onChange={(e) => setRok(e.target.value)} data-testid="novi-rok" />
           </label>
+          <FieldError id="greska-novi-rok" errors={greske.rok_dospijeca} />
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
             <Input type="date" name="datum_zakazan" value={zakazan}
+              aria-describedby={greske.datum_zakazan ? "greska-novi-zakazan" : undefined}
               onChange={(e) => setZakazan(e.target.value)} data-testid="novi-zakazan" />
           </label>
+          <FieldError id="greska-novi-zakazan" errors={greske.datum_zakazan} />
           {jeZakazanoPoslijeRoka(rok, zakazan) && (
-            <p className="text-xs text-amber-700" role="status" data-testid="zakazano-poslije-roka">
+            <p className="text-xs text-warning" role="status" data-testid="zakazano-poslije-roka">
               {tz("poslijeRoka", { dana: danaPoslijeRoka(rok, zakazan), rok: formatDatum(rok) })}
             </p>
           )}
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeZaduzeni")}</span>
-            <Input name="zaduzeni" placeholder={t("placeholderZaduzeni")} data-testid="novi-zaduzeni" />
+            <ZaduzeniPolje
+              prijedlozi={zaduzeniPrijedlozi}
+              placeholder={t("placeholderZaduzeni")}
+              testId="novi-zaduzeni"
+              describedBy={greske.zaduzeni ? "greska-novi-zaduzeni" : undefined}
+            />
           </label>
-
-          {state.ok === false && state.message && (
-            <p className="text-sm text-destructive" role="alert">
-              {state.message}
-            </p>
-          )}
+          <FieldError id="greska-novi-zaduzeni" errors={greske.zaduzeni} />
 
           <Button type="submit" disabled={pending} data-testid="novi-submit">
             {pending ? t("kreiram") : t("kreirajTermin")}

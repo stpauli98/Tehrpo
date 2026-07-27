@@ -3,22 +3,27 @@
 import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Download } from "lucide-react"
+import { toast } from "sonner"
+import { ChevronDown, ChevronRight, Download } from "lucide-react"
 import {
   Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { currentYear, monthName, todayIso } from "@/lib/date"
 import { validRaspon } from "@/lib/plan-izvoz/period"
+import { imeIzContentDisposition } from "@/lib/plan-izvoz/naziv-fajla"
+import { porukaIzOdgovora } from "@/lib/queries/plan-aktivnosti"
 
 type PeriodMod = "om" | "god" | "mj" | "raspon" | "svi"
 const FILTER_KEYS = ["status", "q", "klijent_id", "lokacija", "vrsta_id", "nacin"] as const
 
-export function PlanIzvozModal() {
+export function PlanIzvozModal({ godine }: { godine: number[] }) {
   const params = useSearchParams()
   const t = useTranslations("plan.izvoz")
 
@@ -32,8 +37,8 @@ export function PlanIzvozModal() {
   const [doDatum, setDoDatum] = useState("")
   const [opseg, setOpseg] = useState<"sve" | "filtrirano">("sve")
   const [broj, setBroj] = useState<number | "loading" | null>(null)
+  const [preuzimanje, setPreuzimanje] = useState(false)
 
-  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
   const rasponNevazeci = periodMod === "raspon" && !validRaspon(od, doDatum)
 
   const aktivniFilteri = useMemo(
@@ -77,17 +82,55 @@ export function PlanIzvozModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, periodMod, godina, mjesec, od, doDatum, opseg, filterKljuc, rasponNevazeci])
 
-  function preuzmi() {
-    if (rasponNevazeci) return
-    window.location.assign(`/api/plan-aktivnosti/izvoz?${buildParams(false).toString()}`)
-    setOpen(false)
+  /**
+   * S13: izvoz ide kroz `fetch` + blob, nikad `window.location.assign` — ruta na
+   * grešci vraća JSON `{error}`, koji bi kod navigacije završio kao sirovi tekst na
+   * bijeloj stranici, a modal bi se već bio zatvorio. Modal se sada zatvara TEK
+   * nakon uspješno snimljenog fajla.
+   */
+  async function preuzmi() {
+    if (rasponNevazeci || preuzimanje) return
+    setPreuzimanje(true)
+    try {
+      const res = await fetch(`/api/plan-aktivnosti/izvoz?${buildParams(false).toString()}`)
+      if (!res.ok) {
+        const poruka = await porukaIzOdgovora(res)
+        toast.error(poruka || t("greskaPreuzimanja"))
+        return // modal OSTAJE otvoren — korisnik može ispraviti izbor
+      }
+      const blob = await res.blob()
+      const ime = imeIzContentDisposition(
+        res.headers.get("Content-Disposition"),
+        `plan.${format === "pdf" ? "pdf" : "xlsx"}`,
+      )
+      const url = URL.createObjectURL(blob)
+      try {
+        const a = document.createElement("a")
+        a.href = url
+        a.download = ime
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+      } finally {
+        URL.revokeObjectURL(url)
+      }
+      toast.success(t("uspjeh"))
+      setOpen(false)
+    } catch {
+      toast.error(t("greskaPreuzimanja"))
+    } finally {
+      setPreuzimanje(false)
+    }
   }
 
+  // Plan N16: nevažeći raspon NIJE isto što i pad brojanja — razdvojene poruke.
   const brojTekst =
-    rasponNevazeci ? t("greskaBroj")
+    rasponNevazeci ? t("rasponNevazeci")
     : broj === "loading" ? t("racunam")
     : broj === null ? t("greskaBroj")
     : t("brojAktivnosti", { broj })
+
+  const linkKlase = cn("self-start rounded-sm text-sm text-brand hover:underline", FOCUS_RING)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -126,91 +169,113 @@ export function PlanIzvozModal() {
           <div className="flex items-center justify-between text-sm">
             <span><span className="text-muted-foreground">{t("period")}: </span>{t("periodOvajMjesec")}</span>
             <button
-              type="button" className="text-primary hover:underline text-sm"
+              type="button" className={linkKlase}
               data-testid="izvoz-prilagodi"
               onClick={() => { setPeriodMod("om"); setPrilagodi(true) }}
-            >▸ {t("prilagodi")}</button>
+            >
+              <ChevronRight className="mr-1 inline-block h-[18px] w-[18px] shrink-0 align-text-bottom" aria-hidden />
+              {t("prilagodi")}
+            </button>
           </div>
         ) : (
           <>
             <fieldset className="flex flex-col gap-2" data-testid="izvoz-period">
               <legend className="text-xs font-medium text-muted-foreground mb-1">{t("period")}</legend>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-period" checked={periodMod === "om"} onChange={() => setPeriodMod("om")} data-testid="izvoz-period-om" />
-                {t("periodOvajMjesec")}
-              </label>
-
-              <div className="flex items-center gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="izvoz-period" checked={periodMod === "god"} onChange={() => setPeriodMod("god")} data-testid="izvoz-period-god" />
-                  {t("periodGodina")}
+              {/* S4: native radio → ui/radio-group (fokus prsten i tokeni dolaze iz primitiva).
+                  S12: svaka stavka nosi vlastiti `aria-label`. Base UI `Radio.Root` renderuje
+                  `<span role="radio">` uz `aria-hidden` skriveni input, pa `<label>` koji ga
+                  obavija imenuje samo taj skriveni input — vidljivi radio bi ostao bez imena
+                  (native `<input type="radio">` je ime dobijao od istog tog labela). */}
+              <RadioGroup
+                value={periodMod}
+                onValueChange={(v) => setPeriodMod(v as PeriodMod)}
+                aria-label={t("period")}
+                className="gap-2"
+              >
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="om" data-testid="izvoz-period-om" aria-label={t("periodOvajMjesec")} />
+                  {t("periodOvajMjesec")}
                 </label>
-                {periodMod === "god" && (
-                  <Select value={String(godina)} onValueChange={(v) => setGodina(Number(v))}>
-                    <SelectTrigger size="sm" className="w-24" data-testid="izvoz-godina"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="izvoz-period" checked={periodMod === "mj"} onChange={() => setPeriodMod("mj")} data-testid="izvoz-period-mj" />
-                  {t("periodMjesec")}
-                </label>
-                {periodMod === "mj" && (
-                  <>
-                    <Select value={String(mjesec)} onValueChange={(v) => setMjesec(Number(v))}>
-                      <SelectTrigger size="sm" className="w-32" data-testid="izvoz-mjesec"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <SelectItem key={i + 1} value={String(i + 1)}>{monthName(i + 1)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2">
+                    <RadioGroupItem value="god" data-testid="izvoz-period-god" aria-label={t("periodGodina")} />
+                    {t("periodGodina")}
+                  </label>
+                  {periodMod === "god" && (
                     <Select value={String(godina)} onValueChange={(v) => setGodina(Number(v))}>
-                      <SelectTrigger size="sm" className="w-24"><SelectValue /></SelectTrigger>
+                      <SelectTrigger size="sm" className="w-24" data-testid="izvoz-godina" aria-label={t("periodGodina")}><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                  </>
-                )}
-              </div>
-
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-period" checked={periodMod === "raspon"} onChange={() => setPeriodMod("raspon")} data-testid="izvoz-period-raspon" />
-                {t("periodRaspon")}
-              </label>
-              {periodMod === "raspon" && (
-                <div className="flex items-center gap-2 pl-6 text-sm">
-                  <span className="text-muted-foreground">{t("od")}</span>
-                  <Input type="date" value={od} onChange={(e) => setOd(e.target.value)} className="w-40" data-testid="izvoz-od" />
-                  <span className="text-muted-foreground">{t("do")}</span>
-                  <Input type="date" value={doDatum} onChange={(e) => setDoDatum(e.target.value)} className="w-40" data-testid="izvoz-do" />
+                  )}
                 </div>
-              )}
 
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-period" checked={periodMod === "svi"} onChange={() => setPeriodMod("svi")} data-testid="izvoz-period-svi" />
-                {t("periodSvi")}
-              </label>
+                <div className="flex items-center gap-2 text-sm">
+                  <label className="flex items-center gap-2">
+                    <RadioGroupItem value="mj" data-testid="izvoz-period-mj" aria-label={t("periodMjesec")} />
+                    {t("periodMjesec")}
+                  </label>
+                  {periodMod === "mj" && (
+                    <>
+                      <Select value={String(mjesec)} onValueChange={(v) => setMjesec(Number(v))}>
+                        <SelectTrigger size="sm" className="w-32" data-testid="izvoz-mjesec" aria-label={t("periodMjesec")}><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <SelectItem key={i + 1} value={String(i + 1)}>{monthName(i + 1)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={String(godina)} onValueChange={(v) => setGodina(Number(v))}>
+                        <SelectTrigger size="sm" className="w-24" aria-label={t("periodGodina")}><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
+                </div>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="raspon" data-testid="izvoz-period-raspon" aria-label={t("periodRaspon")} />
+                  {t("periodRaspon")}
+                </label>
+                {periodMod === "raspon" && (
+                  <div className="flex items-center gap-2 pl-6 text-sm">
+                    <span className="text-muted-foreground">{t("od")}</span>
+                    <Input type="date" value={od} onChange={(e) => setOd(e.target.value)} className="w-40" data-testid="izvoz-od" aria-label={t("od")} />
+                    <span className="text-muted-foreground">{t("do")}</span>
+                    <Input type="date" value={doDatum} onChange={(e) => setDoDatum(e.target.value)} className="w-40" data-testid="izvoz-do" aria-label={t("do")} />
+                  </div>
+                )}
+
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="svi" data-testid="izvoz-period-svi" aria-label={t("periodSvi")} />
+                  {t("periodSvi")}
+                </label>
+              </RadioGroup>
             </fieldset>
 
             {/* Opseg */}
             <fieldset className="flex flex-col gap-2" data-testid="izvoz-opseg">
               <legend className="text-xs font-medium text-muted-foreground mb-1">{t("opseg")}</legend>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-opseg" checked={opseg === "sve"} onChange={() => setOpseg("sve")} data-testid="izvoz-opseg-sve" />
-                {t("opsegSve")}
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="radio" name="izvoz-opseg" checked={opseg === "filtrirano"} onChange={() => setOpseg("filtrirano")} data-testid="izvoz-opseg-filtrirano" />
-                {t("opsegFiltrirano")}
-              </label>
+              <RadioGroup
+                value={opseg}
+                onValueChange={(v) => setOpseg(v as "sve" | "filtrirano")}
+                aria-label={t("opseg")}
+                className="gap-2"
+              >
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="sve" data-testid="izvoz-opseg-sve" aria-label={t("opsegSve")} />
+                  {t("opsegSve")}
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="filtrirano" data-testid="izvoz-opseg-filtrirano" aria-label={t("opsegFiltrirano")} />
+                  {t("opsegFiltrirano")}
+                </label>
+              </RadioGroup>
               {opseg === "filtrirano" && (
                 <p className="pl-6 text-xs text-muted-foreground">
                   {aktivniFilteri.length > 0 ? t("filteriPrimijenjeni") : t("nemaFiltera")}
@@ -219,18 +284,27 @@ export function PlanIzvozModal() {
             </fieldset>
 
             <button
-              type="button" className="text-primary hover:underline text-sm self-start"
+              type="button" className={linkKlase}
               data-testid="izvoz-sakrij"
               onClick={() => setPrilagodi(false)}
-            >▾ {t("sakrij")}</button>
+            >
+              <ChevronDown className="mr-1 inline-block h-[18px] w-[18px] shrink-0 align-text-bottom" aria-hidden />
+              {t("sakrij")}
+            </button>
           </>
         )}
 
         {/* Živi broj + akcija */}
         <div className="flex items-center justify-between border-t pt-3">
           <span className="text-sm text-muted-foreground" data-testid="izvoz-broj">{brojTekst}</span>
-          <Button type="button" onClick={preuzmi} disabled={rasponNevazeci} data-testid="izvoz-preuzmi">
-            <Download className="h-4 w-4" aria-hidden /> {t("preuzmi")}
+          <Button
+            type="button"
+            onClick={() => void preuzmi()}
+            disabled={rasponNevazeci || preuzimanje}
+            data-testid="izvoz-preuzmi"
+          >
+            <Download className="h-[18px] w-[18px] shrink-0" aria-hidden />{" "}
+            {preuzimanje ? t("preuzimam") : t("preuzmi")}
           </Button>
         </div>
       </DialogContent>

@@ -55,7 +55,7 @@ export function PlanNav({
         data-testid="plan-nav-prev"
         aria-label={t("prethodniMjesec")}
       >
-        <ChevronLeft className="w-4 h-4" aria-hidden />
+        <ChevronLeft className="h-[18px] w-[18px] shrink-0" aria-hidden />
       </Link>
 
       <span
@@ -71,7 +71,7 @@ export function PlanNav({
         data-testid="plan-nav-next"
         aria-label={t("sljedeciMjesec")}
       >
-        <ChevronRight className="w-4 h-4" aria-hidden />
+        <ChevronRight className="h-[18px] w-[18px] shrink-0" aria-hidden />
       </Link>
 
       <Link

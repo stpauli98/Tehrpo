@@ -1,8 +1,9 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
 import { MatrixGrid } from "@/components/domain/MatrixGrid"
@@ -13,11 +14,17 @@ import type { TerminRow } from "@/components/domain/TerminiTable"
 import { currentYear, todayIso, monthName } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { buildMatrix, type MatrixInput, type MatrixRow } from "@/lib/matrix"
-import { getTerminiMatrica, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { getTerminiMatrica, getTerminDetail, porukaGreske } from "@/lib/queries/plan-aktivnosti"
 import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
-export function MatricaView() {
+export function MatricaView({
+  godine,
+  zaduzeniPrijedlozi,
+}: {
+  godine: number[]
+  zaduzeniPrijedlozi: string[]
+}) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.matrica")
 
@@ -33,13 +40,20 @@ export function MatricaView() {
 
   const filters = { mode, klijent: klijentId, godina, mjesec }
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["termini-matrica", filters],
     queryFn: () => getTerminiMatrica(filters),
     staleTime: 60_000,
+    // Promjena filtera ne ruši matricu na skeleton — skeleton je samo za prvo učitavanje.
+    placeholderData: keepPreviousData,
   })
 
-  const { data: detailData } = useQuery({
+  const {
+    data: detailData,
+    isError: detailIsError,
+    error: detailError,
+    refetch: refetchDetail,
+  } = useQuery({
     queryKey: ["termin-detail", selectedId],
     queryFn: () => getTerminDetail(selectedId!),
     enabled: !!selectedId,
@@ -51,7 +65,6 @@ export function MatricaView() {
     naziv: k.naziv,
   }))
   const termini = (data?.termini ?? []) as TerminRow[]
-  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   let matrixRows: MatrixRow[] = []
   let kolone: MatrixColumn[] = []
@@ -114,6 +127,17 @@ export function MatricaView() {
 
   const showMatrix = mode === "mjesec" || (mode === "klijent" && !!klijentId)
 
+  // S1: pad upita NIJE prazna matrica.
+  if (isError) {
+    return (
+      <GreskaUcitavanja
+        poruka={porukaGreske(error)}
+        onRetry={() => void refetch()}
+        testId="plan-greska"
+      />
+    )
+  }
+
   if (isPending) {
     return (
       <div className="space-y-6">
@@ -146,10 +170,19 @@ export function MatricaView() {
       ) : (
         <div
           data-testid="prikaz-empty"
-          className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
+          className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10"
         >
           {emptyMessage}
         </div>
+      )}
+
+      {/* Detalj upit ima vlastitu grešku — sheet se inače tiho ne otvori. */}
+      {selectedId && detailIsError && (
+        <GreskaUcitavanja
+          poruka={porukaGreske(detailError)}
+          onRetry={() => void refetchDetail()}
+          testId="termin-detail-greska"
+        />
       )}
 
       {selectedTermin && (
@@ -158,6 +191,7 @@ export function MatricaView() {
           istorija={istorija}
           dokumenti={dokumenti}
           closeHref={closeHref}
+          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
         />
       )}
     </div>

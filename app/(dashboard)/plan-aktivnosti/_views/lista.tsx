@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { TerminiTable, type TerminRow } from "@/components/domain/TerminiTable"
@@ -8,14 +8,21 @@ import { TerminiFilters } from "@/components/domain/TerminiFilters"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import { NoviTerminButton } from "@/components/domain/NoviTerminButton"
 import { Pagination } from "@/components/domain/Pagination"
+import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Skeleton } from "@/components/ui/skeleton"
 import { currentYear } from "@/lib/date"
-import { getTerminiLista, getTerminDetail } from "@/lib/queries/plan-aktivnosti"
+import { getTerminiLista, getTerminDetail, porukaGreske } from "@/lib/queries/plan-aktivnosti"
 import { TERMINI_PER_PAGE } from "@/lib/plan-filteri"
 import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
-export function ListaView() {
+export function ListaView({
+  godine,
+  zaduzeniPrijedlozi,
+}: {
+  godine: number[]
+  zaduzeniPrijedlozi: string[]
+}) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.lista")
   const tPag = useTranslations("common.pagination")
@@ -43,13 +50,20 @@ export function ListaView() {
     nacin: nacinFilter,
   }
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["termini-lista", filters],
     queryFn: () => getTerminiLista(filters),
     staleTime: 60_000,
+    // Promjena filtera ne ruši tabelu na skeleton — skeleton je samo za prvo učitavanje.
+    placeholderData: keepPreviousData,
   })
 
-  const { data: detailData } = useQuery({
+  const {
+    data: detailData,
+    isError: detailIsError,
+    error: detailError,
+    refetch: refetchDetail,
+  } = useQuery({
     queryKey: ["termin-detail", selectedId],
     queryFn: () => getTerminDetail(selectedId!),
     enabled: !!selectedId,
@@ -90,6 +104,17 @@ export function ListaView() {
     return href(`/plan-aktivnosti?${params.toString()}`)
   }
 
+  // S1: pad upita NIJE prazan rezultat — empty state ostaje samo za uspješan upit sa 0 redova.
+  if (isError) {
+    return (
+      <GreskaUcitavanja
+        poruka={porukaGreske(error)}
+        onRetry={() => void refetch()}
+        testId="plan-greska"
+      />
+    )
+  }
+
   if (isPending) {
     return (
       <div className="space-y-6">
@@ -108,10 +133,20 @@ export function ListaView() {
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex items-center justify-end">
-        <NoviTerminButton klijenti={klijenti} vrste={vrste} lokacijeByFirma={lokacijeByFirma} />
+        <NoviTerminButton
+          klijenti={klijenti}
+          vrste={vrste}
+          lokacijeByFirma={lokacijeByFirma}
+          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
+        />
       </div>
 
-      <TerminiFilters klijenti={klijenti} vrste={vrste} lokacijeByFirma={lokacijeByFirma} />
+      <TerminiFilters
+        klijenti={klijenti}
+        vrste={vrste}
+        lokacijeByFirma={lokacijeByFirma}
+        godine={godine}
+      />
 
       <TerminiTable rows={rows} currentSearch={currentSearch} />
 
@@ -131,12 +166,22 @@ export function ListaView() {
         />
       </div>
 
+      {/* Detalj upit ima vlastitu grešku — sheet se inače tiho ne otvori. */}
+      {selectedId && detailIsError && (
+        <GreskaUcitavanja
+          poruka={porukaGreske(detailError)}
+          onRetry={() => void refetchDetail()}
+          testId="termin-detail-greska"
+        />
+      )}
+
       {selectedTermin && (
         <TerminSheet
           termin={selectedTermin}
           istorija={istorija}
           dokumenti={dokumenti}
           closeHref={closeHref}
+          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
         />
       )}
     </div>

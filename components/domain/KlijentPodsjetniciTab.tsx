@@ -15,7 +15,10 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
     supabase.from("klijenti").select("salji_podsjetnik_klijentu, podsjetnik_emails").eq("id", klijentId).maybeSingle(),
     supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle(),
     supabase.from("kontakt_osobe").select("id, ime, funkcija, email, podsjetnik_primalac").eq("klijent_id", klijentId).order("ime"),
-    jeAdmin ? supabase.from("korisnici").select("id, ime").eq("aktivan", true).order("ime") : Promise.resolve({ data: [] }),
+    // Isti izvor aktivnih korisnika kao „Zaduženi" na detalj stranici (S8.6):
+    // SECURITY DEFINER RPC, već sortiran po imenu. Ovdje je fetch admin-gated pa
+    // je direktan select bio funkcionalno ispravan — RPC se koristi radi jednog izvora.
+    jeAdmin ? supabase.rpc("get_aktivni_korisnici") : Promise.resolve({ data: [] }),
     jeAdmin ? supabase.from("korisnik_klijent").select("korisnik_id").eq("klijent_id", klijentId) : Promise.resolve({ data: [] }),
   ])
   const salji = klRes.data?.salji_podsjetnik_klijentu ?? false

@@ -43,6 +43,9 @@ test.describe("Podsjetnici v2", () => {
 
   test("vrijeme slanja se sačuva i prikaže", async ({ page }) => {
     const prije = (await getPostavkeV2()).vrijeme_slanja_sat
+    // Labela iz messages/sr.json → postavke.vrijemeSlanja.poslijepodne.
+    // Test bira suprotno od podrazumijevanog "ujutro" da promjena bude stvarna.
+    const LABELA = "Poslijepodne (oko 14–15h)"
     try {
       await page.goto("/postavke")
       await otvoriPodsjetnike(page)
@@ -54,14 +57,17 @@ test.describe("Podsjetnici v2", () => {
       await expect(trigger).toBeVisible()
 
       await trigger.click()
-      await page.getByRole("option", { name: "09:00", exact: true }).click()
+      await page.getByRole("option", { name: LABELA, exact: true }).click()
       // Select se disable-uje dok je server akcija pending (isti obrazac kao ostali
       // testovi u ovoj datoteci) — sačekaj da se vrati enabled prije reload-a.
       await expect(trigger).toBeEnabled()
 
       await page.reload()
       await otvoriPodsjetnike(page)
-      await expect(page.getByTestId("vrijeme-slanja-select")).toContainText("09:00")
+      await expect(page.getByTestId("vrijeme-slanja-select")).toContainText(LABELA)
+
+      // Forma šalje termin, a u bazu ide broj — provjeri da se preslikavanje stvarno desilo.
+      expect((await getPostavkeV2()).vrijeme_slanja_sat).toBe(13)
     } finally {
       // Restore direktno u DB (pouzdanije od ponovnog UI round-trip-a ako je gornji
       // blok pukao na pola) — vrati na vrijednost pročitanu PRIJE mutacije.
@@ -186,12 +192,16 @@ test.describe("Podsjetnici v2", () => {
     await expect(page.getByTestId("pokreni-podsjetnike-potvrdi")).toHaveCount(0)
   })
 
-  test("regresija: POST /api/cron/reminders zaobilazi sat/dnevni gate (dry)", async ({ request }) => {
+  test("regresija: POST /api/cron/reminders zaobilazi dnevni gate (dry)", async ({ request }) => {
     const prije = await getPostavkeV2()
-    // Stanje koje bi GET (auto-cron) sigurno preskočio: sat u budućnosti (23) i
-    // marker "već slato danas" (zadnje_slanje_datum = danas po Europe/Vienna).
+    // Sat-gate se ovdje više ne postavlja: `check` na postavke.vrijeme_slanja_sat
+    // dopušta samo dostižne vrijednosti (0..14), pa se nedostižan sat ne može ni
+    // upisati. Zaobilaženje SAT-gejta za POST pokriva unit test rute
+    // (app/api/cron/reminders/route.test.ts), koji ga može mockovati bez baze.
+    // Stanje koje bi GET (auto-cron) sigurno preskočio: marker "već slato danas"
+    // (zadnje_slanje_datum = danas po Europe/Vienna).
     const danas = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Vienna" }).format(new Date())
-    await setPostavkeV2({ vrijeme_slanja_sat: 23, zadnje_slanje_datum: danas })
+    await setPostavkeV2({ zadnje_slanje_datum: danas })
     try {
       const secret = cronSecret()
       const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }

@@ -14,6 +14,7 @@ import { testEmailSubject, testEmailHtml } from "@/lib/email/templates"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 import { env } from "@/lib/env"
+import { satIzTermina } from "@/lib/reminders/rasporedSlanja"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "postavke.actions" })
 // Dedikovan translator za poruke greške vezane za "Moj nalog" (promjena lozinke) —
@@ -415,10 +416,12 @@ export async function updateVrijemeSlanja(
 ): Promise<ActionResult> {
   await zahtijevajAdmina()
   const raw = String(formData.get("vrijeme_slanja_sat") ?? "")
-  const sat = Number(raw)
-  if (!Number.isInteger(sat) || sat < 0 || sat > 23) {
+  // Forma šalje termin, ne sat: dopuštene su tačno dvije vrijednosti, pa nedostižan
+  // sat ne može ni nastati kroz UI. `check` u bazi pokriva direktan upis.
+  if (raw !== "ujutro" && raw !== "poslijepodne") {
     return { ok: false, message: t("vrijemeSatNeispravan") }
   }
+  const sat = satIzTermina(raw)
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("postavke").update({ vrijeme_slanja_sat: sat }).eq("id", 1)
   if (error) return { ok: false, message: error.message }

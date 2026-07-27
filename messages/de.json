@@ -975,8 +975,10 @@
     },
     "vrijemeSlanja": {
       "naslov": "Sendezeit",
-      "opis": "Erinnerungen werden zur ersten Stunde ab der gewählten gesendet, einmal täglich.",
-      "zona": "Ortszeit (Wien)"
+      "opis": "Erinnerungen werden einmal täglich zu einem von zwei Zeitpunkten versendet.",
+      "zona": "Ortszeit (Wien)",
+      "ujutro": "Vormittags (ca. 10–11 Uhr)",
+      "poslijepodne": "Nachmittags (ca. 14–15 Uhr)"
     },
     "saljiKlijentima": {
       "naslov": "Erinnerungen auch an Firmen senden",
@@ -1044,7 +1046,7 @@
       "samoAdmin": "Nur ein Administrator kann Erinnerungen ausführen.",
       "pokreniNijeKonfigurisan": "CRON_SECRET ist auf diesem Deployment nicht konfiguriert.",
       "pokreniGreska": "Ausführen der Erinnerungen fehlgeschlagen.",
-      "vrijemeSatNeispravan": "Stunde muss eine ganze Zahl 0–23 sein.",
+      "vrijemeSatNeispravan": "Unbekannter Versandzeitpunkt.",
       "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen.",
       "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen."
     }

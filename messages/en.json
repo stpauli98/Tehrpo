@@ -975,8 +975,10 @@
     },
     "vrijemeSlanja": {
       "naslov": "Send time",
-      "opis": "Reminders are sent at the first hour at/after the selected one, once per day.",
-      "zona": "local time (Vienna)"
+      "opis": "Reminders are sent once a day, at one of two slots.",
+      "zona": "local time (Vienna)",
+      "ujutro": "Morning (around 10–11)",
+      "poslijepodne": "Afternoon (around 14–15)"
     },
     "saljiKlijentima": {
       "naslov": "Also send reminders to clients",
@@ -1044,7 +1046,7 @@
       "samoAdmin": "Only an administrator can run reminders.",
       "pokreniNijeKonfigurisan": "CRON_SECRET is not configured on this deployment.",
       "pokreniGreska": "Running reminders failed.",
-      "vrijemeSatNeispravan": "Hour must be an integer 0–23.",
+      "vrijemeSatNeispravan": "Unknown sending time slot.",
       "saljiKlijentimaGreska": "Failed to change sending to clients.",
       "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice."
     }

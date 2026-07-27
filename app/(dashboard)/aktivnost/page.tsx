@@ -25,8 +25,12 @@ export default async function AktivnostPage({
   const jedan = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
   const strana = Math.max(1, Number(jedan(sp.strana) ?? "1") || 1)
-  const od = jedan(sp.od)
-  const doDatum = jedan(sp.do)
+  // Sanitacija prije `utcGranicaSarajevskogDana` (S1): helper na neispravnom
+  // datumu baca RangeError, pa bi ručno pokvaren URL (?od=xyz) srušio stranicu
+  // umjesto da padne na čitljivu granu greške. Neispravan datum = filter se ignoriše.
+  const isoDatum = (v: string | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined)
+  const od = isoDatum(jedan(sp.od))
+  const doDatum = isoDatum(jedan(sp.do))
 
   // S7: granice sarajevskog dana kao UTC instanti; `do` je ekskluzivni sljedeći dan
   // (RPC poredi `vrijeme >= p_od AND vrijeme < p_do`), pa zadnja sekunda dana ne ispada.

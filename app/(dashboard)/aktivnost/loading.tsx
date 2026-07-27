@@ -5,7 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 function FilterSkeleton({ sirina }: { sirina: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <Skeleton className="h-3 w-16" />
+      {/* h-4 = line-height labele `text-xs` (16px) — inače raspored skoči 4px po kontroli */}
+      <Skeleton className="h-4 w-16" />
       <Skeleton className={`h-8 ${sirina}`} />
     </div>
   )
@@ -15,8 +16,9 @@ export default function AktivnostLoading() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
+        {/* h-8 = line-height `text-2xl` naslova, h-5 = line-height `text-sm` opisa */}
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-96" />
+        <Skeleton className="h-5 w-96" />
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <FilterSkeleton sirina="w-72" />

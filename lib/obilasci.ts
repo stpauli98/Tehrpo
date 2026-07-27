@@ -25,17 +25,41 @@ function foldGrad(s: string): string {
 }
 
 /**
+ * Gradi lookup mapu (fold ključ → kanonski naziv) iz liste naziva gradova — isti oblik
+ * kao statična GRADOVI_BIH konstanta, ali iz kataloga `gradovi` u bazi (S8.2).
+ * Prazni/whitespace nazivi se preskaču (ne prave ključ "").
+ */
+export function buildGradoviMapa(nazivi: string[]): Record<string, string> {
+  const mapa: Record<string, string> = {}
+  for (const naziv of nazivi) {
+    const kanonski = naziv.trim()
+    if (!kanonski) continue
+    mapa[foldGrad(kanonski)] = kanonski
+  }
+  return mapa
+}
+
+/**
  * Izvlači grad iz naziva lokacije (whitelist BiH gradova; market/negeo → null).
  * Zadržava već postavljeni postojeciGrad.
+ *
+ * `gradoviMapa` (opciono) = katalog iz baze preko `buildGradoviMapa(await dohvatiGradove())`;
+ * kad se ne proslijedi, koristi se statična GRADOVI_BIH whitelista — fallback koji NAMJERNO
+ * ostaje za Excel import pipeline i backfill skriptu (rade offline / prije baze), pa svi
+ * postojeći pozivaoci rade nepromijenjeno (parametar je opcioni, ne mijenja ponašanje).
  */
-export function izvediGrad(naziv: string | null, postojeciGrad?: string | null): string | null {
+export function izvediGrad(
+  naziv: string | null,
+  postojeciGrad?: string | null,
+  gradoviMapa?: Record<string, string>,
+): string | null {
   const pg = postojeciGrad?.trim()
   if (pg) return pg
   if (!naziv?.trim()) return null
   let s = naziv.trim()
   if (s.includes(",")) s = s.split(",")[0]!.trim()        // višegradski → prvi
   if (s.includes(" - ")) s = s.split(" - ")[0]!.trim()    // "Grad - Objekat" → grad
-  return GRADOVI_BIH[foldGrad(s)] ?? null
+  return (gradoviMapa ?? GRADOVI_BIH)[foldGrad(s)] ?? null
 }
 
 export type ObilazakItem = {

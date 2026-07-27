@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { groupByGrad, izvediGrad, type ObilazakItem } from "./obilasci"
+import { buildGradoviMapa, groupByGrad, izvediGrad, type ObilazakItem } from "./obilasci"
 
 const it1 = (over: Partial<ObilazakItem>): ObilazakItem => ({
   id: "x", klijent_id: "k", klijent_naziv: "Firma", vrsta_naziv: "Hidranti",
@@ -58,5 +58,65 @@ describe("izvediGrad", () => {
   it("prazan/null naziv → null", () => {
     expect(izvediGrad(null)).toBeNull()
     expect(izvediGrad("   ")).toBeNull()
+  })
+})
+
+describe("buildGradoviMapa", () => {
+  it("foldira dijakritiku u ključ, čuva kanonski naziv kao vrijednost", () => {
+    expect(buildGradoviMapa(["Gradiška"])).toEqual({ gradiska: "Gradiška" })
+  })
+  it("fold pokriva sve dijakritičke parove (č/ć/š/ž/đ)", () => {
+    expect(buildGradoviMapa(["Brčko", "Istočno Sarajevo", "Laktaši", "Žepče", "Đurđevik"])).toEqual({
+      brcko: "Brčko",
+      "istocno sarajevo": "Istočno Sarajevo",
+      laktasi: "Laktaši",
+      zepce: "Žepče",
+      durdevik: "Đurđevik",
+    })
+  })
+  it("trimuje naziv i preskače prazne unose", () => {
+    expect(buildGradoviMapa(["  Doboj  ", "   ", ""])).toEqual({ doboj: "Doboj" })
+  })
+  it("prazna lista → prazna mapa", () => {
+    expect(buildGradoviMapa([])).toEqual({})
+  })
+  it("mapa iz kataloga ima isti oblik kao statična whitelista (fold ključ → kanonski)", () => {
+    const mapa = buildGradoviMapa(["Banja Luka", "Brčko"])
+    // Prvo apsolutna očekivanja (da poređenje ispod ne prođe vakuumski null===null),
+    // pa tek onda ekvivalencija sa statičnom whitelistom.
+    expect(izvediGrad("BANJA LUKA", null, mapa)).toBe("Banja Luka")
+    expect(izvediGrad("BRČKO", null, mapa)).toBe("Brčko")
+    expect(izvediGrad("BANJA LUKA", null, mapa)).toBe(izvediGrad("BANJA LUKA"))
+    expect(izvediGrad("BRČKO", null, mapa)).toBe(izvediGrad("BRČKO"))
+  })
+})
+
+describe("izvediGrad sa gradoviMapa (katalog iz baze)", () => {
+  const mapa = buildGradoviMapa(["Bihać", "Banja Luka"])
+
+  it("pogađa grad kog nema u statičnoj GRADOVI_BIH whitelisti", () => {
+    expect(izvediGrad("BIHAĆ")).toBeNull() // statični fallback ga ne poznaje
+    expect(izvediGrad("BIHAĆ", null, mapa)).toBe("Bihać")
+  })
+  it("proslijeđena mapa ZAMJENJUJE whitelistu (ne dopunjuje je)", () => {
+    expect(izvediGrad("Prijedor", null, mapa)).toBeNull()
+  })
+  it("normalizacija naziva (zarez / 'Grad - Objekat') radi i sa mapom", () => {
+    expect(izvediGrad("Banja Luka - Delta", null, mapa)).toBe("Banja Luka")
+    expect(izvediGrad("BIHAĆ, BANJA LUKA", null, mapa)).toBe("Bihać")
+  })
+  it("postojeći grad se i dalje zadržava kad je mapa data", () => {
+    expect(izvediGrad("BIHAĆ", "Doboj", mapa)).toBe("Doboj")
+  })
+  it("prazna mapa → sve null (katalog prazan, bez tihog pada na whitelistu)", () => {
+    expect(izvediGrad("PRIJEDOR", null, {})).toBeNull()
+  })
+  it("bez 3. argumenta = identično dosadašnjem ponašanju (backward-kompatibilnost)", () => {
+    expect(izvediGrad("PRIJEDOR")).toBe("Prijedor")
+    expect(izvediGrad("Banja Luka - Kort")).toBe("Banja Luka")
+    expect(izvediGrad("KORT, DELTA")).toBeNull()
+  })
+  it("eksplicitni undefined kao 3. argument → fallback na GRADOVI_BIH", () => {
+    expect(izvediGrad("Doboj", null, undefined)).toBe("Doboj")
   })
 })

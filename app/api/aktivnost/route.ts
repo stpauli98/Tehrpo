@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { AKCIJE_UI } from "@/lib/aktivnost/tipovi"
 
 export const runtime = "nodejs"
 
-const AKCIJE = ["NAVIGATE", "VIEW", "LOGIN", "LOGOUT", "FILTER"] as const
-
 const dogadjajSchema = z.object({
-  akcija: z.enum(AKCIJE),
+  akcija: z.enum(AKCIJE_UI),
   entitet: z.string().max(100).nullable(),
   entitet_id: z.string().max(200).nullable(),
   detalji: z.record(z.string(), z.any()).nullable(),

@@ -23,9 +23,31 @@ test.describe("Faza 8 — AI Asistent (mock)", () => {
     await page.getByTestId("chat-send").click()
     await expect(page.getByTestId("zapisnik-proposal")).toBeVisible({ timeout: 10000 })
     await expect(page.getByTestId("snimi-zapisnik")).toBeVisible()
-    // mock proposal koristi nepostojeći termin → klik vraća kontrolisanu grešku (bez upisa)
+    // mock proposal koristi nepostojeći termin → klik vraća kontrolisanu grešku (bez upisa).
+    // Greška se prikazuje kroz toast (jedan kanal feedbacka — inline span je uklonjen).
     await page.getByTestId("snimi-zapisnik").click()
-    await expect(page.getByText(/Termin ne postoji/)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/Termin ne postoji/).first()).toBeVisible({ timeout: 10000 })
+    // Na neuspjeh dugme OSTAJE omogućeno (retry mora ostati moguć; `snimljeno` ne smije
+    // postati true na ok:false).
+    await expect(page.getByTestId("snimi-zapisnik")).toBeEnabled()
+  })
+
+  test("HTTP greška API-ja se prikaže u assistant mjehuru", async ({ page }) => {
+    await page.goto("/asistent")
+    await page.getByTestId("novi-razgovor").click()
+    // Rate-limit odgovor: JSON bez završnog newline-a — bez `res.ok` provjere ostao bi
+    // u bufferu i mjehur bi zauvijek stajao na placeholderu.
+    await page.route("**/api/chat", (route) =>
+      route.fulfill({
+        status: 429,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Previše zahtjeva" }),
+      }),
+    )
+    await page.getByTestId("chat-input").fill("Koji termini kasne?")
+    await page.getByTestId("chat-send").click()
+    await expect(page.getByTestId("msg-assistant").last()).toContainText("Previše zahtjeva", { timeout: 10000 })
+    await page.unroute("**/api/chat")
   })
 
   test("follow-up poruka u istom razgovoru", async ({ page }) => {

@@ -52,9 +52,10 @@ test.describe("TerminSheet — kartica stane u prozor", () => {
   test("i u niskom prozoru naslov i dugme Zatvori ostaju vidljivi", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 560 })
     const kartica = await otvoriKarticu(page)
-    // Naslov (klijent) i podnožje moraju biti u vidnom polju bez skrolanja dijaloga.
+    // Naslov (klijent) i X za zatvaranje moraju biti u vidnom polju bez skrolanja
+    // dijaloga — X je fiksan u uglu, van skrolabilnog tijela.
     await expect(kartica.getByRole("heading")).toBeInViewport()
-    await expect(page.getByTestId("sheet-close")).toBeInViewport()
+    await expect(page.getByTestId("dialog-close")).toBeInViewport()
     // Sam dijalog se ne skroluje — skroluje samo njegov srednji dio.
     const skrolDijaloga = await kartica.evaluate((el) => ({
       scrollTop: el.scrollTop,

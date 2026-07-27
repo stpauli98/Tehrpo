@@ -5,6 +5,7 @@
     "otkazi": "Cancel",
     "obrisi": "Delete",
     "zatvori": "Close",
+    "nazad": "Back",
     "pretraga": "Search",
     "prikaziJosLista": {
       "prikaziManje": "Show less",
@@ -838,6 +839,10 @@
     "uploadDugme": "Upload",
     "prazno": "No documents for this appointment.",
     "preuzmi": "Download",
+    "pregledaj": "Preview",
+    "pregledUcitavanje": "Loading preview…",
+    "pregledNijeDostupan": "This file type cannot be displayed in the app.",
+    "pregledGreska": "Preview failed. Try again or download the file.",
     "obrisiDokument": "Delete document",
     "aiOznaka": "AI",
     "uploadUspjeh": "Document added",

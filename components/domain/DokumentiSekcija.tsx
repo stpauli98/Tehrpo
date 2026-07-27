@@ -4,8 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
-import { FileText, Sparkles, Trash2 } from "lucide-react"
-import { Tooltip } from "@/components/ui/ikona-tooltip"
+import { Eye, FileText, Sparkles, Trash2 } from "lucide-react"
+import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -32,10 +32,13 @@ export function DokumentiSekcija({
   terminId,
   dokumenti,
   izvrsen,
+  onPregled,
 }: {
   terminId: string
   dokumenti: DokumentRow[]
   izvrsen: boolean
+  /** Kartica prelazi na prikaz sadržaja dokumenta — pregled ne otvara dialog preko dialoga. */
+  onPregled: (dokument: { id: string; naziv: string }) => void
 }) {
   const t = useTranslations("dokumenti")
   const tc = useTranslations("common")
@@ -167,6 +170,16 @@ export function DokumentiSekcija({
                 )}
               </span>
               <span className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onPregled({ id: d.id, naziv: d.naziv })}
+                  aria-label={t("pregledaj")}
+                  data-testid="dokument-pregled"
+                  className={IKONA_INLINE_KLASA}
+                >
+                  <Eye className="h-[18px] w-[18px] shrink-0" aria-hidden />
+                  <Tooltip>{t("pregledaj")}</Tooltip>
+                </button>
                 <PreuzmiDokumentButton
                   dokumentId={d.id}
                   label={t("preuzmi")}

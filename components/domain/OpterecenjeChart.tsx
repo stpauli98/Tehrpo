@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { monthName } from "@/lib/date"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 import { STATUS_DOT_CLASS } from "@/lib/termini"
 
@@ -53,12 +53,13 @@ export async function OpterecenjeChart({
   // (ukupno može uključivati 'otkazano' koji nema segment → gap na vrhu). Tako visina = popunjenost.
   const seg = (m: OpterecenjeRow) => m.izvrseno + m.kasni + m.u_planu
   const max = Math.max(1, ...months.map(seg))
+  const prazno = months.every((m) => seg(m) === 0)
 
   return (
     <div data-testid="opterecenje-chart">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-foreground">{t("naslov")}</p>
+          <h2 className="font-heading text-base font-medium text-foreground">{t("naslov")}</h2>
           <p className="text-xs text-muted-foreground">{t("podnaslov")}</p>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -83,6 +84,14 @@ export async function OpterecenjeChart({
           ))}
         </div>
 
+        {/* Empty state godine — overlay, NE zamjena barova: 12 `chart-bar`
+            elemenata mora ostati u DOM-u (navigacija po mjesecima i dalje radi). */}
+        {prazno && (
+          <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+            {t("prazno")}
+          </p>
+        )}
+
         {/* Barovi */}
         <div className="relative flex h-full items-end gap-2">
           {months.map((m) => {
@@ -95,7 +104,7 @@ export async function OpterecenjeChart({
             const bar = (
               <div
                 className={cn(
-                  "flex w-full flex-col-reverse overflow-hidden rounded-t-md shadow-sm transition-[height] duration-500",
+                  "flex w-full flex-col-reverse overflow-hidden rounded-t-md shadow-sm transition-[height] duration-500 motion-reduce:transition-none",
                   jeTekuci && "ring-2 ring-brand ring-offset-1",
                 )}
                 // Min 4% da i mali mjeseci ostanu vidljivi; 0 mjeseci → bez bara.
@@ -117,7 +126,11 @@ export async function OpterecenjeChart({
                 data-mjesec={m.mjesec}
                 data-ukupno={m.ukupno}
                 aria-label={t("barAriaLabel", { naziv, count: vidljivo })}
-                className={cn(common, "cursor-pointer rounded-md transition-colors hover:bg-muted/60")}
+                className={cn(
+                  common,
+                  "cursor-pointer rounded-md transition-colors motion-reduce:transition-none hover:bg-muted/60",
+                  FOCUS_RING,
+                )}
               >
                 {bar}
               </Link>
@@ -144,7 +157,7 @@ export async function OpterecenjeChart({
             <span
               key={m.mjesec}
               className={cn(
-                "flex-1 text-center text-[11px] capitalize",
+                "flex-1 text-center text-xs capitalize",
                 currentMonth === m.mjesec ? "font-semibold text-brand" : "text-muted-foreground",
               )}
             >

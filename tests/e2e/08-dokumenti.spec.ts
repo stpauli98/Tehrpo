@@ -92,34 +92,34 @@ test.describe("Faza Dokumenti — termin sheet", () => {
 test.describe("Faza Dokumenti — /zapisnici", () => {
   test("AI zapisnik se vidi na /zapisnici i preview renderuje HTML", async ({ page }) => {
     await page.goto("/zapisnici")
-    await expect(page.getByTestId("pregled-tabela")).toBeVisible()
-    await page.getByTestId("pregled-preview").first().click()
+    await expect(page.getByTestId("zapisnici-tabela")).toBeVisible()
+    await page.getByTestId("zapisnici-preview").first().click()
     await expect(page.getByTestId("docx-preview")).toBeVisible()
     await expect(page.getByTestId("docx-preview")).toContainText("ZAPISNIK")
   })
 
   test("odustajanje od brisanja ne uklanja red", async ({ page }) => {
     await page.goto("/zapisnici")
-    const prijeRedova = await page.getByTestId("pregled-red").count()
+    const prijeRedova = await page.getByTestId("zapisnici-red").count()
     expect(prijeRedova).toBeGreaterThan(0)
-    await page.getByTestId("pregled-delete").first().click()
+    await page.getByTestId("zapisnici-delete").first().click()
     const dialog = page.getByTestId("dokument-obrisi-dialog")
     await expect(dialog).toBeVisible()
     await dialog.getByRole("button", { name: "Otkaži", exact: true }).click()
     await expect(dialog).toBeHidden()
-    await expect(page.getByTestId("pregled-red")).toHaveCount(prijeRedova)
+    await expect(page.getByTestId("zapisnici-red")).toHaveCount(prijeRedova)
   })
 
   test("brisanje zapisnika ga uklanja iz liste (uz potvrdu u dialogu)", async ({ page }) => {
     await page.goto("/zapisnici")
-    const prijeRedova = await page.getByTestId("pregled-red").count()
+    const prijeRedova = await page.getByTestId("zapisnici-red").count()
     expect(prijeRedova).toBeGreaterThan(0)
-    await page.getByTestId("pregled-delete").first().click()
+    await page.getByTestId("zapisnici-delete").first().click()
     const dialog = page.getByTestId("dokument-obrisi-dialog")
     await expect(dialog).toBeVisible()
     await dialog.getByRole("button", { name: "Obriši", exact: true }).click()
     await expect
-      .poll(async () => page.getByTestId("pregled-red").count())
+      .poll(async () => page.getByTestId("zapisnici-red").count())
       .toBeLessThan(prijeRedova)
   })
 })

@@ -99,9 +99,9 @@ export default async function ObilasciPage({
       />
 
       {greska ? (
-        <div data-testid="obilasci-greska">
-          <GreskaUcitavanja />
-        </div>
+        // Server komponenta nema refetch → bez `onRetry`; „Pokušaj ponovo" za
+        // neuhvaćene padove pokriva app/(dashboard)/error.tsx.
+        <GreskaUcitavanja testId="obilasci-greska" />
       ) : grupe.length === 0 ? (
         <div
           data-testid="obilasci-empty"

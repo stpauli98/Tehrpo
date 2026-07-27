@@ -781,7 +781,9 @@
     "pregled": "Preview",
     "preuzmi": "Download",
     "obrisiZapisnik": "Delete record",
-    "prazniRezultati": "No records for \"{upit}\"."
+    "prazniRezultati": "No records for \"{upit}\".",
+    "pregledNijeDostupan": "The requested record does not exist or is no longer available.",
+    "pregledGreska": "The record preview failed. Try again or download the file."
   },
   "dokumenti": {
     "izaberiteFajl": "Select a file.",

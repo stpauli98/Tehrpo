@@ -781,7 +781,9 @@
     "pregled": "Vorschau",
     "preuzmi": "Herunterladen",
     "obrisiZapisnik": "Protokoll löschen",
-    "prazniRezultati": "Keine Protokolle für „{upit}“."
+    "prazniRezultati": "Keine Protokolle für „{upit}“.",
+    "pregledNijeDostupan": "Das angeforderte Protokoll existiert nicht oder ist nicht mehr verfügbar.",
+    "pregledGreska": "Die Protokollvorschau ist fehlgeschlagen. Versuchen Sie es erneut oder laden Sie die Datei herunter."
   },
   "dokumenti": {
     "izaberiteFajl": "Wählen Sie eine Datei aus.",

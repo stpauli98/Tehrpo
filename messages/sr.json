@@ -781,7 +781,9 @@
     "pregled": "Pregled",
     "preuzmi": "Preuzmi",
     "obrisiZapisnik": "Obriši zapisnik",
-    "prazniRezultati": "Nema zapisnika za „{upit}”."
+    "prazniRezultati": "Nema zapisnika za „{upit}”.",
+    "pregledNijeDostupan": "Traženi zapisnik ne postoji ili više nije dostupan.",
+    "pregledGreska": "Pregled zapisnika nije uspio. Pokušaj ponovo ili preuzmi fajl."
   },
   "dokumenti": {
     "izaberiteFajl": "Izaberite fajl.",

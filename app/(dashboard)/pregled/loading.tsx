@@ -7,10 +7,9 @@ export default function PregledLoading() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {[0,1,2,3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Skeleton className="lg:col-span-2 h-80 w-full" />
-        <Skeleton className="h-80 w-full" />
-      </div>
+      {/* Redoslijed prati stvarni raspored stranice: lista pa grafikon, oba pune širine (S16) */}
+      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-80 w-full" />
     </div>
   )
 }

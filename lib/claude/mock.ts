@@ -1,4 +1,4 @@
-import type { ChatEvent } from "./chat"
+import type { ChatEvent } from "./protokol"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
 
 // Korisniku vidljivi mock tekstovi asistenta (dry-run mod: CHAT_DRY_RUN=1 ili bez

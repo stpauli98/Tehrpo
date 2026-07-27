@@ -1077,22 +1077,27 @@
       "prazno": "Ask a question about appointments, companies, or request a record draft.",
       "nemaStream": "No stream",
       "greskaEvent": "\n[Error: {poruka}]",
+      "greskaHttp": "\n[Request failed: {poruka}]",
       "greskaVeze": "\n[Connection error: {poruka}]",
       "nepoznatoGreska": "unknown"
     },
     "chatInput": {
       "placeholder": "Type a question…",
+      "oznaka": "Message to the assistant",
       "posalji": "Send"
     },
     "chatMessage": {
       "alati": "Tools: {lista}",
+      "pisanje": "The assistant is typing…",
       "proposal": {
         "naslov": "Record draft · {klijent} · {vrsta}",
         "nalaz": "Findings:",
         "zakljucak": "Conclusion:",
         "snimi": "Save record",
         "snimam": "Saving…",
-        "snimljeno": "Saved ✓"
+        "snimljeno": "Saved",
+        "uspjeh": "The record has been saved.",
+        "greska": "Saving the record failed."
       }
     },
     "noviRazgovor": {
@@ -1105,6 +1110,8 @@
     },
     "actions": {
       "neispravanTermin": "Invalid appointment",
+      "neispravniPodaci": "The draft data is invalid.",
+      "greskaCitanja": "Loading the appointment failed.",
       "terminNePostoji": "Appointment does not exist.",
       "snimanjeNijeUspjelo": "Save failed."
     },

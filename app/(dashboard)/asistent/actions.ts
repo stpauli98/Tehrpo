@@ -24,15 +24,20 @@ const schema = z.object({
 /** Two-step potvrda: snima predloženi (AI) zapisnik kao .docx u Storage + dokumenti red. */
 export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = schema.safeParse(Object.fromEntries(formData))
-  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  // Sva tri polja su `hidden` (dolaze iz AI prijedloga) — korisnik ih ne može ispraviti,
+  // pa inline per-field greška nema smisla: vraća se `message` koji ide u toast (S2).
+  if (!parsed.success) return { ok: false, message: t("neispravniPodaci") }
   const { termin_id, nalaz, zakljucak } = parsed.data
 
   const supabase = await createServerSupabaseClient()
-  const { data: term } = await supabase
+  const { data: term, error: termErr } = await supabase
     .from("termini_view")
     .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
     .eq("id", termin_id)
     .maybeSingle()
+  // S1: pad upita nije isto što i „nema reda" — bez ove grane oboje bi javljalo
+  // „Termin ne postoji", pa bi kvar baze izgledao kao pogrešan podatak u prijedlogu.
+  if (termErr) return { ok: false, message: t("greskaCitanja") }
   if (!term || !term.klijent_id) return { ok: false, message: t("terminNePostoji") }
 
   const datum = (term.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)

@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { grupisiPoKlijentu } from "./grouping"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
+import type { ProposalData } from "./protokol"
 
 export type ToolName = "searchTermini" | "listFirme" | "predloziZapisnik" | "suggestGrupisanje"
 
@@ -43,14 +44,6 @@ export function toolLabel(name: string, locale: Locale = APP_LOCALE): string {
   return TOOL_LABELS[locale][name as ToolName] ?? TOOL_LABEL_FALLBACK[locale]
 }
 
-export type ProposalData = {
-  terminId: string
-  klijent: string
-  vrsta: string
-  datum: string
-  nalaz: string
-  zakljucak: string
-}
 export type ToolResult = { forModel: string; proposal?: ProposalData }
 
 export const CHAT_TOOLS: Anthropic.Tool[] = [
@@ -156,11 +149,14 @@ export async function executeTool(name: string, input: unknown): Promise<ToolRes
   if (name === "predloziZapisnik") {
     const terminId = typeof args.termin_id === "string" ? args.termin_id : ""
     if (!terminId) return { forModel: "Nedostaje termin_id." }
-    const { data: t } = await supabase
+    const { data: t, error } = await supabase
       .from("termini_view")
       .select("klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
       .eq("id", terminId)
       .maybeSingle()
+    // S1: pad upita nije isto što i „nema reda" — bez ove grane bi kvar baze model
+    // prijavio korisniku kao „termin ne postoji" (ostala tri alata već razlikuju).
+    if (error) return { forModel: `Greška pri čitanju termina: ${error.message}` }
     if (!t) return { forModel: "Termin sa tim ID-em ne postoji." }
     const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
     const c = await generateZapisnik({

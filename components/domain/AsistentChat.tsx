@@ -2,16 +2,10 @@
 
 import { useRef, useState } from "react"
 import { useTranslations } from "next-intl"
-import { ChatMessage, type UiPoruka, type ProposalData } from "@/components/domain/ChatMessage"
+import { ChatMessage, type UiPoruka } from "@/components/domain/ChatMessage"
 import { ChatInput } from "@/components/domain/ChatInput"
 import { SuggestedPills } from "@/components/domain/SuggestedPills"
-
-type StreamEvent =
-  | { type: "text"; text: string }
-  | { type: "tool"; tool: string; label: string }
-  | { type: "proposal"; data: ProposalData }
-  | { type: "error"; message: string }
-  | { type: "done" }
+import type { ChatEvent } from "@/lib/claude/protokol"
 
 export function AsistentChat({
   konverzacijaId,
@@ -29,6 +23,33 @@ export function AsistentChat({
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }))
   }
 
+  /** Upiše tekst u zadnji (assistant) mjehur — isti obrazac koji koriste greške veze. */
+  function dopisiUAssistant(tekst: string) {
+    setPoruke((prev) => {
+      const next = [...prev]
+      const last = next[next.length - 1]
+      if (last && last.role === "assistant") next[next.length - 1] = { ...last, text: last.text + tekst }
+      return next
+    })
+  }
+
+  /** Primijeni jedan NDJSON događaj na zadnji assistant mjehur. */
+  function primijeniEvent(ev: ChatEvent) {
+    setPoruke((prev) => {
+      const lastOrig = prev[prev.length - 1]
+      if (!lastOrig || lastOrig.role !== "assistant") return prev
+      const last = { ...lastOrig, tools: [...(lastOrig.tools ?? [])] }
+      if (ev.type === "text") last.text += ev.text
+      else if (ev.type === "tool") last.tools = [...last.tools, ev.label]
+      else if (ev.type === "proposal") last.proposal = ev.data
+      else if (ev.type === "error") last.text += t("greskaEvent", { poruka: ev.message })
+      const next = [...prev]
+      next[next.length - 1] = last
+      return next
+    })
+    scrollDown()
+  }
+
   async function send(userText: string) {
     if (busy) return
     setBusy(true)
@@ -41,6 +62,14 @@ export function AsistentChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ konverzacija_id: konverzacijaId, userText }),
       })
+      // HTTP greške (400/401/403/429/500) su JSON `{error}` bez završnog newline-a i
+      // nemaju `type` polje — bez ove grane ostale bi u bufferu, a mjehur zauvijek na
+      // placeholderu (S1: greška se mora vidjeti).
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        dopisiUAssistant(t("greskaHttp", { poruka: body?.error ?? t("nepoznatoGreska") }))
+        return
+      }
       if (!res.body) throw new Error(t("nemaStream"))
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -52,30 +81,17 @@ export function AsistentChat({
         buf = lines.pop() ?? ""
         for (const line of lines) {
           if (!line.trim()) continue
-          let ev: StreamEvent
-          try { ev = JSON.parse(line) as StreamEvent } catch { continue } // preskoči nevalidnu/parcijalnu liniju
-          setPoruke((prev) => {
-            const lastOrig = prev[prev.length - 1]
-            if (!lastOrig || lastOrig.role !== "assistant") return prev
-            const last = { ...lastOrig, tools: [...(lastOrig.tools ?? [])] }
-            if (ev.type === "text") last.text += ev.text
-            else if (ev.type === "tool") last.tools = [...last.tools, ev.label]
-            else if (ev.type === "proposal") last.proposal = ev.data
-            else if (ev.type === "error") last.text += t("greskaEvent", { poruka: ev.message })
-            const next = [...prev]
-            next[next.length - 1] = last
-            return next
-          })
-          scrollDown()
+          let ev: ChatEvent
+          try { ev = JSON.parse(line) as ChatEvent } catch { continue } // preskoči nevalidnu/parcijalnu liniju
+          primijeniEvent(ev)
         }
       }
+      // Flush ostatka: odgovor bez završnog newline-a inače ostane neparsiran.
+      if (buf.trim()) {
+        try { primijeniEvent(JSON.parse(buf) as ChatEvent) } catch { /* nepotpuna zadnja linija */ }
+      }
     } catch (e) {
-      setPoruke((prev) => {
-        const next = [...prev]
-        const last = next[next.length - 1]
-        if (last && last.role === "assistant") last.text += t("greskaVeze", { poruka: e instanceof Error ? e.message : t("nepoznatoGreska") })
-        return next
-      })
+      dopisiUAssistant(t("greskaVeze", { poruka: e instanceof Error ? e.message : t("nepoznatoGreska") }))
     } finally {
       setBusy(false)
       scrollDown()

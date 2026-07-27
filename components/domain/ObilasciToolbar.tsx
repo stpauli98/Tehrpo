@@ -1,13 +1,14 @@
 "use client"
 
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
-import { useTransition } from "react"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { monthName, currentYear } from "@/lib/date"
 import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
+import { usePendingFilteri } from "@/lib/use-pending-filteri"
+import { cn } from "@/lib/utils"
 
 const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
 
@@ -20,19 +21,25 @@ export function ObilasciToolbar({
   mjesec: initialMjesec,
   kvartal: initialKvartal,
   gradovi,
+  godine,
 }: {
   period?: string
   godina?: number
   mjesec?: number
   kvartal?: number
   gradovi?: string[]
+  /**
+   * Godine za koje postoje termini — dolaze iz `lib/queries/godine.ts`
+   * (`dohvatiGodineTermina`, koji sam pada na tekuću ± 1). Obavezan prop: toolbar
+   * namjerno više nema vlastiti `currentYear() ± 1` hardkod (S8.1).
+   */
+  godine: number[]
 }) {
   const t = useTranslations("obilasci.toolbar")
   const tStatus = useTranslations("status")
-  const router = useRouter()
   const pathname = usePathname()
   const sp = useSearchParams()
-  const [, startTransition] = useTransition()
+  const { isPending, push } = usePendingFilteri()
 
   const period = sp.get("period") ?? initialPeriod ?? "mjesec"
   const godinaStr = sp.get("godina") ?? String(initialGodina ?? currentYear())
@@ -40,8 +47,6 @@ export function ObilasciToolbar({
   const kvartalStr = sp.get("kvartal") ?? (initialKvartal ? String(initialKvartal) : "")
   const status = sp.get("status") ?? "aktivni"
   const grad = sp.get("grad") ?? "svi"
-
-  const godine = [currentYear() - 1, currentYear(), currentYear() + 1]
 
   const periodItems: Record<string, string> = {
     mjesec: t("periodMjesec"), kvartal: t("periodKvartal"), godina: t("periodGodina"),
@@ -59,19 +64,28 @@ export function ObilasciToolbar({
   const kvartalItems: Record<string, string> = Object.fromEntries(
     [1, 2, 3, 4].map((q) => [String(q), t("kvartalLabel", { broj: q })])
   )
+  const godinaItems: Record<string, string> = Object.fromEntries(
+    godine.map((g) => [String(g), String(g)])
+  )
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(sp.toString())
     if (value) next.set(key, value)
     else next.delete(key)
-    startTransition(() => router.push(`${pathname}?${next.toString()}`))
+    // Svaka promjena filtera vraća na prvu stranu (kanon: AktivnostSearch.tsx).
+    next.delete("strana")
+    push(`${pathname}?${next.toString()}`)
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3" data-testid="obilasci-toolbar">
+    <div
+      className={cn("flex flex-wrap items-center gap-3", isPending && "opacity-60")}
+      data-testid="obilasci-toolbar"
+      aria-busy={isPending}
+      data-pending={isPending}
+    >
       <Select value={period} onValueChange={(v) => setParam("period", v ?? "")} items={periodItems}>
-
-        <SelectTrigger data-testid="obilasci-period" className="w-40">
+        <SelectTrigger data-testid="obilasci-period" className="w-40" disabled={isPending}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -82,7 +96,7 @@ export function ObilasciToolbar({
       </Select>
 
       <Select value={status} onValueChange={(v) => setParam("status", v ?? "")} items={statusItems}>
-        <SelectTrigger data-testid="obilasci-status" className="w-40">
+        <SelectTrigger data-testid="obilasci-status" className="w-40" disabled={isPending}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -93,7 +107,7 @@ export function ObilasciToolbar({
       </Select>
 
       <Select value={grad} onValueChange={(v) => setParam("grad", v === "svi" ? "" : (v ?? ""))} items={gradItems}>
-        <SelectTrigger data-testid="obilasci-grad" className="w-44">
+        <SelectTrigger data-testid="obilasci-grad" className="w-44" disabled={isPending}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -107,7 +121,7 @@ export function ObilasciToolbar({
 
       {period === "mjesec" && (
         <Select value={mjesecStr} onValueChange={(v) => setParam("mjesec", v ?? "")} items={mjesecItems}>
-          <SelectTrigger data-testid="obilasci-mjesec" className="w-40">
+          <SelectTrigger data-testid="obilasci-mjesec" className="w-40" disabled={isPending}>
             <SelectValue placeholder={t("placeholderMjesec")} />
           </SelectTrigger>
           <SelectContent>
@@ -120,7 +134,7 @@ export function ObilasciToolbar({
 
       {period === "kvartal" && (
         <Select value={kvartalStr} onValueChange={(v) => setParam("kvartal", v ?? "")} items={kvartalItems}>
-          <SelectTrigger data-testid="obilasci-kvartal" className="w-32">
+          <SelectTrigger data-testid="obilasci-kvartal" className="w-32" disabled={isPending}>
             <SelectValue placeholder={t("placeholderKvartal")} />
           </SelectTrigger>
           <SelectContent>
@@ -131,9 +145,8 @@ export function ObilasciToolbar({
         </Select>
       )}
 
-      <Select value={godinaStr} onValueChange={(v) => setParam("godina", v ?? "")}>
-
-        <SelectTrigger data-testid="obilasci-godina" className="w-28">
+      <Select value={godinaStr} onValueChange={(v) => setParam("godina", v ?? "")} items={godinaItems}>
+        <SelectTrigger data-testid="obilasci-godina" className="w-28" disabled={isPending}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

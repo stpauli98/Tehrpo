@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { uploadDokument, removeDokument } from "@/lib/supabase/storage"
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { buildZapisnikDocx } from "@/lib/zapisnik/template"
+import { snimiZapisnikDokument } from "@/lib/zapisnik/snimi"
 import {
   dokumentStoragePath,
   jeValidanTip,
@@ -20,13 +21,10 @@ import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
-const tIzvoz = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "izvoz.zapisnik" })
 
 export type ActionResult =
   | { ok: true }
   | { ok: false; errors?: Record<string, string[] | undefined>; message?: string }
-
-const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 function revalidateDokumenti(klijentId?: string | null): void {
   revalidatePath("/zapisnici")
@@ -154,33 +152,15 @@ export async function generateZapisnikAction(
     zakljucak: content.zakljucak,
   })
 
-  const naziv = tIzvoz("imeFajla", { vrsta: term.vrsta_naziv ?? tIzvoz("provjeraFallback"), datum })
-  const path = `termini/${termin_id}/zapisnik-${crypto.randomUUID()}.docx`
-
-  try {
-    await uploadDokument(path, docx, DOCX_MIME)
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : t("generisanjeNijeUspjelo") }
-  }
-
-  const { error } = await supabase.from("dokumenti").insert({
-    termin_id,
-    klijent_id: term.klijent_id,
-    naziv,
-    storage_path: path,
-    mime_type: DOCX_MIME,
-    velicina_bajt: docx.length,
-    tip: "zapisnik",
-    generated_by_ai: true,
+  const snimljeno = await snimiZapisnikDokument(supabase, {
+    terminId: termin_id,
+    klijentId: term.klijent_id,
+    vrstaNaziv: term.vrsta_naziv,
+    datum,
+    docx,
+    uploadGreskaFallback: t("generisanjeNijeUspjelo"),
   })
-  if (error) {
-    try {
-      await removeDokument(path)
-    } catch (cleanupErr) {
-      console.error("Rollback brisanja fajla nije uspio (orphan):", cleanupErr)
-    }
-    return { ok: false, message: error.message }
-  }
+  if (!snimljeno.ok) return snimljeno
 
   revalidateDokumenti(term.klijent_id)
   return { ok: true }

@@ -798,7 +798,6 @@
     "klijentObavezan": "Kunde ist erforderlich",
     "tipNeispravan": "Ungültiger Typ",
     "klijentNePostojiIliNemaPristupa": "Der Kunde existiert nicht oder Sie haben keinen Zugriff.",
-    "ugovorNePripadaKlijentu": "Der Vertrag gehört nicht zum Kunden.",
     "naslov": "Dokumente",
     "generisiZapisnik": "Protokoll erstellen (KI)",
     "generisem": "Wird erstellt…",
@@ -810,7 +809,21 @@
     "obrisiDokument": "Dokument löschen",
     "aiOznaka": "KI",
     "uploadUspjeh": "Dokument hinzugefügt",
-    "zapisnikUspjeh": "Protokoll erstellt"
+    "zapisnikUspjeh": "Protokoll erstellt",
+    "tipLabel": "Dokumenttyp",
+    "fajlPolje": "Dokumentdatei",
+    "neispravniPodaci": "Ungültige Daten — aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "preuzimanjeNijeUspjelo": "Der Download ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "potvrdaBrisanjaNaslov": "Dokument löschen?",
+    "potvrdaBrisanjaOpis": "Das Dokument und die Datei werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+    "tipovi": {
+      "strucni_nalaz": "Fachgutachten",
+      "zapisnik": "Protokoll",
+      "ugovor": "Vertrag",
+      "ponuda": "Angebot",
+      "fotografija": "Foto",
+      "ostalo": "Sonstiges"
+    }
   },
   "postavke": {
     "naslov": "Einstellungen",

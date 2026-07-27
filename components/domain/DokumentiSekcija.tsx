@@ -4,11 +4,16 @@ import { useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
-import { FileText, Sparkles, Trash2, Download } from "lucide-react"
+import { FileText, Sparkles, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 import { useAkcijaToast } from "@/components/akcija-toast"
+import { FieldError } from "./FieldError"
+import { PreuzmiDokumentButton } from "./PreuzmiDokumentButton"
 import {
   uploadDokumentAction,
   generateZapisnikAction,
@@ -17,6 +22,7 @@ import {
 } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
 import { jeAdmin, mozeUrediti } from "@/lib/auth/roles"
+import { ACCEPT_ATTR, DOKUMENT_TIPOVI, MAX_MB, validirajFajl } from "@/lib/dokumenti"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -47,7 +53,11 @@ export function DokumentiSekcija({
   useAkcijaToast(genState, { uspjeh: t("zapisnikUspjeh"), greska: tc("greska") })
   useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
   const fileRef = useRef<HTMLInputElement>(null)
-  const MAX_MB = 10
+
+  // Mapa value→label za base-ui SelectValue (prikaz prevoda kad je select zatvoren).
+  const tipItems: Record<string, string> = Object.fromEntries(
+    DOKUMENT_TIPOVI.map((tip) => [tip, t(`tipovi.${tip}`)]),
+  )
 
   // Refresh liste kad SE PROMIJENI ishod bilo koje akcije i taj (promijenjeni) ishod je uspjeh.
   // NE uslovljavati sa "sve tri ok" — zaglavljena greška iz jedne akcije bi blokirala
@@ -71,11 +81,9 @@ export function DokumentiSekcija({
     }
   }, [uploadState, genState, delState, router, queryClient, terminId])
 
-  const greska =
-    (uploadState.ok === false && uploadState.message) ||
-    (genState.ok === false && genState.message) ||
-    (delState.ok === false && delState.message) ||
-    null
+  // `message` iz svih akcija ide ISKLJUČIVO toastom (useAkcijaToast gore) — inline
+  // duplikat bi bio dupli kanal (S2). Inline ostaje samo `errors` za polje `tip`.
+  const tipGreske = uploadState.ok === false ? uploadState.errors?.tip : undefined
 
   return (
     <section data-testid="sheet-dokumenti">
@@ -104,29 +112,47 @@ export function DokumentiSekcija({
               ref={fileRef}
               type="file"
               name="file"
-              accept=".docx,.pdf,image/png,image/jpeg,image/webp"
+              accept={ACCEPT_ATTR}
+              aria-label={t("fajlPolje")}
               data-testid="dokument-file"
               className="min-w-0 max-w-full text-sm"
               onChange={(e) => {
                 const file = e.target.files?.[0]
-                if (file && file.size > MAX_MB * 1024 * 1024) {
-                  toast.error(t("fajlPrevelik", { max: MAX_MB }))
-                  e.target.value = ""
-                }
+                if (!file) return
+                const provjera = validirajFajl(file)
+                if (provjera.ok) return
+                toast.error(
+                  provjera.razlog === "tip"
+                    ? t("nedozvoljenTip")
+                    : t("fajlPrevelik", { max: MAX_MB }),
+                )
+                e.target.value = ""
               }}
             />
+            <div className="space-y-1">
+              <Select name="tip" defaultValue="strucni_nalaz" items={tipItems}>
+                <SelectTrigger
+                  className="w-44"
+                  aria-label={t("tipLabel")}
+                  aria-describedby={tipGreske ? "greska-dokument-tip" : undefined}
+                  data-testid="dokument-tip"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOKUMENT_TIPOVI.map((tip) => (
+                    <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError id="greska-dokument-tip" errors={tipGreske} />
+            </div>
             <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
               {uploadPending ? t("saljem") : t("uploadDugme")}
             </Button>
           </form>
         )}
       </div>
-
-      {greska && (
-        <p className="mt-2 text-sm text-destructive" role="alert">
-          {greska}
-        </p>
-      )}
 
       {dokumenti.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">{t("prazno")}</p>
@@ -146,15 +172,11 @@ export function DokumentiSekcija({
                 )}
               </span>
               <span className="flex shrink-0 items-center gap-1">
-                <a
-                  href={`/api/dokumenti/${d.id}`}
-                  className={IKONA_INLINE_KLASA}
-                  data-testid="dokument-download"
-                  aria-label={t("preuzmi")}
-                >
-                  <Download className="h-4 w-4" aria-hidden />
-                  <Tooltip>{t("preuzmi")}</Tooltip>
-                </a>
+                <PreuzmiDokumentButton
+                  dokumentId={d.id}
+                  label={t("preuzmi")}
+                  testId="dokument-download"
+                />
                 {mozeBrisati && (
                   <form action={delAction}>
                     <input type="hidden" name="dokument_id" value={d.id} />

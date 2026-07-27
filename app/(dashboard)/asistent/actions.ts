@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { buildZapisnikDocx } from "@/lib/zapisnik/template"
-import { uploadDokument, removeDokument } from "@/lib/supabase/storage"
+import { snimiZapisnikDokument } from "@/lib/zapisnik/snimi"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
@@ -14,8 +14,6 @@ const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namesp
 export type ActionResult =
   | { ok: true }
   | { ok: false; errors?: Record<string, string[] | undefined>; message?: string }
-
-const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 const schema = z.object({
   termin_id: z.string().uuid(t("neispravanTermin")),
@@ -47,32 +45,15 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
     nalaz,
     zakljucak,
   })
-  const naziv = `Zapisnik - ${term.vrsta_naziv ?? "provjera"} - ${datum}.docx`
-  const path = `termini/${termin_id}/zapisnik-${crypto.randomUUID()}.docx`
-
-  try {
-    await uploadDokument(path, docx, DOCX_MIME)
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : t("snimanjeNijeUspjelo") }
-  }
-  const { error } = await supabase.from("dokumenti").insert({
-    termin_id,
-    klijent_id: term.klijent_id,
-    naziv,
-    storage_path: path,
-    mime_type: DOCX_MIME,
-    velicina_bajt: docx.length,
-    tip: "zapisnik",
-    generated_by_ai: true,
+  const snimljeno = await snimiZapisnikDokument(supabase, {
+    terminId: termin_id,
+    klijentId: term.klijent_id,
+    vrstaNaziv: term.vrsta_naziv,
+    datum,
+    docx,
+    uploadGreskaFallback: t("snimanjeNijeUspjelo"),
   })
-  if (error) {
-    try {
-      await removeDokument(path) // rollback fajla ako DB upis padne
-    } catch (e) {
-      console.error("Rollback brisanja fajla nije uspio (orphan):", e)
-    }
-    return { ok: false, message: error.message }
-  }
+  if (!snimljeno.ok) return snimljeno
 
   revalidatePath("/zapisnici")
   if (term.klijent_id) revalidatePath(`/klijenti/${term.klijent_id}`)

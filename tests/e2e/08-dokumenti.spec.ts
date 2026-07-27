@@ -40,6 +40,27 @@ test.describe("Faza Dokumenti — termin sheet", () => {
     ).toBeVisible()
   })
 
+  test("upload sa izabranim tipom 'Fotografija' → red vidljiv", async ({ page }) => {
+    await otvoriPrviTermin(page)
+    // Base UI Select: testid je na SelectTrigger (button), ne na native <select> —
+    // otvori klikom i izaberi opciju preko role=option (obrazac iz 23-podsjetnici-v2).
+    const trigger = page.getByTestId("dokument-tip")
+    await expect(trigger).toBeVisible()
+    await trigger.click()
+    await page.getByRole("option", { name: "Fotografija", exact: true }).click()
+    await expect(trigger).toContainText("Fotografija")
+
+    await page.getByTestId("dokument-file").setInputFiles({
+      name: "fotografija-nalaza.png",
+      mimeType: "image/png",
+      buffer: Buffer.from("\x89PNG\r\n\x1a\n"),
+    })
+    await page.getByTestId("dokument-upload-submit").click()
+    await expect(
+      page.getByTestId("dokument-red").filter({ hasText: "fotografija-nalaza.png" }).first(),
+    ).toBeVisible()
+  })
+
   test("download link vodi na fajl (HTTP 200)", async ({ page }) => {
     await otvoriPrviTermin(page)
     const link = page.getByTestId("dokument-download").first()

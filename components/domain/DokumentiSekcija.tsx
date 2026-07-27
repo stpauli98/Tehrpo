@@ -8,6 +8,9 @@ import { FileText, Sparkles, Trash2, Download } from "lucide-react"
 import { toast } from "sonner"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { Button } from "@/components/ui/button"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import {
   uploadDokumentAction,
@@ -17,7 +20,7 @@ import {
 } from "@/app/(dashboard)/dokumenti/actions"
 import { useUloga } from "@/providers/korisnik-provider"
 import { jeAdmin, mozeUrediti } from "@/lib/auth/roles"
-import { ACCEPT_ATTR, MAX_MB, validirajFajl } from "@/lib/dokumenti"
+import { ACCEPT_ATTR, DOKUMENT_TIPOVI, MAX_MB, validirajFajl } from "@/lib/dokumenti"
 import type { Database } from "@/db/types"
 
 type DokumentRow = Database["public"]["Tables"]["dokumenti"]["Row"]
@@ -48,6 +51,11 @@ export function DokumentiSekcija({
   useAkcijaToast(genState, { uspjeh: t("zapisnikUspjeh"), greska: tc("greska") })
   useAkcijaToast(delState, { uspjeh: tc("obrisano"), greska: tc("greska") })
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Mapa value→label za base-ui SelectValue (prikaz prevoda kad je select zatvoren).
+  const tipItems: Record<string, string> = Object.fromEntries(
+    DOKUMENT_TIPOVI.map((tip) => [tip, t(`tipovi.${tip}`)]),
+  )
 
   // Refresh liste kad SE PROMIJENI ishod bilo koje akcije i taj (promijenjeni) ishod je uspjeh.
   // NE uslovljavati sa "sve tri ok" — zaglavljena greška iz jedne akcije bi blokirala
@@ -105,6 +113,7 @@ export function DokumentiSekcija({
               type="file"
               name="file"
               accept={ACCEPT_ATTR}
+              aria-label={t("fajlPolje")}
               data-testid="dokument-file"
               className="min-w-0 max-w-full text-sm"
               onChange={(e) => {
@@ -120,6 +129,20 @@ export function DokumentiSekcija({
                 e.target.value = ""
               }}
             />
+            <Select name="tip" defaultValue="strucni_nalaz" items={tipItems}>
+              <SelectTrigger
+                className="w-44"
+                aria-label={t("tipLabel")}
+                data-testid="dokument-tip"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DOKUMENT_TIPOVI.map((tip) => (
+                  <SelectItem key={tip} value={tip}>{t(`tipovi.${tip}`)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button type="submit" variant="outline" disabled={uploadPending} data-testid="dokument-upload-submit">
               {uploadPending ? t("saljem") : t("uploadDugme")}
             </Button>

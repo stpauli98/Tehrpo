@@ -810,7 +810,17 @@
     "obrisiDokument": "Dokument löschen",
     "aiOznaka": "KI",
     "uploadUspjeh": "Dokument hinzugefügt",
-    "zapisnikUspjeh": "Protokoll erstellt"
+    "zapisnikUspjeh": "Protokoll erstellt",
+    "tipLabel": "Dokumenttyp",
+    "fajlPolje": "Dokumentdatei",
+    "tipovi": {
+      "strucni_nalaz": "Fachgutachten",
+      "zapisnik": "Protokoll",
+      "ugovor": "Vertrag",
+      "ponuda": "Angebot",
+      "fotografija": "Foto",
+      "ostalo": "Sonstiges"
+    }
   },
   "postavke": {
     "naslov": "Einstellungen",

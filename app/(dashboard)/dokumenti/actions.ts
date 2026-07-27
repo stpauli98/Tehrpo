@@ -33,15 +33,22 @@ function revalidateDokumenti(klijentId?: string | null): void {
   if (klijentId) revalidatePath(`/klijenti/${klijentId}`)
 }
 
-const uploadSchema = z.object({ termin_id: z.string().uuid(t("terminObavezan")) })
+const uploadSchema = z.object({
+  termin_id: z.string().uuid(t("terminObavezan")),
+  tip: z.string().refine(jeValidanTip, t("tipNeispravan")),
+})
 
 export async function uploadDokumentAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const parsed = uploadSchema.safeParse({ termin_id: formData.get("termin_id") })
+  const parsed = uploadSchema.safeParse({
+    termin_id: formData.get("termin_id"),
+    // default čuva ponašanje starih formi/testova bez `tip` polja
+    tip: formData.get("tip") ?? "strucni_nalaz",
+  })
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
-  const { termin_id } = parsed.data
+  const { termin_id, tip } = parsed.data
 
   const file = formData.get("file")
   if (!(file instanceof File) || file.size === 0) {
@@ -81,7 +88,7 @@ export async function uploadDokumentAction(
     storage_path: path,
     mime_type: file.type,
     velicina_bajt: file.size,
-    tip: "strucni_nalaz",
+    tip,
     generated_by_ai: false,
   })
   if (error) {

@@ -810,7 +810,17 @@
     "obrisiDokument": "Delete document",
     "aiOznaka": "AI",
     "uploadUspjeh": "Document added",
-    "zapisnikUspjeh": "Record generated"
+    "zapisnikUspjeh": "Record generated",
+    "tipLabel": "Document type",
+    "fajlPolje": "Document file",
+    "tipovi": {
+      "strucni_nalaz": "Expert report",
+      "zapisnik": "Record",
+      "ugovor": "Contract",
+      "ponuda": "Offer",
+      "fotografija": "Photo",
+      "ostalo": "Other"
+    }
   },
   "postavke": {
     "naslov": "Settings",

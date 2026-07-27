@@ -89,6 +89,9 @@ export async function OpterecenjeChart({
             const naziv = monthName(m.mjesec)
             const pct = (seg(m) / max) * 100
             const jeTekuci = currentMonth === m.mjesec
+            // Labela broji ISTO što se i vidi (seg), ne `m.ukupno` iz RPC-a —
+            // `ukupno` uključuje otkazane, koji nemaju segment u baru.
+            const vidljivo = seg(m)
             const bar = (
               <div
                 className={cn(
@@ -97,7 +100,7 @@ export async function OpterecenjeChart({
                 )}
                 // Min 4% da i mali mjeseci ostanu vidljivi; 0 mjeseci → bez bara.
                 style={{ height: `${seg(m) > 0 ? Math.max(pct, 4) : 0}%` }}
-                title={t("barTitle", { naziv, count: m.ukupno })}
+                title={t("barTitle", { naziv, count: vidljivo })}
               >
                 {/* stacked: izvrseno (zeleno) → kasni (crveno) → u_planu (plavo, na vrhu) */}
                 <div className={cn("w-full", CHART_BOJE.izvrseno)} style={{ flexGrow: m.izvrseno }} />
@@ -113,7 +116,7 @@ export async function OpterecenjeChart({
                 data-testid="chart-bar"
                 data-mjesec={m.mjesec}
                 data-ukupno={m.ukupno}
-                aria-label={t("barAriaLabel", { naziv, count: m.ukupno })}
+                aria-label={t("barAriaLabel", { naziv, count: vidljivo })}
                 className={cn(common, "cursor-pointer rounded-md transition-colors hover:bg-muted/60")}
               >
                 {bar}

@@ -22,11 +22,16 @@ export async function GET(
 ): Promise<NextResponse> {
   const { id } = await params
   const supabase = await createServerSupabaseClient()
-  const { data: dok } = await supabase
+  const { data: dok, error: citanjeGreska } = await supabase
     .from("dokumenti")
     .select("storage_path, naziv")
     .eq("id", id)
     .maybeSingle()
+  // S1: pad upita nije „prazno" — 404 bi lagao da dokument ne postoji.
+  if (citanjeGreska) {
+    console.error("Čitanje dokumenta nije uspjelo:", citanjeGreska)
+    return NextResponse.json({ error: t("preuzimanjeNijeUspjelo") }, { status: 500 })
+  }
   if (!dok) return NextResponse.json({ error: t("dokumentNePostoji") }, { status: 404 })
 
   try {

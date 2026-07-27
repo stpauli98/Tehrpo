@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { User } from "lucide-react"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import type { Database } from "@/db/types"
 import { LokacijaSheet } from "@/components/domain/LokacijaSheet"
 import { ObrisiLokacijuButton } from "@/components/domain/ObrisiLokacijuButton"
@@ -25,12 +26,12 @@ export async function LokacijeTab({
       {lokacije.length === 0 ? (
         <div
           data-testid="lokacije-empty"
-          className="rounded-xl border border-border p-8 text-center text-sm text-muted-foreground"
+          className="rounded-xl bg-card p-8 text-center text-sm text-muted-foreground ring-1 ring-foreground/10"
         >
           {t("prazno")}
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden">
           <table className="w-full text-sm" data-testid="lokacije-table">
             <thead className="bg-muted">
               <tr>
@@ -43,6 +44,7 @@ export async function LokacijeTab({
                 ].map((c) => (
                   <th
                     key={c}
+                    scope="col"
                     className="px-3 py-2 text-left align-top text-xs font-medium uppercase tracking-wide text-muted-foreground"
                   >
                     {c}
@@ -63,12 +65,12 @@ export async function LokacijeTab({
                       <Link
                         href={href(`/klijenti/${klijentId}?tab=kontakti&highlight=${l.id}`)}
                         scroll={false}
-                        className="inline-flex items-center gap-1 font-medium text-brand transition-colors hover:underline"
+                        className="group/tt relative inline-flex items-center gap-1 font-medium text-brand transition-colors motion-reduce:transition-none hover:underline"
                         data-testid={`lokacija-kontakt-link-${l.id}`}
-                        title={t("kontaktLinkTitle")}
                       >
-                        <User className="h-3.5 w-3.5" aria-hidden />
+                        <User className="h-[18px] w-[18px] shrink-0" aria-hidden />
                         {l.kontakt_osoba}
+                        <Tooltip>{t("kontaktLinkTitle")}</Tooltip>
                       </Link>
                     ) : (
                       <span className="text-muted-foreground">—</span>

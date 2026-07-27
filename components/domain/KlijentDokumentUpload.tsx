@@ -90,7 +90,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
     <form
       action={action}
       data-testid="klijent-dok-upload"
-      className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="space-y-4 rounded-xl bg-card p-5 ring-1 ring-foreground/10"
     >
       <input type="hidden" name="klijent_id" value={klijentId} />
 
@@ -115,7 +115,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
         }}
         data-testid="klijent-dok-dropzone"
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center outline-none transition-colors motion-reduce:transition-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           dragging
             ? "border-brand bg-brand/5"
             : "border-border bg-muted hover:border-brand/60 hover:bg-muted",
@@ -131,7 +131,7 @@ export function KlijentDokumentUpload({ klijentId }: { klijentId: string }) {
               type="button"
               onClick={(e) => { e.stopPropagation(); ocisti() }}
               aria-label={t("ukloniFajlAriaLabel")}
-              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded p-0.5 text-muted-foreground transition-colors motion-reduce:transition-none hover:bg-muted hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>

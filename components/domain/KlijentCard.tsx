@@ -16,9 +16,9 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
     <Link
       href={href(`/klijenti/${klijent.id}`)}
       data-testid="klijent-card"
-      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-xl"
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-xl"
     >
-      <Card className="h-full transition hover:border-border">
+      <Card className="h-full transition motion-reduce:transition-none hover:ring-foreground/20">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">

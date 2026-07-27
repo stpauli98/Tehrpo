@@ -30,7 +30,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
   return (
     <div className="space-y-8" data-testid="tab-podsjetnici-content">
       <section>
-        <h2 className="mb-3 text-lg font-medium text-foreground">{t("sekcijaSlanje")}</h2>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">{t("sekcijaSlanje")}</h2>
         {saljiGlobalno ? (
           <KlijentPodsjetniciForm klijentId={klijentId} salji={salji} kontakti={kontakti} adHocEmails={adHocEmails} />
         ) : (
@@ -49,7 +49,7 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
       </section>
       {jeAdmin && (
         <section>
-          <h2 className="mb-3 text-lg font-medium text-foreground">{t("sekcijaDodjela")}</h2>
+          <h2 className="mb-3 text-sm font-semibold text-foreground">{t("sekcijaDodjela")}</h2>
           <DodjelaRadnikaFirmi klijentId={klijentId} radnici={radnici} izabrani={izabrani} />
         </section>
       )}

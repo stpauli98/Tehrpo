@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { X, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { toastRezultat } from "@/components/akcija-toast"
 import {
@@ -19,6 +20,7 @@ import {
   adHocZaPrikaz,
 } from "@/lib/podsjetnici/primaociPicker"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { href } from "@/i18n/routes"
 
 export type KontaktZaPodsjetnik = {
   id: string
@@ -179,10 +181,10 @@ export function PrimaociCombobox({
         ref={rootRef} className="relative"
         onBlur={(e) => { if (!rootRef.current?.contains(e.relatedTarget as Node)) setOpen(false) }}
       >
-        <input
+        {/* S4: ui/Input primitiv donosi h-8, rounded-lg, border-input i fokus prsten. */}
+        <Input
           type="text" role="combobox" aria-expanded={open} aria-controls="primaoci-lista"
           data-testid="primaoci-combobox-input"
-          className={cn("w-full rounded-lg border border-border px-3 py-2 text-sm", FOCUS_RING)}
           placeholder={t("comboPlaceholder")}
           value={q} disabled={pending}
           onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0) }}
@@ -238,7 +240,7 @@ export function PrimaociCombobox({
         <p className="mt-2 text-sm text-muted-foreground">
           {t("nemaKontakata")}{" "}
           <Link
-            href={`/klijenti/${klijentId}?tab=kontakti`}
+            href={href(`/klijenti/${klijentId}?tab=kontakti`)}
             className={cn("rounded-sm font-medium text-brand hover:underline", FOCUS_RING)}
           >
             {t("dodajKontaktLink")}

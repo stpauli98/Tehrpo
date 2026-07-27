@@ -70,7 +70,7 @@ export function DodajProvjeruButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button data-testid="dodaj-provjeru-btn"><Plus className="w-4 h-4" aria-hidden /> {t("dugme")}</Button>} />
+      <DialogTrigger render={<Button data-testid="dodaj-provjeru-btn"><Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme")}</Button>} />
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="dodaj-provjeru-sheet">
         <DialogHeader>
           <DialogTitle>{t("naslov")}</DialogTitle>

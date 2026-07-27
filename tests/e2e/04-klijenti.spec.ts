@@ -1,5 +1,18 @@
 import { test, expect } from "@playwright/test"
 import { deleteKlijentByNaziv } from "./db"
+import { kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
+
+// Firma sa lokacijama i terminima koju testovi sami naprave i sami obrišu —
+// nijedan test se ne oslanja na konkretnu zasijanu firmu iz DEMO skupa.
+let fx: FirmaFikstura
+
+test.beforeAll(async () => {
+  fx = await kreirajFirmuFiksturu({ oznaka: "F04" })
+})
+
+test.afterAll(async () => {
+  await fx?.obrisi()
+})
 
 async function kreirajKlijent(page: import("@playwright/test").Page, naziv: string) {
   await page.goto("/klijenti")
@@ -31,15 +44,15 @@ test.describe("Faza 4 — Klijenti lista", () => {
     expect(total).toMatch(/Ukupno klijenata:\s*\d+/)
   })
 
-  test("pretraga 'WAIK' vraća WAIKIKI klijente", async ({ page }) => {
+  test("pretraga po nazivu vraća traženu firmu", async ({ page }) => {
     await page.goto("/klijenti")
     const input = page.getByTestId("klijenti-search")
-    await input.fill("WAIK")
+    await input.fill(fx.naziv)
     await input.press("Enter")
-    await page.waitForURL(/q=WAIK/)
+    await page.waitForURL(/q=E2E-TMP/)
     const cards = page.getByTestId("klijent-card")
     expect(await cards.count()).toBeGreaterThan(0)
-    await expect(cards.first()).toContainText(/WAIKIKI/i)
+    await expect(cards.first()).toContainText(fx.naziv)
   })
 
   test("paginacija Sljedeća mijenja stranu", async ({ page }) => {
@@ -65,26 +78,22 @@ test.describe("Faza 4 — Klijenti lista", () => {
 
 test.describe("Faza 4 — Klijent detalji i tabovi", () => {
   test("otvara detalje i prikazuje termini tab sa podacima", async ({ page }) => {
-    await page.goto("/klijenti?q=WAIK")
-    await page.getByTestId("klijent-card").first().click()
-    await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
-    await expect(page.getByTestId("klijent-naziv")).toContainText(/WAIKIKI/i)
+    await otvoriKlijent(page, fx.naziv)
+    await expect(page.getByTestId("klijent-naziv")).toContainText(fx.naziv)
     await expect(page.getByTestId("tab-termini-content")).toBeVisible()
-    // WAIKIKI ima termine → tabela ima redove (ne empty state)
+    // fikstura ima termine → tabela ima redove (ne empty state)
     await expect(page.getByTestId("tab-termini-content").getByRole("row").first()).toBeVisible()
     await expect(page.getByTestId("tab-termini-content")).not.toContainText("Nema termina")
   })
 
   test("prebacivanje Lokacije / Dokumenti tab (§9.1 detail prikazuje lokacije)", async ({ page }) => {
-    await page.goto("/klijenti?q=WAIK")
-    await page.getByTestId("klijent-card").first().click()
-    await page.waitForURL(/\/klijenti\//)
+    await otvoriKlijent(page, fx.naziv)
     // Lokacije tab (T5 ga puni; ovdje bar potvrdi da se sadržaj prikazuje — empty ili lista)
-    await page.getByRole("tab", { name: "Lokacije" }).click()
+    await page.getByTestId("tab-lokacije").click()
     await page.waitForURL(/tab=lokacije/)
     await expect(page.getByTestId("tab-lokacije-content")).toBeVisible()
     // Dokumenti tab — T7 implementiran: prikazuje tabelu ili poruku o praznom stanju
-    await page.getByRole("tab", { name: "Dokumenti" }).click()
+    await page.getByTestId("tab-dokumenti").click()
     await page.waitForURL(/tab=dokumenti/)
     await expect(page.getByTestId("tab-dokumenti-content")).toBeVisible()
   })
@@ -96,7 +105,7 @@ test.describe("Faza 4 — Lokacije CRUD", () => {
     try {
       await kreirajKlijent(page, naziv)
       await otvoriKlijent(page, naziv)
-      await page.getByRole("tab", { name: "Lokacije" }).click()
+      await page.getByTestId("tab-lokacije").click()
       await page.waitForURL(/tab=lokacije/)
 
       // create
@@ -167,9 +176,7 @@ test.describe("Faza 4 — Klijent edit i delete", () => {
   })
 
   test("delete je onemogućen za klijenta sa terminima", async ({ page }) => {
-    await page.goto("/klijenti?q=WAIK")
-    await page.getByTestId("klijent-card").first().click()
-    await page.waitForURL(/\/klijenti\//)
+    await otvoriKlijent(page, fx.naziv)
     await expect(page.getByTestId("obrisi-klijent-disabled")).toBeVisible()
   })
 
@@ -218,7 +225,7 @@ test.describe("Faza 4 — Vizuelni smoke", () => {
     try {
       await kreirajKlijent(page, naziv)
       await otvoriKlijent(page, naziv)
-      await page.getByRole("tab", { name: "Lokacije" }).click()
+      await page.getByTestId("tab-lokacije").click()
       await page.waitForURL(/tab=lokacije/)
       await page.getByTestId("nova-lokacija-btn").click()
       await page.getByTestId("lokacija-naziv").fill("Centrala")

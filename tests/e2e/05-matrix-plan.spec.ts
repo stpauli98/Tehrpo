@@ -3,13 +3,15 @@ import {
   insertKlijent, insertTermin, firstActiveVrstaId,
   deleteTerminiByKlijent, deleteKlijentByNaziv,
 } from "./db"
+import { jedinstvenNaziv } from "./fixtures"
 
 test.describe.configure({ mode: "serial" })
 
 // Throwaway klijent sa JEDNIM terminom u 2026 → deterministična matrica (jedna
-// popunjena single-ćelija), bez zavisnosti od konkretnih seed naziva (WAIKIKI/CARMEUSE).
+// popunjena single-ćelija), bez zavisnosti od bilo koje zasijane firme.
+// Naziv ide kroz `jedinstvenNaziv` da nosi prefiks koji cleanup skripta prepoznaje.
 async function seedKlijentSaTerminom(): Promise<{ naziv: string; kid: string }> {
-  const naziv = "E2E-MTX " + Date.now()
+  const naziv = jedinstvenNaziv("MTX")
   const kid = await insertKlijent(naziv)
   const vrsta = await firstActiveVrstaId()
   await insertTermin({ klijentId: kid, vrstaId: vrsta, rok: "2026-05-15" })
@@ -102,7 +104,7 @@ test.describe("Faza 5 — Matrix cell click", () => {
 test.describe("Faza 5 — Plan dan sidebar", () => {
   test("klik dana sa terminima → sidebar → Detalji → sheet", async ({ page }) => {
     // Ubaci termin na poznati dan → deterministički gust dan (bez zavisnosti od seeda).
-    const naziv = "E2E-DAN " + Date.now()
+    const naziv = jedinstvenNaziv("DAN")
     const kid = await insertKlijent(naziv)
     try {
       const vrsta = await firstActiveVrstaId()

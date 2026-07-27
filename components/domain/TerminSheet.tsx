@@ -142,19 +142,21 @@ export function TerminSheet({
             <input type="hidden" name="id" value={termin.id ?? ""} />
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("detaljiNaslov")}</p>
             <div className="grid grid-cols-2 gap-3">
-              <label className="block text-sm">
-                <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
-                <Input
-                  type="date"
-                  name="datum_zakazan"
-                  defaultValue={termin.datum_zakazan ?? ""}
-                  disabled={!mozeUrediti}
-                  aria-describedby={updateGreske.datum_zakazan ? "greska-edit-datum-zakazan" : undefined}
-                  onChange={(e) => setZakazanInput(e.target.value)}
-                  data-testid="edit-datum-zakazan"
-                />
+              <div>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
+                  <Input
+                    type="date"
+                    name="datum_zakazan"
+                    defaultValue={termin.datum_zakazan ?? ""}
+                    disabled={!mozeUrediti}
+                    aria-describedby={updateGreske.datum_zakazan ? "greska-edit-datum-zakazan" : undefined}
+                    onChange={(e) => setZakazanInput(e.target.value)}
+                    data-testid="edit-datum-zakazan"
+                  />
+                </label>
                 <FieldError id="greska-edit-datum-zakazan" errors={updateGreske.datum_zakazan} />
-              </label>
+              </div>
               {jeZakazanoPoslijeRoka(termin.rok_dospijeca, zakazanInput) && (
                 <p
                   className="col-span-2 text-xs text-warning"
@@ -168,43 +170,49 @@ export function TerminSheet({
                 </p>
               )}
               {termin.status === "izvrseno" && (
-                <label className="block text-sm">
-                  <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>
-                  <Input
-                    type="date"
-                    name="datum_izvrsenja"
-                    defaultValue={termin.datum_izvrsenja ?? ""}
-                    max={todayIso()}
-                    disabled={!mozeUrediti}
-                    aria-describedby={updateGreske.datum_izvrsenja ? "greska-edit-datum-izvrsenja" : undefined}
-                    data-testid="edit-datum-izvrsenja"
-                  />
+                <div>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>
+                    <Input
+                      type="date"
+                      name="datum_izvrsenja"
+                      defaultValue={termin.datum_izvrsenja ?? ""}
+                      max={todayIso()}
+                      disabled={!mozeUrediti}
+                      aria-describedby={updateGreske.datum_izvrsenja ? "greska-edit-datum-izvrsenja" : undefined}
+                      data-testid="edit-datum-izvrsenja"
+                    />
+                  </label>
                   <FieldError id="greska-edit-datum-izvrsenja" errors={updateGreske.datum_izvrsenja} />
-                </label>
+                </div>
               )}
-              <label className="block text-sm">
-                <span className="text-muted-foreground">{t("poljeZaduzeni")}</span>
-                <ZaduzeniPolje
-                  prijedlozi={zaduzeniPrijedlozi}
-                  defaultValue={termin.zaduzeni ?? ""}
-                  placeholder={t("placeholderZaduzeni")}
-                  disabled={!mozeUrediti}
-                  testId="edit-zaduzeni"
-                  describedBy={updateGreske.zaduzeni ? "greska-edit-zaduzeni" : undefined}
-                />
+              <div>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">{t("poljeZaduzeni")}</span>
+                  <ZaduzeniPolje
+                    prijedlozi={zaduzeniPrijedlozi}
+                    defaultValue={termin.zaduzeni ?? ""}
+                    placeholder={t("placeholderZaduzeni")}
+                    disabled={!mozeUrediti}
+                    testId="edit-zaduzeni"
+                    describedBy={updateGreske.zaduzeni ? "greska-edit-zaduzeni" : undefined}
+                  />
+                </label>
                 <FieldError id="greska-edit-zaduzeni" errors={updateGreske.zaduzeni} />
-              </label>
-              <label className="block text-sm col-span-2">
-                <span className="text-muted-foreground">{t("poljeNapomena")}</span>
-                <Input
-                  name="napomena"
-                  defaultValue={termin.napomena ?? ""}
-                  disabled={!mozeUrediti}
-                  aria-describedby={updateGreske.napomena ? "greska-edit-napomena" : undefined}
-                  data-testid="edit-napomena"
-                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">{t("poljeNapomena")}</span>
+                  <Input
+                    name="napomena"
+                    defaultValue={termin.napomena ?? ""}
+                    disabled={!mozeUrediti}
+                    aria-describedby={updateGreske.napomena ? "greska-edit-napomena" : undefined}
+                    data-testid="edit-napomena"
+                  />
+                </label>
                 <FieldError id="greska-edit-napomena" errors={updateGreske.napomena} />
-              </label>
+              </div>
             </div>
             {mozeUrediti && (
               <Button type="submit" disabled={updatePending} data-testid="edit-save">

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FieldError } from "@/components/domain/FieldError"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { createKlijent, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -43,12 +44,15 @@ export function NoviKlijentButton() {
 
   if (!mozeUrediti) return null
 
+  const errors = state.ok === false ? state.errors : undefined
+  const opisano = (name: string) => (errors?.[name] ? `novi-klijent-${name}-err` : undefined)
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
           <Button data-testid="novi-klijent-btn">
-            <Plus className="w-4 h-4" aria-hidden /> {t("dugme")}
+            <Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme")}
           </Button>
         }
       />
@@ -75,39 +79,33 @@ export function NoviKlijentButton() {
               required
               placeholder={t("placeholderNaziv")}
               data-testid="novi-klijent-naziv"
+              aria-describedby={opisano("naziv")}
             />
-            {state.ok === false && state.errors?.naziv && (
-              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.naziv[0]}</p>
-            )}
+            <FieldError id="novi-klijent-naziv-err" errors={errors?.naziv} />
           </label>
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeAdresa")}</span>
-            <Input name="adresa" required data-testid="novi-klijent-adresa" />
-            {state.ok === false && state.errors?.adresa && (
-              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.adresa[0]}</p>
-            )}
+            <Input name="adresa" required data-testid="novi-klijent-adresa" aria-describedby={opisano("adresa")} />
+            <FieldError id="novi-klijent-adresa-err" errors={errors?.adresa} />
           </label>
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeTelefon")}</span>
-            <Input name="telefon" required data-testid="novi-klijent-telefon" />
-            {state.ok === false && state.errors?.telefon && (
-              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.telefon[0]}</p>
-            )}
+            <Input name="telefon" required data-testid="novi-klijent-telefon" aria-describedby={opisano("telefon")} />
+            <FieldError id="novi-klijent-telefon-err" errors={errors?.telefon} />
           </label>
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeEmail")}</span>
-            <Input name="email" type="email" required data-testid="novi-klijent-email" />
-            {state.ok === false && state.errors?.email && (
-              <p className="text-sm text-destructive mt-1" role="alert">{state.errors.email[0]}</p>
-            )}
+            <Input name="email" type="email" required data-testid="novi-klijent-email" aria-describedby={opisano("email")} />
+            <FieldError id="novi-klijent-email-err" errors={errors?.email} />
           </label>
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeNapomena")}</span>
-            <Input name="napomena" data-testid="novi-klijent-napomena" />
+            <Input name="napomena" data-testid="novi-klijent-napomena" aria-describedby={opisano("napomena")} />
+            <FieldError id="novi-klijent-napomena-err" errors={errors?.napomena} />
           </label>
 
           {state.ok === false && state.message && (
@@ -116,20 +114,19 @@ export function NoviKlijentButton() {
             </p>
           )}
 
-          <Button type="submit" disabled={pending} data-testid="novi-klijent-submit">
-            {pending ? t("submitPending") : t("submit")}
-          </Button>
+          <DialogFooter className="mt-1">
+            <DialogClose
+              render={
+                <Button type="button" variant="outline" data-testid="novi-klijent-cancel">
+                  {tc("otkazi")}
+                </Button>
+              }
+            />
+            <Button type="submit" disabled={pending} data-testid="novi-klijent-submit">
+              {pending ? t("submitPending") : t("submit")}
+            </Button>
+          </DialogFooter>
         </form>
-
-        <DialogFooter>
-          <DialogClose
-            render={
-              <Button variant="outline" data-testid="novi-klijent-cancel">
-                {tc("otkazi")}
-              </Button>
-            }
-          />
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

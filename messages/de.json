@@ -5,6 +5,7 @@
     "otkazi": "Abbrechen",
     "obrisi": "Löschen",
     "zatvori": "Schließen",
+    "nazad": "Zurück",
     "pretraga": "Suche",
     "prikaziJosLista": {
       "prikaziManje": "Weniger anzeigen",
@@ -838,6 +839,10 @@
     "uploadDugme": "Hochladen",
     "prazno": "Keine Dokumente für diesen Termin.",
     "preuzmi": "Herunterladen",
+    "pregledaj": "Vorschau",
+    "pregledUcitavanje": "Vorschau wird geladen…",
+    "pregledNijeDostupan": "Dieser Dateityp kann in der App nicht angezeigt werden.",
+    "pregledGreska": "Vorschau fehlgeschlagen. Versuchen Sie es erneut oder laden Sie die Datei herunter.",
     "obrisiDokument": "Dokument löschen",
     "aiOznaka": "KI",
     "uploadUspjeh": "Dokument hinzugefügt",

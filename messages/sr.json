@@ -5,6 +5,7 @@
     "otkazi": "Otkaži",
     "obrisi": "Obriši",
     "zatvori": "Zatvori",
+    "nazad": "Nazad",
     "pretraga": "Pretraga",
     "prikaziJosLista": {
       "prikaziManje": "Prikaži manje",
@@ -838,6 +839,10 @@
     "uploadDugme": "Upload",
     "prazno": "Nema dokumenata za ovaj termin.",
     "preuzmi": "Preuzmi",
+    "pregledaj": "Pregledaj",
+    "pregledUcitavanje": "Učitavanje pregleda…",
+    "pregledNijeDostupan": "Ovaj tip fajla se ne može prikazati u aplikaciji.",
+    "pregledGreska": "Pregled dokumenta nije uspio. Pokušajte ponovo ili preuzmite fajl.",
     "obrisiDokument": "Obriši dokument",
     "aiOznaka": "AI",
     "uploadUspjeh": "Dokument dodat",

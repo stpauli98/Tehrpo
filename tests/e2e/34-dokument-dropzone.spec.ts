@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
+import { kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
 
 /**
  * Zona za dodavanje fajla: native `Choose File` nije govorio korisniku da može i
@@ -10,13 +11,30 @@ import { test, expect, type Page } from "@playwright/test"
  *     `name`/`testId`, pa `08-dokumenti.spec.ts` i FormData rade nepromijenjeno,
  *  3. drop stvarno puni input (a ne samo mijenja izgled),
  *  4. izabrani fajl se vidi i može ukloniti.
+ *
+ * Vlastita fikstura: spec otprema fajl, pa ne smije prljati dijeljeni DEMO termin —
+ * svaki upload bi ostajao zauvijek i usporavao tuđe testove.
  */
 
+test.describe.configure({ mode: "serial" })
+
+let firma: FirmaFikstura
+let terminId: string
+
+test.beforeAll(async () => {
+  firma = await kreirajFirmuFiksturu({ oznaka: "DROPZONE", lokacije: ["E2E Lokacija"] })
+  const prvi = firma.terminiTekuciIds[0]
+  if (!prvi) throw new Error("fikstura nije napravila termin")
+  terminId = prvi
+})
+
+test.afterAll(async () => {
+  // `dokumenti` idu cascade preko `termin_id`/`klijent_id`, pa nema zaostataka.
+  await firma?.obrisi().catch(() => {})
+})
+
 async function otvoriIzvrsenTermin(page: Page) {
-  await page.goto("/termini?status=izvrseno&mjesec=svi")
-  const prvi = page.getByTestId("termin-detalji").first()
-  await expect(prvi).toBeVisible()
-  await prvi.click()
+  await page.goto(`/plan-aktivnosti?view=lista&mjesec=svi&selected=${terminId}`)
   await expect(page.getByTestId("termin-sheet")).toBeVisible()
 }
 

@@ -15,7 +15,7 @@ export function NoviRazgovorButton() {
       data-testid="novi-razgovor"
       onClick={() => router.push(href(`/asistent?k=${crypto.randomUUID()}`))}
     >
-      <Plus className="w-4 h-4" aria-hidden /> {t("dugme")}
+      <Plus className="h-[18px] w-[18px] shrink-0" aria-hidden /> {t("dugme")}
     </Button>
   )
 }

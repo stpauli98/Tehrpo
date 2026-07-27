@@ -17,7 +17,13 @@ type Zapisnik = {
   uploaded_at: string
 }
 
-export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
+/**
+ * `dokumenti` je JEDNA strana (server paginira sa PER_PAGE, v. zapisnici/page.tsx),
+ * `ukupno` je broj svih AI zapisnika. Pretraga je svjesno ostala klijentska pa
+ * filtrira samo tekuću stranu — server-side pretraga po klijentu/vrsti traži
+ * obrnuti upit kroz `termini_view` (van obima, v. nalog 22 §4).
+ */
+export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; ukupno: number }) {
   const t = useTranslations("zapisnici")
   const [q, setQ] = useState("")
   const upit = q.trim().toLowerCase()
@@ -45,7 +51,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
         </div>
         <span className="shrink-0 text-xs text-muted-foreground">
           {upit === ""
-            ? t("brojUkupno", { count: dokumenti.length })
+            ? t("brojUkupno", { count: ukupno })
             : t("brojFiltrirano", { prikazano: vidljivi.length, ukupno: dokumenti.length })}
         </span>
       </div>

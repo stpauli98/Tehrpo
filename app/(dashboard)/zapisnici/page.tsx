@@ -6,9 +6,13 @@ import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { downloadDokument } from "@/lib/supabase/storage"
 import { DocxPreview } from "@/components/domain/DocxPreview"
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
+import { Pagination } from "@/components/domain/Pagination"
 import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
 import { href } from "@/i18n/routes"
 import mammoth from "mammoth"
+
+// Isti page-size obrazac kao poslati-mejlovi/page.tsx (PER_PAGE + offset/range).
+const PER_PAGE = 50
 
 // Ishodi preview bloka — pad Storage-a/konverzije i nepostojeći dokument se
 // razlikuju od uspjeha (S1: „prazno" nije isto što i „palo").
@@ -23,16 +27,26 @@ export default async function ZapisniciPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const t = await getTranslations("zapisnici")
+  const tPag = await getTranslations("common.pagination")
   const sp = await searchParams
   const previewId = typeof sp.preview === "string" ? sp.preview : null
+  const pageNum = Math.max(1, Number(typeof sp.strana === "string" ? sp.strana : "1") || 1)
+  const offset = (pageNum - 1) * PER_PAGE
 
   const supabase = await createServerSupabaseClient()
-  const { data: dokData, error: dokError } = await supabase
+  const {
+    data: dokData,
+    error: dokError,
+    count,
+  } = await supabase
     .from("dokumenti")
-    .select("id, naziv, storage_path, uploaded_at, termin_id")
+    .select("id, naziv, storage_path, uploaded_at, termin_id", { count: "exact" })
     .eq("generated_by_ai", true)
     .order("uploaded_at", { ascending: false })
+    .range(offset, offset + PER_PAGE - 1)
   const dokRedovi = dokData ?? []
+  const ukupno = count ?? 0
+  const totalPages = Math.max(1, Math.ceil(ukupno / PER_PAGE))
 
   // termini_view je VIEW → nema embed relacija u supabase-js; dohvat zasebnim upitom + mapa.
   // termin_id je nullable → null-ovi se filtriraju da `.in("id", [null])` nikad ne nastane.
@@ -77,6 +91,17 @@ export default async function ZapisniciPage({
     }
   }
 
+  const currentSearch = new URLSearchParams(
+    Object.entries(sp).flatMap(([k, v]) =>
+      typeof v === "string" ? [[k, v] as [string, string]] : [],
+    ),
+  ).toString()
+  const pageHref = (p: number) => {
+    const params = new URLSearchParams(currentSearch)
+    params.set("strana", String(p))
+    return href(`/zapisnici?${params.toString()}`)
+  }
+
   const zatvoriPregled = (
     <Link href={href("/zapisnici")} className={IKONA_INLINE_KLASA} data-testid="zapisnici-zatvori" aria-label={t("zatvoriPregled")}>
       <X className="h-4 w-4" aria-hidden />
@@ -92,19 +117,35 @@ export default async function ZapisniciPage({
         <GreskaUcitavanja testId="zapisnici-greska" />
       ) : (
         <>
-          {dokumenti.length === 0 ? (
+          {ukupno === 0 ? (
             <div data-testid="zapisnici-prazno" className="rounded-xl bg-card p-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
               {t("prazno")}
             </div>
           ) : (
-            <ZapisniciTabela
-              dokumenti={dokumenti.map((d) => ({
-                id: d.id,
-                klijent_naziv: d.klijent_naziv,
-                vrsta_naziv: d.vrsta_naziv,
-                uploaded_at: d.uploaded_at,
-              }))}
-            />
+            <>
+              <ZapisniciTabela
+                ukupno={ukupno}
+                dokumenti={dokumenti.map((d) => ({
+                  id: d.id,
+                  klijent_naziv: d.klijent_naziv,
+                  vrsta_naziv: d.vrsta_naziv,
+                  uploaded_at: d.uploaded_at,
+                }))}
+              />
+              {totalPages > 1 && (
+                <div className="flex items-center justify-end pt-1" data-testid="zapisnici-pagination">
+                  <Pagination
+                    pageNum={pageNum}
+                    totalPages={totalPages}
+                    hrefFor={pageHref}
+                    pageTestId="zapisnici-page"
+                    prethodnaLabel={tPag("prethodna")}
+                    sljedecaLabel={tPag("sljedeca")}
+                    stranaText={tPag("strana", { pageNum, totalPages })}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {preview?.vrsta === "uspjeh" && (

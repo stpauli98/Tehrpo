@@ -73,17 +73,19 @@ export async function firstKlijentId(): Promise<string> {
   return (data?.[0]?.id as string) ?? ""
 }
 
-/** Ubaci planirani termin; vrati id. */
+/** Ubaci planirani termin; vrati id. `lokacijaId` je opcion (kolona lokacija_id je nullable). */
 export async function insertTermin(input: {
   klijentId: string
   vrstaId: string
   rok: string
+  lokacijaId?: string
 }): Promise<string> {
   const { data, error } = await db
     .from("termini")
     .insert({
       klijent_id: input.klijentId,
       vrsta_provjere_id: input.vrstaId,
+      lokacija_id: input.lokacijaId ?? null,
       rok_dospijeca: input.rok,
       status: "planirano",
     })

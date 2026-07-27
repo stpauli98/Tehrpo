@@ -22,7 +22,7 @@ export function VrstaSheet({
   vrsta: { id: string; naziv: string; interval: number | null; zakonski_osnov: string | null; aktivna: boolean; vodi_dokumentaciju: boolean }
 }) {
   const router = useRouter()
-  const t = useTranslations("termini.vrstaSheet")
+  const t = useTranslations("postavke.vrstaSheet")
   const tc = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(updateVrsta, initial)

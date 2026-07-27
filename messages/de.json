@@ -22,7 +22,11 @@
     },
     "sacuvano": "Gespeichert",
     "obrisano": "Gelöscht",
-    "greska": "Ein Fehler ist aufgetreten"
+    "greska": "Ein Fehler ist aufgetreten",
+    "greskaNeocekivana": "Ein unerwarteter Fehler ist aufgetreten.",
+    "greskaUcitavanja": "Fehler beim Laden der Daten.",
+    "samoAdministrator": "Nur Administrator.",
+    "pokusajPonovo": "Erneut versuchen"
   },
   "shell": {
     "nav": {
@@ -41,7 +45,8 @@
       "prosiriNavigaciju": "Navigation erweitern",
       "skupiNavigaciju": "Navigation einklappen",
       "skupi": "Einklappen",
-      "resizeHint": "Ziehen zum Anpassen der Breite · Doppelklick zum Einklappen"
+      "resizeHint": "Ziehen zum Anpassen der Breite · Doppelklick zum Einklappen",
+      "bedzGreske": "Ungelöste Fehler"
     },
     "topBar": {
       "odjava": "Abmelden",
@@ -137,14 +142,6 @@
       },
       "barTitle": "{naziv}: {count, plural, =1 {# Termin} other {# Termine}}",
       "barAriaLabel": "{naziv}: {count, plural, =1 {# Termin} other {# Termine}} — Monat in der Matrix öffnen"
-    },
-    "prikaz": {
-      "modKlijent": "Nach Kunde",
-      "modMjesec": "Nach Monat",
-      "sviKlijenti": "— alle Kunden —",
-      "izaberiKlijenta": "Kunden auswählen",
-      "izaberiMjesec": "Monat auswählen",
-      "godina": "Jahr"
     }
   },
   "klijenti": {
@@ -422,18 +419,6 @@
       "submit": "Dokument hinzufügen",
       "uspjeh": "Dokument hinzugefügt"
     },
-    "dodjelaKlijenata": {
-      "dugme": "Firmen ({count})",
-      "naslov": "Zugewiesene Firmen",
-      "opis": "Der Benutzer sieht und bearbeitet nur die ihm hier zugewiesenen Firmen.",
-      "pretragaPlaceholder": "Firmen suchen…",
-      "prazno": "Keine Ergebnisse.",
-      "brojac": "{count} ausgewählt",
-      "submitPending": "Wird gespeichert…",
-      "toastSuccess": "Firmen zugewiesen.",
-      "toastErrorFallback": "Fehler.",
-      "checkboxAriaLabel": "Firma {naziv} auswählen"
-    },
     "profil": {
       "prazno": "Keine Prüfungen im Profil. Fügen Sie eine Prüfung hinzu, um Termine zu erstellen.",
       "kolone": {
@@ -479,6 +464,32 @@
       "snimam": "Wird gespeichert…",
       "spaseno": "Zuweisung gespeichert.",
       "checkboxAriaLabel": "Mitarbeiter {ime} auswählen"
+    },
+    "dodajProvjeru": {
+      "dugme": "Prüfung hinzufügen",
+      "naslov": "Prüfung zum Profil hinzufügen",
+      "opis": "Verknüpfen Sie eine Leistung mit einem Standort — Termin und Frist werden automatisch erstellt.",
+      "bezLokacijaTekst": "Der Kunde hat keinen Standort, jede Prüfung muss jedoch mit einem Standort verknüpft sein.",
+      "bezLokacijaLink": "Zuerst einen Standort des Kunden anlegen.",
+      "poljeVrsta": "Art *",
+      "placeholderVrsta": "Art auswählen",
+      "poljeLokacija": "Standort *",
+      "placeholderLokacija": "Standort auswählen",
+      "poljeInterval": "Intervall (Monate) — aus der Art übernommen",
+      "bezIntervalaTekst": "Diese Art hat kein Standardintervall — legen Sie es in den",
+      "bezIntervalaLink": "Einstellungen",
+      "bezIntervalaKraj": "fest, bevor Sie sie zum Profil hinzufügen.",
+      "bezIntervalaOperater": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, bevor Sie sie zum Profil hinzufügen.",
+      "poljeRadjenoRanije": "Wurde diese Prüfung bereits durchgeführt? *",
+      "opcijaVecRadeno": "Ja — ich gebe das letzte Datum ein",
+      "opcijaPrviPut": "Nein — zum ersten Mal (ich gebe die erste Frist ein)",
+      "poljeZadnjiDatum": "Zuletzt durchgeführt *",
+      "poljePrviRok": "Erste Frist *",
+      "poljeNacinIzvrsenja": "Durchführungsart *",
+      "nacinIzvrsava": "{appName} führt es durch",
+      "nacinPracenje": "Nur Fristverfolgung",
+      "dodajem": "Füge hinzu…",
+      "dodajIGenerisi": "Hinzufügen und Termin erstellen"
     }
   },
   "termini": {
@@ -505,7 +516,6 @@
       "sviNacini": "Alle Methoden",
       "nacinIzvrsava": "Führt aus",
       "nacinPracenje": "Nur Verfolgung",
-      "svi": "Alle",
       "godina": "Jahr",
       "pretragaPlaceholder": "Firma suchen...",
       "tekuciNaredni": "Aktueller + nächster Monat"
@@ -558,80 +568,6 @@
       "kreiram": "Erstelle…",
       "kreirajTermin": "Termin erstellen"
     },
-    "dodajProvjeru": {
-      "dugme": "Prüfung hinzufügen",
-      "naslov": "Prüfung zum Profil hinzufügen",
-      "opis": "Verknüpfen Sie eine Leistung mit einem Standort — Termin und Frist werden automatisch erstellt.",
-      "bezLokacijaTekst": "Der Kunde hat keinen Standort, jede Prüfung muss jedoch mit einem Standort verknüpft sein.",
-      "bezLokacijaLink": "Zuerst einen Standort des Kunden anlegen.",
-      "poljeVrsta": "Art *",
-      "placeholderVrsta": "Art auswählen",
-      "poljeLokacija": "Standort *",
-      "placeholderLokacija": "Standort auswählen",
-      "poljeInterval": "Intervall (Monate) — aus der Art übernommen",
-      "bezIntervalaTekst": "Diese Art hat kein Standardintervall — legen Sie es in den",
-      "bezIntervalaLink": "Einstellungen",
-      "bezIntervalaKraj": "fest, bevor Sie sie zum Profil hinzufügen.",
-      "bezIntervalaOperater": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, bevor Sie sie zum Profil hinzufügen.",
-      "poljeRadjenoRanije": "Wurde diese Prüfung bereits durchgeführt? *",
-      "opcijaVecRadeno": "Ja — ich gebe das letzte Datum ein",
-      "opcijaPrviPut": "Nein — zum ersten Mal (ich gebe die erste Frist ein)",
-      "poljeZadnjiDatum": "Zuletzt durchgeführt *",
-      "poljePrviRok": "Erste Frist *",
-      "poljeNacinIzvrsenja": "Durchführungsart *",
-      "nacinIzvrsava": "{appName} führt es durch",
-      "nacinPracenje": "Nur Fristverfolgung",
-      "dodajem": "Füge hinzu…",
-      "dodajIGenerisi": "Hinzufügen und Termin erstellen"
-    },
-    "novaVrsta": {
-      "dugme": "Neue Art",
-      "naslov": "Neue Prüfungsart",
-      "poljeNaziv": "Name *",
-      "placeholderNaziv": "z. B. Prüfung der Lüftungsanlage",
-      "poljeInterval": "Intervall (Monate)",
-      "placeholderInterval": "leer = keine automatische Planung",
-      "poljeZakonskiOsnov": "Rechtsgrundlage",
-      "placeholderZakonskiOsnov": "z. B. Verordnung… (optional)",
-      "kreiram": "Erstelle…",
-      "kreirajVrstu": "Art erstellen"
-    },
-    "vrstaSheet": {
-      "urediAriaLabel": "Bearbeiten",
-      "naslov": "Prüfungsart bearbeiten",
-      "poljeNaziv": "Name *",
-      "poljeZakonskiOsnov": "Rechtsgrundlage",
-      "poljeVodiDokumentaciju": "Für diese Leistung wird Dokumentation geführt",
-      "spremam": "Speichere…",
-      "spremiIzmjene": "Änderungen speichern",
-      "deaktiviraj": "Deaktivieren",
-      "aktiviraj": "Aktivieren",
-      "aktiviranaUspjeh": "Art aktiviert",
-      "deaktiviranaUspjeh": "Art deaktiviert"
-    },
-    "vrstePregleda": {
-      "prikaziNeaktivne": "Auch inaktive anzeigen",
-      "brojVrsta": "{count} Arten",
-      "kolone": {
-        "vrsta": "Prüfungsart",
-        "interval": "Intervall (Mon.)",
-        "dokumentacija": "Dok.",
-        "status": "Status",
-        "akcije": "Aktionen"
-      },
-      "vodiDokumentacijuTitle": "Dokumentation wird geführt",
-      "bezDokumentacijeTitle": "Keine Dokumentation",
-      "prazno": "Keine Arten zum Anzeigen.",
-      "intervalGreska": "1–120 oder leer",
-      "intervalSpremljeno": "✓ gespeichert",
-      "intervalGreskaFallback": "Fehler beim Speichern",
-      "klikDeaktivacija": "Klicken zum Deaktivieren",
-      "klikAktivacija": "Klicken zum Aktivieren",
-      "aktivna": "Aktiv",
-      "neaktivna": "Inaktiv",
-      "aktiviranaUspjeh": "Art aktiviert",
-      "deaktiviranaUspjeh": "Art deaktiviert"
-    },
     "actions": {
       "datumNeispravan": "Ungültiges Datum",
       "datumUBuducnosti": "Das Durchführungsdatum darf nicht in der Zukunft liegen",
@@ -645,6 +581,8 @@
     }
   },
   "status": {
+    "svi": "Alle",
+    "aktivni": "Aktiv",
     "planirano": "Geplant",
     "zakazano": "Terminiert",
     "izvrseno": "Durchgeführt",
@@ -659,8 +597,6 @@
       "periodMjesec": "Monat",
       "periodKvartal": "Quartal",
       "periodGodina": "Jahr",
-      "statusAktivni": "Aktiv",
-      "statusSvi": "Alle",
       "gradSvi": "Alle Städte",
       "gradBez": "Ohne Stadt",
       "placeholderMjesec": "Monat",
@@ -734,6 +670,14 @@
       "izaberiteKlijenta": "Wählen Sie einen Kunden, um die Jahresmatrix anzuzeigen.",
       "nemaTerminaMjesec": "Keine Termine für den ausgewählten Monat.",
       "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr."
+    },
+    "prikaz": {
+      "modKlijent": "Nach Kunde",
+      "modMjesec": "Nach Monat",
+      "sviKlijenti": "— alle Kunden —",
+      "izaberiKlijenta": "Kunden auswählen",
+      "izaberiMjesec": "Monat auswählen",
+      "godina": "Jahr"
     }
   },
   "aktivnost": {
@@ -757,13 +701,11 @@
       "FILTER": "Gefiltert"
     },
     "filteri": {
-      "korisnik": "Benutzer",
       "akcija": "Aktionstyp",
       "svi": "Alle",
       "od": "Von",
       "do": "Bis",
       "pretraga": "Suche",
-      "primijeni": "Anwenden",
       "ocisti": "Zurücksetzen"
     },
     "prazno": "Keine erfassten Ereignisse für die ausgewählten Filter.",
@@ -1021,7 +963,6 @@
     "actions": {
       "pragObavezan": "Geben Sie mindestens eine Schwelle ein",
       "pragoviNeispravni": "Schwellenwerte müssen ganze Zahlen 0–365 sein, durch Komma getrennt",
-      "samoAdministrator": "Nur Administrator.",
       "intervalGreskaVrijednost": "Intervall muss eine ganze Zahl 1–120 oder leer sein (Fehler: \"{vrijednost}\")",
       "nazivObavezan": "Name ist erforderlich",
       "intervalNeispravan": "Intervall muss eine ganze Zahl 1–120 oder leer sein",
@@ -1049,6 +990,66 @@
       "vrijemeSatNeispravan": "Unbekannter Versandzeitpunkt.",
       "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen.",
       "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen."
+    },
+    "novaVrsta": {
+      "dugme": "Neue Art",
+      "naslov": "Neue Prüfungsart",
+      "poljeNaziv": "Name *",
+      "placeholderNaziv": "z. B. Prüfung der Lüftungsanlage",
+      "poljeInterval": "Intervall (Monate)",
+      "placeholderInterval": "leer = keine automatische Planung",
+      "poljeZakonskiOsnov": "Rechtsgrundlage",
+      "placeholderZakonskiOsnov": "z. B. Verordnung… (optional)",
+      "kreiram": "Erstelle…",
+      "kreirajVrstu": "Art erstellen"
+    },
+    "vrstaSheet": {
+      "urediAriaLabel": "Bearbeiten",
+      "naslov": "Prüfungsart bearbeiten",
+      "poljeNaziv": "Name *",
+      "poljeZakonskiOsnov": "Rechtsgrundlage",
+      "poljeVodiDokumentaciju": "Für diese Leistung wird Dokumentation geführt",
+      "spremam": "Speichere…",
+      "spremiIzmjene": "Änderungen speichern",
+      "deaktiviraj": "Deaktivieren",
+      "aktiviraj": "Aktivieren",
+      "aktiviranaUspjeh": "Art aktiviert",
+      "deaktiviranaUspjeh": "Art deaktiviert"
+    },
+    "vrstePregleda": {
+      "prikaziNeaktivne": "Auch inaktive anzeigen",
+      "brojVrsta": "{count} Arten",
+      "kolone": {
+        "vrsta": "Prüfungsart",
+        "interval": "Intervall (Mon.)",
+        "dokumentacija": "Dok.",
+        "status": "Status",
+        "akcije": "Aktionen"
+      },
+      "vodiDokumentacijuTitle": "Dokumentation wird geführt",
+      "bezDokumentacijeTitle": "Keine Dokumentation",
+      "prazno": "Keine Arten zum Anzeigen.",
+      "intervalGreska": "1–120 oder leer",
+      "intervalSpremljeno": "✓ gespeichert",
+      "intervalGreskaFallback": "Fehler beim Speichern",
+      "klikDeaktivacija": "Klicken zum Deaktivieren",
+      "klikAktivacija": "Klicken zum Aktivieren",
+      "aktivna": "Aktiv",
+      "neaktivna": "Inaktiv",
+      "aktiviranaUspjeh": "Art aktiviert",
+      "deaktiviranaUspjeh": "Art deaktiviert"
+    },
+    "dodjelaKlijenata": {
+      "dugme": "Firmen ({count})",
+      "naslov": "Zugewiesene Firmen",
+      "opis": "Der Benutzer sieht und bearbeitet nur die ihm hier zugewiesenen Firmen.",
+      "pretragaPlaceholder": "Firmen suchen…",
+      "prazno": "Keine Ergebnisse.",
+      "brojac": "{count} ausgewählt",
+      "submitPending": "Wird gespeichert…",
+      "toastSuccess": "Firmen zugewiesen.",
+      "toastErrorFallback": "Fehler.",
+      "checkboxAriaLabel": "Firma {naziv} auswählen"
     }
   },
   "asistent": {
@@ -1179,7 +1180,6 @@
       "naslov": "Betreff",
       "slanje": "Versand",
       "dostava": "Zustellung",
-      "greska": "Fehler",
       "klijent": "Kunde"
     },
     "tip": {
@@ -1213,8 +1213,7 @@
       "svi": "Alle",
       "filtriraj": "Filtern"
     },
-    "oznaciPregledanim": "Als geprüft markieren",
-    "bedzGreske": "Ungelöste Fehler"
+    "oznaciPregledanim": "Als geprüft markieren"
   },
   "izvoz": {
     "plan": {

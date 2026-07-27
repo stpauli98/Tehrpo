@@ -3,7 +3,7 @@ import type { DogadjajUnos } from "./tipovi"
 // Fizički (srpski) segment → labela ekrana za NAVIGATE. Fallback: sam segment.
 // Napomena: na en/de deploymentu usePathname vraća lokalizovan segment; tada labela
 // pada na raw segment (svjesno ograničenje MVP-a — entitet nosi lokalizovan naziv).
-const EKRAN_LABELE: Record<string, string> = {
+export const EKRAN_LABELE: Record<string, string> = {
   pregled: "Pregled",
   "plan-aktivnosti": "Plan aktivnosti",
   obilasci: "Obilasci",
@@ -14,17 +14,20 @@ const EKRAN_LABELE: Record<string, string> = {
   aktivnost: "Aktivnost",
   termini: "Termini",
   dokumenti: "Dokumenti",
+  "poslati-mejlovi": "Poslati mejlovi",
 }
 
 // Rute čiji drugi segment je id konkretnog zapisa → VIEW.
-const ENTITET_RUTE = new Set(["klijenti", "zapisnici", "termini", "obilasci", "dokumenti"])
+const ENTITET_RUTE = new Set(["klijenti", "zapisnici", "termini", "dokumenti"])
 
 // Per-ekran allowlist filter ključeva iz searchParams.
-const FILTER_KLJUCEVI: Record<string, string[]> = {
+export const FILTER_KLJUCEVI: Record<string, string[]> = {
   termini: ["status", "vrsta", "klijent", "q"],
   klijenti: ["q", "grad", "status"],
-  obilasci: ["mjesec", "klijent", "q"],
+  obilasci: ["period", "godina", "mjesec", "kvartal", "status", "grad"],
   "plan-aktivnosti": ["view", "od", "do", "status"],
+  // "page" je paginacija, NE filter — ne ulazi.
+  "poslati-mejlovi": ["tip", "status", "od", "do", "samo_greske", "nepregledano"],
 }
 
 export function segmenti(pathname: string): string[] {

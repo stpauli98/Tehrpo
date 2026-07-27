@@ -107,6 +107,49 @@ export function periodRange(
   return { od: `${godina}-${pad(m)}-01`, do: `${godina}-${pad(m)}-${pad(last(godina, m))}` }
 }
 
+/** ISO timestamp → "26. 7. 2026. 12:00" — fiksna zona Europe/Sarajevo, locale iz APP_LOCALE (sr se INTERNO mapira u sr-Latn). Null/nevažeće → "—". Bez sekundi. */
+export function formatDatumVrijeme(iso: string | null | undefined): string {
+  if (!iso) return "—"
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return "—"
+  return new Intl.DateTimeFormat(APP_LOCALE === "sr" ? "sr-Latn" : APP_LOCALE, {
+    timeZone: "Europe/Sarajevo",
+    day: "numeric", month: "numeric", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  }).format(dt)
+}
+
+/** Offset zone Europe/Sarajevo (ms) za dati UTC instant, izračunat preko Intl (bez novih zavisnosti). */
+function sarajevoOffsetMs(instant: Date): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Sarajevo",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  }).formatToParts(instant)
+  const p = (type: string) => Number(parts.find((x) => x.type === type)?.value)
+  // hour12:false može dati "24" za ponoć — normalizuj na 0
+  const zidnoVrijeme = Date.UTC(p("year"), p("month") - 1, p("day"), p("hour") % 24, p("minute"), p("second"))
+  return zidnoVrijeme - instant.getTime()
+}
+
+/** ISO datum "YYYY-MM-DD" → UTC instant ponoći tog datuma u Europe/Sarajevo, npr. "2026-07-26" → "2026-07-25T22:00:00.000Z" (ljeto, UTC+2). Za datumske granice filtera (S7: eksplicitna zona, `do` kao ekskluzivni sljedeći dan). */
+export function utcGranicaSarajevskogDana(isoDatum: string): string {
+  const [g, m, d] = isoDatum.split("-").map(Number)
+  const utcPonoc = Date.UTC(g!, m! - 1, d!)
+  // DST prelazi u Sarajevu su u 02:00/03:00 lokalno — offset u UTC ponoć važi i za lokalnu ponoć istog dana
+  const offset = sarajevoOffsetMs(new Date(utcPonoc))
+  return new Date(utcPonoc - offset).toISOString()
+}
+
+/** ISO datum + 1 dan, TZ-safe (obrazac kao addMjeseci). */
+export function dodajDan(isoDatum: string): string {
+  const [g, m, d] = isoDatum.split("-").map(Number)
+  const dt = new Date(Date.UTC(g!, m! - 1, d! + 1)) // Date.UTC normalizuje overflow dana
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`
+}
+
 /** Raspon [prvi dan tekućeg mjeseca, zadnji dan narednog mjeseca] (ISO, UTC, granica godine OK). */
 export function tekuciNarednomMjesecuRange(danas?: Date): { from: string; to: string } {
   const base = danas ?? new Date()

@@ -22,7 +22,7 @@ const initial: ActionResult = { ok: true }
 
 export function NovaVrstaButton() {
   const router = useRouter()
-  const t = useTranslations("termini.novaVrsta")
+  const t = useTranslations("postavke.novaVrsta")
   const tc = useTranslations("common")
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(createVrsta, initial)

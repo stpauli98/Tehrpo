@@ -23,7 +23,7 @@ export function PrikazToolbar({
   godine: number[]
   godina: number
 }) {
-  const t = useTranslations("pregled.prikaz")
+  const t = useTranslations("plan.prikaz")
   const router = useRouter()
   const params = useSearchParams()
   const [pending, startTransition] = useTransition()

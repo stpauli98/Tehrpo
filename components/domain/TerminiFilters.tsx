@@ -137,7 +137,7 @@ export function TerminiFilters({
                 : "bg-card text-muted-foreground border-border hover:bg-muted"
             )}
           >
-            {o.value === "svi" ? t("svi") : tStatus(o.value)}
+            {tStatus(o.labelKey)}
           </button>
         ))}
       </div>

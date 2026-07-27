@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { zahtijevajAdmina } from "@/app/(dashboard)/postavke/actions"
+import { zahtijevajAdmina } from "@/lib/auth/zahtijevaj-admina"
 import type { ActionResult } from "@/app/(dashboard)/klijenti/actions"
 
 /** Per-firma: uključi/isključi slanje podsjetnika firmi. SSR → RLS klijenti_upd (operater sa pristupom smije). */

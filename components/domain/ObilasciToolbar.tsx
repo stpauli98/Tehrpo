@@ -7,8 +7,12 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { monthName, currentYear } from "@/lib/date"
+import { STATUS_FILTER_OPTIONS } from "@/lib/termini"
 
 const MJESEC_NAZIVI = Array.from({ length: 12 }, (_, i) => monthName(i + 1))
+
+// Jedan izvor za status select: "aktivni" (obilasci-specifično) + zajedničke opcije iz lib/termini.
+const STATUS_OPCIJE = [{ value: "aktivni", labelKey: "aktivni" } as const, ...STATUS_FILTER_OPTIONS]
 
 export function ObilasciToolbar({
   period: initialPeriod,
@@ -42,10 +46,9 @@ export function ObilasciToolbar({
   const periodItems: Record<string, string> = {
     mjesec: t("periodMjesec"), kvartal: t("periodKvartal"), godina: t("periodGodina"),
   }
-  const statusItems: Record<string, string> = {
-    aktivni: t("statusAktivni"), svi: t("statusSvi"), kasni: tStatus("kasni"), planirano: tStatus("planirano"),
-    zakazano: tStatus("zakazano"), izvrseno: tStatus("izvrseno"), otkazano: tStatus("otkazano"),
-  }
+  const statusItems: Record<string, string> = Object.fromEntries(
+    STATUS_OPCIJE.map((o) => [o.value, tStatus(o.labelKey)])
+  )
   const gradItems: Record<string, string> = {
     svi: t("gradSvi"), __bez__: t("gradBez"),
     ...Object.fromEntries((gradovi ?? []).map((g) => [g, g])),
@@ -83,13 +86,9 @@ export function ObilasciToolbar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="aktivni">{t("statusAktivni")}</SelectItem>
-          <SelectItem value="svi">{t("statusSvi")}</SelectItem>
-          <SelectItem value="kasni">{tStatus("kasni")}</SelectItem>
-          <SelectItem value="planirano">{tStatus("planirano")}</SelectItem>
-          <SelectItem value="zakazano">{tStatus("zakazano")}</SelectItem>
-          <SelectItem value="izvrseno">{tStatus("izvrseno")}</SelectItem>
-          <SelectItem value="otkazano">{tStatus("otkazano")}</SelectItem>
+          {STATUS_OPCIJE.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{tStatus(o.labelKey)}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

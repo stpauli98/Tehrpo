@@ -16,6 +16,7 @@ import {
   ChevronsLeft,
   Mail,
 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
 import { useUloga } from "@/providers/korisnik-provider"
@@ -153,9 +154,16 @@ export function Sidebar({ mejlGreske = 0 }: { mejlGreske?: number }) {
         <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
         {!collapsed && <span className="min-w-0 truncate">{label}</span>}
         {itemHref === href("/poslati-mejlovi") && mejlGreske > 0 && !collapsed && (
-          <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-medium text-white">
+          <Badge variant="destructive" className="ml-auto">
             {mejlGreske}
-          </span>
+            <span className="sr-only">{tSidebar("bedzGreske")}</span>
+          </Badge>
+        )}
+        {itemHref === href("/poslati-mejlovi") && mejlGreske > 0 && collapsed && (
+          <>
+            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
+            <span className="sr-only">{tSidebar("bedzGreske")}</span>
+          </>
         )}
         {collapsed && (
           <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-md group-hover/item:block">

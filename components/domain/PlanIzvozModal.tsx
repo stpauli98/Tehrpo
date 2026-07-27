@@ -182,7 +182,11 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
             <fieldset className="flex flex-col gap-2" data-testid="izvoz-period">
               <legend className="text-xs font-medium text-muted-foreground mb-1">{t("period")}</legend>
 
-              {/* S4: native radio → ui/radio-group (fokus prsten i tokeni dolaze iz primitiva) */}
+              {/* S4: native radio → ui/radio-group (fokus prsten i tokeni dolaze iz primitiva).
+                  S12: svaka stavka nosi vlastiti `aria-label`. Base UI `Radio.Root` renderuje
+                  `<span role="radio">` uz `aria-hidden` skriveni input, pa `<label>` koji ga
+                  obavija imenuje samo taj skriveni input — vidljivi radio bi ostao bez imena
+                  (native `<input type="radio">` je ime dobijao od istog tog labela). */}
               <RadioGroup
                 value={periodMod}
                 onValueChange={(v) => setPeriodMod(v as PeriodMod)}
@@ -190,13 +194,13 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                 className="gap-2"
               >
                 <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="om" data-testid="izvoz-period-om" />
+                  <RadioGroupItem value="om" data-testid="izvoz-period-om" aria-label={t("periodOvajMjesec")} />
                   {t("periodOvajMjesec")}
                 </label>
 
                 <div className="flex items-center gap-2 text-sm">
                   <label className="flex items-center gap-2">
-                    <RadioGroupItem value="god" data-testid="izvoz-period-god" />
+                    <RadioGroupItem value="god" data-testid="izvoz-period-god" aria-label={t("periodGodina")} />
                     {t("periodGodina")}
                   </label>
                   {periodMod === "god" && (
@@ -211,7 +215,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
 
                 <div className="flex items-center gap-2 text-sm">
                   <label className="flex items-center gap-2">
-                    <RadioGroupItem value="mj" data-testid="izvoz-period-mj" />
+                    <RadioGroupItem value="mj" data-testid="izvoz-period-mj" aria-label={t("periodMjesec")} />
                     {t("periodMjesec")}
                   </label>
                   {periodMod === "mj" && (
@@ -235,7 +239,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                 </div>
 
                 <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="raspon" data-testid="izvoz-period-raspon" />
+                  <RadioGroupItem value="raspon" data-testid="izvoz-period-raspon" aria-label={t("periodRaspon")} />
                   {t("periodRaspon")}
                 </label>
                 {periodMod === "raspon" && (
@@ -248,7 +252,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                 )}
 
                 <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="svi" data-testid="izvoz-period-svi" />
+                  <RadioGroupItem value="svi" data-testid="izvoz-period-svi" aria-label={t("periodSvi")} />
                   {t("periodSvi")}
                 </label>
               </RadioGroup>
@@ -264,11 +268,11 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                 className="gap-2"
               >
                 <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="sve" data-testid="izvoz-opseg-sve" />
+                  <RadioGroupItem value="sve" data-testid="izvoz-opseg-sve" aria-label={t("opsegSve")} />
                   {t("opsegSve")}
                 </label>
                 <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="filtrirano" data-testid="izvoz-opseg-filtrirano" />
+                  <RadioGroupItem value="filtrirano" data-testid="izvoz-opseg-filtrirano" aria-label={t("opsegFiltrirano")} />
                   {t("opsegFiltrirano")}
                 </label>
               </RadioGroup>

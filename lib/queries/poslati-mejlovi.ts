@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import type { PostgrestError } from "@supabase/supabase-js"
 import type { Database } from "@/db/types"
 
 export type PoslatiMejlFilteri = {
@@ -15,9 +16,14 @@ export type PoslatiMejlFilteri = {
 export type PoslatiMejlRed =
   Database["public"]["Functions"]["get_poslati_mejlovi"]["Returns"][number]
 
+/**
+ * Čitanje dnevnika mejlova. Greška se NE baca nego vraća (S1) — stranica mora moći
+ * razlikovati "upit pao" od "0 redova" i prikazati `GreskaUcitavanja` umjesto
+ * empty state-a.
+ */
 export async function dohvatiPoslateMejlove(
   f: PoslatiMejlFilteri,
-): Promise<{ redovi: PoslatiMejlRed[]; ukupno: number }> {
+): Promise<{ redovi: PoslatiMejlRed[]; ukupno: number; error: PostgrestError | null }> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase.rpc("get_poslati_mejlovi", {
     p_tip: f.tip ?? null,
@@ -29,8 +35,8 @@ export async function dohvatiPoslateMejlove(
     p_limit: f.limit ?? 50,
     p_offset: f.offset ?? 0,
   } as Database["public"]["Functions"]["get_poslati_mejlovi"]["Args"])
-  if (error) throw new Error(error.message)
+  if (error) return { redovi: [], ukupno: 0, error }
   const redovi = data ?? []
   const ukupno = Number(redovi[0]?.ukupno ?? 0)
-  return { redovi, ukupno }
+  return { redovi, ukupno, error: null }
 }

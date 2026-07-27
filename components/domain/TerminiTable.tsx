@@ -53,6 +53,7 @@ export function TerminiTable({
             {COL_KEYS.map((c) => (
               <th
                 key={c}
+                scope="col"
                 className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground whitespace-nowrap"
               >
                 {tKolone(c)}

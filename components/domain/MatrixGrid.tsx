@@ -66,7 +66,7 @@ export function MatrixGrid({
       >
         <thead className="bg-muted">
           <tr>
-            <th className={cn(
+            <th scope="col" className={cn(
               "sticky left-0 z-10 bg-muted px-3 py-2 text-left font-medium text-muted-foreground border-r border-border",
               fillWidth ? "w-[220px]" : "min-w-[220px]",
             )}>
@@ -75,6 +75,7 @@ export function MatrixGrid({
             {columns.map((c) => (
               <th
                 key={c.id}
+                scope="col"
                 className={cn(
                   "px-2 py-2 text-center font-medium text-muted-foreground whitespace-nowrap min-w-[56px]",
                   c.isCurrent && "ring-2 ring-brand rounded",
@@ -88,9 +89,14 @@ export function MatrixGrid({
         <tbody>
           {rows.map((row) => (
             <tr key={row.rowId} data-testid="matrix-row" className="border-t border-border">
-              <td className="sticky left-0 z-10 bg-card px-3 py-2 font-medium text-foreground border-r border-border min-w-[220px]">
+              {/* S12: naziv vrste je zaglavlje reda, ne obična ćelija — `th scope="row"`
+                  daje čitaču ekrana kontekst za svaku ćeliju u redu. */}
+              <th
+                scope="row"
+                className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-medium text-foreground border-r border-border min-w-[220px]"
+              >
                 {row.rowLabel}
-              </td>
+              </th>
               {columns.map((c) => {
                 const cell = row.cells[c.id] ?? null
                 const href =

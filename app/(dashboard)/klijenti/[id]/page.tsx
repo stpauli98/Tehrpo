@@ -1,8 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { ChevronLeft, MapPin, Download } from "lucide-react"
-import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { ChevronLeft, MapPin } from "lucide-react"
 import { InfoIkona } from "@/components/ui/info-ikona"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
@@ -14,6 +13,7 @@ import { TipOdnosaBadge } from "@/components/domain/TipOdnosaBadge"
 import { ProfilTab } from "@/components/domain/ProfilTab"
 import { KlijentDokumentUpload } from "@/components/domain/KlijentDokumentUpload"
 import { ObrisiDokumentButton } from "@/components/domain/ObrisiDokumentButton"
+import { PreuzmiDokumentButton } from "@/components/domain/PreuzmiDokumentButton"
 import { DodajProvjeruButton } from "@/components/domain/DodajProvjeruButton"
 import { IdKartaTab } from "@/components/domain/IdKartaTab"
 import { KlijentPodsjetniciTab } from "@/components/domain/KlijentPodsjetniciTab"
@@ -449,10 +449,7 @@ export default async function KlijentDetailPage({
                           <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
                           <td className="px-3 py-2">
                             <span className="flex items-center justify-end gap-1">
-                              <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="klijent-dokument-download" aria-label={t("dokumentiTab.preuzmi")}>
-                                <Download className="h-[18px] w-[18px] shrink-0" aria-hidden />
-                                <Tooltip>{t("dokumentiTab.preuzmi")}</Tooltip>
-                              </a>
+                              <PreuzmiDokumentButton dokumentId={d.id} label={t("dokumentiTab.preuzmi")} testId="klijent-dokument-download" />
                               {/* Renderuje se samo adminu (samogating u komponenti; server akcija nameće isto pravilo) */}
                               <ObrisiDokumentButton dokumentId={d.id} testId="klijent-dokument-delete" />
                             </span>

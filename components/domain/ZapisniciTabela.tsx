@@ -3,11 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { Search, Download, Eye } from "lucide-react"
+import { Search, Eye } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { formatDatum } from "@/lib/date"
 import { ObrisiDokumentButton } from "./ObrisiDokumentButton"
+import { PreuzmiDokumentButton } from "./PreuzmiDokumentButton"
 import { href } from "@/i18n/routes"
 
 type Zapisnik = {
@@ -73,10 +74,7 @@ export function ZapisniciTabela({ dokumenti }: { dokumenti: Zapisnik[] }) {
                       <Eye className="h-4 w-4" aria-hidden />
                       <Tooltip>{t("pregled")}</Tooltip>
                     </Link>
-                    <a href={`/api/dokumenti/${d.id}`} className={IKONA_INLINE_KLASA} data-testid="pregled-download" aria-label={t("preuzmi")}>
-                      <Download className="h-4 w-4" aria-hidden />
-                      <Tooltip>{t("preuzmi")}</Tooltip>
-                    </a>
+                    <PreuzmiDokumentButton dokumentId={d.id} label={t("preuzmi")} testId="pregled-download" />
                     <ObrisiDokumentButton dokumentId={d.id} label={t("obrisiZapisnik")} testId="pregled-delete" />
                   </div>
                 </td>

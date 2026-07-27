@@ -810,7 +810,6 @@
     "klijentObavezan": "Client is required",
     "tipNeispravan": "Invalid type",
     "klijentNePostojiIliNemaPristupa": "Client does not exist or you don't have access.",
-    "ugovorNePripadaKlijentu": "Contract does not belong to the client.",
     "naslov": "Documents",
     "generisiZapisnik": "Generate record (AI)",
     "generisem": "Generating…",
@@ -822,7 +821,21 @@
     "obrisiDokument": "Delete document",
     "aiOznaka": "AI",
     "uploadUspjeh": "Document added",
-    "zapisnikUspjeh": "Record generated"
+    "zapisnikUspjeh": "Record generated",
+    "tipLabel": "Document type",
+    "fajlPolje": "Document file",
+    "neispravniPodaci": "Invalid data — refresh the page and try again.",
+    "preuzimanjeNijeUspjelo": "Download failed. Please try again.",
+    "potvrdaBrisanjaNaslov": "Delete document?",
+    "potvrdaBrisanjaOpis": "The document and its file are permanently deleted. This cannot be undone.",
+    "tipovi": {
+      "strucni_nalaz": "Expert report",
+      "zapisnik": "Record",
+      "ugovor": "Contract",
+      "ponuda": "Offer",
+      "fotografija": "Photo",
+      "ostalo": "Other"
+    }
   },
   "postavke": {
     "naslov": "Settings",

@@ -219,11 +219,12 @@ export async function deleteDokumentAction(
   return { ok: true }
 }
 
-// ─── Upload na nivou klijenta / ugovora (ne mora biti vezan za termin) ────────
+// ─── Upload na nivou klijenta (ne mora biti vezan za termin) ─────────────────
+// Napomena: ugovor-nivo je uklonjen kao mrtav kod (N15) — kolona `ugovor_id` ostaje
+// u šemi (nullable) i insert je više ne šalje.
 
 const uploadKlijentSchema = z.object({
   klijent_id: z.string().uuid(t("klijentObavezan")),
-  ugovor_id: z.union([z.string().uuid(), z.literal("").transform(() => undefined)]).optional(),
   tip: z.string().refine(jeValidanTip, t("tipNeispravan")),
 })
 
@@ -233,7 +234,6 @@ export async function uploadKlijentDokumentAction(
 ): Promise<ActionResult> {
   const parsed = uploadKlijentSchema.safeParse({
     klijent_id: formData.get("klijent_id"),
-    ugovor_id: formData.get("ugovor_id") ?? "",
     tip: formData.get("tip") ?? "ostalo",
   })
   if (!parsed.success) {
@@ -241,7 +241,7 @@ export async function uploadKlijentDokumentAction(
     // je smisleni kanal (toast); `errors` ostaju za polja koja bira (tip) i dijagnostiku (S2).
     return { ok: false, message: t("neispravniPodaci"), errors: parsed.error.flatten().fieldErrors }
   }
-  const { klijent_id, ugovor_id, tip } = parsed.data
+  const { klijent_id, tip } = parsed.data
 
   const file = formData.get("file")
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: t("izaberiteFajl") }
@@ -259,16 +259,9 @@ export async function uploadKlijentDokumentAction(
   // → izbjegava tranzitni orphan blob za neovlaštenog korisnika.
   const { data: kl } = await supabase.from("klijenti").select("id").eq("id", klijent_id).maybeSingle()
   if (!kl) return { ok: false, message: t("klijentNePostojiIliNemaPristupa") }
-  // Integritet: ako je dat ugovor, mora pripadati klijentu
-  if (ugovor_id) {
-    const { data: ug } = await supabase.from("ugovori").select("id").eq("id", ugovor_id).eq("klijent_id", klijent_id).maybeSingle()
-    if (!ug) return { ok: false, message: t("ugovorNePripadaKlijentu") }
-  }
 
   const naziv = safeName(file.name)
-  const path = ugovor_id
-    ? dokumentStoragePath({ ugovorId: ugovor_id }, naziv)
-    : dokumentStoragePath({ klijentId: klijent_id }, naziv)
+  const path = dokumentStoragePath({ klijentId: klijent_id }, naziv)
   const bytes = Buffer.from(await file.arrayBuffer())
 
   try {
@@ -279,7 +272,6 @@ export async function uploadKlijentDokumentAction(
 
   const { error } = await supabase.from("dokumenti").insert({
     klijent_id,
-    ugovor_id: ugovor_id ?? null,
     termin_id: null,
     naziv,
     storage_path: path,

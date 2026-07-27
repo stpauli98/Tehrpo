@@ -26,9 +26,6 @@ describe("dokumentStoragePath", () => {
   it("klijent scope → klijenti/<id>/<file>", () => {
     expect(dokumentStoragePath({ klijentId: "k1" }, "ugovor.pdf")).toMatch(/^klijenti\/k1\/[\w.-]+$/)
   })
-  it("ugovor scope → ugovori/<id>/<file>", () => {
-    expect(dokumentStoragePath({ ugovorId: "u1" }, "anex.pdf")).toMatch(/^ugovori\/u1\/[\w.-]+$/)
-  })
   it("termin scope → termini/<id>/<file>", () => {
     expect(dokumentStoragePath({ terminId: "t1" }, "nalaz.pdf")).toMatch(/^termini\/t1\/[\w.-]+$/)
   })

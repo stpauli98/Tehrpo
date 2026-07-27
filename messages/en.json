@@ -798,7 +798,6 @@
     "klijentObavezan": "Client is required",
     "tipNeispravan": "Invalid type",
     "klijentNePostojiIliNemaPristupa": "Client does not exist or you don't have access.",
-    "ugovorNePripadaKlijentu": "Contract does not belong to the client.",
     "naslov": "Documents",
     "generisiZapisnik": "Generate record (AI)",
     "generisem": "Generating…",

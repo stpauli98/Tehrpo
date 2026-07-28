@@ -93,6 +93,16 @@ export function jeIsoDatum(v: string | undefined): v is string {
 }
 
 /** Red je "neriješena greška" ako je slanje palo ILI je dostava neuspjela. */
+/**
+ * Demo red: mejl je sastavljen do kraja ali NAMJERNO nije poslat.
+ *
+ * Zašto zasebna funkcija a ne inline provjera: prikaz se razlikuje na dva mjesta
+ * (bedž statusa i kolona dostave), pa uslov ima jedno ime i jedno mjesto za izmjenu.
+ */
+export function jeDemo(r: Pick<MejlRed, "status">): boolean {
+  return r.status === "demo"
+}
+
 export function jeGreska(r: Pick<MejlRed, "status" | "delivery_status">): boolean {
   return (
     r.status === "greska_slanja" ||

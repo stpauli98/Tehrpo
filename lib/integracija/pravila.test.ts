@@ -274,6 +274,91 @@ describe("provjeriSql — nova tabela bez politike", () => {
   })
 })
 
+describe("provjeriSql — slijepilo za DROP (tabela-bez-politike)", () => {
+  it("CASE 2: create policy pa drop policy u ISTOM fajlu — tabela na kraju BEZ žive politike, MORA se prijaviti", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "create table probna_w (id int primary key);",
+        "create policy probna_w_sel on probna_w for select using (true);",
+        "drop policy probna_w_sel on probna_w;",
+      ].join("\n"),
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.pravilo).toBe("tabela-bez-politike")
+    expect(nalazi[0]!.poruka).toContain("probna_w")
+  })
+
+  it("KONTROLNI PARNJAK: create pa drop pa PONOVNI create iste politike — NE smije se prijaviti", () => {
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj: [
+          "create table probna_w (id int primary key);",
+          "create policy probna_w_sel on probna_w for select using (true);",
+          "drop policy probna_w_sel on probna_w;",
+          "create policy probna_w_sel on probna_w for select using (true);",
+        ].join("\n"),
+      }),
+    ).toEqual([])
+  })
+
+  it("DROP POLICY IF EXISTS bez ponovnog create takođe briše pokriće", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "create table probna_v (id int primary key);",
+        "create policy probna_v_sel on probna_v for select using (true);",
+        "drop policy if exists probna_v_sel on probna_v;",
+      ].join("\n"),
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("probna_v")
+  })
+
+  it("POZNATO OGRANIČENJE (namjerno van obuhvata): migracija koja SAMO drop-uje politike (tabela kreirana u DRUGOM fajlu, van vidokruga po-fajl provjere) prolazi neprimijećeno", () => {
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj: [
+          "drop policy if exists klijenti_sel on klijenti;",
+          "drop policy if exists klijenti_ins on klijenti;",
+          "drop policy if exists klijenti_upd on klijenti;",
+          "drop policy if exists klijenti_del on klijenti;",
+        ].join("\n"),
+      }),
+    ).toEqual([])
+  })
+})
+
+describe("provjeriSql — slijepilo za DROP (view-bez-invokera)", () => {
+  it("CASE 3: inline invoker=on pa ALTER VIEW ... security_invoker=off u ISTOM fajlu — MORA se prijaviti", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "create view termini_view with (security_invoker=on) as select 1 as x;",
+        "alter view termini_view set (security_invoker = off);",
+      ].join("\n"),
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.pravilo).toBe("view-bez-invokera")
+    expect(nalazi[0]!.poruka).toContain("termini_view")
+  })
+
+  it("KONTROLNI PARNJAK: off pa ponovno on (zadnja naredba odlučuje) — NE smije se prijaviti", () => {
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj: [
+          "create view termini_view as select 1 as x;",
+          "alter view termini_view set (security_invoker = off);",
+          "alter view termini_view set (security_invoker = on);",
+        ].join("\n"),
+      }),
+    ).toEqual([])
+  })
+})
+
 describe("provjeriIzvore", () => {
   it("bira provjeru prema ekstenziji i spaja nalaze", () => {
     const nalazi = provjeriIzvore([

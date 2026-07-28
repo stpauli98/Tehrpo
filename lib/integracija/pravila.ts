@@ -11,6 +11,20 @@
  * Namjerno tekstualno, ne AST — cilj je jeftina i predvidiva mreža, ne
  * potpuna analiza. Lažno pozitivan nalaz se rješava tačkom u IZUZECI.
  *
+ * "Slijepilo za DROP" — dvije uske korekcije za slučaj kad je isti fajl i UKLJUČIO i
+ * ISKLJUČIO pokrivenost, jer to je tačno ono što provjera po fajlu treba da vidi:
+ *  - `tabela-bez-politike`: politika za tabelu se NE računa kao pokriće ako je u ISTOM
+ *    fajlu, kasnije, obrisana (`DROP POLICY <ime> ON <tabela>`) bez ponovnog kreiranja.
+ *  - `view-bez-invokera`: `ALTER VIEW <ime> SET (security_invoker = off)` u ISTOM fajlu
+ *    poništava raniji `on` (bilo inline na CREATE, bilo iz ranije ALTER naredbe).
+ *
+ * POZNATO OGRANIČENJE (namjerno van obuhvata): migracija koja radi SAMO
+ * `DROP POLICY ... ON tabela` bez ijedne `CREATE TABLE`/`CREATE POLICY` u ISTOM fajlu
+ * (tabela je kreirana u nekom RANIJEM, drugom fajlu) i dalje prolazi neprimijećeno —
+ * to bi tražilo praćenje stanja KROZ ISTORIJU (preko fajlova), što je izvan onoga što
+ * provjera po fajlu može vidjeti bez agregacije (a agregacija je odbačena — probijena
+ * je recenzijom, v. scripts/provjeri-integraciju.ts).
+ *
  * Čisto nad podacima: bez dodira s diskom, mrežom i process.env.
  */
 import { PROD_REF } from "@/lib/supabase/refs"
@@ -43,8 +57,10 @@ const MARKER_ADMIN_DOZVOLI = /^\s*\/\/\s*integracija-dozvoli:\s*admin-klijent\s*
 const ADMIN = /createAdminSupabaseClient|@\/lib\/supabase\/admin/
 const VIEW = /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+([A-Za-z0-9_."]+)/i
 const TABELA = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z0-9_."]+)/gi
-const POLITIKA = /CREATE\s+POLICY/i
-const SECURITY_INVOKER = /security_invoker\s*=\s*on/i
+const SECURITY_INVOKER_ON = /security_invoker\s*=\s*on/i
+const SECURITY_INVOKER_OFF = /security_invoker\s*=\s*off/i
+const CREATE_POLICY = /CREATE\s+POLICY\s+"?([A-Za-z0-9_]+)"?\s+ON\s+([A-Za-z0-9_."]+)/i
+const DROP_POLICY = /DROP\s+POLICY\s+(?:IF\s+EXISTS\s+)?"?([A-Za-z0-9_]+)"?\s+ON\s+([A-Za-z0-9_."]+)/i
 
 function brojLinije(sadrzaj: string, indeks: number): number {
   let linija = 1
@@ -130,29 +146,63 @@ export function provjeriTs(izvor: Izvor): Nalaz[] {
 }
 
 /**
- * Da li se negdje u cijelom `sadrzaj`-u view `ime` naknadno postavlja na
- * security_invoker=on preko `ALTER VIEW <ime> ... security_invoker = on`.
- *
- * Pretraga je ograničena na JEDNU `;`-razdvojenu naredbu (isti pristup kao za
- * CREATE VIEW niže) — naredba mora i početi sa `ALTER VIEW <ime>` (dozvoljeni
- * su vodeći whitespace i `-- ...` SQL komentari, npr. "Re-apply security_invoker"
- * napomena iznad stvarne ALTER VIEW linije) i sadržati `security_invoker=on`
- * unutar SEBE. Bez granice na jednu naredbu, lijeni `[\s\S]*?` bi mogao
- * preskočiti preko granice naredbe i pokupiti invoker koji pripada SLJEDEĆOJ
- * `ALTER VIEW` naredbi za neki drugi view (lažni negativ).
- *
- * Granica riječi (`\b`) uz ime sprječava da `termini` pokrije `termini_view`
- * i obrnuto (isti obrazac kao `politikaZaOvu` za tabele — `_` je karakter
- * riječi, pa `\b` ne prelazi granicu prefiksa).
+ * Regex koji prepoznaje `ALTER VIEW <ime> ...` kao POČETAK naredbe (dozvoljeni su
+ * vodeći whitespace i `-- ...` SQL komentari, npr. "Re-apply security_invoker"
+ * napomena iznad stvarne ALTER VIEW linije). Granica riječi (`\b`) uz ime sprječava
+ * da `termini` pokrije `termini_view` i obrnuto (isti obrazac kao `politikaZaOvu` za
+ * tabele — `_` je karakter riječi, pa `\b` ne prelazi granicu prefiksa).
  */
-function imaAlterInvokerZaView(sadrzaj: string, ime: string): boolean {
-  const alterZaIme = new RegExp(
-    `^(?:\\s|--[^\\n]*)*ALTER\\s+VIEW\\s+[A-Za-z0-9_."]*\\b${ime}\\b`,
-    "i",
-  )
-  return sadrzaj
-    .split(";")
-    .some((naredba) => alterZaIme.test(naredba) && SECURITY_INVOKER.test(naredba))
+function alterViewZaIme(ime: string): RegExp {
+  return new RegExp(`^(?:\\s|--[^\\n]*)*ALTER\\s+VIEW\\s+[A-Za-z0-9_."]*\\b${ime}\\b`, "i")
+}
+
+/**
+ * Efektivno stanje invokera za `ime` NA KRAJU fajla: počinje od `inlineStanje`
+ * (invoker inline na CREATE (OR REPLACE) VIEW naredbi), pa se SEKVENCIJALNO
+ * (redoslijed naredbi u fajlu, ne redoslijed pojavljivanja u regexu) ažurira svakom
+ * `ALTER VIEW <ime> ...` naredbom koja EKSPLICITNO pominje `security_invoker` — zadnja
+ * takva naredba odlučuje. `ALTER VIEW` koja ne dodiruje `security_invoker` (mijenja
+ * neku drugu opciju) ne mijenja stanje — to je "slijepilo za DROP" fix: ranije se
+ * gledalo SAMO da li ijedna ALTER-naredba ikad postavi `on`, pa je naknadni `off` u
+ * istom fajlu prolazio neprimijećen.
+ */
+function efektivniInvokerZaView(sadrzaj: string, ime: string, inlineStanje: boolean): boolean {
+  let stanje = inlineStanje
+  const regex = alterViewZaIme(ime)
+  for (const naredba of sadrzaj.split(";")) {
+    if (!regex.test(naredba)) continue
+    if (SECURITY_INVOKER_ON.test(naredba)) stanje = true
+    else if (SECURITY_INVOKER_OFF.test(naredba)) stanje = false
+  }
+  return stanje
+}
+
+/**
+ * Žive (nedropovane) politike po tabeli, na kraju fajla — sekvencijalno: `CREATE
+ * POLICY <p> ON <t>` dodaje `p` u živi skup za `t`; `DROP POLICY [IF EXISTS] <p> ON
+ * <t>` ga uklanja. Ponovno kreiranje iste politike poslije drop-a je ponovo živo (to
+ * je kontrolni slučaj — drop pa ponovni create NE smije biti prijavljen). Bez ovoga
+ * (stari kod je samo tražio "postoji li IJEDNA CREATE POLICY za ovu tabelu bilo gdje
+ * u fajlu") `CREATE POLICY p ON t; DROP POLICY p ON t;` u ISTOM fajlu je prolazilo kao
+ * pokriveno iako tabela na kraju fajla nema nijednu politiku — "slijepilo za DROP".
+ */
+function zivePolitikePoTabeli(sadrzaj: string): Map<string, Set<string>> {
+  const zive = new Map<string, Set<string>>()
+  for (const naredba of sadrzaj.split(";")) {
+    const create = CREATE_POLICY.exec(naredba)
+    if (create && create[1] !== undefined && create[2] !== undefined) {
+      const tabela = kratkoIme(create[2])
+      const skup = zive.get(tabela) ?? new Set<string>()
+      skup.add(create[1].toLowerCase())
+      zive.set(tabela, skup)
+      continue
+    }
+    const drop = DROP_POLICY.exec(naredba)
+    if (drop && drop[1] !== undefined && drop[2] !== undefined) {
+      zive.get(kratkoIme(drop[2]))?.delete(drop[1].toLowerCase())
+    }
+  }
+  return zive
 }
 
 export function provjeriSql(izvor: Izvor): Nalaz[] {
@@ -161,15 +211,17 @@ export function provjeriSql(izvor: Izvor): Nalaz[] {
 
   // VIEW: gleda se svaka naredba zasebno za inline invoker (WITH (security_invoker=on)),
   // da invoker iz jedne naredbe ne pokrije drugu. Ali repo ima i obrazac gdje se invoker
-  // vraća naknadnom `ALTER VIEW <ime> ... security_invoker=on` naredbom u istom fajlu
-  // (npr. nakon DROP+CREATE koji ga izgubi) — to se traži preko cijelog sadržaja, s
-  // granicom riječi da <ime> ne pokrije ime koje ga sadrži kao prefiks (ili obrnuto).
+  // naknadno mijenja preko ALTER VIEW <ime> ... u ISTOM fajlu (npr. nakon DROP+CREATE
+  // koji ga izgubi, ILI namjerno/greškom isključen) — efektivniInvokerZaView gleda SVE
+  // takve ALTER naredbe REDOM (zadnja odlučuje), s granicom riječi da <ime> ne pokrije
+  // ime koje ga sadrži kao prefiks (ili obrnuto).
   let pomak = 0
   for (const naredba of sadrzaj.split(";")) {
     const pogodak = VIEW.exec(naredba)
     if (pogodak && pogodak[1] !== undefined) {
       const ime = kratkoIme(pogodak[1])
-      const imaInvoker = SECURITY_INVOKER.test(naredba) || imaAlterInvokerZaView(sadrzaj, ime)
+      const inlineStanje = SECURITY_INVOKER_ON.test(naredba)
+      const imaInvoker = efektivniInvokerZaView(sadrzaj, ime, inlineStanje)
       if (!imaInvoker) {
         nalazi.push({
           putanja,
@@ -182,14 +234,15 @@ export function provjeriSql(izvor: Izvor): Nalaz[] {
     pomak += naredba.length + 1
   }
 
-  // Tabela bez ijedne politike u istom fajlu.
-  const imaPolitiku = POLITIKA.test(sadrzaj)
+  // Tabela bez ijedne ŽIVE politike (kreirana pa NIJE naknadno obrisana bez ponovnog
+  // kreiranja) u istom fajlu — v. zivePolitikePoTabeli.
+  const zivePoTabeli = zivePolitikePoTabeli(sadrzaj)
   for (const pogodak of sadrzaj.matchAll(TABELA)) {
     const sirovoIme = pogodak[1]
     if (sirovoIme === undefined) continue
     const ime = kratkoIme(sirovoIme)
-    const politikaZaOvu = new RegExp(`CREATE\\s+POLICY[\\s\\S]*?ON\\s+[A-Za-z0-9_."]*\\b${ime}\\b`, "i")
-    if (imaPolitiku && politikaZaOvu.test(sadrzaj)) continue
+    const imaZivuPolitiku = (zivePoTabeli.get(ime)?.size ?? 0) > 0
+    if (imaZivuPolitiku) continue
     nalazi.push({
       putanja,
       linija: brojLinije(sadrzaj, pogodak.index),

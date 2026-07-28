@@ -1,18 +1,27 @@
 /**
  * Statičke provjere integracije. Tanka ljuska — sva logika je u lib/integracija/,
- * gdje je pokrivena vitest testovima (vitest.config.ts ne obuhvata scripts/).
+ * gdje je pokrivena vitest testovima (vitest.config.ts ne obuhvata scripts/). Ova
+ * datoteka smije samo: pozvati `git`, čitati disk (`readdir`/`readFile`), pozvati čiste
+ * funkcije iz lib/integracija/, i formatirati ispis/izlazni kod.
  *
- * Obuhvat SQL migracija zavisi od načina pokretanja (v. parsirajOpcije ispod) —
+ * Obuhvat SQL migracija zavisi od načina pokretanja (v. lib/integracija/opcije.ts) —
  * provjere koje NE zavise od obuhvata (sudar prefiksa, neispravno ime, paritet
  * prevoda, ICU `one`) i pravila nad .ts/.tsx uvijek idu nad cijelim repozitorijem
  * (nemaju šum koji bi tražio suženje).
  *
- * Izlazni kod: 0 čisto, 1 ima nalaza, 2 bazna grana nije razrešiva lokalno.
+ * Izlazni kod: 0 čisto, 1 ima nalaza, 2 greška u opcijama ili bazna grana nije
+ * razrešiva lokalno.
  *
  * Pokretanje:
  *   pnpm provjeri:integraciju                  # bazna grana: origin/main
  *   pnpm provjeri:integraciju -- --baza <ref>  # eksplicitna bazna grana
  *   pnpm provjeri:integraciju -- --sve         # sve migracije, bez obzira na git
+ *
+ * U podrazumijevanom/--baza režimu, obuhvat migracija je UNIJA: fajlovi koje grana
+ * stvarno donosi (`git diff <baza>...HEAD`) I necommitovane izmjene u radnom stablu
+ * (`git status --porcelain`: untracked, staged, modified) — bez ovog drugog dijela,
+ * pokretanje skripte LOKALNO prije komita (tačno trenutak kad je jedina korisna)
+ * uvijek bi javljalo "0 fajlova, čisto" bez obzira šta je na disku.
  */
 import { execFileSync } from "node:child_process"
 import { readdir, readFile } from "node:fs/promises"
@@ -22,33 +31,18 @@ import { nadjiSudarenePrefikse, nadjiNeispravnaImena } from "../lib/integracija/
 import { nadjiNeparitet, nadjiIcuOne, type Katalog } from "../lib/integracija/prijevodi"
 import { provjeriIzvore, type Izvor, type Nalaz } from "../lib/integracija/pravila"
 import { sanitizujSql, filtrirajNamjernePolicyless } from "../lib/integracija/sql"
+import {
+  parsirajOpcije,
+  filtrirajSqlImena,
+  filtrirajMigracijskePutanje,
+  parsirajGitStatusPorcelain,
+  type Opcije,
+} from "../lib/integracija/opcije"
 import { RLS_INTENTIONAL_POLICYLESS } from "../lib/rlsCoverage"
 
 const KORIJEN = process.cwd()
 const JEZICI = ["sr", "en", "de"] as const
 const OBUHVAT_TS = ["app", "components", "lib", "tests"]
-const BAZA_PODRAZUMIJEVANA = "origin/main"
-
-type Opcije = { sve: boolean; baza: string }
-
-function parsirajOpcije(argovi: string[]): Opcije {
-  let sve = false
-  let baza = BAZA_PODRAZUMIJEVANA
-  for (let i = 0; i < argovi.length; i++) {
-    const a = argovi[i]
-    if (a === "--sve") {
-      sve = true
-    } else if (a === "--baza") {
-      const vrijednost = argovi[i + 1]
-      if (vrijednost === undefined) {
-        throw new Error("--baza zahtijeva vrijednost (npr. --baza origin/main)")
-      }
-      baza = vrijednost
-      i++
-    }
-  }
-  return { sve, baza }
-}
 
 /** Bazna grana nije razrešiva lokalno — jasna greška i izlazni kod 2, ne tiho "čisto". */
 class BaznaGranaGreska extends Error {}
@@ -66,21 +60,22 @@ function bazaPostojiLokalno(baza: string): boolean {
   }
 }
 
-/** Migracije nove/izmijenjene na trenutnoj grani u odnosu na `baza` — ono što grana
- *  STVARNO donosi, ne cijela istorija (koja legitimno razdvaja tabelu i njenu politiku
- *  po različitim migracijama iz različitih, davno spojenih grana). */
-function izmijenjeneMigracije(baza: string): string[] {
+/** Migracije koje grana STVARNO donosi (commitovano) u odnosu na `baza`. */
+function komitovaneMigracije(baza: string): string[] {
   if (!bazaPostojiLokalno(baza)) {
     throw new BaznaGranaGreska(
       `bazna grana "${baza}" nije razrešiva lokalno (možda treba \`git fetch origin\`?)`,
     )
   }
   const izlaz = git(["diff", "--name-only", "--diff-filter=ACMR", `${baza}...HEAD`])
-  return izlaz
-    .split("\n")
-    .map((r) => r.trim())
-    .filter((r) => r.startsWith("supabase/migrations/") && r.endsWith(".sql"))
-    .sort()
+  return filtrirajMigracijskePutanje(izlaz.split("\n").map((r) => r.trim()))
+}
+
+/** Necommitovane migracije u radnom stablu (untracked, staged, modified) — v. napomenu
+ *  o uniji u modul-nivo komentaru iznad. */
+function radnoStabloMigracije(): string[] {
+  const izlaz = git(["status", "--porcelain"])
+  return filtrirajMigracijskePutanje(parsirajGitStatusPorcelain(izlaz))
 }
 
 async function skupiFajlove(pocetak: string, ekstenzije: RegExp): Promise<string[]> {
@@ -103,13 +98,27 @@ async function ucitajTsIzvore(): Promise<Izvor[]> {
   )
 }
 
-/** Relativne putanje (`supabase/migrations/*.sql`) čiji sadržaj treba provjeriti —
- *  zavisi od `opcije.sve` (cijeli direktorij) ili `opcije.baza` (git diff). */
+/** Imena FAJLOVA (ne poddirektorija) u supabase/migrations — poddirektorij bi inače
+ *  pukao sa EISDIR kad bi ga ucitajMigracijeIzvore pokušao pročitati kao fajl (prošli
+ *  defekt). */
+async function imenaUMigracijama(): Promise<string[]> {
+  const stavke = await readdir(join(KORIJEN, "supabase/migrations"), {
+    withFileTypes: true,
+  }).catch(() => [])
+  return stavke
+    .filter((s) => s.isFile())
+    .map((s) => s.name)
+    .sort()
+}
+
+/** Relativne putanje (`supabase/migrations/*.sql`) čiji sadržaj treba provjeriti. */
 function odaberiPutanjeMigracija(opcije: Opcije, sveImenaMigracija: string[]): string[] {
   if (opcije.sve) {
-    return sveImenaMigracija.map((ime) => `supabase/migrations/${ime}`)
+    return filtrirajSqlImena(sveImenaMigracija).map((ime) => `supabase/migrations/${ime}`)
   }
-  return izmijenjeneMigracije(opcije.baza)
+  const komitovano = komitovaneMigracije(opcije.baza)
+  const radnoStablo = radnoStabloMigracije()
+  return [...new Set([...komitovano, ...radnoStablo])].sort()
 }
 
 /** Svaki fajl ide kroz provjeriSql ZASEBNO (jedan Izvor = jedan fajl) — tako `putanja`
@@ -125,15 +134,23 @@ async function ucitajMigracijeIzvore(putanje: string[]): Promise<Izvor[]> {
 }
 
 async function main(): Promise<void> {
-  const opcije = parsirajOpcije(process.argv.slice(2))
+  const rezultatOpcija = parsirajOpcije(process.argv.slice(2))
+  if (!rezultatOpcija.ok) {
+    console.error(`✗ ${rezultatOpcija.poruka}`)
+    process.exitCode = 2
+    return
+  }
+  const { opcije, upozorenje } = rezultatOpcija
+  if (upozorenje !== null) {
+    console.error(`⚠ ${upozorenje}`)
+  }
+
   const nalazi: Nalaz[] = []
 
   // 1 + 2 — migracije: imena se provjeravaju nad CIJELIM repozitorijem, ne zavise od
   // obuhvata (sudar prefiksa i neispravno ime pogađaju bilo koju granu, ne samo onu
   // koja ih je unijela).
-  const sveImenaMigracija = (
-    await readdir(join(KORIJEN, "supabase/migrations")).catch(() => [] as string[])
-  ).sort()
+  const sveImenaMigracija = await imenaUMigracijama()
 
   for (const sudar of nadjiSudarenePrefikse(sveImenaMigracija)) {
     nalazi.push({
@@ -200,7 +217,7 @@ async function main(): Promise<void> {
   console.log(
     opcije.sve
       ? `ℹ obuhvat migracija: ${putanjeMigracija.length} fajl(ova) (--sve, bez obzira na git)`
-      : `ℹ obuhvat migracija: ${putanjeMigracija.length} fajl(ova) izmijenjeno u odnosu na ${opcije.baza}`,
+      : `ℹ obuhvat migracija: ${putanjeMigracija.length} fajl(ova) — commitovano u odnosu na ${opcije.baza} ILI necommitovano u radnom stablu (untracked/staged/modified)`,
   )
 
   const sviIzvori = [

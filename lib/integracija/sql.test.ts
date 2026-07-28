@@ -37,24 +37,25 @@ describe("sanitizujSql", () => {
     expect(izlaz).not.toContain("tajna vrijednost")
   })
 
-  it("PostgreSQL udvajanje ('') se tretira kao JEDAN string, ne kao kraj+početak", () => {
+  it("PostgreSQL udvajanje ('') se tretira kao JEDAN string, ne kao kraj+početak (dokumentaciona provjera)", () => {
     // "it''s" = apostrof unutar stringa bježan udvajanjem — cijeli izraz je JEDAN
     // string literal, a ne "it" (string) + "s" (kod).
+    //
+    // POŠTENA NAPOMENA (v. diskriminatorski describe blok ispod): ovaj test NE
+    // razlikuje sanitizujSql od naivne verzije (/'[^']*'/, bez '' svijesti) — za bilo
+    // koji dobro formiran SQL, udvojeni navodnik su UVIJEK dva SUSJEDNA karaktera bez
+    // ičega između, pa naivna verzija "zatvori pa odmah ponovo otvori" fragmentiše
+    // isti raspon na dva poklapanja koja se nadovezuju BEZ praznine — ukupan maskiran
+    // raspon (jedino što je javno vidljivo kroz sanitizujSql) je matematički
+    // IDENTIČAN bez obzira da li se '' prepoznaje kao escape ili ne. Ovaj test
+    // dokumentuje očekivano ponašanje; test koji STVARNO dokazuje da je novi regex
+    // bolji od naivnog je "DISKRIMINATOR: \\ prije zatvarajućeg navodnika" ispod.
     const ulaz = "select 'it''s a test', create_table_marker;"
     const izlaz = sanitizujSql(ulaz)
     expect(izlaz).not.toContain("it")
     expect(izlaz).not.toContain("test")
     // Ostatak izraza (van navodnika) mora ostati netaknut.
     expect(izlaz).toContain("create_table_marker;")
-  })
-
-  it("ne koristi JS-stil \\' escape — obrnuta kosa crta u stringu ne produžuje literal", () => {
-    // U PostgreSQL-u (standard_conforming_strings=on) `\` NIJE escape karakter unutar
-    // stringa — `'a\'` je zatvoren string 'a\' praćen sa još jednim otvorenim/zatvorenim
-    // navodnikom. Provjeravamo da regex ne "pobjegne" preko granice naredbe.
-    const ulaz = String.raw`select 'a\', real_code;`
-    const izlaz = sanitizujSql(ulaz)
-    expect(izlaz).toContain("real_code;")
   })
 
   it("uklanja poznati lažni pogodak: 'CREATE TABLE AS' unutar string literala", () => {
@@ -83,17 +84,85 @@ describe("sanitizujSql", () => {
     expect(izlaz).toContain("create policy p on t for select using (true);")
   })
 
-  it("brojevi linija se NE pomjeraju poslije maskiranja", () => {
+  it("brojevi linija se NE pomjeraju poslije maskiranja — VIŠELINIJSKI string literal", () => {
+    // Namjerno višelinijski literal (ne jednolinijski) — string regex koristi [^']
+    // koje HVATA \n, pa cijeli literal (3 fizičke linije) postaje JEDNO poklapanje
+    // koje sadrži DVA ugniježđena \n karaktera. Ako maskiraj ikad počne brisati \n
+    // (umjesto da ih čuva), ovih 5 linija bi se sažalo u 3 — regresija koju bi
+    // jednolinijski test SAKRIO (v. diskriminator "slomljenMaskiraj" ispod, koji
+    // upravo tu regresiju pravi eksplicitno i pokazuje 5 → 3).
     const ulaz = [
-      "-- prvi komentar",
       "create table a (id int);",
-      "select 'neka duga string vrijednost preko cijelog reda';",
+      "select 'prvi red",
+      "drugi red",
+      "treci red';",
       "create table b (id int);",
     ].join("\n")
-    const izlaz = sanitizujSql(ulaz)
-    expect(izlaz.split("\n")).toHaveLength(ulaz.split("\n").length)
-    expect(izlaz.split("\n")[1]).toBe("create table a (id int);")
-    expect(izlaz.split("\n")[3]).toBe("create table b (id int);")
+    const redoviUlaz = ulaz.split("\n")
+    const redoviIzlaz = sanitizujSql(ulaz).split("\n")
+
+    expect(redoviIzlaz).toHaveLength(redoviUlaz.length)
+    expect(redoviIzlaz[0]).toBe("create table a (id int);")
+    expect(redoviIzlaz[4]).toBe("create table b (id int);")
+    // Redovi 1-3 (unutar literala) su maskirani — sadržaj nestaje, ALI dužina svakog
+    // reda (pa time i raspored linija) je netaknuta.
+    for (const i of [1, 2, 3]) {
+      expect(redoviIzlaz[i]!.length).toBe(redoviUlaz[i]!.length)
+    }
+    expect(redoviIzlaz[1]).not.toContain("prvi")
+    expect(redoviIzlaz[2]).not.toContain("drugi")
+    expect(redoviIzlaz[3]).not.toContain("treci")
+  })
+
+  describe("diskriminacija implementacija — dokazuje da testovi GORE stvarno padaju na slomljenim verzijama", () => {
+    // Reference implementacije koje NAMJERNO reprodukuju dva poznata kvara, da bismo
+    // dokazali da testovi iznad zaista razlikuju sanitizujSql od njih (a ne prolaze
+    // slučajno i kod ispravne i kod pokvarene verzije — v. recenzija: "ako test
+    // prolazi i sa naivnom verzijom, ne služi ničemu").
+    function slomljenMaskiraj(poklapanje: string): string {
+      // NE čuva \n — sve postaje razmak, uključujući nove redove unutar poklapanja.
+      return " ".repeat(poklapanje.length)
+    }
+    function slomljenaSanitizacija(sadrzaj: string): string {
+      return sadrzaj
+        .replace(/--[^\n]*/g, slomljenMaskiraj)
+        .replace(/'(?:[^']|'')*'/g, slomljenMaskiraj)
+    }
+    // Stara verzija iz prve runde: JS-stil `\'` escape umjesto PostgreSQL `''` udvajanja.
+    function staraVerzija(sadrzaj: string): string {
+      return sadrzaj.replace(/--[^\n]*/g, maskiraj).replace(/'(?:[^'\\]|\\.)*'/g, maskiraj)
+    }
+    // Potpuno naivna verzija: kraj-na-prvi-navodnik, bez ikakve escape svijesti.
+    function naivnaVerzija(sadrzaj: string): string {
+      return sadrzaj.replace(/--[^\n]*/g, maskiraj).replace(/'[^']*'/g, maskiraj)
+    }
+
+    it("slomljenMaskiraj (briše \\n) DAJE regresiju 5 → 3 linije — potvrđuje da test iznad nešto stvarno provjerava", () => {
+      const ulaz = [
+        "create table a (id int);",
+        "select 'prvi red",
+        "drugi red",
+        "treci red';",
+        "create table b (id int);",
+      ].join("\n")
+      expect(sanitizujSql(ulaz).split("\n")).toHaveLength(5)
+      expect(slomljenaSanitizacija(ulaz).split("\n")).toHaveLength(3)
+    })
+
+    it("DISKRIMINATOR: \\ neposredno prije zatvarajućeg navodnika — stara (JS-escape) verzija proguta stvaran DDL, nova i naivna ne", () => {
+      // Windows-stil putanja u string literalu (\ neposredno prije zatvarajućeg
+      // navodnika), pa DRUGI, nepovezan string kasnije u istom fajlu. PostgreSQL ne
+      // bježi navodnik obrnutom kosom crtom, pa se prvi string zatvara na PRVOM
+      // stvarnom apostrofu (odmah poslije "put\"). Stara (JS-escape) verzija misli da
+      // je "\'" escapovan navodnik, pa nastavlja da čita "unutar stringa" sve do
+      // SLJEDEĆEG apostrofa u CIJELOM fajlu — gutajući stvaran DDL
+      // ("create table pravi_hit") u međuvremenu.
+      const ulaz = String.raw`select 'c:\put\', create table pravi_hit (id int);` + "\nselect 'ok';"
+
+      expect(sanitizujSql(ulaz)).toContain("create table pravi_hit (id int);")
+      expect(naivnaVerzija(ulaz)).toContain("create table pravi_hit (id int);")
+      expect(staraVerzija(ulaz)).not.toContain("create table pravi_hit (id int);")
+    })
   })
 
   it("stvaran DDL izvan komentara/stringova nije izgubljen", () => {

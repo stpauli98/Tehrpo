@@ -52,7 +52,10 @@ const IME_IZ_PORUKE = /^tabela (\S+) nema RLS politiku/
  * teksta poruke u pravila.ts `provjeriSql`), ali prihvaćeno: dodavanje strukturiranog
  * polja u `Nalaz` bi značilo mijenjanje pravila.ts, što je van dozvoljenog obuhvata
  * ovog zadatka. Ako se tekst poruke ikad promijeni, ova funkcija prestaje prepoznavati
- * izuzetke i te tabele će se ponovo prijaviti — vidljivo (provjera padne), ne tiho.
+ * izuzetke — ALI to NIJE garantovano vidljivo u praksi: sve tri tabele iz
+ * RLS_INTENTIONAL_POLICYLESS su u ISTORIJSKIM migracijama, van dometa podrazumijevanog
+ * (git-diff suženog) režima. Regresija bi se pojavila TEK pod `--sve` (ili ako neka od
+ * te tri migracije ikad uđe u obuhvat git diff-a), ne u podrazumijevanom CI toku.
  */
 export function filtrirajNamjernePolicyless(
   nalazi: readonly Nalaz[],

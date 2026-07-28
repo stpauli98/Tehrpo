@@ -70,7 +70,9 @@ export default async function KlijentDetailPage({
   const trebaEnrichment = tab === "id-karta" || tab === "profil" // termini + profil stavke
   const trebaOpcije = tab === "termini" || tab === "profil" // vrste + admini za DodajProvjeruButton
   const trebaUgovore = tab === "id-karta"
-  const trebaKontakte = tab === "id-karta" || tab === "kontakti"
+  // Tab „lokacije" takođe treba kontakte: forma nudi vezivanje postojećeg, a tabela
+  // prikazuje ko stvarno prima podsjetnike za tu lokaciju.
+  const trebaKontakte = tab === "id-karta" || tab === "kontakti" || tab === "lokacije"
   const trebaDokumente = tab === "dokumenti"
 
   const supabase = await createServerSupabaseClient()

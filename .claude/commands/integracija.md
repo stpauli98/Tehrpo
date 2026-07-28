@@ -10,9 +10,10 @@ Argument (opciono): spisak grana. Bez argumenta — sam sastavi spisak.
 
 - `git fetch origin --prune`
 - Ako je argument komande dat, tretiraj ga kao gotov spisak grana i preskoči popis ispod. Bez argumenta, sastavi spisak sam: `gh pr list --state open` i `git branch --format='%(refname:short)'`.
-- Za svaku granu: `git rev-list --left-right --count origin/main...<grana>`
-- Odredi redoslijed serije: grane sa otvorenim PR-om idu prve, sortirane po rastućem broju PR-a. Grane **bez** PR-a idu poslije njih, međusobno sortirane po datumu prvog commita koji nije na `origin/main` — najstariji prvi (`git log origin/main..<grana> --reverse --format=%aI | head -1`). Ovaj redoslijed nije kozmetički: to je mehanizam kojim Faza 2 hvata sudar timestampova migracija (dvije grane koje uvedu migraciju istog trenutka se spajaju u poznatom, ponovljivom redu) — drži ga se dosljedno kroz Fazu 1.
-- Ispiši predloženu seriju sa određenim redoslijedom i **sačekaj potvrdu vlasnika**. Ne nastavljaj bez nje.
+- Za svaku granu: `git rev-list --left-right --count origin/main...<grana>` (desni broj = commiti grane ispred `origin/main`).
+- **Izbaci iz serije svaku granu čiji je taj desni broj `0`** — nema nijedan commit ispred bazne grane pa nema šta da doprinese sklopu. Ne tretiraj je tiho: **navedi je vlasniku posebno u popisu iz ove faze, sa razlogom**, jer prazan rezultat znači jedno od dvoje i oba vrijedi vidjeti — (a) grana je već stopljena u `main` (može se obrisati zajedno sa svojim worktree-om/branch-om), ili (b) je branchovana s pogrešne tačke pa joj stvarni rad nije ispred `origin/main` gdje se očekuje (u ovom repou je taj obrazac stvaran: `feat/kontakt-lokacija-podsjetnici` ima diff identičan već mergovanoj `feat/demo-rezim-mejlovi`). Ne pogađaj koje je od dvoje — samo prijavi obje mogućnosti i pusti vlasnika da odluči.
+- Odredi redoslijed **preostale** serije (poslije izbacivanja gornjih): grane sa otvorenim PR-om idu prve, sortirane po rastućem broju PR-a. Grane **bez** PR-a idu poslije njih, međusobno sortirane po datumu prvog commita koji nije na `origin/main` — najstariji prvi (`git log origin/main..<grana> --reverse --format=%aI | head -1`; pošto su grane bez ijednog takvog commita već izbačene gore, ovaj poziv ovdje uvijek vraća datum, nikad prazan string). Ovaj redoslijed nije kozmetički: to je mehanizam kojim Faza 2 hvata sudar timestampova migracija (dvije grane koje uvedu migraciju istog trenutka se spajaju u poznatom, ponovljivom redu) — drži ga se dosljedno kroz Fazu 1.
+- Ispiši predloženu seriju sa određenim redoslijedom (i posebno izbačene grane s razlogom) i **sačekaj potvrdu vlasnika**. Ne nastavljaj bez nje.
 
 ## Faza 1 — Sklapanje
 

@@ -89,7 +89,11 @@ export function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
         </thead>
         <tbody>
           {redovi.map((r) => (
-            <tr key={r.id} className="border-t border-border">
+            // data-red-id je test-hook: React `key` ne dopire do DOM-a, a textContent
+            // reda NIJE pouzdan identitet — dva različita audit zapisa (npr. isti
+            // korisnik otvori isti ekran dvaput u istom minutu) mogu se prikazati
+            // identično jer vrijeme ide samo do minute.
+            <tr key={r.id} data-red-id={r.id} className="border-t border-border">
               <td className="px-3 py-2 whitespace-nowrap">
                 {formatDatumVrijeme(r.vrijeme)}
               </td>

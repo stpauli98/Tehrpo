@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { db, insertKlijent, deleteKlijentByNaziv, setPostavkeV2 } from "./db"
+import { db, insertKlijent, deleteKlijentByNaziv, setPostavkeV2, getPostavkeV2 } from "./db"
 
 // Postavke → „Ko šta prima": sirovi per-firma prekidač je uređiv iz tabele, dok kolona
 // „Firma prima?" ostaje IZVEDENA (globalno && firma && ima adrese) i read-only. Test brani
@@ -100,6 +100,42 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       await expect(page.getByTestId("salji-klijentima-toggle")).toBeChecked()
     } finally {
       await setPostavkeV2({ salji_klijentima: false })
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+
+  test("automatika isključena → badge „Ne\" sa razlogom, banner, i sažetak ne tvrdi da firme primaju", async ({ page }) => {
+    const naziv = "E2E-TMP KSP AUTO " + Date.now()
+    const kid = await insertKlijent(naziv)
+    const prije = (await getPostavkeV2()).podsjetnici_aktivni
+    try {
+      // Firma je potpuno spremna za slanje — jedini razlog smije biti automatika.
+      await setPostavkeV2({ salji_klijentima: true, podsjetnici_aktivni: false })
+      const { error } = await db
+        .from("klijenti")
+        .update({ salji_podsjetnik_klijentu: true, podsjetnik_emails: ["ksp-auto@example.com"] })
+        .eq("id", kid)
+      if (error) throw new Error(`priprema firme: ${error.message}`)
+
+      await page.goto("/postavke")
+      await page.getByRole("button", { name: "Ko šta prima" }).click()
+
+      await expect(page.getByTestId("ksp-automatika-off-banner")).toBeVisible()
+      await expect(page.getByTestId(`ksp-prima-${kid}`)).toHaveText("Ne")
+      await expect(page.getByTestId(`ksp-razlog-${kid}`)).toHaveText("automatsko slanje isključeno")
+      await expect(page.getByTestId("ksp-sazetak")).toContainText("automatsko slanje je isključeno")
+
+      // Per-firma kontrola OSTAJE omogućena: ručni „Pokreni sada" koristi taj flag.
+      await expect(page.getByTestId(`ksp-salji-${kid}`)).toBeEnabled()
+
+      // Uključena automatika → isti red odmah prelazi na „Da", bez ostalih izmjena.
+      await setPostavkeV2({ podsjetnici_aktivni: true })
+      await page.reload()
+      await page.getByRole("button", { name: "Ko šta prima" }).click()
+      await expect(page.getByTestId("ksp-automatika-off-banner")).toHaveCount(0)
+      await expect(page.getByTestId(`ksp-prima-${kid}`)).toHaveText("Da")
+    } finally {
+      await setPostavkeV2({ salji_klijentima: false, podsjetnici_aktivni: prije })
       await deleteKlijentByNaziv(naziv)
     }
   })

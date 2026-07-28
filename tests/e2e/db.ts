@@ -276,13 +276,14 @@ export type PostavkeV2 = {
   vrijeme_slanja_sat: number
   salji_klijentima: boolean
   zadnje_slanje_datum: string | null
+  podsjetnici_aktivni: boolean
 }
 
 /** Pročitaj podsjetnici-v2 kolone iz singleton postavke (id=1) — za read-before-restore u e2e. */
 export async function getPostavkeV2(): Promise<PostavkeV2> {
   const { data, error } = await db
     .from("postavke")
-    .select("vrijeme_slanja_sat, salji_klijentima, zadnje_slanje_datum")
+    .select("vrijeme_slanja_sat, salji_klijentima, zadnje_slanje_datum, podsjetnici_aktivni")
     .eq("id", 1)
     .maybeSingle()
   if (error) throw new Error(`getPostavkeV2: ${error.message}`)
@@ -290,6 +291,7 @@ export async function getPostavkeV2(): Promise<PostavkeV2> {
     vrijeme_slanja_sat: (data?.vrijeme_slanja_sat as number | null) ?? 8,
     salji_klijentima: (data?.salji_klijentima as boolean | null) ?? false,
     zadnje_slanje_datum: (data?.zadnje_slanje_datum as string | null) ?? null,
+    podsjetnici_aktivni: (data?.podsjetnici_aktivni as boolean | null) ?? true,
   }
 }
 

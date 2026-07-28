@@ -1008,7 +1008,10 @@
       "globalnoIskljucenoBanner": "Der globale Schalter „{prekidac}“ ist deaktiviert — derzeit erhält keine Firma Erinnerungen, unabhängig von den Einzeleinstellungen. Oben in den Einstellungen aktivieren.",
       "razlogGlobalno": "globaler Schalter aus",
       "razlogFirma": "Firma deaktiviert",
-      "razlogNemaAdrese": "keine Adresse"
+      "razlogNemaAdrese": "keine Adresse",
+      "razlogAutomatika": "automatischer Versand ist aus",
+      "automatikaIskljucenaBanner": "„Automatischer Versand“ ist aus — planmäßig geht nichts hinaus, an keine Firma und keinen Mitarbeiter. Die Einzeleinstellungen unten bleiben erhalten und gelten für „Jetzt ausführen“.",
+      "sazetakAutomatikaOff": "{prima} von {ukupno} Firmen würden erhalten — automatischer Versand ist aus"
     },
     "reminderForm": {
       "naDan": "am Tag",

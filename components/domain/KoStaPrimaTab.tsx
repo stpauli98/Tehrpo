@@ -2,7 +2,9 @@ import Link from "next/link"
 import { AlertTriangle, ArrowUp, Send } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { href } from "@/i18n/routes"
+import { podsjetniciAktivni as citajPodsjetniciAktivni } from "@/lib/reminders/gating"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
+import { izracunajIshodReda, type RazlogNePrima } from "@/lib/podsjetnici/koStaPrima"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
@@ -11,8 +13,8 @@ import { SaljiFirmiToggle } from "./SaljiFirmiToggle"
 import { UkljuciSlanjeFirmamaButton } from "./UkljuciSlanjeFirmamaButton"
 
 // Razlog zašto firma NE prima — koristi se za objašnjenje pored "Ne" u pregledu.
-type Razlog = "globalno" | "firma" | "nemaAdrese"
-const RAZLOG_KEY: Record<Razlog, string> = {
+const RAZLOG_KEY: Record<RazlogNePrima, string> = {
+  automatika: "razlogAutomatika",
   globalno: "razlogGlobalno",
   firma: "razlogFirma",
   nemaAdrese: "razlogNemaAdrese",
@@ -23,13 +25,15 @@ export async function KoStaPrimaTab() {
   const tSalji = await getTranslations("postavke.saljiKlijentima")
   const supabase = await createServerSupabaseClient()
   const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
-    supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle(),
+    supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, prima_podsjetnike, aktivan").order("ime"),
     supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
     supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac"),
   ])
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
+  // Fallback „nema reda/kolone = uključeno" je isti onaj kojim se vodi cron ruta.
+  const automatikaAktivna = citajPodsjetniciAktivni(postRes.data)
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
   // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
@@ -65,15 +69,12 @@ export async function KoStaPrimaTab() {
       .filter((uid) => primaZa(uid))
       .map((uid) => imeZa(uid))
     const adrese = [...(adreseByKlijent.get(k.id) ?? [])]
-    const firmaPrima = saljiGlobalno && k.salji_podsjetnik_klijentu && adrese.length > 0
-    // Precedencija: globalni prekidač je nadređen; zatim po-firma flag; zatim adrese.
-    const razlog: Razlog | null = firmaPrima
-      ? null
-      : !saljiGlobalno
-        ? "globalno"
-        : !k.salji_podsjetnik_klijentu
-          ? "firma"
-          : "nemaAdrese"
+    const { prima: firmaPrima, razlog } = izracunajIshodReda({
+      podsjetniciAktivni: automatikaAktivna,
+      saljiGlobalno,
+      saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
+      brojAdresa: adrese.length,
+    })
     return {
       id: k.id,
       naziv: k.naziv,
@@ -87,6 +88,9 @@ export async function KoStaPrimaTab() {
   })
 
   const brojPrima = redovi.filter((r) => r.firmaPrima).length
+  const brojAdresaKandidata = redovi.filter(
+    (r) => saljiGlobalno && r.salji && r.adrese.length > 0,
+  ).length
 
   return (
     <CollapsibleSection
@@ -94,6 +98,16 @@ export async function KoStaPrimaTab() {
       description={t("opis")}
       icon={<Send className="h-[18px] w-[18px]" />}
     >
+      {!automatikaAktivna && (
+        <div
+          data-testid="ksp-automatika-off-banner"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
+        >
+          <AlertTriangle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
+          <span>{t("automatikaIskljucenaBanner")}</span>
+        </div>
+      )}
+
       {!saljiGlobalno && (
         <div
           data-testid="ksp-global-off-banner"
@@ -111,8 +125,10 @@ export async function KoStaPrimaTab() {
       )}
 
       <div className="mb-2 flex items-center justify-end">
-        <span className="text-xs text-muted-foreground">
-          {t("sazetak", { prima: brojPrima, ukupno: redovi.length })}
+        <span className="text-xs text-muted-foreground" data-testid="ksp-sazetak">
+          {automatikaAktivna
+            ? t("sazetak", { prima: brojPrima, ukupno: redovi.length })
+            : t("sazetakAutomatikaOff", { prima: brojAdresaKandidata, ukupno: redovi.length })}
         </span>
       </div>
 

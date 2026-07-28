@@ -1008,7 +1008,10 @@
       "globalnoIskljucenoBanner": "The global switch “{prekidac}” is off — no client currently receives reminders, regardless of individual settings. Enable it in the settings above.",
       "razlogGlobalno": "global switch off",
       "razlogFirma": "client disabled",
-      "razlogNemaAdrese": "no address"
+      "razlogNemaAdrese": "no address",
+      "razlogAutomatika": "automatic sending is off",
+      "automatikaIskljucenaBanner": "“Automatic sending” is off — nothing goes out on schedule, to no client and no worker. The individual settings below are kept and still apply to “Run now”.",
+      "sazetakAutomatikaOff": "{prima} of {ukupno} clients would receive — automatic sending is off"
     },
     "reminderForm": {
       "naDan": "on the day",

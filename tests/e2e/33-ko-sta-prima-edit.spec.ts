@@ -60,13 +60,18 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
     }
   })
 
-  test("globalni prekidač isključen → toggle je disabled i banner objašnjava zašto", async ({ page }) => {
+  test("globalni prekidač isključen → toggle disabled, razlog na hover, bez linka u ćorsokak", async ({ page }) => {
     const naziv = "E2E-TMP KSP OFF " + Date.now()
     const kid = await insertKlijent(naziv)
     try {
       await setPostavkeV2({ salji_klijentima: false })
 
       await page.goto("/postavke")
+      // Sekcija sa glavnim prekidačem se otvara PRIJE klika u banneru — samo tako je
+      // ta komponenta montirana i test zaista provjerava sinhronizaciju sa novim
+      // serverskim propom (zatvorena sekcija bi se ionako montirala svježa).
+      await page.getByRole("button", { name: "Email podsjetnici" }).click()
+      await expect(page.getByTestId("salji-klijentima-toggle")).not.toBeChecked()
       await page.getByRole("button", { name: "Ko šta prima" }).click()
 
       await expect(page.getByTestId("ksp-global-off-banner")).toBeVisible()
@@ -74,7 +79,47 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       // Read-only dio ostaje čitljiv — sakriva se samo mogućnost upisa.
       await expect(page.getByTestId(`ksp-prima-${kid}`)).toHaveText("Ne")
       await expect(page.getByTestId(`ksp-razlog-${kid}`)).toHaveText("globalni prekidač isključen")
+
+      // Razlog MORA biti vidljiv na hover — `title` na disabled elementu Chrome ne
+      // prikazuje, pa ga nosi tooltip na omotaču.
+      const razlog = page.getByTestId(`ksp-red-${kid}`).getByText(/Prvo uključi/).first()
+      await expect(razlog).toBeHidden()
+      await page.getByTestId(`ksp-salji-omotac-${kid}`).hover()
+      await expect(razlog).toBeVisible()
+
+      // „Adrese firme" ne smije voditi na karticu firme dok je globalno isključeno —
+      // tamo forme nema, pa bi to bio ćorsokak.
+      await expect(page.getByTestId(`ksp-adrese-link-${kid}`)).toHaveCount(0)
+
+      // Umjesto toga: prekidač se uključuje iz banner-a (sekcija sa njim je zatvorena).
+      await page.getByTestId("ksp-ukljuci-globalno").click()
+      await expect(page.getByTestId("ksp-global-off-banner")).toBeHidden()
+      await expect(page.getByTestId(`ksp-salji-${kid}`)).toBeEnabled()
+      await expect(page.getByTestId(`ksp-adrese-link-${kid}`)).toBeVisible()
+      // Već montirani glavni prekidač mora pokazati novo stanje, a ne ono iz mounta.
+      await expect(page.getByTestId("salji-klijentima-toggle")).toBeChecked()
     } finally {
+      await setPostavkeV2({ salji_klijentima: false })
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+
+  test("kartica firme: kad je globalno isključeno admin ga uključi u mjestu, bez vraćanja u Postavke", async ({ page }) => {
+    const naziv = "E2E-TMP KSP TAB " + Date.now()
+    const kid = await insertKlijent(naziv)
+    try {
+      await setPostavkeV2({ salji_klijentima: false })
+
+      await page.goto(`/klijenti/${kid}?tab=podsjetnici`)
+      await expect(page.getByTestId("podsjetnici-global-off")).toBeVisible()
+      await expect(page.getByTestId("klijent-podsjetnici-form")).toHaveCount(0)
+
+      await page.getByTestId("ksp-ukljuci-globalno").click()
+      // router.refresh() — akcija revalidira samo /postavke, ne zna o kojoj je firmi riječ.
+      await expect(page.getByTestId("klijent-podsjetnici-form")).toBeVisible()
+      await expect(page.getByTestId("podsjetnici-global-off")).toHaveCount(0)
+    } finally {
+      await setPostavkeV2({ salji_klijentima: false })
       await deleteKlijentByNaziv(naziv)
     }
   })

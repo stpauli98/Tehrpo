@@ -34,13 +34,17 @@ export function SaljiFirmiToggle({
   const [pending, start] = useTransition()
 
   const aria = t("saljiFirmiAria", { firma: naziv })
+  // Vizuelni razlog nosi hover Tooltip na omotaču (KoStaPrimaTab) — `title` na disabled
+  // elementu Chrome ne prikazuje. Za čitače ekrana razlog ide u samo pristupačno ime,
+  // jer je tooltip `display:none` dok se ne hoverne.
+  const opis = globalnoIskljuceno ? `${aria} — ${t("saljiFirmiIskljuceno")}` : aria
 
   return (
     <Checkbox
       checked={checked}
       disabled={pending || globalnoIskljuceno}
-      aria-label={aria}
-      title={globalnoIskljuceno ? t("saljiFirmiIskljuceno") : aria}
+      aria-label={opis}
+      title={globalnoIskljuceno ? undefined : aria}
       data-testid={`ksp-salji-${klijentId}`}
       onCheckedChange={(next) => {
         setChecked(next)

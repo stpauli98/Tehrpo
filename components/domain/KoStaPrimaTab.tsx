@@ -5,8 +5,10 @@ import { href } from "@/i18n/routes"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { CollapsibleSection } from "./CollapsibleSection"
 import { SaljiFirmiToggle } from "./SaljiFirmiToggle"
+import { UkljuciSlanjeFirmamaButton } from "./UkljuciSlanjeFirmamaButton"
 
 // Razlog zašto firma NE prima — koristi se za objašnjenje pored "Ne" u pregledu.
 type Razlog = "globalno" | "firma" | "nemaAdrese"
@@ -95,13 +97,16 @@ export async function KoStaPrimaTab() {
       {!saljiGlobalno && (
         <div
           data-testid="ksp-global-off-banner"
-          className="mb-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
+          className="mb-3 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
         >
           <AlertTriangle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex flex-1 items-center gap-1">
             {t("globalnoIskljucenoBanner", { prekidac: tSalji("naslov") })}
             <ArrowUp className="h-[18px] w-[18px] shrink-0" aria-hidden />
           </span>
+          {/* Akcija u banneru, ne link na prekidač: prekidač je u zatvorenoj
+              CollapsibleSection sekciji, pa anchor na njega ne bi imao gdje skočiti. */}
+          <UkljuciSlanjeFirmamaButton />
         </div>
       )}
 
@@ -138,12 +143,21 @@ export async function KoStaPrimaTab() {
                   )}
                 </td>
                 <td className="px-4 py-2.5 text-center">
-                  <SaljiFirmiToggle
-                    klijentId={r.id}
-                    naziv={r.naziv}
-                    salji={r.salji}
-                    globalnoIskljuceno={!saljiGlobalno}
-                  />
+                  {/* Kad je globalno isključeno kontrola je disabled — a `title` na
+                      disabled elementu Chrome ne prikazuje, pa razlog nosi hover
+                      tooltip na OMOTAČU (omotač nije disabled, pa hover radi). */}
+                  <span
+                    className="group/tt relative inline-flex"
+                    data-testid={`ksp-salji-omotac-${r.id}`}
+                  >
+                    <SaljiFirmiToggle
+                      klijentId={r.id}
+                      naziv={r.naziv}
+                      salji={r.salji}
+                      globalnoIskljuceno={!saljiGlobalno}
+                    />
+                    {!saljiGlobalno && <Tooltip>{t("saljiFirmiIskljuceno")}</Tooltip>}
+                  </span>
                 </td>
                 <td className="px-4 py-2.5">
                   {r.firmaPrima ? (
@@ -173,19 +187,29 @@ export async function KoStaPrimaTab() {
                 <td className="px-4 py-2.5">
                   {/* Primaoci se ne uređuju odavde — biranje kontakt-osoba i ad-hoc adresa
                       traži kontekst (ime, funkcija, validacija), pa ćelija vodi na klijentov
-                      tab gdje `PrimaociCombobox` već postoji. */}
-                  <Link
-                    href={href(`/klijenti/${r.id}?tab=podsjetnici`)}
-                    title={t("uredi")}
-                    data-testid={`ksp-adrese-link-${r.id}`}
-                    className={cn(
-                      "rounded-sm underline-offset-2 hover:underline",
-                      r.adrese.length > 0 ? "text-muted-foreground" : "font-medium text-brand",
-                      FOCUS_RING,
-                    )}
-                  >
-                    {r.adrese.length > 0 ? r.adrese.join(", ") : t("uredi")}
-                  </Link>
+                      tab gdje `PrimaociCombobox` već postoji.
+                      ALI: dok je globalno slanje isključeno taj tab uopšte ne prikazuje
+                      formu (samo poruku „prvo uključi u postavkama"), pa link tamo bi bio
+                      ćorsokak — u tom stanju ćelija je običan tekst sa istim razlogom. */}
+                  {saljiGlobalno ? (
+                    <Link
+                      href={href(`/klijenti/${r.id}?tab=podsjetnici`)}
+                      title={t("uredi")}
+                      data-testid={`ksp-adrese-link-${r.id}`}
+                      className={cn(
+                        "rounded-sm underline-offset-2 hover:underline",
+                        r.adrese.length > 0 ? "text-muted-foreground" : "font-medium text-brand",
+                        FOCUS_RING,
+                      )}
+                    >
+                      {r.adrese.length > 0 ? r.adrese.join(", ") : t("uredi")}
+                    </Link>
+                  ) : (
+                    <span className="group/tt relative inline-flex text-muted-foreground">
+                      {r.adrese.length > 0 ? r.adrese.join(", ") : "—"}
+                      <Tooltip>{t("saljiFirmiIskljuceno")}</Tooltip>
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

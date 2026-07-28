@@ -111,7 +111,12 @@ export function KorisniciTabela({
                   </td>
                   <td className="px-4 py-2.5 text-center">
                     <span className="group/tt relative inline-flex" data-testid={`prima-omotac-${k.id}`}>
-                      <PrimaPodsjetnikeToggle korisnikId={k.id} prima={k.prima_podsjetnike} onemoguceno={!k.aktivan} />
+                      <PrimaPodsjetnikeToggle
+                        korisnikId={k.id}
+                        prima={k.prima_podsjetnike}
+                        onemoguceno={!k.aktivan}
+                        razlogOnemogucen={!k.aktivan ? t("primaDeaktiviran") : undefined}
+                      />
                       {!k.aktivan && <Tooltip>{t("primaDeaktiviran")}</Tooltip>}
                     </span>
                   </td>

@@ -6,18 +6,25 @@ import { toastRezultat } from "@/components/akcija-toast"
 import { Checkbox } from "@/components/ui/checkbox"
 
 export function PrimaPodsjetnikeToggle({
-  korisnikId, prima, onemoguceno = false,
-}: { korisnikId: string; prima: boolean; onemoguceno?: boolean }) {
+  korisnikId, prima, onemoguceno = false, razlogOnemogucen,
+}: { korisnikId: string; prima: boolean; onemoguceno?: boolean; razlogOnemogucen?: string }) {
   const t = useTranslations("postavke.primaPodsjetnike")
   const [checked, setChecked] = useState(prima)
   const [pending, start] = useTransition()
+
+  const aria = t("aria")
+  // Vizuelni razlog nosi hover Tooltip na omotaču (KorisniciTabela) — tooltip je
+  // `display:none` dok se ne hoverne, a disabled checkbox ne može dobiti fokus, pa
+  // za tastaturu/čitač ekrana razlog mora i u pristupačno ime (isto kao SaljiFirmiToggle).
+  const opis = razlogOnemogucen ? `${aria} — ${razlogOnemogucen}` : aria
+
   return (
     <Checkbox
       checked={checked}
       disabled={pending || onemoguceno}
       data-testid={`prima-podsjetnike-${korisnikId}`}
-      aria-label={t("aria")}
-      title={t("aria")}
+      aria-label={opis}
+      title={aria}
       onCheckedChange={(next) => {
         setChecked(next)
         start(async () => {

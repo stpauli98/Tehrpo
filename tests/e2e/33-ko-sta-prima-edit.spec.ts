@@ -226,8 +226,11 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       await page.getByRole("button", { name: "Korisnici" }).click()
       const toggle = page.getByTestId(`prima-podsjetnike-${uid}`)
       await expect(toggle).toBeDisabled()
+      // Tooltip je display:none do hovera, a disabled checkbox ne može dobiti fokus —
+      // tastatura/čitač ekrana idu isključivo preko pristupačnog imena.
+      await expect(toggle).toHaveAccessibleName(/Deaktiviran korisnik ne prima/)
 
-      const razlog = page.getByText(/Deaktiviran korisnik ne prima/).first()
+      const razlog = page.getByTestId(`prima-omotac-${uid}`).getByText(/Deaktiviran korisnik ne prima/)
       await expect(razlog).toBeHidden()
       await page.getByTestId(`prima-omotac-${uid}`).hover()
       await expect(razlog).toBeVisible()

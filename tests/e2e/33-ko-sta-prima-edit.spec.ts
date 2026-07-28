@@ -214,4 +214,25 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
     await expect(red).toContainText("Uvijek primaju")
     await expect(red).toContainText("@")
   })
+
+  test("Korisnici: toggle podsjetnika je disabled za deaktiviranog, sa razlogom na hover", async ({ page }) => {
+    const email = `e2e-deakt-${Date.now()}@example.com`
+    const uid = await ensureKorisnik(email, "E2eLozinka!23", "E2E Deaktivirani", "operater")
+    try {
+      const { error } = await db.from("korisnici").update({ aktivan: false }).eq("id", uid)
+      if (error) throw new Error(`deaktivacija: ${error.message}`)
+
+      await page.goto("/postavke")
+      await page.getByRole("button", { name: "Korisnici" }).click()
+      const toggle = page.getByTestId(`prima-podsjetnike-${uid}`)
+      await expect(toggle).toBeDisabled()
+
+      const razlog = page.getByText(/Deaktiviran korisnik ne prima/).first()
+      await expect(razlog).toBeHidden()
+      await page.getByTestId(`prima-omotac-${uid}`).hover()
+      await expect(razlog).toBeVisible()
+    } finally {
+      await deleteKorisnikByEmail(email)
+    }
+  })
 })

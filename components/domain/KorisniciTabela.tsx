@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { DodjelaKlijenata } from "./DodjelaKlijenata"
 import { PrimaPodsjetnikeToggle } from "./PrimaPodsjetnikeToggle"
 import { UlogaSelect } from "./UlogaSelect"
@@ -109,7 +110,10 @@ export function KorisniciTabela({
                     <UlogaSelect korisnikId={k.id} uloga={k.uloga} jeJa={jeJa} />
                   </td>
                   <td className="px-4 py-2.5 text-center">
-                    <PrimaPodsjetnikeToggle korisnikId={k.id} prima={k.prima_podsjetnike} />
+                    <span className="group/tt relative inline-flex" data-testid={`prima-omotac-${k.id}`}>
+                      <PrimaPodsjetnikeToggle korisnikId={k.id} prima={k.prima_podsjetnike} onemoguceno={!k.aktivan} />
+                      {!k.aktivan && <Tooltip>{t("primaDeaktiviran")}</Tooltip>}
+                    </span>
                   </td>
                   <td className="px-4 py-2.5">
                     {k.uloga === "admin" ? (

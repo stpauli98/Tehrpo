@@ -916,6 +916,7 @@
       "sveFirme": "all companies",
       "sveFirmeTitle": "Administrator sees all companies",
       "nemaDodijeljenih": "none assigned",
+      "primaDeaktiviran": "A deactivated user receives no reminders, regardless of this setting.",
       "prazno": "No users for \"{upit}\"."
     },
     "korisnikAkcije": {

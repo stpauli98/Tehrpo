@@ -916,6 +916,7 @@
       "sveFirme": "sve firme",
       "sveFirmeTitle": "Administrator vidi sve firme",
       "nemaDodijeljenih": "nema dodijeljenih",
+      "primaDeaktiviran": "Deaktiviran korisnik ne prima podsjetnike, bez obzira na ovu postavku.",
       "prazno": "Nema korisnika za „{upit}”."
     },
     "korisnikAkcije": {

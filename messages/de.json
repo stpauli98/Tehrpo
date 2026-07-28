@@ -916,6 +916,7 @@
       "sveFirme": "alle Firmen",
       "sveFirmeTitle": "Administrator sieht alle Firmen",
       "nemaDodijeljenih": "keine zugewiesen",
+      "primaDeaktiviran": "Ein deaktivierter Benutzer erhält keine Erinnerungen, unabhängig von dieser Einstellung.",
       "prazno": "Keine Benutzer für „{upit}“."
     },
     "korisnikAkcije": {

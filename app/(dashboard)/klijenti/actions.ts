@@ -404,6 +404,9 @@ const kontaktFields = {
   funkcija: optionalText(120),
   telefon: optionalText(60),
   email: optionalEmail(200),
+  // Prazan string iz selecta = „Sve lokacije — kontakt firme" → upisuje se NULL.
+  // Bazna brava (fk na lokacije(id, klijent_id)) hvata pokušaj vezivanja za tuđu lokaciju.
+  lokacija_id: z.union([z.string().uuid(), z.literal("")]).optional(),
 }
 const createKontaktSchema = z.object({ klijent_id: z.string().uuid(), ...kontaktFields })
 const updateKontaktSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid(), ...kontaktFields })
@@ -422,6 +425,7 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   }
   const { error } = await supabase.from("kontakt_osobe").insert({
     klijent_id, ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
+    lokacija_id: f.lokacija_id || null,
   })
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
@@ -435,6 +439,7 @@ export async function updateKontakt(_prev: ActionResult, formData: FormData): Pr
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("kontakt_osobe").update({
     ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
+    lokacija_id: f.lokacija_id || null,
   }).eq("id", id).eq("klijent_id", klijent_id)
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)

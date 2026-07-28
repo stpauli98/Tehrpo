@@ -286,6 +286,7 @@ export default async function KlijentDetailPage({
           {tab === "id-karta" && (
             <IdKartaTab
               klijentId={id}
+              lokacije={lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))}
               osnovni={{
                 adresa: klijentPolja?.adresa ?? null,
                 telefon: klijentPolja?.telefon ?? null,
@@ -366,6 +367,7 @@ export default async function KlijentDetailPage({
                 <KontaktiKlijentList
                   klijentId={id}
                   kontakti={kontakti}
+                  lokacije={lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))}
                   searchable
                   info={t("kontaktiTab.infoPuniSpisak")}
                 />

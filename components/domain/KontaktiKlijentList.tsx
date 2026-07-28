@@ -24,9 +24,12 @@ export function KontaktiKlijentList({
   previewLimit,
   seeAllHref,
   info,
+  lokacije = [],
 }: {
   klijentId: string
   kontakti: KontaktRow[]
+  /** Lokacije firme — prosljeđuju se formi kontakta radi vezivanja (prazno = polje skriveno). */
+  lokacije?: { id: string; naziv: string }[]
   searchable?: boolean
   previewLimit?: number
   seeAllHref?: string
@@ -65,7 +68,7 @@ export function KontaktiKlijentList({
           <Users className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden /> {t("naslov")}
           {info && <InfoIkona tekst={info} testId="info-sekcija-kontakti-firma" />}
         </h3>
-        <KontaktSheet klijentId={klijentId} />
+        <KontaktSheet klijentId={klijentId} lokacije={lokacije} />
       </div>
 
       {searchable && kontakti.length > 0 && (
@@ -96,7 +99,7 @@ export function KontaktiKlijentList({
                   {k.funkcija && <span className="font-normal text-muted-foreground"> · {k.funkcija}</span>}
                 </span>
                 <span className="flex items-center gap-2">
-                  <KontaktSheet klijentId={klijentId} kontakt={k} />
+                  <KontaktSheet klijentId={klijentId} kontakt={k} lokacije={lokacije} />
                   {mozeUrediti && (
                     <PotvrdiBrisanjeDialog
                       trigger={

@@ -1213,6 +1213,7 @@ export type Database = {
           dana_prije: number
           klijent_id: string
           klijent_naziv: string
+          lokacija_id: string | null
           lokacija_naziv: string
           rok_dospijeca: string
           termin_id: string
@@ -1282,6 +1283,7 @@ export type Database = {
           datum_zakazan: string
           klijent_id: string
           klijent_naziv: string
+          lokacija_id: string | null
           lokacija_naziv: string
           rok_dospijeca: string
           termin_id: string

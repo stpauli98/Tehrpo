@@ -316,6 +316,46 @@ describe("provjeriSql — slijepilo za DROP (tabela-bez-politike)", () => {
     expect(nalazi[0]!.poruka).toContain("probna_v")
   })
 
+  it("ime politike sa DIJAKRITIKOM (č/š/ć/ž/đ) se prepoznaje — NE smije lažno prijaviti tabelu kao bez politike", () => {
+    // Regresija runde 3: uski regex [A-Za-z0-9_]+ bi ovdje odsjekao ime na prvom
+    // dijakritiku i "izgubio" politiku — u repou čiji je domenski jezik BCS latinica
+    // dijakritika u imenima nije egzotična.
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj: [
+          "create table zaduzenja (id int primary key);",
+          "create policy zaduženja_sel on zaduzenja for select using (true);",
+        ].join("\n"),
+      }),
+    ).toEqual([])
+  })
+
+  it("ime politike u NAVODNICIMA SA RAZMAKOM (\"moja politika\") se prepoznaje", () => {
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj: [
+          "create table probna_z (id int primary key);",
+          'create policy "moja politika" on probna_z for select using (true);',
+        ].join("\n"),
+      }),
+    ).toEqual([])
+  })
+
+  it("DROP POLICY sa dijakritikom u imenu takođe uklanja pokriće (kontrola parnjaka)", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "create table zaduzenja2 (id int primary key);",
+        "create policy zaduženja_sel on zaduzenja2 for select using (true);",
+        "drop policy zaduženja_sel on zaduzenja2;",
+      ].join("\n"),
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("zaduzenja2")
+  })
+
   it("POZNATO OGRANIČENJE (namjerno van obuhvata): migracija koja SAMO drop-uje politike (tabela kreirana u DRUGOM fajlu, van vidokruga po-fajl provjere) prolazi neprimijećeno", () => {
     expect(
       provjeriSql({

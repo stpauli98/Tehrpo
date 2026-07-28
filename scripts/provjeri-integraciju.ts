@@ -22,6 +22,12 @@
  * (`git status --porcelain`: untracked, staged, modified) — bez ovog drugog dijela,
  * pokretanje skripte LOKALNO prije komita (tačno trenutak kad je jedina korisna)
  * uvijek bi javljalo "0 fajlova, čisto" bez obzira šta je na disku.
+ *
+ * Oba git poziva koriste `-z` (NUL-terminated, sirov UTF-8, BEZ navodnika/escape-a) —
+ * `core.quotePath` je podrazumijevano uključen u gitu i bez `-z` bi svaka migracija sa
+ * ne-ASCII imenom (u repou čiji je domenski jezik BCS latinica to nije egzotično) bila
+ * C-escapovana i omotana u navodnike, pa bi tiho ispala iz obuhvata — v.
+ * lib/integracija/opcije.ts za detalje formata.
  */
 import { execFileSync } from "node:child_process"
 import { readdir, readFile } from "node:fs/promises"
@@ -35,7 +41,11 @@ import {
   parsirajOpcije,
   filtrirajSqlImena,
   filtrirajMigracijskePutanje,
-  parsirajGitStatusPorcelain,
+  parsirajGitDiffNameOnly,
+  parsirajGitStatusPorcelainZ,
+  spojiPutanje,
+  normalizujPutanju,
+  jeTsIzvor,
   type Opcije,
 } from "../lib/integracija/opcije"
 import { RLS_INTENTIONAL_POLICYLESS } from "../lib/rlsCoverage"
@@ -67,32 +77,32 @@ function komitovaneMigracije(baza: string): string[] {
       `bazna grana "${baza}" nije razrešiva lokalno (možda treba \`git fetch origin\`?)`,
     )
   }
-  const izlaz = git(["diff", "--name-only", "--diff-filter=ACMR", `${baza}...HEAD`])
-  return filtrirajMigracijskePutanje(izlaz.split("\n").map((r) => r.trim()))
+  const izlaz = git(["diff", "--name-only", "-z", "--diff-filter=ACMR", `${baza}...HEAD`])
+  return filtrirajMigracijskePutanje(parsirajGitDiffNameOnly(izlaz))
 }
 
 /** Necommitovane migracije u radnom stablu (untracked, staged, modified) — v. napomenu
  *  o uniji u modul-nivo komentaru iznad. */
 function radnoStabloMigracije(): string[] {
-  const izlaz = git(["status", "--porcelain"])
-  return filtrirajMigracijskePutanje(parsirajGitStatusPorcelain(izlaz))
+  const izlaz = git(["status", "--porcelain", "-z"])
+  return filtrirajMigracijskePutanje(parsirajGitStatusPorcelainZ(izlaz))
 }
 
-async function skupiFajlove(pocetak: string, ekstenzije: RegExp): Promise<string[]> {
+async function skupiFajlove(pocetak: string, jeIzvor: (ime: string) => boolean): Promise<string[]> {
   const stavke = await readdir(pocetak, { withFileTypes: true, recursive: true })
   return stavke
-    .filter((s) => s.isFile() && ekstenzije.test(s.name))
+    .filter((s) => s.isFile() && jeIzvor(s.name))
     .map((s) => join(s.parentPath, s.name))
 }
 
 async function ucitajTsIzvore(): Promise<Izvor[]> {
   const grane = await Promise.all(
-    OBUHVAT_TS.map((dir) => skupiFajlove(join(KORIJEN, dir), /\.tsx?$/).catch(() => [])),
+    OBUHVAT_TS.map((dir) => skupiFajlove(join(KORIJEN, dir), jeTsIzvor).catch(() => [])),
   )
   const putanje = grane.flat()
   return Promise.all(
     putanje.map(async (p) => ({
-      putanja: relative(KORIJEN, p).split("\\").join("/"),
+      putanja: normalizujPutanju(relative(KORIJEN, p)),
       sadrzaj: await readFile(p, "utf8"),
     })),
   )
@@ -116,9 +126,7 @@ function odaberiPutanjeMigracija(opcije: Opcije, sveImenaMigracija: string[]): s
   if (opcije.sve) {
     return filtrirajSqlImena(sveImenaMigracija).map((ime) => `supabase/migrations/${ime}`)
   }
-  const komitovano = komitovaneMigracije(opcije.baza)
-  const radnoStablo = radnoStabloMigracije()
-  return [...new Set([...komitovano, ...radnoStablo])].sort()
+  return spojiPutanje(komitovaneMigracije(opcije.baza), radnoStabloMigracije())
 }
 
 /** Svaki fajl ide kroz provjeriSql ZASEBNO (jedan Izvor = jedan fajl) — tako `putanja`

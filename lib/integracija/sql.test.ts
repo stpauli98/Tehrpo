@@ -3,12 +3,15 @@ import { maskiraj, sanitizujSql, filtrirajNamjernePolicyless } from "./sql"
 import type { Nalaz } from "./pravila"
 
 describe("maskiraj", () => {
-  it("zamjenjuje sve karaktere razmakom, čuvajući dužinu", () => {
-    expect(maskiraj("abc")).toBe("   ")
-  })
-
-  it("čuva nove redove nepromijenjene", () => {
-    expect(maskiraj("ab\ncd")).toBe("  \n  ")
+  it("zamjenjuje SVAKI ne-\\n karakter razmakom, ali ČUVA \\n i ukupnu dužinu", () => {
+    // Namjerno JEDAN ulaz sa i običnim tekstom i novim redom (ne dva odvojena testa) —
+    // tako mutant koji ukloni \n-izuzetak (npr. [^\n] → .) i mutant koji promijeni
+    // zamjenski karakter (npr. " " → "") oba padaju na OVOJ istoj provjeri, umjesto da
+    // svaki od dva prethodna testa hvata samo po jednu polovinu.
+    const ulaz = "ab\ncd"
+    const izlaz = maskiraj(ulaz)
+    expect(izlaz).toBe("  \n  ")
+    expect(izlaz).toHaveLength(ulaz.length)
   })
 })
 
@@ -165,15 +168,22 @@ describe("sanitizujSql", () => {
     })
   })
 
-  it("stvaran DDL izvan komentara/stringova nije izgubljen", () => {
+  it("stvaran DDL izvan komentara/stringova nije izgubljen (I komentar/string SU stvarno maskirani)", () => {
+    // Prijašnja verzija je provjeravala SAMO da DDL preživi — što bi prošlo i kod
+    // identity funkcije (return sadrzaj nepromijenjeno), pošto ovaj DDL uopšte ne
+    // sadrži ni komentar ni navodnik koji bi identity funkcija morala pokvariti.
+    // Sad se eksplicitno provjerava i UKLANJANJE (komentar, string) i OČUVANJE (DDL)
+    // u ISTOM ulazu — identity-funkcija mutant sad pada na prve dvije provjere.
     const ulaz = [
-      "-- napomena",
+      "-- napomena o klijenti tabeli",
       "create table klijenti (id uuid primary key);",
-      "create policy klijenti_sel on klijenti for select using (true);",
+      "create policy klijenti_sel on klijenti for select using ('aktivan');",
     ].join("\n")
     const izlaz = sanitizujSql(ulaz)
+    expect(izlaz).not.toContain("napomena")
+    expect(izlaz).not.toContain("aktivan")
     expect(izlaz).toContain("create table klijenti (id uuid primary key);")
-    expect(izlaz).toContain("create policy klijenti_sel on klijenti for select using (true);")
+    expect(izlaz).toContain("create policy klijenti_sel on klijenti for select using (")
   })
 })
 
@@ -191,9 +201,20 @@ describe("filtrirajNamjernePolicyless", () => {
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual([])
   })
 
-  it("ne izbacuje 'tabela-bez-politike' nalaz za tabelu VAN allowlist-e", () => {
-    const nalazi = [nalaz("tabela-bez-politike", "tabela klijenti nema RLS politiku — ...")]
-    expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)
+  it("od MIJEŠANE liste izbacuje SAMO allowlist-ovanu, čuva onu VAN allowlist-e", () => {
+    // Zamjena za prijašnji "ne izbacuje ... VAN allowlist-e" — taj test je izolovano
+    // prolazio i kod mutanta koji UVIJEK vraća ulaz nepromijenjen (filter(() => true)),
+    // jer je testirao samo "sačuvaj" stranu. Ovdje su OBA nalaza u istoj listi, pa
+    // mutant koji ništa ne izbacuje PADA na prvom nalazu, a mutant koji izbacuje SVE
+    // pada na drugom.
+    const uAllowlisti = nalaz(
+      "tabela-bez-politike",
+      "tabela termin_zakazano_obavijest nema RLS politiku — ...",
+    )
+    const vanAllowlist = nalaz("tabela-bez-politike", "tabela klijenti nema RLS politiku — ...")
+    expect(filtrirajNamjernePolicyless([uAllowlisti, vanAllowlist], allowlist)).toEqual([
+      vanAllowlist,
+    ])
   })
 
   it("ne izbacuje tabelu sličnog imena koja nije tačno u allowlist-i", () => {
@@ -206,12 +227,22 @@ describe("filtrirajNamjernePolicyless", () => {
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)
   })
 
-  it("ne dira nalaze drugih pravila", () => {
-    const nalazi = [nalaz("view-bez-invokera", "VIEW x bez security_invoker=on")]
+  it("NE dira nalaze drugih pravila — čak ni kad poruka SLIČI na tabela-bez-politike format", () => {
+    // Zamjena za prijašnji "ne dira nalaze drugih pravila" — taj test je (dokazano)
+    // preživljavao mutaciju koja UKLANJA `if (n.pravilo !== "tabela-bez-politike")`,
+    // jer poruka u tom testu ("VIEW x bez security_invoker=on") ionako ne poklapa
+    // IME_IZ_PORUKE regex — sa ili bez guard-a, ishod je identičan ("zadrži"), pa test
+    // ne testira granu koju mu ime tvrdi da testira.
+    //
+    // Ovdje poruka NAMJERNO poklapa IME_IZ_PORUKE (kao da je allowlist-ovana tabela),
+    // ALI `pravilo` NIJE "tabela-bez-politike" — provjerava da se `pravilo` STVARNO
+    // čita prije poruke. Bez guard-a, ovaj nalaz bi bio (pogrešno) izbačen.
+    const nalazi = [
+      nalaz(
+        "neko-drugo-pravilo",
+        "tabela termin_zakazano_obavijest nema RLS politiku — lažna poruka",
+      ),
+    ]
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)
-  })
-
-  it("prazna lista nalaza daje prazan rezultat", () => {
-    expect(filtrirajNamjernePolicyless([], allowlist)).toEqual([])
   })
 })

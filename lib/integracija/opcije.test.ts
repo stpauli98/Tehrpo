@@ -3,7 +3,11 @@ import {
   parsirajOpcije,
   filtrirajSqlImena,
   filtrirajMigracijskePutanje,
-  parsirajGitStatusPorcelain,
+  parsirajGitDiffNameOnly,
+  parsirajGitStatusPorcelainZ,
+  spojiPutanje,
+  normalizujPutanju,
+  jeTsIzvor,
 } from "./opcije"
 
 describe("parsirajOpcije", () => {
@@ -118,49 +122,150 @@ describe("filtrirajMigracijskePutanje", () => {
   })
 })
 
-describe("parsirajGitStatusPorcelain", () => {
+describe("parsirajGitDiffNameOnly (git diff --name-only -z)", () => {
+  it("parsira više NUL-odvojenih putanja", () => {
+    const izlaz = "supabase/migrations/a.sql\0supabase/migrations/b.sql\0"
+    expect(parsirajGitDiffNameOnly(izlaz)).toEqual([
+      "supabase/migrations/a.sql",
+      "supabase/migrations/b.sql",
+    ])
+  })
+
+  it("prazan izlaz daje prazan rezultat", () => {
+    expect(parsirajGitDiffNameOnly("")).toEqual([])
+  })
+
+  it("ne-ASCII (dijakritika) ime prolazi netaknuto — -z nikad ne C-escapuje/navodi (core.quotePath se ne primjenjuje)", () => {
+    // Stvarni scenario, ručno potvrđen: bez -z, git diff --name-only bi ovo ime vratio
+    // kao `"supabase/migrations/20260728990031_\304\215\305\241\304\207\305\276\304\221.sql"`
+    // (C-escaped, u navodnicima) — sa -z dolazi kao sirov UTF-8, bez navodnika/escape-a.
+    const izlaz = "supabase/migrations/20260728990031_čšćžđ.sql\0"
+    expect(parsirajGitDiffNameOnly(izlaz)).toEqual([
+      "supabase/migrations/20260728990031_čšćžđ.sql",
+    ])
+  })
+
+  it("rename daje JEDNO polje (novi put) — --name-only ne emituje par kao --name-status", () => {
+    // Ručno potvrđeno: `git diff --name-only -z` na preimenovanju daje SAMO novu putanju
+    // kao jedno NUL-terminated polje — za razliku od `git status --porcelain -z`, koji
+    // za rename daje DVA polja (v. parsirajGitStatusPorcelainZ ispod).
+    const izlaz = "supabase/migrations/novo-ime.sql\0"
+    expect(parsirajGitDiffNameOnly(izlaz)).toEqual(["supabase/migrations/novo-ime.sql"])
+  })
+})
+
+describe("parsirajGitStatusPorcelainZ (git status --porcelain -z)", () => {
   it("prepoznaje untracked (??)", () => {
-    expect(parsirajGitStatusPorcelain("?? supabase/migrations/nova.sql")).toEqual([
+    expect(parsirajGitStatusPorcelainZ("?? supabase/migrations/nova.sql\0")).toEqual([
       "supabase/migrations/nova.sql",
     ])
   })
 
   it("prepoznaje staged dodavanje (A )", () => {
-    expect(parsirajGitStatusPorcelain("A  supabase/migrations/dodano.sql")).toEqual([
+    expect(parsirajGitStatusPorcelainZ("A  supabase/migrations/dodano.sql\0")).toEqual([
       "supabase/migrations/dodano.sql",
     ])
   })
 
   it("prepoznaje modified, staged i unstaged ( M / M )", () => {
     expect(
-      parsirajGitStatusPorcelain(" M supabase/migrations/izmijenjeno.sql\nM  drugi.sql"),
+      parsirajGitStatusPorcelainZ(" M supabase/migrations/izmijenjeno.sql\0M  drugi.sql\0"),
     ).toEqual(["supabase/migrations/izmijenjeno.sql", "drugi.sql"])
   })
 
   it("izbacuje obrisane fajlove (status sadrži D)", () => {
-    expect(parsirajGitStatusPorcelain(" D supabase/migrations/obrisano.sql")).toEqual([])
-  })
-
-  it("rename zapis uzima NOVU putanju", () => {
-    expect(parsirajGitStatusPorcelain("R  stara.sql -> supabase/migrations/nova.sql")).toEqual([
-      "supabase/migrations/nova.sql",
-    ])
+    expect(parsirajGitStatusPorcelainZ(" D supabase/migrations/obrisano.sql\0")).toEqual([])
   })
 
   it("prazan izlaz daje prazan rezultat", () => {
-    expect(parsirajGitStatusPorcelain("")).toEqual([])
+    expect(parsirajGitStatusPorcelainZ("")).toEqual([])
+  })
+
+  it("ne-ASCII (dijakritika) untracked ime prolazi netaknuto", () => {
+    // Ručno potvrđen scenario iz recenzije: netrackovan fajl sa dijakritikom u imenu.
+    expect(
+      parsirajGitStatusPorcelainZ("?? supabase/migrations/20260729000000_žščćđ.sql\0"),
+    ).toEqual(["supabase/migrations/20260729000000_žščćđ.sql"])
+  })
+
+  it("RENAME: -z format je DVA polja (XY noviPut, pa originalniPut) — uzima se NOVI put, staro polje se konzumira", () => {
+    // Ručno potvrđeno preko stvarnog `git status --porcelain -z` na `git mv`:
+    // "R  novi.sql\0stari.sql\0" — DRUGAČIJE od ne--z oblika ("R  stari -> novi").
+    const izlaz = "R  supabase/migrations/novi.sql\0supabase/migrations/stari.sql\0"
+    expect(parsirajGitStatusPorcelainZ(izlaz)).toEqual(["supabase/migrations/novi.sql"])
+  })
+
+  it("RENAME praćen DRUGIM zapisom — originalni put rename-a se ne pojavljuje kao lažan treći zapis", () => {
+    const izlaz =
+      "R  supabase/migrations/novi.sql\0" +
+      "supabase/migrations/stari.sql\0" +
+      "?? supabase/migrations/dodatno.sql\0"
+    expect(parsirajGitStatusPorcelainZ(izlaz)).toEqual([
+      "supabase/migrations/novi.sql",
+      "supabase/migrations/dodatno.sql",
+    ])
+  })
+
+  it("COPY (C) status ima isti dvopoljni oblik kao rename — originalni put se konzumira", () => {
+    const izlaz = "C  supabase/migrations/kopija.sql\0supabase/migrations/original.sql\0"
+    expect(parsirajGitStatusPorcelainZ(izlaz)).toEqual(["supabase/migrations/kopija.sql"])
   })
 
   it("više linija odjednom, izmiješano", () => {
     expect(
-      parsirajGitStatusPorcelain(
+      parsirajGitStatusPorcelainZ(
         [
           "?? supabase/migrations/a.sql",
           " M supabase/migrations/b.sql",
           " D supabase/migrations/c.sql",
           "M  package.json",
-        ].join("\n"),
+        ].join("\0") + "\0",
       ),
     ).toEqual(["supabase/migrations/a.sql", "supabase/migrations/b.sql", "package.json"])
+  })
+})
+
+describe("spojiPutanje", () => {
+  it("dedupuje isti fajl kad je i commitovan i izmijenjen (u obje liste)", () => {
+    expect(
+      spojiPutanje(
+        ["supabase/migrations/a.sql", "supabase/migrations/b.sql"],
+        ["supabase/migrations/b.sql", "supabase/migrations/c.sql"],
+      ),
+    ).toEqual(["supabase/migrations/a.sql", "supabase/migrations/b.sql", "supabase/migrations/c.sql"])
+  })
+
+  it("sortira rezultat bez obzira na ulazni redoslijed", () => {
+    expect(spojiPutanje(["z.sql"], ["a.sql"])).toEqual(["a.sql", "z.sql"])
+  })
+
+  it("obje prazne liste daju prazan rezultat", () => {
+    expect(spojiPutanje([], [])).toEqual([])
+  })
+
+  it("jedna prazna, druga sa duplikatima unutar sebe — i dalje dedupovano", () => {
+    expect(spojiPutanje([], ["x.sql", "x.sql"])).toEqual(["x.sql"])
+  })
+})
+
+describe("normalizujPutanju", () => {
+  it("pretvara Windows \\ separatore u /", () => {
+    expect(normalizujPutanju("app\\klijenti\\page.tsx")).toBe("app/klijenti/page.tsx")
+  })
+
+  it("putanja bez \\ ostaje netaknuta", () => {
+    expect(normalizujPutanju("app/klijenti/page.tsx")).toBe("app/klijenti/page.tsx")
+  })
+})
+
+describe("jeTsIzvor", () => {
+  it("prepoznaje .ts i .tsx", () => {
+    expect(jeTsIzvor("route.ts")).toBe(true)
+    expect(jeTsIzvor("page.tsx")).toBe(true)
+  })
+
+  it("odbija ostale ekstenzije", () => {
+    expect(jeTsIzvor("README.md")).toBe(false)
+    expect(jeTsIzvor("styles.css")).toBe(false)
   })
 })

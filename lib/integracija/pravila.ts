@@ -59,8 +59,15 @@ const VIEW = /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+([A-Za-z0-9_."]+)/i
 const TABELA = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z0-9_."]+)/gi
 const SECURITY_INVOKER_ON = /security_invoker\s*=\s*on/i
 const SECURITY_INVOKER_OFF = /security_invoker\s*=\s*off/i
-const CREATE_POLICY = /CREATE\s+POLICY\s+"?([A-Za-z0-9_]+)"?\s+ON\s+([A-Za-z0-9_."]+)/i
-const DROP_POLICY = /DROP\s+POLICY\s+(?:IF\s+EXISTS\s+)?"?([A-Za-z0-9_]+)"?\s+ON\s+([A-Za-z0-9_."]+)/i
+// Ime politike: navodnicima ograničeno (BILO KOJI karakter osim navodnika, uključujući
+// razmak — npr. "moja politika") ILI goli identifikator (unicode slova — dijakritika
+// poput č/š/ć/ž/đ NIJE egzotična u BCS domenu — cifre, donja crta). Bez \p{L} (samo
+// [A-Za-z0-9_]) bi ime poput `zaduženja_sel` bilo odsječeno na prvom dijakritiku, pa bi
+// se politika "izgubila" i tabela lažno prijavila kao bez politike (v. recenzija).
+const CREATE_POLICY =
+  /CREATE\s+POLICY\s+(?:"([^"]+)"|([\p{L}\p{N}_]+))\s+ON\s+([A-Za-z0-9_."]+)/iu
+const DROP_POLICY =
+  /DROP\s+POLICY\s+(?:IF\s+EXISTS\s+)?(?:"([^"]+)"|([\p{L}\p{N}_]+))\s+ON\s+([A-Za-z0-9_."]+)/iu
 
 function brojLinije(sadrzaj: string, indeks: number): number {
   let linija = 1
@@ -190,16 +197,24 @@ function zivePolitikePoTabeli(sadrzaj: string): Map<string, Set<string>> {
   const zive = new Map<string, Set<string>>()
   for (const naredba of sadrzaj.split(";")) {
     const create = CREATE_POLICY.exec(naredba)
-    if (create && create[1] !== undefined && create[2] !== undefined) {
-      const tabela = kratkoIme(create[2])
-      const skup = zive.get(tabela) ?? new Set<string>()
-      skup.add(create[1].toLowerCase())
-      zive.set(tabela, skup)
-      continue
+    if (create) {
+      const imePolitike = create[1] ?? create[2]
+      const imeTabele = create[3]
+      if (imePolitike !== undefined && imeTabele !== undefined) {
+        const tabela = kratkoIme(imeTabele)
+        const skup = zive.get(tabela) ?? new Set<string>()
+        skup.add(imePolitike.toLowerCase())
+        zive.set(tabela, skup)
+        continue
+      }
     }
     const drop = DROP_POLICY.exec(naredba)
-    if (drop && drop[1] !== undefined && drop[2] !== undefined) {
-      zive.get(kratkoIme(drop[2]))?.delete(drop[1].toLowerCase())
+    if (drop) {
+      const imePolitike = drop[1] ?? drop[2]
+      const imeTabele = drop[3]
+      if (imePolitike !== undefined && imeTabele !== undefined) {
+        zive.get(kratkoIme(imeTabele))?.delete(imePolitike.toLowerCase())
+      }
     }
   }
   return zive

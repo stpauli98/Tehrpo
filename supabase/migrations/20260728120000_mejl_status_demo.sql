@@ -1,0 +1,11 @@
+-- Demo režim: slanje se ne izvršava, ali se bilježi da bi tab „Poslati mejlovi"
+-- pokazao kako bi mejlovi izgledali u stvarnom radu. Zaseban status (ne „poslato")
+-- da se demo i stvarna slanja nikad ne pomiješaju u dnevniku — ni u aplikaciji ni
+-- kad se baza pregleda izvan nje.
+--
+-- Bezopasno na PROD-u: vrijednost samo postoji u enumu. Upisuje je isključivo kod
+-- koji radi kad je NEXT_PUBLIC_DEMO_MODE=1, a to na produkciji nikad nije postavljeno.
+--
+-- `add value` unutar transakcije Postgres dozvoljava od v12 dok se nova vrijednost
+-- ne KORISTI u istoj transakciji — ovdje se samo dodaje.
+alter type mejl_status add value if not exists 'demo';

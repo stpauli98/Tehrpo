@@ -52,7 +52,9 @@
     "topBar": {
       "odjava": "Sign out",
       "korisnickiMeni": "Account menu",
-      "prijavljenKao": "Signed in as"
+      "prijavljenKao": "Signed in as",
+      "demoBedz": "DEMO",
+      "demoBedzOpis": "Demo version — emails are not sent"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — coming soon"
@@ -1246,6 +1248,7 @@
   "poslatiMejlovi": {
     "naslov": "Sent emails",
     "opis": "Log of automatic and manual emails with delivery status.",
+    "demoTraka": "This is a demo — no emails are actually sent. Below is a preview of how they would look in real use.",
     "prazno": "No emails have been sent yet.",
     "kolone": {
       "vrijeme": "Time",
@@ -1268,7 +1271,8 @@
     },
     "status": {
       "poslato": "Sent",
-      "greskaSlanja": "Sending failed"
+      "greskaSlanja": "Sending failed",
+      "demo": "Demo (not sent)"
     },
     "dostava": {
       "nepoznato": "Unknown",

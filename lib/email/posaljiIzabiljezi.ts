@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/db/types"
 
 type MejlTip = Database["public"]["Enums"]["mejl_tip"]
+// Vezano za enum, ne prepisano — inače bi nova vrijednost statusa mogla tiho odlutati.
+type MejlStatus = Database["public"]["Enums"]["mejl_status"]
 
 export async function posaljiIzabiljezi(
   supabase: SupabaseClient<Database>,
@@ -13,10 +15,13 @@ export async function posaljiIzabiljezi(
   const primaoci = [...(sendArgs.to ?? []), ...(sendArgs.bcc ?? [])]
   try {
     const res = await send(sendArgs)
-    if (!res.dryRun) {
+    // Demo režim SE bilježi — tab „Poslati mejlovi" time pokazuje kako bi mejlovi
+    // izgledali u stvarnom radu. Obični dry-run (nema ključa, unit testovi) ostaje
+    // tih, inače bi svaki test punio dnevnik.
+    if (!res.dryRun || res.demo) {
       await zabiljeziMejlLog(supabase, {
         tip, terminId, klijentId, primaoci, subject: sendArgs.subject,
-        resendId: res.id, status: "poslato", greska: null,
+        resendId: res.id, status: res.demo ? "demo" : "poslato", greska: null,
       })
     }
     return res
@@ -35,7 +40,7 @@ async function zabiljeziMejlLog(
   row: {
     tip: MejlTip; terminId: string | null; klijentId: string | null
     primaoci: string[]; subject: string; resendId: string | null
-    status: "poslato" | "greska_slanja"; greska: string | null
+    status: MejlStatus; greska: string | null
   },
 ): Promise<void> {
   try {

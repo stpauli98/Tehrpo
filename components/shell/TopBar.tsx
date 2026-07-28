@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { odjaviSe } from "@/app/(dashboard)/odjava/actions"
 import type { TrenutniKorisnik } from "@/lib/auth/current-user"
 import { APP_NAME, APP_TAGLINE, APP_INITIAL } from "@/lib/brand"
+import { DEMO_MODE } from "@/lib/demo"
 import { KorisnikMeni } from "@/components/shell/KorisnikMeni"
 import { cn, FOCUS_RING } from "@/lib/utils"
 
@@ -17,6 +18,17 @@ export async function TopBar({ korisnik }: { korisnik: TrenutniKorisnik | null }
         <span className="text-sm font-semibold text-foreground">{APP_NAME}</span>
         <span aria-hidden className="h-4 w-px bg-border" />
         <span className="text-xs text-muted-foreground">{APP_TAGLINE}</span>
+        {/* Stoji na SVAKOM ekranu namjerno: ako demo režim ikad završi u produkciji,
+            vidi se odmah, a ne tek kad neko otvori tab sa mejlovima. */}
+        {DEMO_MODE && (
+          <span
+            data-testid="demo-bedz"
+            title={t("demoBedzOpis")}
+            className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-warning"
+          >
+            {t("demoBedz")}
+          </span>
+        )}
       </div>
 
       {korisnik ? (

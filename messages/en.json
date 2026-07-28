@@ -385,7 +385,8 @@
       "obrisiAriaLabel": "Delete contact",
       "vidiSve": "See all ({count}) →",
       "obrisiDialogNaslov": "Delete contact person?",
-      "obrisiDialogOpis": "The contact is permanently deleted. If marked as a reminder recipient, it stops receiving reminders."
+      "obrisiDialogOpis": "The contact is permanently deleted. If marked as a reminder recipient, it stops receiving reminders.",
+      "lokacijaSve": "All locations"
     },
     "lokacijaSheet": {
       "uredi": "Edit",

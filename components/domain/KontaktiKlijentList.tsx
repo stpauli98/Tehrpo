@@ -97,6 +97,14 @@ export function KontaktiKlijentList({
                 <span className="font-medium">
                   {k.ime}
                   {k.funkcija && <span className="font-normal text-muted-foreground"> · {k.funkcija}</span>}
+                  {/* Za koju lokaciju prima podsjetnike — bez ovoga se veza vidi tek
+                      otvaranjem forme, pa je lako pomisliti da svi primaju sve. */}
+                  <span
+                    className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground"
+                    data-testid={`kontakt-lokacija-bedz-${k.id}`}
+                  >
+                    {lokacije.find((l) => l.id === k.lokacija_id)?.naziv ?? t("lokacijaSve")}
+                  </span>
                 </span>
                 <span className="flex items-center gap-2">
                   <KontaktSheet klijentId={klijentId} kontakt={k} lokacije={lokacije} />

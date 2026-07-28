@@ -385,7 +385,8 @@
       "obrisiAriaLabel": "Kontakt löschen",
       "vidiSve": "Alle anzeigen ({count}) →",
       "obrisiDialogNaslov": "Kontaktperson löschen?",
-      "obrisiDialogOpis": "Der Kontakt wird dauerhaft gelöscht. Ist er als Empfänger von Erinnerungen markiert, erhält er keine mehr."
+      "obrisiDialogOpis": "Der Kontakt wird dauerhaft gelöscht. Ist er als Empfänger von Erinnerungen markiert, erhält er keine mehr.",
+      "lokacijaSve": "Alle Standorte"
     },
     "lokacijaSheet": {
       "uredi": "Bearbeiten",

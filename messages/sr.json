@@ -385,7 +385,8 @@
       "obrisiAriaLabel": "Obriši kontakt",
       "vidiSve": "Vidi sve ({count}) →",
       "obrisiDialogNaslov": "Obrisati kontakt osobu?",
-      "obrisiDialogOpis": "Kontakt se trajno briše. Ako je označen kao primalac podsjetnika, prestaje da ih prima."
+      "obrisiDialogOpis": "Kontakt se trajno briše. Ako je označen kao primalac podsjetnika, prestaje da ih prima.",
+      "lokacijaSve": "Sve lokacije"
     },
     "lokacijaSheet": {
       "uredi": "Uredi",

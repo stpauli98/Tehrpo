@@ -24,12 +24,14 @@ describe("DEMO_MODE", () => {
     expect(DEMO_MODE).toBe(true)
   })
 
-  it('ignoriše vrijednosti koje liče na uključeno ("true", "0", prazno)', async () => {
-    for (const v of ["true", "0", "", "yes"]) {
-      vi.resetModules()
+  // Svaka vrijednost se učitava u SVOM modulu — `vi.resetModules()` mora pasti između
+  // importa, pa `it.each` (jedan test po vrijednosti) umjesto petlje sa await unutra.
+  it.each(["true", "0", "", "yes", " 1 x"])(
+    'ignoriše vrijednost %j — uključuje samo tačno "1"',
+    async (v) => {
       process.env.NEXT_PUBLIC_DEMO_MODE = v
       const { DEMO_MODE } = await import("./demo")
-      expect(DEMO_MODE, `vrijednost ${JSON.stringify(v)}`).toBe(false)
-    }
-  })
+      expect(DEMO_MODE).toBe(false)
+    },
+  )
 })

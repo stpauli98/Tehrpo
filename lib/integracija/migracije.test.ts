@@ -30,8 +30,8 @@ describe("nadjiSudarenePrefikse", () => {
   it("prijavljuje stvarni sudar iz dvije grane", () => {
     const nalazi = nadjiSudarenePrefikse(STVARNI_SUDAR)
     expect(nalazi).toHaveLength(1)
-    expect(nalazi[0].prefiks).toBe("20260728120000")
-    expect(nalazi[0].fajlovi).toEqual([
+    expect(nalazi[0]!.prefiks).toBe("20260728120000")
+    expect(nalazi[0]!.fajlovi).toEqual([
       "20260728120000_audit_pretraga_kolone.sql",
       "20260728120000_mejl_status_demo.sql",
     ])
@@ -54,7 +54,7 @@ describe("nadjiSudarenePrefikse", () => {
       "20260728120000_c.sql",
     ])
     expect(nalazi).toHaveLength(1)
-    expect(nalazi[0].fajlovi).toHaveLength(3)
+    expect(nalazi[0]!.fajlovi).toHaveLength(3)
   })
 
   it("prijavlja više nezavisnih sudara, sortirano po prefiksu", () => {
@@ -72,7 +72,7 @@ describe("nadjiSudarenePrefikse", () => {
       "20260728120000_mejl_status_demo.sql",
       "20260728120000_audit_pretraga_kolone.sql",
     ])
-    expect(nalazi[0].fajlovi[0]).toBe("20260728120000_audit_pretraga_kolone.sql")
+    expect(nalazi[0]!.fajlovi[0]).toBe("20260728120000_audit_pretraga_kolone.sql")
   })
 
   it("prazan ulaz daje prazan rezultat", () => {

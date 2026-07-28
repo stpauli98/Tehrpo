@@ -733,6 +733,8 @@
     "filteri": {
       "akcija": "Action type",
       "svi": "All",
+      "korisnik": "User",
+      "sviKorisnici": "All users",
       "od": "From",
       "do": "To",
       "pretraga": "Search",

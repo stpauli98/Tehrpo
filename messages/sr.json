@@ -733,6 +733,8 @@
     "filteri": {
       "akcija": "Tip akcije",
       "svi": "Svi",
+      "korisnik": "Korisnik",
+      "sviKorisnici": "Svi korisnici",
       "od": "Od",
       "do": "Do",
       "pretraga": "Pretraga",

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { dohvatiAktivnostStranu } from "@/lib/queries/aktivnost"
 import { parsirajAktivnostFiltere, kljucFiltera, upitFiltera } from "@/lib/aktivnost/filteri"
 import { AktivnostFilteri } from "@/components/domain/AktivnostFilteri"
@@ -25,7 +26,13 @@ export default async function AktivnostPage({
   const f = parsirajAktivnostFiltere((k) => jedan(sp[k]))
   f.kursor = null
 
-  const rezultat = await dohvatiAktivnostStranu(f)
+  const supabase = await createServerSupabaseClient()
+  const [rezultat, korisniciRes] = await Promise.all([
+    dohvatiAktivnostStranu(f),
+    supabase.rpc("get_aktivni_korisnici"),
+  ])
+  // Pad dohvata korisnika NE ruši stranicu — filter tad ima samo „Svi korisnici", lista i dalje radi.
+  const korisnici = (korisniciRes.data ?? []) as { id: string; ime: string }[]
 
   return (
     <div className="space-y-6">
@@ -35,7 +42,7 @@ export default async function AktivnostPage({
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <AktivnostSearch />
-        <AktivnostFilteri key={kljucFiltera(f)} />
+        <AktivnostFilteri key={kljucFiltera(f)} korisnici={korisnici} />
       </div>
       {/* S1: greška čitanja NIJE prazan rezultat — lista se ne renderuje,
           ali naslov i filteri ostaju (promjena filtera = novi pokušaj). */}

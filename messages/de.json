@@ -733,6 +733,8 @@
     "filteri": {
       "akcija": "Aktionstyp",
       "svi": "Alle",
+      "korisnik": "Benutzer",
+      "sviKorisnici": "Alle Benutzer",
       "od": "Von",
       "do": "Bis",
       "pretraga": "Suche",

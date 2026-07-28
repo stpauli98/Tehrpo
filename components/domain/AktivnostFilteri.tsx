@@ -14,17 +14,22 @@ import { cn } from "@/lib/utils"
 // Sentinel za „bez filtera" — base-ui Select ne prima prazan string kao vrijednost stavke.
 const SVI = "svi"
 
-export function AktivnostFilteri() {
+export function AktivnostFilteri({ korisnici }: { korisnici: { id: string; ime: string }[] }) {
   const t = useTranslations("aktivnost")
   const pathname = usePathname()
   const sp = useSearchParams()
   const { isPending, push } = usePendingFilteri()
   const akcijaLabelId = useId()
+  const korisnikLabelId = useId()
 
   // items mapa value→label — base-ui SelectValue prikazuje labelu kad je dropdown zatvoren
   const akcijaItems: Record<string, string> = {
     [SVI]: t("filteri.svi"),
     ...Object.fromEntries(AKCIJE.map((a) => [a, t(`akcije.${a}` as never)])),
+  }
+  const korisnikItems: Record<string, string> = {
+    [SVI]: t("filteri.sviKorisnici"),
+    ...Object.fromEntries(korisnici.map((k) => [k.id, k.ime])),
   }
 
   function postavi(kljuc: string, vrijednost: string) {
@@ -55,6 +60,24 @@ export function AktivnostFilteri() {
             <SelectItem value={SVI}>{t("filteri.svi")}</SelectItem>
             {AKCIJE.map((a) => (
               <SelectItem key={a} value={a}>{t(`akcije.${a}` as never)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-1 text-xs">
+        <span id={korisnikLabelId}>{t("filteri.korisnik")}</span>
+        <Select
+          items={korisnikItems}
+          value={sp.get("korisnik") ?? SVI}
+          onValueChange={(v) => postavi("korisnik", !v || v === SVI ? "" : v)}
+        >
+          <SelectTrigger className="w-52" disabled={isPending} aria-labelledby={korisnikLabelId}>
+            <SelectValue placeholder={t("filteri.sviKorisnici")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={SVI}>{t("filteri.sviKorisnici")}</SelectItem>
+            {korisnici.map((k) => (
+              <SelectItem key={k.id} value={k.id}>{k.ime}</SelectItem>
             ))}
           </SelectContent>
         </Select>

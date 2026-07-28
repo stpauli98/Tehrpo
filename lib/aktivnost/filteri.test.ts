@@ -29,6 +29,28 @@ describe("parsirajAktivnostFiltere", () => {
     const f = parsirajAktivnostFiltere(izMape({ prijeVrijeme: "2026-07-28T09:00:00Z", prijeId: "800" }))
     expect(f.kursor).toEqual({ vrijeme: "2026-07-28T09:00:00Z", id: 800 })
   })
+
+  it("ignoriše neispravan datum 2026-02-30 bez bacanja greške", () => {
+    expect(() => {
+      const f = parsirajAktivnostFiltere(izMape({ od: "2026-02-30" }))
+      expect(f).toEqual({ kursor: null })
+    }).not.toThrow()
+  })
+
+  it("ignoriše neispravan datum 2026-04-31 bez bacanja greške", () => {
+    expect(() => {
+      const f = parsirajAktivnostFiltere(izMape({ do: "2026-04-31" }))
+      expect(f).toEqual({ kursor: null })
+    }).not.toThrow()
+  })
+
+  it("prihvata validan datum u leap godini 2028-02-29", () => {
+    expect(() => {
+      const f = parsirajAktivnostFiltere(izMape({ od: "2028-02-29" }))
+      expect(f.od).toBeDefined()
+      expect(f.od).not.toBeUndefined()
+    }).not.toThrow()
+  })
 })
 
 describe("kljucFiltera", () => {

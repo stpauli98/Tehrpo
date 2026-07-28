@@ -2,7 +2,7 @@
 // CLAUDE.md već navodi drift između te dvije putanje kao problem kod plan-aktivnosti
 // ("route's filter logic deliberately mirrors the server-component query"); ovdje
 // se on izbjegava time što izvor postoji samo na jednom mjestu.
-import { dodajDan, utcGranicaSarajevskogDana } from "@/lib/date"
+import { dodajDan, jeIsoDatum, utcGranicaSarajevskogDana } from "@/lib/date"
 import { parsirajKursor, type AktivnostKursor } from "./kursor"
 
 export type AktivnostFilteriUlaz = {
@@ -14,10 +14,12 @@ export type AktivnostFilteriUlaz = {
   kursor: AktivnostKursor | null
 }
 
-// utcGranicaSarajevskogDana baca RangeError na neispravnom datumu, pa se sanitacija
+// utcGranicaSarajevskogDana i dodajDan bacaju greške na neispravnom datumu, pa se validacija
 // radi PRIJE poziva: ručno pokvaren URL (?od=xyz) ignoriše filter umjesto da sruši stranicu.
-const isoDatum = (v: string | undefined) =>
-  v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined
+// Regex samo za format nije dovoljan — ISO gramatika dozvoljava DD do 31 u svakom mjesecu,
+// pa "2026-02-30" prođe regex ali je nevažeći. Koristi jeIsoDatum koja validiraround-tripom
+// kroz Date.UTC i provjerava da su komponente identične nakon krug-putovanja.
+const isoDatum = (v: string | undefined) => jeIsoDatum(v) ? v : undefined
 
 export function parsirajAktivnostFiltere(
   uzmi: (k: string) => string | undefined,

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { provjeriTs, provjeriSql, provjeriIzvore } from "./pravila"
+import { sanitizujSql } from "./sql"
 import { PROD_REF } from "@/lib/supabase/refs"
 
 describe("provjeriTs — admin klijent u zahtjevnoj putanji", () => {
@@ -30,7 +31,9 @@ describe("provjeriTs — admin klijent u zahtjevnoj putanji", () => {
     expect(nalazi[0]!.linija).toBe(3)
   })
 
-  it("NE prijavlja u scripts/ — tamo je admin klijent ispravan", () => {
+  it("NE prijavlja u scripts/ — pravilo se ionako pušta samo nad app/ i components/", () => {
+    // Nije stvar liste IZUZECI_ADMIN (iz nje je `scripts/` uklonjen kao mrtva stavka),
+    // nego vanjskog uslova `uZahtjevnoj`.
     expect(
       provjeriTs({
         putanja: "scripts/seed-admin.ts",
@@ -318,16 +321,19 @@ describe("provjeriSql — dijakritika u imenima (BCS latinica je domenski jezik)
   it("DROP POLICY nad DRUGOM tabelom (razlika tek poslije dijakritike) ne skida pokriće sa prve", () => {
     // Sa uskim razredom obje tabele u DROP/CREATE naredbama postaju `zadu`, pa bi drop
     // nad `zaduživanja` obrisao živu politiku tabele `zaduženja` i lažno je prijavio.
-    expect(
-      provjeriSql({
-        putanja: "supabase/migrations/20260728120000_x.sql",
-        sadrzaj: [
-          "create table zaduženja (id int primary key);",
-          "create policy p on zaduženja for select using (true);",
-          "drop policy p on zaduživanja;",
-        ].join("\n"),
-      }),
-    ).toEqual([])
+    // `zaduživanja` (tabela iz DRUGOG fajla kojoj je politika obrisana bez zamjene) je
+    // STVARAN nalaz novog pravila `zastita-uklonjena` — bitno je da se `zaduženja` NE
+    // pojavljuje nigdje.
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "create table zaduženja (id int primary key);",
+        "create policy p on zaduženja for select using (true);",
+        "drop policy p on zaduživanja;",
+      ].join("\n"),
+    })
+    expect(nalazi.map((n) => n.tabela)).toEqual(["zaduživanja"])
+    expect(nalazi[0]!.pravilo).toBe("zastita-uklonjena")
   })
 })
 
@@ -446,18 +452,24 @@ describe("provjeriSql — slijepilo za DROP (tabela-bez-politike)", () => {
     expect(nalazi[0]!.poruka).toContain("zaduzenja2")
   })
 
-  it("POZNATO OGRANIČENJE (namjerno van obuhvata): migracija koja SAMO drop-uje politike (tabela kreirana u DRUGOM fajlu, van vidokruga po-fajl provjere) prolazi neprimijećeno", () => {
-    expect(
-      provjeriSql({
-        putanja: "supabase/migrations/20260728120000_x.sql",
-        sadrzaj: [
-          "drop policy if exists klijenti_sel on klijenti;",
-          "drop policy if exists klijenti_ins on klijenti;",
-          "drop policy if exists klijenti_upd on klijenti;",
-          "drop policy if exists klijenti_del on klijenti;",
-        ].join("\n"),
-      }),
-    ).toEqual([])
+  it("migracija koja SAMO drop-uje politike (tabela kreirana u DRUGOM fajlu) se prijavljuje kroz `zastita-uklonjena`, ne kroz `tabela-bez-politike`", () => {
+    // Ranije je ovo bilo dokumentovano „poznato ograničenje" i vraćalo prazan niz —
+    // fajl koji skida SVE politike sa `klijenti` je prolazio kao čist. `tabela-bez-politike`
+    // to i dalje ne vidi (tabela nije kreirana u ovom fajlu, to bi tražilo praćenje
+    // stanja kroz istoriju), ali `zastita-uklonjena` gleda samu naredbu.
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "drop policy if exists klijenti_sel on klijenti;",
+        "drop policy if exists klijenti_ins on klijenti;",
+        "drop policy if exists klijenti_upd on klijenti;",
+        "drop policy if exists klijenti_del on klijenti;",
+      ].join("\n"),
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.pravilo).toBe("zastita-uklonjena")
+    expect(nalazi[0]!.tabela).toBe("klijenti")
+    expect(nalazi[0]!.poruka).toContain("klijenti_sel, klijenti_ins, klijenti_upd, klijenti_del")
   })
 })
 
@@ -486,6 +498,160 @@ describe("provjeriSql — slijepilo za DROP (view-bez-invokera)", () => {
         ].join("\n"),
       }),
     ).toEqual([])
+  })
+})
+
+describe("provjeriSql — zastita-uklonjena", () => {
+  const PUT = "supabase/migrations/20260728120000_x.sql"
+  const sql = (sadrzaj: string) => provjeriSql({ putanja: PUT, sadrzaj })
+
+  describe("tri naredbe koje zaštitu SKIDAJU — svaka sama u migraciji", () => {
+    it("ALTER TABLE ... DISABLE ROW LEVEL SECURITY", () => {
+      const nalazi = sql("alter table klijenti disable row level security;\n")
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("zastita-uklonjena")
+      expect(nalazi[0]!.tabela).toBe("klijenti")
+      expect(nalazi[0]!.poruka).toContain("isključen RLS")
+      expect(nalazi[0]!.poruka).toContain("klijenti")
+      expect(nalazi[0]!.linija).toBe(1)
+    })
+
+    it("DROP POLICY bez ponovnog kreiranja", () => {
+      const nalazi = sql("drop policy klijenti_select on klijenti;\n")
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("zastita-uklonjena")
+      expect(nalazi[0]!.poruka).toContain("klijenti_select")
+      expect(nalazi[0]!.poruka).toContain("klijenti")
+    })
+
+    it("ALTER VIEW ... SET (security_invoker = off)", () => {
+      const nalazi = sql("alter view termini_view set (security_invoker = off);\n")
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("zastita-uklonjena")
+      expect(nalazi[0]!.poruka).toContain("security_invoker")
+      expect(nalazi[0]!.poruka).toContain("termini_view")
+    })
+  })
+
+  describe("kontrolni parnjaci — zaštita VRAĆENA u istom fajlu, ne smije se prijaviti", () => {
+    it("disable pa enable", () => {
+      expect(
+        sql(
+          "alter table klijenti disable row level security;\n" +
+            "alter table klijenti enable row level security;\n",
+        ),
+      ).toEqual([])
+    })
+
+    it("drop pa ponovni create (za istu tabelu)", () => {
+      expect(
+        sql(
+          "drop policy klijenti_select on klijenti;\n" +
+            "create policy klijenti_select on klijenti for select using (true);\n",
+        ),
+      ).toEqual([])
+    })
+
+    it("off pa on", () => {
+      expect(
+        sql(
+          "alter view termini_view set (security_invoker = off);\n" +
+            "alter view termini_view set (security_invoker = on);\n",
+        ),
+      ).toEqual([])
+    })
+  })
+
+  it("jedna zaštita vraćena, druga nije — prijavljuje se SAMO ona koja je ostala skinuta", () => {
+    const nalazi = sql(
+      [
+        "alter table klijenti disable row level security;",
+        "alter table klijenti enable row level security;",
+        "alter view termini_view set (security_invoker = off);",
+      ].join("\n"),
+    )
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("termini_view")
+    expect(nalazi[0]!.linija).toBe(3)
+  })
+
+  it("enable pa disable (obrnut red) — zadnja naredba odlučuje, PRIJAVLJUJE se", () => {
+    // Diskriminator za „zadnja naredba odlučuje": mutant koji samo pita „ima li ijedan
+    // enable u fajlu" bi ovdje prošutio.
+    const nalazi = sql(
+      "alter table klijenti enable row level security;\n" +
+        "alter table klijenti disable row level security;\n",
+    )
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.linija).toBe(2)
+  })
+
+  it("DISABLE se prijavljuje i kad je tabela kreirana u ISTOM fajlu i ima politiku", () => {
+    // Nijedno drugo pravilo ovu naredbu ne poznaje: `tabela-bez-politike` ćuti jer
+    // politika postoji, a RLS je ipak ugašen.
+    const nalazi = sql(
+      [
+        "create table nova (id int primary key);",
+        "create policy nova_sel on nova for select using (true);",
+        "alter table nova disable row level security;",
+      ].join("\n"),
+    )
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.pravilo).toBe("zastita-uklonjena")
+    expect(nalazi[0]!.tabela).toBe("nova")
+  })
+
+  it("DISABLE nad tabelom sa šemom i navodnicima — ime se svodi na kratko", () => {
+    const nalazi = sql('alter table only public."klijenti" disable row level security;\n')
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.tabela).toBe("klijenti")
+  })
+
+  describe("bez duplog signala — objekat kreiran u ISTOM fajlu pokriva već postojeće pravilo", () => {
+    it("create table + create policy + drop policy → TAČNO jedan nalaz (tabela-bez-politike)", () => {
+      const nalazi = sql(
+        [
+          "create table probna (id int primary key);",
+          "create policy probna_sel on probna for select using (true);",
+          "drop policy probna_sel on probna;",
+        ].join("\n"),
+      )
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("tabela-bez-politike")
+    })
+
+    it("create view + alter view off → TAČNO jedan nalaz (view-bez-invokera)", () => {
+      const nalazi = sql(
+        [
+          "create view v with (security_invoker=on) as select 1;",
+          "alter view v set (security_invoker = off);",
+        ].join("\n"),
+      )
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("view-bez-invokera")
+    })
+  })
+
+  it("prefiks kolizija: DISABLE nad `grad` ne prijavljuje `gradovi` (ni obrnuto)", () => {
+    const nalazi = sql(
+      "alter table gradovi disable row level security;\nalter table grad enable row level security;\n",
+    )
+    expect(nalazi.map((n) => n.tabela)).toEqual(["gradovi"])
+  })
+
+  it("DROP POLICY pa create DRUGE politike za istu tabelu — neto efekat je pokrivena tabela, bez nalaza", () => {
+    expect(
+      sql(
+        "drop policy stara on klijenti;\n" +
+          "create policy nova on klijenti for select using (true);\n",
+      ),
+    ).toEqual([])
+  })
+
+  it("`disable row level security` iza `--` komentara se ne prijavljuje (sanitizacija ga maskira)", () => {
+    // Ulaz je već sanitizovan u ljusci; ovdje se maskiranje simulira razmacima kao što
+    // to radi sanitizujSql, da se potvrdi da pravilo ne gleda „sirov" tekst komentara.
+    expect(sql(sanitizujSql("-- alter table klijenti disable row level security;\n"))).toEqual([])
   })
 })
 

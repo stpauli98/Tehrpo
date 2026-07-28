@@ -105,8 +105,17 @@ revoke execute on function get_aktivnost_strana(
 grant execute on function get_aktivnost_strana(
   timestamptz, timestamptz, uuid, text, text, text, timestamptz, bigint, int) to authenticated;
 
--- Stara funkcija i view koji joj je služio više nemaju pozivaoca (provjereno:
--- nema pojave u lib/, app/, components/, tests/, scripts/). Funkcija ide prva —
--- zavisi od view-a.
+-- aktivnost_view nema pozivaoca nigdje — provjereno u repou (lib/, app/,
+-- components/, tests/, scripts/) i dodatno provjereno na samoj DEMO bazi
+-- (pg_depend nad pg_rewrite, plus sken pg_get_functiondef za svaku prokind='f'
+-- funkciju u public šemi) — oba dolaze prazna.
+--
+-- get_aktivnost i dalje ima tačno jednog pozivaoca: lib/queries/aktivnost.ts,
+-- koji zamjenjuje Task 4 ovog plana. Između primjene ove migracije i
+-- deploy-a te app-side izmjene, /aktivnost je pokvarena — zato plan zahtijeva
+-- da OBJE migracije (DEMO i PROD) budu primijenjene PRIJE nego se aplikacija
+-- deploy-uje, nikad obrnuto. Funkcija ide prva — zavisi od view-a (tijelo
+-- joj čita `from aktivnost_view`), pa view mora ostati dok se funkcija ne
+-- ukloni.
 drop function if exists get_aktivnost(timestamptz, timestamptz, uuid, text, text, text, int, int);
 drop view if exists aktivnost_view;

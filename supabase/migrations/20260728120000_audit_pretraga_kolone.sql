@@ -11,8 +11,10 @@
 -- PROD. `extensions.gin_trgm_ops` NE postoji i obara migraciju.
 --
 -- LOCK: dodavanje STORED generisane kolone prepisuje tabelu uz ACCESS EXCLUSIVE.
--- Na ~5.500 redova / 2,5 MB to je ispod sekunde. Provjeriti trajanje na DEMO-u
--- prije PROD apply-a.
+-- Izmjereno na DEMO-u (5.444 reda, 2,5 MB): 1699 ms — ali to uključuje mrežni
+-- round-trip do clouda, pa je to gornja granica, ne čisto vrijeme locka. PROD
+-- (3.333 reda, 2.320 kB) je manji od DEMO-a, pa je očekivano trajanje na PROD-u
+-- jednako ili kraće. Provjeriti trajanje na DEMO-u ponovo prije PROD apply-a.
 
 create extension if not exists pg_trgm;
 

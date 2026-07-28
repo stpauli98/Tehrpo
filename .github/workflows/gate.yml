@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    permissions:
+      contents: read
+
     env:
       # DEMO vrijednosti. PROD ključevi ne smiju postojati u ovom workflow-u.
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
@@ -41,17 +44,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: typecheck
+      - name: provjera tipova
         run: pnpm typecheck
 
       - name: lint
         run: pnpm lint
 
+      - name: statičke provjere integracije
+        run: pnpm provjeri:integraciju
+
       - name: unit testovi
         run: pnpm test:unit
 
-      - name: build
+      - name: izgradnja
         run: pnpm build
-
-      - name: statičke provjere integracije
-        run: pnpm provjeri:integraciju

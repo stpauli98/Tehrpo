@@ -794,7 +794,11 @@
       "kontakt_osobe": "Kontakt osobe",
       "ugovori": "Ugovori"
     },
-    "ukupno": "Ukupno: {count}"
+    "ucitajJos": "Učitaj još",
+    "ucitavanje": "Učitavam…",
+    "greskaPorcije": "Nije uspjelo učitavanje sljedeće porcije.",
+    "krajListe": "To je sve.",
+    "prikazanoRedova": "Prikazano redova: {count}"
   },
   "zapisnici": {
     "naslov": "Zapisnici",

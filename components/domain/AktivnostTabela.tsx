@@ -1,9 +1,11 @@
-import { getTranslations } from "next-intl/server"
+"use client"
+
+import { useTranslations } from "next-intl"
 import type { AktivnostRed } from "@/lib/queries/aktivnost"
 import { formatDatum, formatDatumVrijeme } from "@/lib/date"
 import { delokalizujSegment } from "@/i18n/routes"
 
-type T = Awaited<ReturnType<typeof getTranslations<"aktivnost">>>
+type T = ReturnType<typeof useTranslations<"aktivnost">>
 
 function prettify(k: string): string {
   const s = k.replace(/_/g, " ")
@@ -66,8 +68,8 @@ function ciljLabel(r: AktivnostRed, t: T): string {
   return naziv ? `${ent} · ${naziv}` : ent
 }
 
-export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
-  const t = await getTranslations("aktivnost")
+export function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
+  const t = useTranslations("aktivnost")
   if (redovi.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("prazno")}</p>
   }

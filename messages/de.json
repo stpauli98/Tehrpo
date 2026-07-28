@@ -794,7 +794,11 @@
       "kontakt_osobe": "Kontaktpersonen",
       "ugovori": "Verträge"
     },
-    "ukupno": "Gesamt: {count}"
+    "ucitajJos": "Mehr laden",
+    "ucitavanje": "Wird geladen…",
+    "greskaPorcije": "Der nächste Abschnitt konnte nicht geladen werden.",
+    "krajListe": "Das ist alles.",
+    "prikazanoRedova": "Angezeigte Zeilen: {count}"
   },
   "zapisnici": {
     "naslov": "Protokolle",

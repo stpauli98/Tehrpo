@@ -537,92 +537,33 @@ git commit -m "feat(demo): objasnidbena traka, bedž reda i globalni DEMO bedž"
 
 ---
 
-### Zadatak 7: E2E — režim uključen
+### Zadatak 7: E2E — ODUSTALO (tehnički neizvodljivo)
 
-**Fajlovi:**
-- Kreirati: `tests/e2e/36-demo-rezim.spec.ts`
+**Ishod:** spec je napisan pa uklonjen. Razlog nije lijenost nego tvrda prepreka:
 
-**Interfejsi:**
-- Konzumira: `data-testid="demo-traka"`, `data-testid="demo-bedz"`
-
-**Napomena o okruženju:** `NEXT_PUBLIC_*` se ugrađuje u build, pa se demo režim NE može
-uključiti u toku rada. Playwright `webServer` u `playwright.config.ts` diže svoj dev
-server sa `env: { ZAPISNIK_DRY_RUN: "1", CHAT_DRY_RUN: "1" }` — a demo režim mora
-ostati ISKLJUČEN za sve ostale specove. Zato ovaj spec diže **vlastiti** dev server na
-zasebnom portu, sa `NEXT_PUBLIC_DEMO_MODE=1`.
-
-- [ ] **Korak 1: Napiši spec**
-
-`tests/e2e/36-demo-rezim.spec.ts`:
-
-```ts
-import { test, expect } from "@playwright/test"
-import { spawn, type ChildProcess } from "node:child_process"
-
-/**
- * Demo režim se ugrađuje u build (`NEXT_PUBLIC_*`), pa se ne može upaliti u toku
- * rada — ovaj spec diže VLASTITI dev server sa uključenim režimom, na portu 3100,
- * da ostali specovi ostanu na isključenom.
- */
-const PORT = 3100
-const BASE = `http://localhost:${PORT}`
-let server: ChildProcess
-
-test.beforeAll(async () => {
-  server = spawn("pnpm", ["exec", "next", "dev", "-p", String(PORT), "--webpack"], {
-    env: { ...process.env, NEXT_PUBLIC_DEMO_MODE: "1", ZAPISNIK_DRY_RUN: "1" },
-    stdio: "ignore",
-  })
-  const rok = Date.now() + 120_000
-  for (;;) {
-    try {
-      const r = await fetch(`${BASE}/plan-aktivnosti`, { redirect: "manual" })
-      if (r.status > 0) break
-    } catch {
-      // server se još diže
-    }
-    if (Date.now() > rok) throw new Error("demo dev server se nije podigao za 120s")
-    await new Promise((r) => setTimeout(r, 1000))
-  }
-})
-
-test.afterAll(() => {
-  server?.kill("SIGTERM")
-})
-
-test.describe("Demo režim", () => {
-  test("TopBar nosi DEMO bedž na svakom ekranu", async ({ page }) => {
-    await page.goto(`${BASE}/pregled`)
-    await expect(page.getByTestId("demo-bedz")).toBeVisible()
-    await page.goto(`${BASE}/plan-aktivnosti`)
-    await expect(page.getByTestId("demo-bedz")).toBeVisible()
-  })
-
-  test("tab Poslati mejlovi objašnjava da se mejlovi ne šalju", async ({ page }) => {
-    await page.goto(`${BASE}/poslati-mejlovi`)
-    const traka = page.getByTestId("demo-traka")
-    await expect(traka).toBeVisible()
-    await expect(traka).toContainText("mejlovi se ne šalju")
-  })
-})
+```
+⨯ Another next dev server is already running.
 ```
 
-- [ ] **Korak 2: Pokreni spec**
+Next 16 odbija **drugi `next dev` u istom projektnom direktorijumu**, bez obzira na
+port. Demo režim se ugrađuje u build (`NEXT_PUBLIC_*`), pa se ne može upaliti u toku
+rada — a Playwright `webServer` već drži server na 3000 iz istog direktorijuma.
+Reprodukovano uživo: 3000 se digao, 3100 odbijen uz poruku iznad.
 
-Pokreni: `pnpm exec playwright test tests/e2e/36-demo-rezim.spec.ts --project=chromium --workers=1 --reporter=list`
-Očekivano: PASS (2 testa)
+Preostale opcije i zašto su odbačene:
+- drugi worktree samo da bi se digao demo server — vezuje test za raspored direktorijuma
+  i udvostručuje vrijeme prolaza
+- `next build` + `next start` za demo — minute po prolazu, za dva `&&` uslova u JSX-u
 
-- [ ] **Korak 3: Potvrdi da ostali specovi NISU u demo režimu**
+**Pokriveno umjesto toga:** 15 unit testova (semantika prekidača, blokada mreže, upis u
+dnevnik) + vizuelna provjera oba elementa u pravom pregledaču. Sama UI izmjena su dva
+`{DEMO_MODE && …}` bloka.
 
-Pokreni: `pnpm exec playwright test tests/e2e/32-poslati-mejlovi.spec.ts --project=chromium --workers=1 --reporter=list`
-Očekivano: PASS — traka i bedž se ne pojavljuju na podrazumijevanom serveru (port 3000).
-
-- [ ] **Korak 4: Commit**
-
-```bash
-git add tests/e2e/36-demo-rezim.spec.ts
-git commit -m "test(demo): e2e za DEMO bedž i objasnidbenu traku"
-```
+**Zašto prekidač OSTAJE `NEXT_PUBLIC_`:** sve tri tačke upotrebe su server komponente,
+pa bi server-only varijabla bila „čistija" (van klijentskog bundle-a, promjenjiva bez
+build-a). Ali bedž je SIGURNOSNI indikator: da ga neko kasnije prenese u klijentsku
+komponentu, server-only varijabla bi tiho postala `undefined` → bedž nestaje baš u
+slučaju kad najviše treba. Robusnost pretegla nad čistoćom bundle-a.
 
 ---
 

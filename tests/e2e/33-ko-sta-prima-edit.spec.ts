@@ -20,8 +20,11 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
   test("toggle upisuje per-firma flag, izvedeni badge se osvježi, link vodi na karticu firme", async ({ page }) => {
     const naziv = "E2E-TMP KSP " + Date.now()
     const kid = await insertKlijent(naziv)
+    const prije = (await getPostavkeV2()).podsjetnici_aktivni
     try {
-      await setPostavkeV2({ salji_klijentima: true })
+      // Automatika mora biti uključena — inače bi najviši razlog bio „automatsko slanje
+      // isključeno", a test provjerava upravo razliku globalno/per-firma ispod nje.
+      await setPostavkeV2({ salji_klijentima: true, podsjetnici_aktivni: true })
       // Firma mora imati validnu adresu da izvedeni badge UOPŠTE može postati „Da“ —
       // bez toga bi ovaj test dokazivao samo `nemaAdrese` putanju.
       const { error } = await db
@@ -64,7 +67,7 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       await expect(page).toHaveURL(new RegExp(`/klijenti/${kid}\\?tab=podsjetnici`))
       await expect(page.getByTestId("klijent-podsjetnici-form")).toBeVisible()
     } finally {
-      await setPostavkeV2({ salji_klijentima: false })
+      await setPostavkeV2({ salji_klijentima: false, podsjetnici_aktivni: prije })
       await deleteKlijentByNaziv(naziv)
     }
   })
@@ -72,8 +75,11 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
   test("globalni prekidač isključen → toggle disabled, razlog na hover, bez linka u ćorsokak", async ({ page }) => {
     const naziv = "E2E-TMP KSP OFF " + Date.now()
     const kid = await insertKlijent(naziv)
+    const prije = (await getPostavkeV2()).podsjetnici_aktivni
     try {
-      await setPostavkeV2({ salji_klijentima: false })
+      // Automatika mora biti uključena — inače bi razlog bio „automatsko slanje isključeno",
+      // ne „globalni prekidač isključen" koji ovaj test provjerava.
+      await setPostavkeV2({ salji_klijentima: false, podsjetnici_aktivni: true })
 
       await page.goto("/postavke")
       // Sekcija sa glavnim prekidačem se otvara PRIJE klika u banneru — samo tako je
@@ -108,12 +114,12 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       // Već montirani glavni prekidač mora pokazati novo stanje, a ne ono iz mounta.
       await expect(page.getByTestId("salji-klijentima-toggle")).toBeChecked()
     } finally {
-      await setPostavkeV2({ salji_klijentima: false })
+      await setPostavkeV2({ salji_klijentima: false, podsjetnici_aktivni: prije })
       await deleteKlijentByNaziv(naziv)
     }
   })
 
-  test("automatika isključena → badge „Ne\" sa razlogom, banner, i sažetak ne tvrdi da firme primaju", async ({ page }) => {
+  test("automatika isključena → badge „Ne“ sa razlogom, banner, i sažetak ne tvrdi da firme primaju", async ({ page }) => {
     const naziv = "E2E-TMP KSP AUTO " + Date.now()
     const kid = await insertKlijent(naziv)
     const prije = (await getPostavkeV2()).podsjetnici_aktivni
@@ -169,7 +175,7 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
     }
   })
 
-  test("kolona radnika razlikuje „nema dodijeljenih\" od „dodijeljeni ne primaju\"", async ({ page }) => {
+  test("kolona radnika razlikuje „nema dodijeljenih“ od „dodijeljeni ne primaju“", async ({ page }) => {
     const naziv = "E2E-TMP KSP RAD " + Date.now()
     const email = `e2e-optout-${Date.now()}@example.com`
     const kid = await insertKlijent(naziv)

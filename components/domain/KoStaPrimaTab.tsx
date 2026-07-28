@@ -105,8 +105,16 @@ export async function KoStaPrimaTab() {
   })
 
   const brojPrima = redovi.filter((r) => r.firmaPrima).length
+  // „Koliko bi primilo da automatika radi" — ista funkcija kao r.firmaPrima, samo sa
+  // podsjetniciAktivni:true, da ne postoji druga (netestirana) kopija istog pravila.
   const brojAdresaKandidata = redovi.filter(
-    (r) => saljiGlobalno && r.salji && r.adrese.length > 0,
+    (r) =>
+      izracunajIshodReda({
+        podsjetniciAktivni: true,
+        saljiGlobalno,
+        saljiFirmi: r.salji,
+        brojAdresa: r.adrese.length,
+      }).prima,
   ).length
 
   return (
@@ -194,7 +202,11 @@ export async function KoStaPrimaTab() {
                       salji={r.salji}
                       globalnoIskljuceno={!saljiGlobalno}
                     />
-                    {!saljiGlobalno && <Tooltip>{t("saljiFirmiIskljuceno")}</Tooltip>}
+                    {!saljiGlobalno && (
+                      <Tooltip className="max-w-xs whitespace-normal text-left">
+                        {t("saljiFirmiIskljuceno")}
+                      </Tooltip>
+                    )}
                   </span>
                 </td>
                 <td className="px-4 py-2.5">
@@ -245,7 +257,9 @@ export async function KoStaPrimaTab() {
                   ) : (
                     <span className="group/tt relative inline-flex text-muted-foreground">
                       {r.adrese.length > 0 ? r.adrese.join(", ") : "—"}
-                      <Tooltip>{t("saljiFirmiIskljuceno")}</Tooltip>
+                      <Tooltip className="max-w-xs whitespace-normal text-left">
+                        {t("saljiFirmiIskljuceno")}
+                      </Tooltip>
                     </span>
                   )}
                 </td>

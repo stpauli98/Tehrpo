@@ -24,7 +24,7 @@ export function PrimaPodsjetnikeToggle({
       disabled={pending || onemoguceno}
       data-testid={`prima-podsjetnike-${korisnikId}`}
       aria-label={opis}
-      title={aria}
+      title={onemoguceno ? undefined : aria}
       onCheckedChange={(next) => {
         setChecked(next)
         start(async () => {

@@ -36,8 +36,9 @@ const IZUZECI_ADMIN = ["scripts/", "app/api/cron/"]
 
 /** Izuzetak od pravila admin-klijent: komentar neposredno iznad pogotka (uz
  *  zanemarivanje praznih redova) oblika `// integracija-dozvoli: admin-klijent — <razlog>`.
- *  Razlog iza crte je obavezan — bez njega marker ne vrijedi. */
-const MARKER_ADMIN_DOZVOLI = /^\s*\/\/\s*integracija-dozvoli:\s*admin-klijent\s*—\s*(.+?)\s*$/
+ *  Razdvajač prije razloga može biti em crta (—), en crta (–) ili obična crtica (-) —
+ *  sve tri se prihvataju. Razlog iza crte je obavezan — bez njega marker ne vrijedi. */
+const MARKER_ADMIN_DOZVOLI = /^\s*\/\/\s*integracija-dozvoli:\s*admin-klijent\s*[—–-]\s*(.+?)\s*$/
 
 const ADMIN = /createAdminSupabaseClient|@\/lib\/supabase\/admin/
 const VIEW = /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+([A-Za-z0-9_."]+)/i
@@ -131,16 +132,27 @@ export function provjeriTs(izvor: Izvor): Nalaz[] {
 /**
  * Da li se negdje u cijelom `sadrzaj`-u view `ime` naknadno postavlja na
  * security_invoker=on preko `ALTER VIEW <ime> ... security_invoker = on`.
- * Granica riječi (`\b`) sprječava da `termini` pokrije `termini_view` i obrnuto
- * (isti obrazac kao `politikaZaOvu` za tabele — `_` je karakter riječi, pa `\b`
- * ne prelazi granicu prefiksa).
+ *
+ * Pretraga je ograničena na JEDNU `;`-razdvojenu naredbu (isti pristup kao za
+ * CREATE VIEW niže) — naredba mora i početi sa `ALTER VIEW <ime>` (dozvoljeni
+ * su vodeći whitespace i `-- ...` SQL komentari, npr. "Re-apply security_invoker"
+ * napomena iznad stvarne ALTER VIEW linije) i sadržati `security_invoker=on`
+ * unutar SEBE. Bez granice na jednu naredbu, lijeni `[\s\S]*?` bi mogao
+ * preskočiti preko granice naredbe i pokupiti invoker koji pripada SLJEDEĆOJ
+ * `ALTER VIEW` naredbi za neki drugi view (lažni negativ).
+ *
+ * Granica riječi (`\b`) uz ime sprječava da `termini` pokrije `termini_view`
+ * i obrnuto (isti obrazac kao `politikaZaOvu` za tabele — `_` je karakter
+ * riječi, pa `\b` ne prelazi granicu prefiksa).
  */
 function imaAlterInvokerZaView(sadrzaj: string, ime: string): boolean {
   const alterZaIme = new RegExp(
-    `ALTER\\s+VIEW\\s+[A-Za-z0-9_."]*\\b${ime}\\b[\\s\\S]*?security_invoker\\s*=\\s*on`,
+    `^(?:\\s|--[^\\n]*)*ALTER\\s+VIEW\\s+[A-Za-z0-9_."]*\\b${ime}\\b`,
     "i",
   )
-  return alterZaIme.test(sadrzaj)
+  return sadrzaj
+    .split(";")
+    .some((naredba) => alterZaIme.test(naredba) && SECURITY_INVOKER.test(naredba))
 }
 
 export function provjeriSql(izvor: Izvor): Nalaz[] {

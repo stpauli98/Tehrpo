@@ -100,6 +100,15 @@ describe("provjeriTs — admin-klijent izuzet markerom integracija-dozvoli", () 
     expect(nalazi).toHaveLength(1)
     expect(nalazi[0]!.linija).toBe(4)
   })
+
+  it("marker sa običnom ASCII crticom (-) umjesto em/en crte i dalje preskače", () => {
+    expect(
+      provjeriTs({
+        putanja: "app/x.ts",
+        sadrzaj: "// integracija-dozvoli: admin-klijent - razlog\n" + 'import "@/lib/supabase/admin"\n',
+      }),
+    ).toEqual([])
+  })
 })
 
 describe("provjeriTs — PROD ref u testovima", () => {
@@ -183,6 +192,30 @@ describe("provjeriSql — VIEW bez security_invoker", () => {
     })
     expect(nalazi).toHaveLength(1)
     expect(nalazi[0]!.poruka).toContain("a_view")
+  })
+
+  it("REGRESIJA: ALTER VIEW x_view bez invokera ne smije pokupiti invoker koji pripada ALTER VIEW y_view iza njega", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj:
+        "create view x_view as select 1;\n" +
+        "alter view x_view set (something_else = true);\n" +
+        "alter view y_view set (security_invoker = on);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("x_view")
+  })
+
+  it("x_view dobija invoker u DRUGOJ ALTER VIEW naredbi, poslije prve bez invokera — nije nalaz", () => {
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj:
+          "create view x_view as select 1;\n" +
+          "alter view x_view set (something_else = true);\n" +
+          "alter view x_view set (security_invoker = on);\n",
+      }),
+    ).toEqual([])
   })
 
   it("prefiks kolizija: ALTER VIEW termini ne pokriva CREATE VIEW termini_view", () => {

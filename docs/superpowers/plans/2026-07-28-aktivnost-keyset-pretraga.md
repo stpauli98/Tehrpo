@@ -715,7 +715,7 @@ export function upitFiltera(f: AktivnostFilteriUlaz): string {
 Run: `pnpm vitest run lib/aktivnost/filteri.test.ts`
 Expected: PASS, 8 testova.
 
-Ako test „pretvara `do` u ekskluzivnu granicu" padne na drugoj vrijednosti od očekivane, to je ljetno/zimsko računanje vremena — uzmi stvarnu vrijednost koju `utcGranicaSarajevskogDana` vraća i ispravi očekivanje u testu, ne implementaciju.
+Vrijednosti `2026-06-30T22:00:00.000Z` i `2026-07-31T22:00:00.000Z` su **provjerene** pozivom `utcGranicaSarajevskogDana` prije pisanja plana (juli je CEST, UTC+2). Ako taj test padne, greška je u implementaciji ili u `lib/date` — **ne** prepravljaj očekivanje da bi test prošao.
 
 - [ ] **Step 9: Commit**
 

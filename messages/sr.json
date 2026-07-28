@@ -1274,7 +1274,8 @@
     },
     "status": {
       "poslato": "Poslato",
-      "greskaSlanja": "Greška slanja"
+      "greskaSlanja": "Greška slanja",
+      "demo": "Demo"
     },
     "dostava": {
       "nepoznato": "Nepoznato",

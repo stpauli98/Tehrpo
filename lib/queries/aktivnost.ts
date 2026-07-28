@@ -56,7 +56,7 @@ export async function dohvatiAktivnostStranu(
     console.error("get_aktivnost_strana:", error.message)
     return { ok: false }
   }
-  const svi = (data ?? []) as AktivnostRed[]
+  const svi = data ?? []
   const imaJos = svi.length > PO_PORCIJI
   return { ok: true, redovi: imaJos ? svi.slice(0, PO_PORCIJI) : svi, imaJos }
 }

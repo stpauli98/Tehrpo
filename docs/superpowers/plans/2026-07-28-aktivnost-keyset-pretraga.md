@@ -1382,14 +1382,20 @@ git commit -m "test(aktivnost): keyset listanje, pretraga, filter po korisniku, 
 
 **Agent ovo NE radi.** Redoslijed je obavezan — obrnut redoslijed obara produkciju, jer bi deployana aplikacija zvala nepostojeću funkciju:
 
-1. Migracije na PROD:
+1. Migracije `…120000` i `…121000` na PROD (expand pola — dodaju novo, ništa ne brišu):
    ```bash
    POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260728120000_audit_pretraga_kolone.sql
    POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260728121000_get_aktivnost_strana.sql
    ```
-2. Tek onda merge u `main` (merge = deploy na tri Vercel projekta odjednom).
+2. Tek onda merge u `main` (merge = deploy na tri Vercel projekta odjednom) — sačekati da je nova verzija aplikacije zaista live.
+3. Tek nakon što je deploy potvrđen: `…122000` na PROD (contract pola — briše staru `get_aktivnost`/`aktivnost_view`, koje dotad samo neiskorišteno sjede):
+   ```bash
+   POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260728122000_drop_get_aktivnost.sql
+   ```
 
 Prije PROD apply-a provjeri trajanje prve migracije zabilježeno u Tasku 1 — ona uzima `ACCESS EXCLUSIVE` lock na `audit_log`, pa u tom trenutku nijedan upis u log ne prolazi.
+
+Nikad ne deploy-ovati aplikaciju prije koraka 1 (migracije moraju prethoditi), i nikad ne primjenjivati korak 3 prije koraka 2 (stara verzija aplikacije bi se slomila da drop stigne prerano).
 
 ---
 

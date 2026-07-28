@@ -1274,7 +1274,8 @@
     },
     "status": {
       "poslato": "Gesendet",
-      "greskaSlanja": "Versand fehlgeschlagen"
+      "greskaSlanja": "Versand fehlgeschlagen",
+      "demo": "Demo"
     },
     "dostava": {
       "nepoznato": "Unbekannt",

@@ -32,6 +32,7 @@ export const TIP_KEY = {
 export const STATUS_KEY = {
   poslato: "poslato",
   greska_slanja: "greskaSlanja",
+  demo: "demo",
 } as const satisfies Record<MejlStatus, string>
 
 export const DOSTAVA_KEY = {

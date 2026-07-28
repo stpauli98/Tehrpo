@@ -100,22 +100,18 @@ end;
 $$;
 
 -- Definer funkcija koja probija RLS → nikad anon; samo prijavljeni korisnici.
+-- Supabase-ov default ACL daje EXECUTE direktno rolama anon/authenticated/
+-- service_role (ne preko PUBLIC), pa revoke ... from public NE uklanja anon-ov
+-- privilegij — mora se eksplicitno revoke-ovati i od anon i od authenticated
+-- prije nego se authenticated ponovo doda. Presedan: 20260711130000_aktivnost_log.sql:103,
+-- 20260720123000_claim_post_due.sql:21.
 revoke execute on function get_aktivnost_strana(
-  timestamptz, timestamptz, uuid, text, text, text, timestamptz, bigint, int) from public;
+  timestamptz, timestamptz, uuid, text, text, text, timestamptz, bigint, int) from public, anon, authenticated;
 grant execute on function get_aktivnost_strana(
   timestamptz, timestamptz, uuid, text, text, text, timestamptz, bigint, int) to authenticated;
 
--- aktivnost_view nema pozivaoca nigdje — provjereno u repou (lib/, app/,
--- components/, tests/, scripts/) i dodatno provjereno na samoj DEMO bazi
--- (pg_depend nad pg_rewrite, plus sken pg_get_functiondef za svaku prokind='f'
--- funkciju u public šemi) — oba dolaze prazna.
---
--- get_aktivnost i dalje ima tačno jednog pozivaoca: lib/queries/aktivnost.ts,
--- koji zamjenjuje Task 4 ovog plana. Između primjene ove migracije i
--- deploy-a te app-side izmjene, /aktivnost je pokvarena — zato plan zahtijeva
--- da OBJE migracije (DEMO i PROD) budu primijenjene PRIJE nego se aplikacija
--- deploy-uje, nikad obrnuto. Funkcija ide prva — zavisi od view-a (tijelo
--- joj čita `from aktivnost_view`), pa view mora ostati dok se funkcija ne
--- ukloni.
-drop function if exists get_aktivnost(timestamptz, timestamptz, uuid, text, text, text, int, int);
-drop view if exists aktivnost_view;
+-- Stara funkcija get_aktivnost i view aktivnost_view se NE brišu ovdje.
+-- To je "contract" pola expand/contract migracije i živi u zasebnom fajlu
+-- 20260728122000_drop_get_aktivnost.sql, koji se primjenjuje TEK nakon što
+-- je nova verzija aplikacije deploy-ovana (vidi taj fajl za detalje i za
+-- napomenu o DEMO/PROD stanju).

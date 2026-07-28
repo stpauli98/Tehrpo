@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+// integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { zahtijevajAdmina } from "@/lib/auth/zahtijevaj-admina"
@@ -147,6 +148,7 @@ export async function kreirajKorisnika(_prev: ActionResult, formData: FormData):
   await zahtijevajAdmina()
   const parsed = noviKorisnikSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
   const admin = createAdminSupabaseClient()
   const { data, error } = await admin.auth.admin.createUser({
     email: parsed.data.email, password: parsed.data.lozinka, email_confirm: true,

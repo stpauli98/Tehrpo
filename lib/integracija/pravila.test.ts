@@ -55,6 +55,53 @@ describe("provjeriTs — admin klijent u zahtjevnoj putanji", () => {
   })
 })
 
+describe("provjeriTs — admin-klijent izuzet markerom integracija-dozvoli", () => {
+  it("marker sa razlogom neposredno iznad preskače pogodak", () => {
+    expect(
+      provjeriTs({
+        putanja: "app/api/webhooks/resend/route.ts",
+        sadrzaj:
+          "// integracija-dozvoli: admin-klijent — webhook ruta nije app request-path\n" +
+          'import { createAdminSupabaseClient } from "@/lib/supabase/admin"\n',
+      }),
+    ).toEqual([])
+  })
+
+  it("marker BEZ razloga poslije crte ne vrijedi — pogodak se i dalje prijavljuje", () => {
+    const nalazi = provjeriTs({
+      putanja: "app/x.ts",
+      sadrzaj: "// integracija-dozvoli: admin-klijent —\n" + 'import "@/lib/supabase/admin"\n',
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.pravilo).toBe("admin-klijent")
+  })
+
+  it("marker dvije linije iznad, sa praznim redom između, i dalje preskače", () => {
+    expect(
+      provjeriTs({
+        putanja: "app/x.ts",
+        sadrzaj:
+          "// integracija-dozvoli: admin-klijent — razlog\n" +
+          "\n" +
+          'import "@/lib/supabase/admin"\n',
+      }),
+    ).toEqual([])
+  })
+
+  it("marker iznad jedne linije ne pokriva nepovezan pogodak niže u fajlu", () => {
+    const nalazi = provjeriTs({
+      putanja: "app/x.ts",
+      sadrzaj:
+        "// integracija-dozvoli: admin-klijent — razlog1\n" +
+        'import { createAdminSupabaseClient } from "@/lib/supabase/admin"\n' +
+        "const x = 1\n" +
+        "const y = createAdminSupabaseClient()\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.linija).toBe(4)
+  })
+})
+
 describe("provjeriTs — PROD ref u testovima", () => {
   it("prijavlja PROD ref pod tests/", () => {
     const nalazi = provjeriTs({
@@ -114,6 +161,50 @@ describe("provjeriSql — VIEW bez security_invoker", () => {
     })
     expect(nalazi).toHaveLength(1)
     expect(nalazi[0]!.poruka).toContain("a_view")
+  })
+
+  it("NE prijavlja kad je invoker postavljen naknadnom ALTER VIEW naredbom u istom fajlu", () => {
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260630120000_nacin_izvrsenja.sql",
+        sadrzaj:
+          "create view termini_view as select 1;\n" +
+          "alter view termini_view set (security_invoker = on);\n",
+      }),
+    ).toEqual([])
+  })
+
+  it("CREATE VIEW a_view bez ALTER, uz ALTER VIEW b_view ... security_invoker=on — a_view se i dalje prijavljuje", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj:
+        "create view a_view as select 1;\n" +
+        "alter view b_view set (security_invoker = on);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("a_view")
+  })
+
+  it("prefiks kolizija: ALTER VIEW termini ne pokriva CREATE VIEW termini_view", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj:
+        "create view termini_view as select 1;\n" +
+        "alter view termini set (security_invoker = on);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("termini_view")
+  })
+
+  it("prefiks kolizija: ALTER VIEW termini_view ne pokriva CREATE VIEW termini", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj:
+        "create view termini as select 1;\n" +
+        "alter view termini_view set (security_invoker = on);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("termini ")
   })
 })
 

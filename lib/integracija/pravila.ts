@@ -29,14 +29,15 @@ export type Nalaz = {
   poruka: string
 }
 
-/** Putanje u kojima admin klijent NIJE greška. */
-const IZUZECI_ADMIN = [
-  "scripts/",
-  "app/api/cron/",
-  "lib/supabase/admin.ts",
-  "lib/supabase/storage.ts",
-  "lib/cache.ts",
-]
+/** Putanje u kojima admin klijent NIJE greška. Obje su pod app/ ili components/
+ *  (vanjski uslov u provjeriTs) — stavke van tog stabla ovdje nikad ne bi bile
+ *  dosegnute pa nemaju šta da traže u listi. */
+const IZUZECI_ADMIN = ["scripts/", "app/api/cron/"]
+
+/** Izuzetak od pravila admin-klijent: komentar neposredno iznad pogotka (uz
+ *  zanemarivanje praznih redova) oblika `// integracija-dozvoli: admin-klijent — <razlog>`.
+ *  Razlog iza crte je obavezan — bez njega marker ne vrijedi. */
+const MARKER_ADMIN_DOZVOLI = /^\s*\/\/\s*integracija-dozvoli:\s*admin-klijent\s*—\s*(.+?)\s*$/
 
 const ADMIN = /createAdminSupabaseClient|@\/lib\/supabase\/admin/
 const VIEW = /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+([A-Za-z0-9_."]+)/i
@@ -57,58 +58,114 @@ function kratkoIme(ime: string): string {
   return ime.replace(/"/g, "").split(".").pop() ?? ime
 }
 
+/**
+ * Da li je pogodak na `linije[i]` pokriven markerom `integracija-dozvoli: admin-klijent`
+ * na najbližem NEpraznom redu iznad (prazni redovi između se preskaču). Marker bez
+ * razloga poslije crte ne vrijedi — namjerno, izuzetak mora nositi obrazloženje.
+ */
+function jeIzuzetMarkerom(linije: string[], i: number): boolean {
+  let j = i - 1
+  while (j >= 0 && (linije[j] ?? "").trim() === "") j--
+  if (j < 0) return false
+  const pogodak = MARKER_ADMIN_DOZVOLI.exec(linije[j] ?? "")
+  if (!pogodak) return false
+  const razlog = pogodak[1]?.trim()
+  return !!razlog
+}
+
+/** Zajednički obrazac za oba provjeriTs pravila: test po redu → Nalaz, uz opcioni
+ *  izuzetak (koristi ga isključivo admin-klijent, ne i prod-ref-u-testovima). */
+function linijskiNalazi(
+  linije: string[],
+  test: (linija: string) => boolean,
+  putanja: string,
+  pravilo: string,
+  poruka: string,
+  preskoci?: (linije: string[], i: number) => boolean,
+): Nalaz[] {
+  const nalazi: Nalaz[] = []
+  linije.forEach((linija, i) => {
+    if (test(linija) && !(preskoci?.(linije, i) ?? false)) {
+      nalazi.push({ putanja, linija: i + 1, pravilo, poruka })
+    }
+  })
+  return nalazi
+}
+
 export function provjeriTs(izvor: Izvor): Nalaz[] {
   const { putanja, sadrzaj } = izvor
+  const linije = sadrzaj.split("\n")
   const nalazi: Nalaz[] = []
 
   const uZahtjevnoj = putanja.startsWith("app/") || putanja.startsWith("components/")
   const izuzet = IZUZECI_ADMIN.some((p) => putanja.startsWith(p))
 
   if (uZahtjevnoj && !izuzet) {
-    sadrzaj.split("\n").forEach((linija, i) => {
-      if (ADMIN.test(linija)) {
-        nalazi.push({
-          putanja,
-          linija: i + 1,
-          pravilo: "admin-klijent",
-          poruka:
-            "service-role klijent u zahtjevnoj putanji zaobilazi RLS — koristi createServerSupabaseClient",
-        })
-      }
-    })
+    nalazi.push(
+      ...linijskiNalazi(
+        linije,
+        (linija) => ADMIN.test(linija),
+        putanja,
+        "admin-klijent",
+        "service-role klijent u zahtjevnoj putanji zaobilazi RLS — koristi createServerSupabaseClient",
+        jeIzuzetMarkerom,
+      ),
+    )
   }
 
   if (putanja.startsWith("tests/")) {
-    sadrzaj.split("\n").forEach((linija, i) => {
-      if (linija.includes(PROD_REF)) {
-        nalazi.push({
-          putanja,
-          linija: i + 1,
-          pravilo: "prod-ref-u-testovima",
-          poruka: "PROD ref u testu — E2E prolaz bi pisao u produkciju; cilj mora biti DEMO",
-        })
-      }
-    })
+    nalazi.push(
+      ...linijskiNalazi(
+        linije,
+        (linija) => linija.includes(PROD_REF),
+        putanja,
+        "prod-ref-u-testovima",
+        "PROD ref u testu — E2E prolaz bi pisao u produkciju; cilj mora biti DEMO",
+      ),
+    )
   }
 
   return nalazi
+}
+
+/**
+ * Da li se negdje u cijelom `sadrzaj`-u view `ime` naknadno postavlja na
+ * security_invoker=on preko `ALTER VIEW <ime> ... security_invoker = on`.
+ * Granica riječi (`\b`) sprječava da `termini` pokrije `termini_view` i obrnuto
+ * (isti obrazac kao `politikaZaOvu` za tabele — `_` je karakter riječi, pa `\b`
+ * ne prelazi granicu prefiksa).
+ */
+function imaAlterInvokerZaView(sadrzaj: string, ime: string): boolean {
+  const alterZaIme = new RegExp(
+    `ALTER\\s+VIEW\\s+[A-Za-z0-9_."]*\\b${ime}\\b[\\s\\S]*?security_invoker\\s*=\\s*on`,
+    "i",
+  )
+  return alterZaIme.test(sadrzaj)
 }
 
 export function provjeriSql(izvor: Izvor): Nalaz[] {
   const { putanja, sadrzaj } = izvor
   const nalazi: Nalaz[] = []
 
-  // VIEW: gleda se svaka naredba zasebno, da invoker iz jedne ne pokrije drugu.
+  // VIEW: gleda se svaka naredba zasebno za inline invoker (WITH (security_invoker=on)),
+  // da invoker iz jedne naredbe ne pokrije drugu. Ali repo ima i obrazac gdje se invoker
+  // vraća naknadnom `ALTER VIEW <ime> ... security_invoker=on` naredbom u istom fajlu
+  // (npr. nakon DROP+CREATE koji ga izgubi) — to se traži preko cijelog sadržaja, s
+  // granicom riječi da <ime> ne pokrije ime koje ga sadrži kao prefiks (ili obrnuto).
   let pomak = 0
   for (const naredba of sadrzaj.split(";")) {
     const pogodak = VIEW.exec(naredba)
-    if (pogodak && pogodak[1] !== undefined && !SECURITY_INVOKER.test(naredba)) {
-      nalazi.push({
-        putanja,
-        linija: brojLinije(sadrzaj, pomak + pogodak.index),
-        pravilo: "view-bez-invokera",
-        poruka: `VIEW ${kratkoIme(pogodak[1])} bez security_invoker=on — zaobilazi RLS`,
-      })
+    if (pogodak && pogodak[1] !== undefined) {
+      const ime = kratkoIme(pogodak[1])
+      const imaInvoker = SECURITY_INVOKER.test(naredba) || imaAlterInvokerZaView(sadrzaj, ime)
+      if (!imaInvoker) {
+        nalazi.push({
+          putanja,
+          linija: brojLinije(sadrzaj, pomak + pogodak.index),
+          pravilo: "view-bez-invokera",
+          poruka: `VIEW ${ime} bez security_invoker=on — zaobilazi RLS`,
+        })
+      }
     }
     pomak += naredba.length + 1
   }

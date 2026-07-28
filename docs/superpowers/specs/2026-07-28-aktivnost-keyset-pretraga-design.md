@@ -126,7 +126,8 @@ Ključne osobine:
    jedini razlog za dinamički SQL — `%L` radi ispravno kvotovanje, nema injekcije.
 2. **Keyset umjesto offset-a:** `where (vrijeme, id) < (p_prije_vrijeme, p_prije_id)` kad je
    kursor prisutan. Prva porcija ide bez tog uslova.
-3. **Nema `count(*) over ()`.** Dohvata se `p_limit + 1` red; pozivalac po tome zna ima li još.
+3. **Nema `count(*) over ()`.** RPC vraća tačno `p_limit` redova; sloj upita (`lib/queries`)
+   traži `50 + 1` i po 51. redu zna da ima još, pa prikaže prvih 50.
 4. **Join na `korisnici`/`klijenti` tek nad dohvaćenom porcijom**, ne nad cijelim logom.
    `klijent_ref` ovdje zamjenjuje `tekst_u_uuid(case …)` iz `aktivnost_view`.
 5. **Pretraga** — pojam se prvo traži u malim tabelama, pa se log filtrira po id-evima:

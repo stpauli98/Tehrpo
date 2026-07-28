@@ -1,15 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import type { AktivnostFilteriUlaz } from "@/lib/aktivnost/filteri"
 
-export interface AktivnostFilter {
-  od?: string
-  do?: string
-  korisnik?: string
-  akcija?: string
-  entitet?: string
-  pretraga?: string
-  limit?: number
-  offset?: number
-}
+/** Koliko redova stane u jednu porciju „Učitaj još". */
+export const PO_PORCIJI = 50
 
 export interface AktivnostRed {
   id: number
@@ -25,7 +18,6 @@ export interface AktivnostRed {
   detalji: unknown
   cilj_ime: string | null
   cilj_klijent: string | null
-  ukupno: number
 }
 
 /**
@@ -35,25 +27,36 @@ export interface AktivnostRed {
  * detalj ostaje u server logu.
  */
 export type AktivnostRezultat =
-  | { ok: true; redovi: AktivnostRed[]; ukupno: number }
+  | { ok: true; redovi: AktivnostRed[]; imaJos: boolean }
   | { ok: false }
 
-export async function dohvatiAktivnost(f: AktivnostFilter): Promise<AktivnostRezultat> {
+/**
+ * Jedna porcija aktivnosti, keyset paginacija.
+ *
+ * Traži se PO_PORCIJI + 1 red: ako ih stigne toliko, znači da ima još, a 51. se
+ * odbacuje. Time nema `count(*) over ()` — on je prolazio kroz cijeli filtrirani
+ * skup pri svakoj stranici i bio je jedan od uzroka statement_timeouta.
+ */
+export async function dohvatiAktivnostStranu(
+  f: AktivnostFilteriUlaz,
+): Promise<AktivnostRezultat> {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase.rpc("get_aktivnost", {
+  const { data, error } = await supabase.rpc("get_aktivnost_strana", {
     p_od: f.od ?? undefined,
     p_do: f.do ?? undefined,
     p_korisnik: f.korisnik ?? undefined,
     p_akcija: f.akcija ?? undefined,
-    p_entitet: f.entitet ?? undefined,
+    p_entitet: undefined,
     p_pretraga: f.pretraga ?? undefined,
-    p_limit: f.limit ?? 50,
-    p_offset: f.offset ?? 0,
+    p_prije_vrijeme: f.kursor?.vrijeme ?? undefined,
+    p_prije_id: f.kursor?.id ?? undefined,
+    p_limit: PO_PORCIJI + 1,
   })
   if (error) {
-    console.error("get_aktivnost:", error.message)
+    console.error("get_aktivnost_strana:", error.message)
     return { ok: false }
   }
-  const redovi = (data ?? []) as AktivnostRed[]
-  return { ok: true, redovi, ukupno: redovi[0]?.ukupno ?? 0 }
+  const svi = (data ?? []) as AktivnostRed[]
+  const imaJos = svi.length > PO_PORCIJI
+  return { ok: true, redovi: imaJos ? svi.slice(0, PO_PORCIJI) : svi, imaJos }
 }

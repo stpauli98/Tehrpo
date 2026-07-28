@@ -80,10 +80,39 @@ export function filtrirajSqlImena(imena: readonly string[]): string[] {
   return imena.filter((ime) => ime.endsWith(".sql")).sort()
 }
 
+/** Direktorij migracija, repo-relativno — jedina lokacija koju obuhvat gleda. */
+const PREFIKS_MIGRACIJA = "supabase/migrations/"
+
 /** Repo-relativne putanje suzene na `supabase/migrations/*.sql` — zajednicka logika za
- *  (parsiran) izlaz `git diff --name-only -z` i `git status --porcelain -z`. */
+ *  (parsiran) izlaz `git diff --name-only -z` i `git status --porcelain -z`.
+ *  `startsWith` (ne `includes`) je bitan: `docs/supabase/migrations/x.sql` NIJE
+ *  migracija i ne smije uci u obuhvat. */
 export function filtrirajMigracijskePutanje(putanje: readonly string[]): string[] {
-  return putanje.filter((p) => p.startsWith("supabase/migrations/") && p.endsWith(".sql"))
+  return putanje.filter((p) => p.startsWith(PREFIKS_MIGRACIJA) && p.endsWith(".sql"))
+}
+
+/**
+ * Suzi obuhvat na putanje koje STVARNO postoje na disku (`postojecaImena` = imena
+ * fajlova u `supabase/migrations`, v. `imenaUMigracijama` u scripts/).
+ *
+ * ZASTO: obuhvat je unija `git diff <baza>...HEAD` (sta grana donosi) i `git status`
+ * (sta je u radnom stablu). Kad se KOMITOVANA migracija preimenuje ili obrise, `git
+ * diff` je i dalje vidi pod STARIM imenom (HEAD ga jos ima), a stari fajl vise nije na
+ * disku — bezuslovno citanje takve putanje puca sa ENOENT i prekida CIJELU provjeru,
+ * pa nestaju i nalazi koji su vec bili prijavljeni. Gore od toga: `git mv` je tacno
+ * radni tok koji alat sam propisuje kao popravku za `sudar-migracija`, pa bi alat
+ * pukao bas u trenutku kad se njegov nalaz ispravlja.
+ *
+ * `git status` sam po sebi NIJE dovoljna zastita: obrisan fajl ima status `D` (parser
+ * ga izbacuje), a rename daje NOVI put — ali stari put u obuhvat ulazi iz `git diff`
+ * grane, ne iz statusa, pa se mora oduzeti ovdje.
+ */
+export function zadrziPostojeceMigracije(
+  putanje: readonly string[],
+  postojecaImena: readonly string[],
+): string[] {
+  const postoje = new Set(postojecaImena.map((ime) => `${PREFIKS_MIGRACIJA}${ime}`))
+  return putanje.filter((p) => postoje.has(p))
 }
 
 /**

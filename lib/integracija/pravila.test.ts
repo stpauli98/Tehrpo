@@ -241,6 +241,96 @@ describe("provjeriSql — VIEW bez security_invoker", () => {
   })
 })
 
+describe("provjeriSql — dijakritika u imenima (BCS latinica je domenski jezik)", () => {
+  it("ime VIEW-a se ne siječe na dijakritiku — poruka nosi CIJELO ime", () => {
+    // Sa uskim razredom [A-Za-z0-9_."] poruka bi glasila "VIEW pregled_ bez ..." —
+    // nepostojeće ime, neupotrebljivo za pretragu po fajlu.
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: "create view pregled_čšćžđ as select 1;\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("VIEW pregled_čšćžđ bez")
+  })
+
+  it("ALTER VIEW <ime sa dijakritikom> ... security_invoker=on POKRIVA taj view", () => {
+    // Ovo je test granice identifikatora: sa `\b` (definisanim preko \w = [A-Za-z0-9_],
+    // koje ne poznaje dijakritiku ni pod `u` zastavicom) poklapanje otkazuje jer je
+    // karakter prije granice `đ` NEriječni, pa `\b` traži da SLJEDEĆI bude riječni — a
+    // slijedi razmak. Rezultat bi bio LAŽAN nalaz na pokrivenom view-u.
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj:
+          "create view pregled_čšćžđ as select 1;\n" +
+          "alter view pregled_čšćžđ set (security_invoker = on);\n",
+      }),
+    ).toEqual([])
+  })
+
+  it("prefiks kolizija SA dijakritikom: ALTER VIEW zaduženja ne pokriva CREATE VIEW zaduženja_view", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj:
+        "create view zaduženja_view as select 1;\n" +
+        "alter view zaduženja set (security_invoker = on);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("VIEW zaduženja_view bez")
+  })
+
+  it("prefiks kolizija SA dijakritikom, obrnuto: ALTER VIEW zaduženja_view ne pokriva CREATE VIEW zaduženja", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj:
+        "create view zaduženja as select 1;\n" +
+        "alter view zaduženja_view set (security_invoker = on);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("VIEW zaduženja bez")
+  })
+
+  it("dvije tabele koje se razlikuju TEK POSLIJE dijakritike: politika za jednu NE pokriva drugu", () => {
+    // Sa uskim razredom oba imena se skraćuju na `zadu` — politika za `zaduženja` bi
+    // "pokrila" i `zaduživanja`, pa NIJEDAN nalaz ne bi bio prijavljen (propuštena
+    // detekcija tabele bez RLS politike, tačno ono što gate treba da hvata).
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: [
+        "create table zaduženja (id int primary key);",
+        "create policy zaduženja_sel on zaduženja for select using (true);",
+        "create table zaduživanja (id int primary key);",
+      ].join("\n"),
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("tabela zaduživanja nema")
+  })
+
+  it("ime TABELE se ne siječe na dijakritiku — poruka nosi CIJELO ime", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260728120000_x.sql",
+      sadrzaj: "create table javna_čšćžđ (id int primary key);\n",
+    })
+    expect(nalazi).toHaveLength(1)
+    expect(nalazi[0]!.poruka).toContain("tabela javna_čšćžđ nema")
+  })
+
+  it("DROP POLICY nad DRUGOM tabelom (razlika tek poslije dijakritike) ne skida pokriće sa prve", () => {
+    // Sa uskim razredom obje tabele u DROP/CREATE naredbama postaju `zadu`, pa bi drop
+    // nad `zaduživanja` obrisao živu politiku tabele `zaduženja` i lažno je prijavio.
+    expect(
+      provjeriSql({
+        putanja: "supabase/migrations/20260728120000_x.sql",
+        sadrzaj: [
+          "create table zaduženja (id int primary key);",
+          "create policy p on zaduženja for select using (true);",
+          "drop policy p on zaduživanja;",
+        ].join("\n"),
+      }),
+    ).toEqual([])
+  })
+})
+
 describe("provjeriSql — nova tabela bez politike", () => {
   it("prijavlja CREATE TABLE bez ijedne CREATE POLICY", () => {
     const nalazi = provjeriSql({

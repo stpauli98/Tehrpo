@@ -12,19 +12,68 @@ export function maskiraj(poklapanje: string): string {
   return poklapanje.replace(/[^\n]/g, " ")
 }
 
+/** Kraj (ekskluzivno) blok komentara koji počinje na `pocetak` (na OTVARANJU, dvoznaku
+ *  kosa-crta-zvjezdica). PostgreSQL blok komentari se UGNJEŽĐUJU — unutrašnje otvaranje
+ *  traži i svoje zatvaranje, za razliku od C-a — zato brojač dubine, a ne prvi zatvarač.
+ *  Neterminisan komentar se maskira do kraja fajla (PostgreSQL bi ga prijavio kao
+ *  grešku; svakako nije izvršni DDL). */
+function krajBlokKomentara(sadrzaj: string, pocetak: number): number {
+  let dubina = 0
+  let i = pocetak
+  while (i < sadrzaj.length) {
+    const par = sadrzaj.slice(i, i + 2)
+    if (par === "/*") {
+      dubina++
+      i += 2
+      continue
+    }
+    if (par === "*/") {
+      dubina--
+      i += 2
+      if (dubina === 0) return i
+      continue
+    }
+    i++
+  }
+  return sadrzaj.length
+}
+
+/** Kraj (ekskluzivno) string literala koji počinje na `pocetak`. Apostrof UNUTAR
+ *  stringa se u PostgreSQL-u (standard_conforming_strings=on, podrazumijevano od PG9)
+ *  bježi UDVAJANJEM (`''`), NE obrnutom kosom crtom — `\` je običan karakter. */
+function krajStringa(sadrzaj: string, pocetak: number): number {
+  let i = pocetak + 1
+  while (i < sadrzaj.length) {
+    if (sadrzaj[i] === "'") {
+      if (sadrzaj[i + 1] === "'") {
+        i += 2
+        continue
+      }
+      return i + 1
+    }
+    i++
+  }
+  return sadrzaj.length
+}
+
 /**
  * SQL-specifično čišćenje prije tekstualne provjere iz pravila.ts: linijski komentari
- * (`-- ...`) i sadržaj jednostrukih navodnika se maskiraju razmacima (linije se ne
- * pomjeraju, samo se prazne). Bez ovoga podniz poput 'CREATE TABLE AS' unutar string
- * literala (stvaran izvršni SQL u rls_auto_enable() — kopija cloud event trigger
- * funkcije koja citira PostgreSQL command_tag vrijednosti kao stringove) ili
- * "create table if not exists" unutar komentara lažno pogodi TABELA/VIEW obrasce iz
- * pravila.ts — pravila su namjerno tekstualna, ne AST, pa sama ne razlikuju izvršni
- * kod od komentara/stringova.
+ * (`-- ...`), blok komentari (kosa-crta-zvjezdica ... zvjezdica-kosa-crta) i sadržaj
+ * jednostrukih navodnika se maskiraju razmacima (linije se ne pomjeraju, samo se
+ * prazne — brojevi linija u nalazima ostaju tačni). Bez ovoga podniz poput
+ * 'CREATE TABLE AS' unutar string literala (stvaran izvršni SQL u rls_auto_enable() —
+ * kopija cloud event trigger funkcije koja citira PostgreSQL command_tag vrijednosti kao
+ * stringove) ili "create table if not exists" unutar komentara lažno pogodi TABELA/VIEW
+ * obrasce iz pravila.ts — pravila su namjerno tekstualna, ne AST, pa sama ne razlikuju
+ * izvršni kod od komentara/stringova.
  *
- * String literal se prepoznaje po PostgreSQL pravilu (standard_conforming_strings=on,
- * podrazumijevano od PG9): apostrof UNUTAR stringa se bježi UDVAJANJEM (''), ne
- * obrnutom kosom crtom — zato `(?:[^']|'')*`, ne JS-stil `\'` escape.
+ * JEDAN PROLAZ, ne lanac `.replace()`: koja god od tri konstrukcije počne PRVA, guta
+ * ostale do svog kraja. Lanac replace-ova to ne može — `--` unutar blok komentara bi
+ * "pojeo" ostatak reda uključujući zatvarač bloka, a otvarač bloka unutar `'...'` bi
+ * otvorio lažan komentar do prvog zatvarača u fajlu. Posljedice su u OBA smjera:
+ * zakomentarisana `create policy` koja prolazi kao stvarna politika (lažno negativno —
+ * tabela bez politike se ne prijavi), i zakomentarisana `create table`/`create view`
+ * koja se prijavi kao stvarna (lažno pozitivno).
  *
  * NAPOMENA: ovo NE preskače dollar-quoted ($$...$$) tijela funkcija kao cjelinu —
  * string literali UNUTAR takvog tijela (npr. gore pomenuti 'CREATE TABLE AS') se i
@@ -33,7 +82,32 @@ export function maskiraj(poklapanje: string): string {
  * bloku) ostaje netaknut i vidljiv provjeri.
  */
 export function sanitizujSql(sadrzaj: string): string {
-  return sadrzaj.replace(/--[^\n]*/g, maskiraj).replace(/'(?:[^']|'')*'/g, maskiraj)
+  const dijelovi: string[] = []
+  /** Početak tekućeg NEmaskiranog isječka — prepisuje se doslovno kad naiđe maskiranje
+   *  ili kraj fajla (jeftinije i bez indeksiranja pojedinačnih karaktera). */
+  let obicanOd = 0
+  let i = 0
+  while (i < sadrzaj.length) {
+    const par = sadrzaj.slice(i, i + 2)
+    let kraj: number | null = null
+    if (par === "--") {
+      const novired = sadrzaj.indexOf("\n", i)
+      kraj = novired === -1 ? sadrzaj.length : novired
+    } else if (par === "/*") {
+      kraj = krajBlokKomentara(sadrzaj, i)
+    } else if (sadrzaj[i] === "'") {
+      kraj = krajStringa(sadrzaj, i)
+    }
+    if (kraj === null) {
+      i++
+      continue
+    }
+    dijelovi.push(sadrzaj.slice(obicanOd, i), maskiraj(sadrzaj.slice(i, kraj)))
+    i = kraj
+    obicanOd = kraj
+  }
+  dijelovi.push(sadrzaj.slice(obicanOd))
+  return dijelovi.join("")
 }
 
 /** Ime tabele iz poruke pravila "tabela-bez-politike" (v. pravila.ts `provjeriSql`). */

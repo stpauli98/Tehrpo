@@ -6,6 +6,7 @@ import {
   parsirajGitDiffNameOnly,
   parsirajGitStatusPorcelainZ,
   spojiPutanje,
+  zadrziPostojeceMigracije,
   normalizujPutanju,
   jeTsIzvor,
 } from "./opcije"
@@ -119,6 +120,67 @@ describe("filtrirajMigracijskePutanje", () => {
 
   it("prazan ulaz daje prazan rezultat", () => {
     expect(filtrirajMigracijskePutanje([])).toEqual([])
+  })
+
+  it("prefiks mora biti na POČETKU putanje — `docs/supabase/migrations/x.sql` nije migracija", () => {
+    // Prijašnji test je prolazio i kod mutanta `startsWith` → `includes`, jer nijedan
+    // ulaz nije imao prefiks na sredini putanje. Ovaj ulaz razlikuje te dvije
+    // implementacije: `includes` bi ga (pogrešno) uvrstio u obuhvat migracija.
+    expect(
+      filtrirajMigracijskePutanje([
+        "docs/supabase/migrations/x.sql",
+        "vendor/supabase/migrations/y.sql",
+        "supabase/migrations/z.sql",
+      ]),
+    ).toEqual(["supabase/migrations/z.sql"])
+  })
+})
+
+describe("zadrziPostojeceMigracije", () => {
+  it("izbacuje putanju koje NEMA na disku, zadržava onu koje ima", () => {
+    // Scenario `git mv`: `git diff <baza>...HEAD` i dalje vraća STARO ime (HEAD ga ima),
+    // a na disku je samo NOVO — bez ovog presjeka ljuska bi čitala stari put i pukla sa
+    // ENOENT, prekinuvši cijelu provjeru (i pojevši već prijavljene nalaze).
+    expect(
+      zadrziPostojeceMigracije(
+        ["supabase/migrations/20260728990040_prije.sql", "supabase/migrations/20260728990041_poslije.sql"],
+        ["20260728990041_poslije.sql"],
+      ),
+    ).toEqual(["supabase/migrations/20260728990041_poslije.sql"])
+  })
+
+  it("scenario `rm`/`git rm`: nijedno ime nije na disku → prazan obuhvat, ne pad", () => {
+    expect(
+      zadrziPostojeceMigracije(["supabase/migrations/20260728990040_prije.sql"], [
+        "20260620200023_foundation_tables.sql",
+      ]),
+    ).toEqual([])
+  })
+
+  it("sve putanje postoje → lista ostaje netaknuta, u istom redoslijedu", () => {
+    // Mutant "uvijek vrati []" pada ovdje; mutant "uvijek vrati ulaz" pada na prva dva
+    // testa — nijedna trivijalna implementacija ne prolazi sva tri.
+    const putanje = ["supabase/migrations/a.sql", "supabase/migrations/b.sql"]
+    expect(zadrziPostojeceMigracije(putanje, ["b.sql", "a.sql", "README.md"])).toEqual(putanje)
+  })
+
+  it("poklapanje je po CIJELOJ putanji, ne po sufiksu — istoimeni fajl van migracija ne prolazi", () => {
+    expect(
+      zadrziPostojeceMigracije(["docs/a.sql", "supabase/migrations/a.sql"], ["a.sql"]),
+    ).toEqual(["supabase/migrations/a.sql"])
+  })
+
+  it("prazan spisak imena (npr. direktorij ne postoji) → prazan obuhvat", () => {
+    expect(zadrziPostojeceMigracije(["supabase/migrations/a.sql"], [])).toEqual([])
+  })
+
+  it("dijakritika u imenu se poklapa doslovno (-z izlaz je sirov UTF-8, kao i readdir)", () => {
+    expect(
+      zadrziPostojeceMigracije(
+        ["supabase/migrations/20260728990031_čšćžđ.sql", "supabase/migrations/nepostoji.sql"],
+        ["20260728990031_čšćžđ.sql"],
+      ),
+    ).toEqual(["supabase/migrations/20260728990031_čšćžđ.sql"])
   })
 })
 
@@ -267,5 +329,19 @@ describe("jeTsIzvor", () => {
   it("odbija ostale ekstenzije", () => {
     expect(jeTsIzvor("README.md")).toBe(false)
     expect(jeTsIzvor("styles.css")).toBe(false)
+  })
+
+  it("SIDRO NA KRAJU: `.ts`/`.tsx` mora biti KRAJ imena, ne bilo gdje u njemu", () => {
+    // Bez `$` u regexu (`/\.tsx?/`) sva tri imena bi ušla u obuhvat i bila pročitana
+    // kao TS izvor — `.tsv` je tabelarni podatak, `.ts.snap` vitest snapshot, a
+    // `.tsbuildinfo` keš TypeScript kompajlera (može biti megabajtima velik).
+    expect(jeTsIzvor("izvoz.tsv")).toBe(false)
+    expect(jeTsIzvor("snapshot.ts.snap")).toBe(false)
+    expect(jeTsIzvor("tsconfig.tsbuildinfo")).toBe(false)
+  })
+
+  it("tačka prije ekstenzije je obavezna — `.ts` ne smije pogoditi ime bez tačke", () => {
+    expect(jeTsIzvor("skripts")).toBe(false)
+    expect(jeTsIzvor("robots")).toBe(false)
   })
 })

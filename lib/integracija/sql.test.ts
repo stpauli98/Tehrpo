@@ -1,13 +1,21 @@
 import { describe, it, expect } from "vitest"
 import { maskiraj, sanitizujSql, filtrirajNamjernePolicyless } from "./sql"
-import type { Nalaz } from "./pravila"
+import { provjeriSql, type Nalaz } from "./pravila"
+
+/** Otvarač/zatvarač SQL blok komentara, sastavljeni u vrijeme izvršavanja — doslovno
+ *  napisani u TS izvoru bi zatvorili okolne JSDoc komentare u ovom fajlu. */
+const OTV = "/" + "*"
+const ZATV = "*" + "/"
 
 describe("maskiraj", () => {
   it("zamjenjuje SVAKI ne-\\n karakter razmakom, ali ČUVA \\n i ukupnu dužinu", () => {
     // Namjerno JEDAN ulaz sa i običnim tekstom i novim redom (ne dva odvojena testa) —
-    // tako mutant koji ukloni \n-izuzetak (npr. [^\n] → .) i mutant koji promijeni
-    // zamjenski karakter (npr. " " → "") oba padaju na OVOJ istoj provjeri, umjesto da
-    // svaki od dva prethodna testa hvata samo po jednu polovinu.
+    // tako mutant koji zamijeni razred za "bilo koji karakter UKLJUČUJUĆI \n"
+    // ([^\n] → [\s\S]) i mutant koji promijeni zamjenski karakter (" " → "") oba padaju
+    // na OVOJ istoj provjeri, umjesto da svaki od dva prethodna testa hvata samo po
+    // jednu polovinu. (Mutacija [^\n] → `.` NIJE među njima: u JS-u bez `s` zastavice
+    // `.` ionako ne hvata \n, pa je ponašanje identično — raniji komentar je to
+    // pogrešno tvrdio.)
     const ulaz = "ab\ncd"
     const izlaz = maskiraj(ulaz)
     expect(izlaz).toBe("  \n  ")
@@ -117,6 +125,122 @@ describe("sanitizujSql", () => {
     expect(redoviIzlaz[3]).not.toContain("treci")
   })
 
+  describe("blok komentari", () => {
+    it("LAŽNO NEGATIVNO: zakomentarisana CREATE POLICY ne smije proći kao stvarna politika", () => {
+      const ulaz = [
+        `${OTV} privremeno isključeno:`,
+        "   create policy p on t for select using (true);",
+        ZATV,
+        "create table t (id int primary key);",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("create policy p on t")
+      expect(izlaz).toContain("create table t (id int primary key);")
+      // Stvarna posljedica kroz pravilo, ne samo kroz tekst: tabela je bez politike.
+      const nalazi = provjeriSql({ putanja: "supabase/migrations/x.sql", sadrzaj: izlaz })
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("tabela-bez-politike")
+    })
+
+    it("LAŽNO POZITIVNO: zakomentarisana CREATE TABLE ne smije dati nalaz tabela-bez-politike", () => {
+      const ulaz = `${OTV} create table stara (id uuid); ${ZATV}\nselect 1;`
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("create table stara")
+      expect(provjeriSql({ putanja: "supabase/migrations/x.sql", sadrzaj: izlaz })).toEqual([])
+    })
+
+    it("LAŽNO POZITIVNO: zakomentarisana CREATE VIEW ne smije dati nalaz view-bez-invokera", () => {
+      const ulaz = `${OTV} create view stari_v as select 1; ${ZATV}\nselect 1;`
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("create view stari_v")
+      expect(provjeriSql({ putanja: "supabase/migrations/x.sql", sadrzaj: izlaz })).toEqual([])
+    })
+
+    it("višelinijski blok komentar ČUVA broj linija (nalazi ispod njega zadržavaju tačnu liniju)", () => {
+      const ulaz = [
+        `${OTV} prvi red komentara`,
+        "   drugi red",
+        `   treci red ${ZATV}`,
+        "create table prava (id int primary key);",
+      ].join("\n")
+      const redoviIzlaz = sanitizujSql(ulaz).split("\n")
+      expect(redoviIzlaz).toHaveLength(4)
+      expect(redoviIzlaz[3]).toBe("create table prava (id int primary key);")
+      // Nalaz mora pokazati na 4. liniju, ne na 2. (što bi bilo da se blok sažme).
+      const nalazi = provjeriSql({
+        putanja: "supabase/migrations/x.sql",
+        sadrzaj: sanitizujSql(ulaz),
+      })
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.linija).toBe(4)
+    })
+
+    it("blok komentari se UGNJEŽĐUJU (PostgreSQL, za razliku od C) — prvi zatvarač ne završava vanjski", () => {
+      // Bez brojača dubine (naivno "do prvog zatvarača") komentar bi se završio poslije
+      // `unutrasnji`, pa bi `create table lazna` postala vidljiva — lažno pozitivan
+      // nalaz na kodu koji baza nikad neće izvršiti.
+      const ulaz =
+        `${OTV} vanjski ${OTV} unutrasnji ${ZATV} create table lazna (id int); ${ZATV}\n` +
+        "create table prava (id int primary key);"
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("create table lazna")
+      expect(izlaz).toContain("create table prava (id int primary key);")
+    })
+
+    it("NETERMINISAN blok komentar se maskira do kraja fajla", () => {
+      const ulaz = `${OTV} zaboravljen zatvarač\ncreate table lazna (id int);`
+      expect(sanitizujSql(ulaz)).not.toContain("create table lazna")
+    })
+
+    it("UKRŠTANJE: `--` UNUTAR bloka nema značenje — zatvarač bloka iza `--` i dalje zatvara", () => {
+      // Ovo je slučaj koji lanac `.replace()` (prvo `--`, pa blok) ne može: maskiranje
+      // linijskog komentara bi progutalo zatvarač bloka, blok bi ostao "otvoren", pa
+      // `create table lazna` iznad njega ne bi bila maskirana — a `create table prava`
+      // ispod jeste (ili obrnuto, zavisno od redoslijeda) — u oba slučaja pogrešno.
+      const ulaz = [
+        `${OTV} napomena`,
+        `   create table lazna (id int); -- rep ${ZATV}`,
+        "create table prava (id int primary key);",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("create table lazna")
+      expect(izlaz).toContain("create table prava (id int primary key);")
+    })
+
+    it("UKRŠTANJE: apostrof UNUTAR bloka ne otvara string koji bi progutao DDL ispod", () => {
+      const ulaz = [
+        `${OTV} klijent nije rekao 'da' na ovo ${ZATV}`,
+        "create table prava (id int primary key);",
+        "select 'ok';",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("klijent")
+      expect(izlaz).toContain("create table prava (id int primary key);")
+    })
+
+    it("UKRŠTANJE: otvarač bloka UNUTAR stringa ne otvara komentar", () => {
+      const ulaz = [
+        `select 'literal sa ${OTV} unutra';`,
+        "create table prava (id int primary key);",
+        `select 'drugi ${ZATV} literal';`,
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("literal sa")
+      expect(izlaz).toContain("create table prava (id int primary key);")
+    })
+
+    it("UKRŠTANJE: otvarač bloka UNUTAR `--` komentara ne otvara komentar preko sljedećih redova", () => {
+      const ulaz = [
+        `-- ovo je samo napomena ${OTV}`,
+        "create table prava (id int primary key);",
+        `-- kraj ${ZATV}`,
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).not.toContain("napomena")
+      expect(izlaz).toContain("create table prava (id int primary key);")
+    })
+  })
+
   describe("diskriminacija implementacija — dokazuje da testovi GORE stvarno padaju na slomljenim verzijama", () => {
     // Reference implementacije koje NAMJERNO reprodukuju dva poznata kvara, da bismo
     // dokazali da testovi iznad zaista razlikuju sanitizujSql od njih (a ne prolaze
@@ -139,6 +263,61 @@ describe("sanitizujSql", () => {
     function naivnaVerzija(sadrzaj: string): string {
       return sadrzaj.replace(/--[^\n]*/g, maskiraj).replace(/'[^']*'/g, maskiraj)
     }
+
+    // Dvije plauzibilne "popravke" za blok komentare koje NE rade: lanac `.replace()`
+    // koraka koji ne znaju jedan za drugoga (samo se razlikuju po redoslijedu).
+    const BLOK = new RegExp("\\/\\*[\\s\\S]*?\\*\\/", "g")
+    function lancanoKomentarPrvi(sadrzaj: string): string {
+      return sadrzaj
+        .replace(/--[^\n]*/g, maskiraj)
+        .replace(BLOK, maskiraj)
+        .replace(/'(?:[^']|'')*'/g, maskiraj)
+    }
+    function lancanoBlokPrvi(sadrzaj: string): string {
+      return sadrzaj
+        .replace(BLOK, maskiraj)
+        .replace(/--[^\n]*/g, maskiraj)
+        .replace(/'(?:[^']|'')*'/g, maskiraj)
+    }
+
+    it("DISKRIMINATOR: `--` prije zatvarača bloka — lanac (`--` prvi) izgubi zatvarač i ostavi zakomentarisan DDL vidljiv", () => {
+      const ulaz = [
+        `${OTV} napomena`,
+        `   create table lazna (id int); -- rep ${ZATV}`,
+        "create table prava (id int primary key);",
+      ].join("\n")
+      expect(sanitizujSql(ulaz)).not.toContain("create table lazna")
+      expect(lancanoKomentarPrvi(ulaz)).toContain("create table lazna")
+    })
+
+    it("DISKRIMINATOR: otvarač bloka u stringu — lanac otvori lažan komentar i proguta STVARAN DDL", () => {
+      const ulaz = [
+        `select 'literal sa ${OTV} unutra';`,
+        "create table prava (id int primary key);",
+        `select 'drugi ${ZATV} literal';`,
+      ].join("\n")
+      expect(sanitizujSql(ulaz)).toContain("create table prava (id int primary key);")
+      expect(lancanoKomentarPrvi(ulaz)).not.toContain("create table prava (id int primary key);")
+      expect(lancanoBlokPrvi(ulaz)).not.toContain("create table prava (id int primary key);")
+    })
+
+    it("DISKRIMINATOR: otvarač bloka u `--` komentaru — lanac (blok prvi) proguta STVARAN DDL", () => {
+      const ulaz = [
+        `-- ovo je samo napomena ${OTV}`,
+        "create table prava (id int primary key);",
+        `-- kraj ${ZATV}`,
+      ].join("\n")
+      expect(sanitizujSql(ulaz)).toContain("create table prava (id int primary key);")
+      expect(lancanoBlokPrvi(ulaz)).not.toContain("create table prava (id int primary key);")
+    })
+
+    it("DISKRIMINATOR: ugnježđeni blok — nedubinska varijanta ostavi zakomentarisan DDL vidljiv", () => {
+      const ulaz =
+        `${OTV} vanjski ${OTV} unutrasnji ${ZATV} create table lazna (id int); ${ZATV}\n` +
+        "create table prava (id int primary key);"
+      expect(sanitizujSql(ulaz)).not.toContain("create table lazna")
+      expect(lancanoKomentarPrvi(ulaz)).toContain("create table lazna")
+    })
 
     it("slomljenMaskiraj (briše \\n) DAJE regresiju 5 → 3 linije — potvrđuje da test iznad nešto stvarno provjerava", () => {
       const ulaz = [
@@ -215,6 +394,16 @@ describe("filtrirajNamjernePolicyless", () => {
     expect(filtrirajNamjernePolicyless([uAllowlisti, vanAllowlist], allowlist)).toEqual([
       vanAllowlist,
     ])
+  })
+
+  it("tabela sa DIJAKRITIKOM u imenu se može pogoditi u allowlist-i", () => {
+    // Zavisi od toga da pravila.ts ne siječe ime na dijakritiku (v. IDENT razred u
+    // pravila.ts): dok je poruka glasila "tabela zadu nema RLS politiku", nijedan unos
+    // u allowlist-i ne bi se poklopio, pa bi namjerno policyless tabela bila trajno
+    // prijavljivana. (`\S+` u IME_IZ_PORUKE dijakritiku hvata bez izmjene.)
+    const nalazi = [nalaz("tabela-bez-politike", "tabela zaduženja nema RLS politiku — ...")]
+    expect(filtrirajNamjernePolicyless(nalazi, ["zaduženja"])).toEqual([])
+    expect(filtrirajNamjernePolicyless(nalazi, ["zaduživanja"])).toEqual(nalazi)
   })
 
   it("ne izbacuje tabelu sličnog imena koja nije tačno u allowlist-i", () => {

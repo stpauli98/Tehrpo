@@ -44,6 +44,7 @@ import {
   parsirajGitDiffNameOnly,
   parsirajGitStatusPorcelainZ,
   spojiPutanje,
+  zadrziPostojeceMigracije,
   normalizujPutanju,
   jeTsIzvor,
   type Opcije,
@@ -121,12 +122,18 @@ async function imenaUMigracijama(): Promise<string[]> {
     .sort()
 }
 
-/** Relativne putanje (`supabase/migrations/*.sql`) čiji sadržaj treba provjeriti. */
+/** Relativne putanje (`supabase/migrations/*.sql`) čiji sadržaj treba provjeriti.
+ *  Unija se na kraju siječe sa stvarnim sadržajem direktorija — `git diff` vidi
+ *  komitovanu migraciju i pod STARIM imenom poslije `git mv`/`rm`/`git rm`, a taj fajl
+ *  više nije na disku (v. `zadrziPostojeceMigracije`). */
 function odaberiPutanjeMigracija(opcije: Opcije, sveImenaMigracija: string[]): string[] {
   if (opcije.sve) {
     return filtrirajSqlImena(sveImenaMigracija).map((ime) => `supabase/migrations/${ime}`)
   }
-  return spojiPutanje(komitovaneMigracije(opcije.baza), radnoStabloMigracije())
+  return zadrziPostojeceMigracije(
+    spojiPutanje(komitovaneMigracije(opcije.baza), radnoStabloMigracije()),
+    sveImenaMigracija,
+  )
 }
 
 /** Svaki fajl ide kroz provjeriSql ZASEBNO (jedan Izvor = jedan fajl) — tako `putanja`

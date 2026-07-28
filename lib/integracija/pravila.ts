@@ -55,8 +55,27 @@ const IZUZECI_ADMIN = ["scripts/", "app/api/cron/"]
 const MARKER_ADMIN_DOZVOLI = /^\s*\/\/\s*integracija-dozvoli:\s*admin-klijent\s*[—–-]\s*(.+?)\s*$/
 
 const ADMIN = /createAdminSupabaseClient|@\/lib\/supabase\/admin/
-const VIEW = /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+([A-Za-z0-9_."]+)/i
-const TABELA = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z0-9_."]+)/gi
+/**
+ * Karakteri od kojih se sastoji SQL identifikator (ime tabele/viewa), sa šemom i
+ * navodnicima. Unicode slova (`\p{L}`) su OBAVEZNA — repo čiji je domenski jezik BCS
+ * latinica normalno ima imena poput `zaduženja`; sa uskim `[A-Za-z0-9_."]` takvo ime bi
+ * bilo odsječeno na prvom dijakritiku, pa bi:
+ *  - `zaduženja` i `zaduživanja` obje postale `zadu` (politika za jednu bi "pokrila" i
+ *    drugu, i DROP bi skinuo pokriće sa POGREŠNE tabele), i
+ *  - nalaz bi prijavljivao nepostojeće ime (`tabela zadu nema RLS politiku`).
+ * Za ASCII sadržaj je ovo doslovno ekvivalentno starom razredu (\p{L} sadrži A-Za-z,
+ * \p{N} sadrži 0-9), pa se ponašanje nad postojećim migracijama ne mijenja.
+ */
+const IDENT_RAZRED = String.raw`[\p{L}\p{N}_."]`
+const IDENT = `${IDENT_RAZRED}+`
+/** Karakteri koji NASTAVLJAJU identifikator — za granicu riječi bez `\b`, v.
+ *  `alterViewZaIme`. Isto kao IDENT_RAZRED, bez `.`/`"` (razdvajači, ne nastavak imena). */
+const IDENT_KARAKTER = String.raw`[\p{L}\p{N}_]`
+const VIEW = new RegExp(String.raw`CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+(${IDENT})`, "iu")
+const TABELA = new RegExp(
+  String.raw`CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(${IDENT})`,
+  "giu",
+)
 const SECURITY_INVOKER_ON = /security_invoker\s*=\s*on/i
 const SECURITY_INVOKER_OFF = /security_invoker\s*=\s*off/i
 // Ime politike: navodnicima ograničeno (BILO KOJI karakter osim navodnika, uključujući
@@ -64,10 +83,14 @@ const SECURITY_INVOKER_OFF = /security_invoker\s*=\s*off/i
 // poput č/š/ć/ž/đ NIJE egzotična u BCS domenu — cifre, donja crta). Bez \p{L} (samo
 // [A-Za-z0-9_]) bi ime poput `zaduženja_sel` bilo odsječeno na prvom dijakritiku, pa bi
 // se politika "izgubila" i tabela lažno prijavila kao bez politike (v. recenzija).
-const CREATE_POLICY =
-  /CREATE\s+POLICY\s+(?:"([^"]+)"|([\p{L}\p{N}_]+))\s+ON\s+([A-Za-z0-9_."]+)/iu
-const DROP_POLICY =
-  /DROP\s+POLICY\s+(?:IF\s+EXISTS\s+)?(?:"([^"]+)"|([\p{L}\p{N}_]+))\s+ON\s+([A-Za-z0-9_."]+)/iu
+const CREATE_POLICY = new RegExp(
+  String.raw`CREATE\s+POLICY\s+(?:"([^"]+)"|(${IDENT_KARAKTER}+))\s+ON\s+(${IDENT})`,
+  "iu",
+)
+const DROP_POLICY = new RegExp(
+  String.raw`DROP\s+POLICY\s+(?:IF\s+EXISTS\s+)?(?:"([^"]+)"|(${IDENT_KARAKTER}+))\s+ON\s+(${IDENT})`,
+  "iu",
+)
 
 function brojLinije(sadrzaj: string, indeks: number): number {
   let linija = 1
@@ -155,12 +178,22 @@ export function provjeriTs(izvor: Izvor): Nalaz[] {
 /**
  * Regex koji prepoznaje `ALTER VIEW <ime> ...` kao POČETAK naredbe (dozvoljeni su
  * vodeći whitespace i `-- ...` SQL komentari, npr. "Re-apply security_invoker"
- * napomena iznad stvarne ALTER VIEW linije). Granica riječi (`\b`) uz ime sprječava
- * da `termini` pokrije `termini_view` i obrnuto (isti obrazac kao `politikaZaOvu` za
- * tabele — `_` je karakter riječi, pa `\b` ne prelazi granicu prefiksa).
+ * napomena iznad stvarne ALTER VIEW linije). Granica identifikatora oko imena sprječava
+ * da `termini` pokrije `termini_view` i obrnuto (i `grad` da pokrije `gradovi`).
+ *
+ * NAMJERNO se NE koristi `\b`: granica riječi je definisana preko `\w` = `[A-Za-z0-9_]`
+ * i NE poznaje dijakritiku ni pod `u` zastavicom. Za view `pregled_č`, `\b` iza `č`
+ * (koje je za `\b` NEriječni karakter) traži da SLJEDEĆI karakter bude riječni — a
+ * poslije imena dolazi razmak, pa poklapanje otkazuje i `ALTER VIEW pregled_č SET
+ * (security_invoker = on)` tiho ne bi bio viđen. Umjesto toga se koriste eksplicitni
+ * lookaround-i nad IDENT_KARAKTER (unicode-svjesni), koji se na ASCII imenima ponašaju
+ * identično kao `\b`.
  */
 function alterViewZaIme(ime: string): RegExp {
-  return new RegExp(`^(?:\\s|--[^\\n]*)*ALTER\\s+VIEW\\s+[A-Za-z0-9_."]*\\b${ime}\\b`, "i")
+  return new RegExp(
+    String.raw`^(?:\s|--[^\n]*)*ALTER\s+VIEW\s+${IDENT_RAZRED}*(?<!${IDENT_KARAKTER})${ime}(?!${IDENT_KARAKTER})`,
+    "iu",
+  )
 }
 
 /**

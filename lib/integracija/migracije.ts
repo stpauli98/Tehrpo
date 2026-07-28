@@ -38,6 +38,32 @@ export function nadjiSudarenePrefikse(imenaFajlova: string[]): SudarMigracija[] 
     .sort((a, b) => a.prefiks.localeCompare(b.prefiks))
 }
 
+/**
+ * Fajl iz sudara na koji se nalaz prijavljuje — onaj koji treba PREIMENOVATI.
+ *
+ * Sudarene fajlove `nadjiSudarenePrefikse` vraća abecedno, a abecedno prvi je po pravilu
+ * ZATEČENA, nedužna migracija (već je u `main`-u); preimenovati treba onu koju grana
+ * donosi. Zato: ako je ijedan od sudarenih fajlova u obuhvatu izmijenjenih (`uObuhvatu`
+ * = imena fajlova, ne putanje), bira se on. Kad ih je više u obuhvatu, ili kad obuhvat
+ * ne zna nijedan (npr. `--sve`, ili sudar zatečen na baznoj grani), bira se abecedno
+ * POSLJEDNJI — pošto sudarene migracije dijele identičan 14-cifreni prefiks, poređenje
+ * pada na ostatak imena, pa je to determinističan izbor, a ne prvi (nedužni).
+ *
+ * `fajlovi` je uvijek neprazan (sudar po definiciji ima bar dva fajla); prazan ulaz
+ * vraća prazan string umjesto da baca — pozivalac ga nikad ne proizvodi.
+ */
+export function odaberiFajlZaPrijavu(
+  fajlovi: readonly string[],
+  uObuhvatu: ReadonlySet<string>,
+): string {
+  const kandidati = fajlovi.filter((f) => uObuhvatu.has(f))
+  const izbor = (kandidati.length > 0 ? kandidati : fajlovi).reduce<string | undefined>(
+    (najveci, f) => (najveci === undefined || f.localeCompare(najveci) > 0 ? f : najveci),
+    undefined,
+  )
+  return izbor ?? ""
+}
+
 /** .sql fajlovi bez ispravnog timestamp prefiksa — redoslijed im je nedefinisan. */
 export function nadjiNeispravnaImena(imenaFajlova: string[]): string[] {
   return imenaFajlova

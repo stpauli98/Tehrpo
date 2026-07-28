@@ -3,6 +3,7 @@ import {
   izdvojiPrefiks,
   nadjiSudarenePrefikse,
   nadjiNeispravnaImena,
+  odaberiFajlZaPrijavu,
 } from "./migracije"
 
 // Stvarni sudar zatečen 2026-07-28: dvije grane, isti timestamp, različita imena.
@@ -81,6 +82,34 @@ describe("nadjiSudarenePrefikse", () => {
 
   it("ignoriše fajlove bez prefiksa umjesto da ih grupiše zajedno", () => {
     expect(nadjiSudarenePrefikse(["README.md", "biljeska.sql"])).toEqual([])
+  })
+})
+
+describe("odaberiFajlZaPrijavu", () => {
+  // Stvaran sudar 2026-07-28: `audit_pretraga_kolone` je abecedno prvi, ali migraciju
+  // koju grana donosi (`mejl_status_demo`) treba preimenovati — nalaz mora pokazati na nju.
+  const AUDIT = "20260728120000_audit_pretraga_kolone.sql"
+  const MEJL = "20260728120000_mejl_status_demo.sql"
+
+  it("bira fajl iz obuhvata izmijenjenih, čak i kad je abecedno DRUGI", () => {
+    expect(odaberiFajlZaPrijavu([AUDIT, MEJL], new Set([MEJL]))).toBe(MEJL)
+  })
+
+  it("bira fajl iz obuhvata i kad je abecedno PRVI (nije samo 'uvijek posljednji')", () => {
+    expect(odaberiFajlZaPrijavu([AUDIT, MEJL], new Set([AUDIT]))).toBe(AUDIT)
+  })
+
+  it("prazan obuhvat (npr. --sve) → abecedno POSLJEDNJI, ne prvi (nedužni)", () => {
+    expect(odaberiFajlZaPrijavu([AUDIT, MEJL], new Set())).toBe(MEJL)
+  })
+
+  it("obuhvat koji ne sadrži nijedan sudareni fajl se ponaša kao prazan", () => {
+    expect(odaberiFajlZaPrijavu([AUDIT, MEJL], new Set(["20260101000000_drugo.sql"]))).toBe(MEJL)
+  })
+
+  it("više sudarenih fajlova u obuhvatu → abecedno posljednji OD NJIH, ne od svih", () => {
+    const treci = "20260728120000_a_prvi.sql"
+    expect(odaberiFajlZaPrijavu([treci, AUDIT, MEJL], new Set([treci, AUDIT]))).toBe(AUDIT)
   })
 })
 

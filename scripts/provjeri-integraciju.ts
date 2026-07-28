@@ -10,12 +10,17 @@
  * (nemaju šum koji bi tražio suženje).
  *
  * Izlazni kod: 0 čisto, 1 ima nalaza, 2 greška u opcijama ili bazna grana nije
- * razrešiva lokalno.
+ * razrešiva lokalno, 3 alat je PUKAO (neuhvaćena greška). Kod 3 postoji da se pad alata
+ * ne bi predstavljao kao "ima nalaza": pod kodom 1 pozivalac traži spisak nalaza koji u
+ * tom slučaju ne postoji, pa bi pad izgledao kao uredno odrađena provjera s nalazima.
  *
  * Pokretanje:
- *   pnpm provjeri:integraciju                  # bazna grana: origin/main
+ *   pnpm provjeri:integraciju                  # bazna grana: origin/main (GO/NE-GO režim)
  *   pnpm provjeri:integraciju -- --baza <ref>  # eksplicitna bazna grana
- *   pnpm provjeri:integraciju -- --sve         # sve migracije, bez obzira na git
+ *   pnpm provjeri:integraciju -- --sve         # DIJAGNOSTIČKI: sve migracije, bez obzira
+ *                                              # na git; ima poznat nenulti pod nalaza iz
+ *                                              # istorijskih migracija — nije GO/NE-GO
+ *                                              # signal (v. .claude/commands/integracija.md)
  *
  * U podrazumijevanom/--baza režimu, obuhvat migracija je UNIJA: fajlovi koje grana
  * stvarno donosi (`git diff <baza>...HEAD`) I necommitovane izmjene u radnom stablu
@@ -33,7 +38,11 @@ import { execFileSync } from "node:child_process"
 import { readdir, readFile } from "node:fs/promises"
 import { join, relative } from "node:path"
 
-import { nadjiSudarenePrefikse, nadjiNeispravnaImena } from "../lib/integracija/migracije"
+import {
+  nadjiSudarenePrefikse,
+  nadjiNeispravnaImena,
+  odaberiFajlZaPrijavu,
+} from "../lib/integracija/migracije"
 import { nadjiNeparitet, nadjiIcuOne, type Katalog } from "../lib/integracija/prijevodi"
 import { provjeriIzvore, type Izvor, type Nalaz } from "../lib/integracija/pravila"
 import { sanitizujSql, filtrirajNamjernePolicyless } from "../lib/integracija/sql"
@@ -53,7 +62,10 @@ import { RLS_INTENTIONAL_POLICYLESS } from "../lib/rlsCoverage"
 
 const KORIJEN = process.cwd()
 const JEZICI = ["sr", "en", "de"] as const
-const OBUHVAT_TS = ["app", "components", "lib", "tests"]
+/** Direktoriji koje TS pravila uopšte gledaju: `admin-klijent` važi za `app/` i
+ *  `components/`, `prod-ref-u-testovima` za `tests/`. `lib/` je namjerno izostavljen —
+ *  nijedno TS pravilo se na njega ne odnosi, pa bi njegovo čitanje bio čist utrošak. */
+const OBUHVAT_TS = ["app", "components", "tests"]
 
 /** Bazna grana nije razrešiva lokalno — jasna greška i izlazni kod 2, ne tiho "čisto". */
 class BaznaGranaGreska extends Error {}
@@ -167,9 +179,27 @@ async function main(): Promise<void> {
   // koja ih je unijela).
   const sveImenaMigracija = await imenaUMigracijama()
 
+  // Obuhvat se računa PRIJE sudara jer sudar mora znati koji je od sudarenih fajlova
+  // onaj koji grana donosi (v. odaberiFajlZaPrijavu) — nalaz treba da pokaže na fajl
+  // koji se preimenuje, ne na zatečeni.
+  let putanjeMigracija: string[]
+  try {
+    putanjeMigracija = odaberiPutanjeMigracija(opcije, sveImenaMigracija)
+  } catch (greska) {
+    if (greska instanceof BaznaGranaGreska) {
+      console.error(`✗ ${greska.message}`)
+      process.exitCode = 2
+      return
+    }
+    throw greska
+  }
+  const imenaUObuhvatu = new Set(
+    putanjeMigracija.map((p) => p.slice("supabase/migrations/".length)),
+  )
+
   for (const sudar of nadjiSudarenePrefikse(sveImenaMigracija)) {
     nalazi.push({
-      putanja: `supabase/migrations/${sudar.fajlovi[0]}`,
+      putanja: `supabase/migrations/${odaberiFajlZaPrijavu(sudar.fajlovi, imenaUObuhvatu)}`,
       linija: 1,
       pravilo: "sudar-migracija",
       poruka: `prefiks ${sudar.prefiks} dijeli ${sudar.fajlovi.length} fajla: ${sudar.fajlovi.join(", ")} — redoslijed primjene je nedefinisan`,
@@ -213,20 +243,10 @@ async function main(): Promise<void> {
     })
   }
 
-  // 4 — tekstualna pravila. SQL migracije: obuhvat zavisi od --sve/--baza, svaki fajl
-  // zasebno (v. ucitajMigracijeIzvore). TS/TSX: uvijek cijeli repozitorij.
-  let putanjeMigracija: string[]
-  try {
-    putanjeMigracija = odaberiPutanjeMigracija(opcije, sveImenaMigracija)
-  } catch (greska) {
-    if (greska instanceof BaznaGranaGreska) {
-      console.error(`✗ ${greska.message}`)
-      process.exitCode = 2
-      return
-    }
-    throw greska
-  }
-
+  // 4 — tekstualna pravila. SQL migracije: obuhvat zavisi od --sve/--baza (izračunat
+  // gore), svaki fajl zasebno (v. ucitajMigracijeIzvore). TS/TSX: uvijek cijeli
+  // repozitorij.
+  //
   // Uvijek ispisano — i kad je obuhvat prazan — da prazan obuhvat ne izgleda kao
   // uspješna provjera.
   console.log(
@@ -256,6 +276,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((greska) => {
+  // Kod 3, NE 1: pad alata nije "ima nalaza". Pod 1 pozivalac (procedura iz
+  // .claude/commands/integracija.md) očekuje spisak nalaza koji ovdje ne postoji.
   console.error("provjera integracije je pukla:", greska)
-  process.exitCode = 1
+  process.exitCode = 3
 })

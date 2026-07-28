@@ -83,16 +83,15 @@ describe("sanitizujSql", () => {
     expect(izlaz).toContain("create table if not exists gradovi (naziv text primary key);")
   })
 
-  it("ne dira sadržaj dollar-quoted ($$...$$) tijela funkcija van navodnika", () => {
-    const ulaz = [
-      "create or replace function f() returns void language plpgsql as $function$",
-      "begin",
-      "  create policy p on t for select using (true);",
-      "end;",
-      "$function$;",
-    ].join("\n")
+  it("NETERMINISAN string literal se maskira do kraja fajla", () => {
+    // Odgođeni nalaz iz Task-a 4. PostgreSQL bi ovakav fajl odbio kao grešku, pa je
+    // maskiranje do kraja siguran smjer — ali mora biti POTVRĐENO, jer je isti mehanizam
+    // (neterminisana konstrukcija guta ostatak fajla) izvor C1 kvara sa $$-om.
+    const ulaz = "select 'zaboravljen zatvarač\ncreate table lazna (id int);"
     const izlaz = sanitizujSql(ulaz)
-    expect(izlaz).toContain("create policy p on t for select using (true);")
+    expect(izlaz).not.toContain("create table lazna")
+    // Broj linija ostaje isti i kad se maskira sve do kraja.
+    expect(izlaz.split("\n")).toHaveLength(2)
   })
 
   it("brojevi linija se NE pomjeraju poslije maskiranja — VIŠELINIJSKI string literal", () => {
@@ -241,6 +240,141 @@ describe("sanitizujSql", () => {
     })
   })
 
+  describe("dollar-quoting ($$...$$, $tag$...$tag$)", () => {
+    const MIGRACIJA = "supabase/migrations/20260728120000_x.sql"
+
+    it("C1: apostrof u $$...$$ NE guta ostatak fajla — DDL ispod ostaje vidljiv", () => {
+      // Dokazni fajl iz recenzije. Bez svijesti o dollar-quotingu, apostrof u
+      // `Petrova'` otvara "string literal" koji nikad ne nalazi zatvarač, pa se SVE
+      // ispod njega maskira i fajl prolazi kao čist.
+      const ulaz = [
+        "comment on table klijenti is $$Petrova' tabela$$;",
+        "create table nova_tabela (id int);",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).toContain("create table nova_tabela (id int);")
+      const nalazi = provjeriSql({ putanja: MIGRACIJA, sadrzaj: izlaz })
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("tabela-bez-politike")
+      expect(nalazi[0]!.tabela).toBe("nova_tabela")
+    })
+
+    it("C1: fajl SA apostrofom i fajl BEZ njega daju IDENTIČAN skup nalaza", () => {
+      // Par iz dokaza: dva fajla se razlikuju u JEDNOM karakteru, a prije popravke su
+      // davali 0 naspram 3 nalaza. Poređenje je jače od dvije zasebne tvrdnje — mutant
+      // koji ukloni dollar-granu pada baš ovdje.
+      const saApostrofom = [
+        "comment on table klijenti is $$Petrova' tabela$$;",
+        "create table nova_tabela (id int);",
+        "create view novi_view as select 1;",
+      ].join("\n")
+      const bezApostrofa = saApostrofom.replace("Petrova'", "Petrova")
+      const nalaziSa = provjeriSql({ putanja: MIGRACIJA, sadrzaj: sanitizujSql(saApostrofom) })
+      const nalaziBez = provjeriSql({ putanja: MIGRACIJA, sadrzaj: sanitizujSql(bezApostrofa) })
+      expect(nalaziSa).toEqual(nalaziBez)
+      expect(nalaziSa).toHaveLength(2)
+    })
+
+    it("C1: $x$don't$x$ u plpgsql tijelu ne guta CREATE VIEW ispod", () => {
+      const ulaz = [
+        "create or replace function f() returns text language plpgsql as $f$",
+        "begin",
+        "  return $x$don't$x$;",
+        "end",
+        "$f$;",
+        "create view pregled as select 1;",
+      ].join("\n")
+      const nalazi = provjeriSql({ putanja: MIGRACIJA, sadrzaj: sanitizujSql(ulaz) })
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("view-bez-invokera")
+      expect(nalazi[0]!.poruka).toContain("pregled")
+    })
+
+    it("zatvarač mora biti ISTI tag — ugniježđeni $b$ ne zatvara vanjski $a$", () => {
+      const ulaz = [
+        "do $a$ begin",
+        "  execute $b$ create table unutrasnja (id int); $b$;",
+        "end $a$;",
+        "create table vanjska (id int);",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      // Cijelo $a$...$a$ tijelo je maskirano, uključujući ugniježđeni $b$ blok.
+      expect(izlaz).not.toContain("create table unutrasnja")
+      // A naredba POSLIJE tijela je netaknuta — dokaz da se tijelo zatvorilo na $a$,
+      // ne da je progutalo ostatak fajla.
+      expect(izlaz).toContain("create table vanjska (id int);")
+    })
+
+    it("NETERMINISAN $$ se maskira do kraja fajla", () => {
+      const ulaz = "do $$ begin\ncreate table lazna (id int);"
+      expect(sanitizujSql(ulaz)).not.toContain("create table lazna")
+    })
+
+    it("VIŠELINIJSKO tijelo ČUVA broj linija — nalaz ispod zadržava tačnu liniju", () => {
+      const ulaz = [
+        "create function f() returns void language plpgsql as $$",
+        "begin",
+        "  perform 1;",
+        "end",
+        "$$;",
+        "create table prava (id int primary key);",
+      ].join("\n")
+      const redoviIzlaz = sanitizujSql(ulaz).split("\n")
+      expect(redoviIzlaz).toHaveLength(6)
+      const nalazi = provjeriSql({ putanja: MIGRACIJA, sadrzaj: sanitizujSql(ulaz) })
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.linija).toBe(6)
+    })
+
+    it("UKRŠTANJE: $$ unutar `--` komentara NE otvara tijelo", () => {
+      const ulaz = [
+        "-- ranije je ovdje bio $$ blok",
+        "create table prava (id int primary key);",
+        "-- kraj $$",
+        "create table druga (id int primary key);",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).toContain("create table prava (id int primary key);")
+      expect(izlaz).toContain("create table druga (id int primary key);")
+    })
+
+    it("UKRŠTANJE: $$ unutar '...' NE otvara tijelo", () => {
+      const ulaz = [
+        "select 'literal sa $$ unutra';",
+        "create table prava (id int primary key);",
+        "select 'drugi $$ literal';",
+        "create table druga (id int primary key);",
+      ].join("\n")
+      const izlaz = sanitizujSql(ulaz)
+      expect(izlaz).toContain("create table prava (id int primary key);")
+      expect(izlaz).toContain("create table druga (id int primary key);")
+    })
+
+    it("SVJESTAN KOMPROMIS: prava CREATE POLICY u DO $$ bloku postaje nevidljiva (lažno pozitivan nalaz)", () => {
+      // Zapisano u modul-nivo komentaru sql.ts: cijena za to da apostrof u tijelu ne
+      // ugasi provjeru je da izvršni DDL UNUTAR tijela više nije vidljiv. Smjer greške
+      // je bučan (višak nalaza), ne tih (fajl prolazi kao čist).
+      const ulaz = [
+        "create table t (id int primary key);",
+        "do $$ begin",
+        "  create policy p on t for select using (true);",
+        "end $$;",
+      ].join("\n")
+      const nalazi = provjeriSql({ putanja: MIGRACIJA, sadrzaj: sanitizujSql(ulaz) })
+      expect(nalazi).toHaveLength(1)
+      expect(nalazi[0]!.pravilo).toBe("tabela-bez-politike")
+      expect(nalazi[0]!.tabela).toBe("t")
+    })
+
+    it("`$1` pozicioni parametar (bez zatvarajućeg $) NE otvara tijelo", () => {
+      const ulaz = [
+        "prepare p as select * from t where id = $1 and ime = $2;",
+        "create table prava (id int primary key);",
+      ].join("\n")
+      expect(sanitizujSql(ulaz)).toContain("create table prava (id int primary key);")
+    })
+  })
+
   describe("diskriminacija implementacija — dokazuje da testovi GORE stvarno padaju na slomljenim verzijama", () => {
     // Reference implementacije koje NAMJERNO reprodukuju dva poznata kvara, da bismo
     // dokazali da testovi iznad zaista razlikuju sanitizujSql od njih (a ne prolaze
@@ -366,8 +500,8 @@ describe("sanitizujSql", () => {
   })
 })
 
-function nalaz(pravilo: string, poruka: string): Nalaz {
-  return { putanja: "x.sql", linija: 1, pravilo, poruka }
+function nalaz(pravilo: string, poruka: string, tabela?: string): Nalaz {
+  return { putanja: "x.sql", linija: 1, pravilo, poruka, ...(tabela === undefined ? {} : { tabela }) }
 }
 
 describe("filtrirajNamjernePolicyless", () => {
@@ -375,7 +509,34 @@ describe("filtrirajNamjernePolicyless", () => {
 
   it("izbacuje 'tabela-bez-politike' nalaz za tabelu iz allowlist-e", () => {
     const nalazi = [
+      nalaz(
+        "tabela-bez-politike",
+        "tabela termin_zakazano_obavijest nema RLS politiku — ...",
+        "termin_zakazano_obavijest",
+      ),
+    ]
+    expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual([])
+  })
+
+  it("nalaz BEZ `tabela` polja se ZADRŽAVA i kad poruka pominje allowlist-ovanu tabelu", () => {
+    // Fail-loud: filter se oslanja ISKLJUČIVO na strukturirano polje. Ako pravila.ts
+    // ikad prestane da ga popunjava, izuzetak prestaje da važi (šum), umjesto da se
+    // tiho oslanja na tekst poruke koji niko ne čuva.
+    const nalazi = [
       nalaz("tabela-bez-politike", "tabela termin_zakazano_obavijest nema RLS politiku — ..."),
+    ]
+    expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)
+  })
+
+  it("čita `tabela` polje, NE tekst poruke — poruka pominje tabelu VAN allowlist-e, polje je u njoj", () => {
+    // Diskriminator za M4: mutant koji se vrati na parsiranje imena iz `poruka` bi
+    // ovaj nalaz ZADRŽAO (jer poruka pominje `klijenti`), a ispravna verzija ga izbacuje.
+    const nalazi = [
+      nalaz(
+        "tabela-bez-politike",
+        "tabela klijenti nema RLS politiku — ...",
+        "termin_zakazano_obavijest",
+      ),
     ]
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual([])
   })
@@ -389,8 +550,13 @@ describe("filtrirajNamjernePolicyless", () => {
     const uAllowlisti = nalaz(
       "tabela-bez-politike",
       "tabela termin_zakazano_obavijest nema RLS politiku — ...",
+      "termin_zakazano_obavijest",
     )
-    const vanAllowlist = nalaz("tabela-bez-politike", "tabela klijenti nema RLS politiku — ...")
+    const vanAllowlist = nalaz(
+      "tabela-bez-politike",
+      "tabela klijenti nema RLS politiku — ...",
+      "klijenti",
+    )
     expect(filtrirajNamjernePolicyless([uAllowlisti, vanAllowlist], allowlist)).toEqual([
       vanAllowlist,
     ])
@@ -398,10 +564,11 @@ describe("filtrirajNamjernePolicyless", () => {
 
   it("tabela sa DIJAKRITIKOM u imenu se može pogoditi u allowlist-i", () => {
     // Zavisi od toga da pravila.ts ne siječe ime na dijakritiku (v. IDENT razred u
-    // pravila.ts): dok je poruka glasila "tabela zadu nema RLS politiku", nijedan unos
-    // u allowlist-i ne bi se poklopio, pa bi namjerno policyless tabela bila trajno
-    // prijavljivana. (`\S+` u IME_IZ_PORUKE dijakritiku hvata bez izmjene.)
-    const nalazi = [nalaz("tabela-bez-politike", "tabela zaduženja nema RLS politiku — ...")]
+    // pravila.ts): dok je polje `tabela` glasilo `zadu`, nijedan unos u allowlist-i se
+    // ne bi poklopio, pa bi namjerno policyless tabela bila trajno prijavljivana.
+    const nalazi = [
+      nalaz("tabela-bez-politike", "tabela zaduženja nema RLS politiku — ...", "zaduženja"),
+    ]
     expect(filtrirajNamjernePolicyless(nalazi, ["zaduženja"])).toEqual([])
     expect(filtrirajNamjernePolicyless(nalazi, ["zaduživanja"])).toEqual(nalazi)
   })
@@ -411,25 +578,22 @@ describe("filtrirajNamjernePolicyless", () => {
       nalaz(
         "tabela-bez-politike",
         "tabela termin_zakazano_obavijest_v2 nema RLS politiku — ...",
+        "termin_zakazano_obavijest_v2",
       ),
     ]
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)
   })
 
-  it("NE dira nalaze drugih pravila — čak ni kad poruka SLIČI na tabela-bez-politike format", () => {
-    // Zamjena za prijašnji "ne dira nalaze drugih pravila" — taj test je (dokazano)
-    // preživljavao mutaciju koja UKLANJA `if (n.pravilo !== "tabela-bez-politike")`,
-    // jer poruka u tom testu ("VIEW x bez security_invoker=on") ionako ne poklapa
-    // IME_IZ_PORUKE regex — sa ili bez guard-a, ishod je identičan ("zadrži"), pa test
-    // ne testira granu koju mu ime tvrdi da testira.
-    //
-    // Ovdje poruka NAMJERNO poklapa IME_IZ_PORUKE (kao da je allowlist-ovana tabela),
-    // ALI `pravilo` NIJE "tabela-bez-politike" — provjerava da se `pravilo` STVARNO
-    // čita prije poruke. Bez guard-a, ovaj nalaz bi bio (pogrešno) izbačen.
+  it("NE dira nalaze drugih pravila — čak ni kad NOSE allowlist-ovanu tabelu u polju `tabela`", () => {
+    // Guard na `pravilo` mora da se čita PRIJE polja `tabela`: `zastita-uklonjena` nad
+    // namjerno policyless tabelom je i dalje pravi nalaz (RLS isključen na njoj znači da
+    // više ni service-role izolacija ne važi), pa se NE smije izgubiti kroz ovaj filter.
+    // Bez guard-a bi ovaj nalaz bio (pogrešno) izbačen.
     const nalazi = [
       nalaz(
-        "neko-drugo-pravilo",
-        "tabela termin_zakazano_obavijest nema RLS politiku — lažna poruka",
+        "zastita-uklonjena",
+        "isključen RLS (row level security) na tabeli termin_zakazano_obavijest — ...",
+        "termin_zakazano_obavijest",
       ),
     ]
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)

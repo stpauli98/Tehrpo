@@ -38,6 +38,33 @@ function krajBlokKomentara(sadrzaj: string, pocetak: number): number {
   return sadrzaj.length
 }
 
+/**
+ * Otvarajući dollar-quote tag (`$$` ili `$tag$`) NA POZICIJI `pocetak`, ili null ako
+ * tu ne počinje tag. Sticky (`y`) — poklapa se isključivo od `pocetak`, bez kopiranja
+ * ostatka fajla.
+ *
+ * Tag u PostgreSQL-u prati pravila NEnavodnjenog identifikatora (bez znaka dolara), pa
+ * se koristi unicode razred (`\p{L}\p{N}_`) a ne uski `[A-Za-z0-9_]` — u repou čiji je
+ * domenski jezik BCS latinica `$tijelo_č$` nije egzotično. Prazan tag (`$$`) je
+ * dozvoljen i najčešći.
+ */
+const DOLLAR_TAG = /\$[\p{L}\p{N}_]*\$/uy
+
+/**
+ * Kraj (ekskluzivno) dollar-quoted tijela koje počinje na `pocetak`, ili null ako tu
+ * uopšte ne počinje tag (npr. `$1` pozicioni parametar — nema zatvarajući `$`).
+ * Zatvarač mora biti ISTI tag: `$a$ ... $b$ ... $b$ ... $a$` se zatvara na spoljnom
+ * `$a$`, ne na unutrašnjem `$b$`. Neterminisan tag se maskira do kraja fajla (isto kao
+ * neterminisan blok komentar/string — PostgreSQL bi ga odbio kao grešku).
+ */
+function krajDollarQuote(sadrzaj: string, pocetak: number): number | null {
+  DOLLAR_TAG.lastIndex = pocetak
+  const tag = DOLLAR_TAG.exec(sadrzaj)?.[0]
+  if (tag === undefined) return null
+  const zatvarac = sadrzaj.indexOf(tag, pocetak + tag.length)
+  return zatvarac === -1 ? sadrzaj.length : zatvarac + tag.length
+}
+
 /** Kraj (ekskluzivno) string literala koji počinje na `pocetak`. Apostrof UNUTAR
  *  stringa se u PostgreSQL-u (standard_conforming_strings=on, podrazumijevano od PG9)
  *  bježi UDVAJANJEM (`''`), NE obrnutom kosom crtom — `\` je običan karakter. */
@@ -58,16 +85,17 @@ function krajStringa(sadrzaj: string, pocetak: number): number {
 
 /**
  * SQL-specifično čišćenje prije tekstualne provjere iz pravila.ts: linijski komentari
- * (`-- ...`), blok komentari (kosa-crta-zvjezdica ... zvjezdica-kosa-crta) i sadržaj
- * jednostrukih navodnika se maskiraju razmacima (linije se ne pomjeraju, samo se
- * prazne — brojevi linija u nalazima ostaju tačni). Bez ovoga podniz poput
+ * (`-- ...`), blok komentari (kosa-crta-zvjezdica ... zvjezdica-kosa-crta), sadržaj
+ * jednostrukih navodnika i dollar-quoted tijela (`$$...$$`, `$tag$...$tag$`) se
+ * maskiraju razmacima (linije se ne pomjeraju, samo se prazne — brojevi linija u
+ * nalazima ostaju tačni). Bez ovoga podniz poput
  * 'CREATE TABLE AS' unutar string literala (stvaran izvršni SQL u rls_auto_enable() —
  * kopija cloud event trigger funkcije koja citira PostgreSQL command_tag vrijednosti kao
  * stringove) ili "create table if not exists" unutar komentara lažno pogodi TABELA/VIEW
  * obrasce iz pravila.ts — pravila su namjerno tekstualna, ne AST, pa sama ne razlikuju
  * izvršni kod od komentara/stringova.
  *
- * JEDAN PROLAZ, ne lanac `.replace()`: koja god od tri konstrukcije počne PRVA, guta
+ * JEDAN PROLAZ, ne lanac `.replace()`: koja god od četiri konstrukcije počne PRVA, guta
  * ostale do svog kraja. Lanac replace-ova to ne može — `--` unutar blok komentara bi
  * "pojeo" ostatak reda uključujući zatvarač bloka, a otvarač bloka unutar `'...'` bi
  * otvorio lažan komentar do prvog zatvarača u fajlu. Posljedice su u OBA smjera:
@@ -75,11 +103,19 @@ function krajStringa(sadrzaj: string, pocetak: number): number {
  * tabela bez politike se ne prijavi), i zakomentarisana `create table`/`create view`
  * koja se prijavi kao stvarna (lažno pozitivno).
  *
- * NAPOMENA: ovo NE preskače dollar-quoted ($$...$$) tijela funkcija kao cjelinu —
- * string literali UNUTAR takvog tijela (npr. gore pomenuti 'CREATE TABLE AS') se i
- * dalje maskiraju, i to je poenta (baš taj literal je izvor lažnog pogotka). Stvaran
- * izvršni SQL izvan navodnika unutar $$...$$ tijela (npr. prava CREATE POLICY u DO
- * bloku) ostaje netaknut i vidljiv provjeri.
+ * DOLLAR-QUOTING JE ČETVRTA KONSTRUKCIJA, i to je SVJESTAN KOMPROMIS. Dok se `$$...$$`
+ * nije poznavalo, apostrof unutar dollar-quoted tijela (npr.
+ * `comment on table klijenti is $$Petrova' tabela$$;` — validan PostgreSQL) je otvarao
+ * "string literal" koji nikad ne nalazi zatvarač, pa se maskirao SAV sadržaj DO KRAJA
+ * FAJLA: svaka DDL naredba poslije njega je tiho nestajala iz provjere i fajl je
+ * prolazio kao čist. Isti kvar je davao `$x$don't$x$` u plpgsql tijelu.
+ *
+ * Cijena popravke: tijelo se maskira U CJELINI, pa PRAVA `CREATE POLICY` unutar
+ * `DO $$ ... $$` bloka (ili `EXECUTE` u plpgsql-u) postaje NEVIDLJIVA — tabela sa takvom
+ * politikom se može lažno prijaviti kao „bez politike". To je namjerno prihvaćeno: smjer
+ * greške je BUČAN (lažno pozitivan nalaz koji neko pročita i odbaci) umjesto TIHOG
+ * (fajl prolazi kao čist iako pola njegovog DDL-a nije ni pogledano). Lažno pozitivan
+ * nalaz se rješava tačkom u IZUZECI, tihi propust se ne rješava nikako.
  */
 export function sanitizujSql(sadrzaj: string): string {
   const dijelovi: string[] = []
@@ -97,6 +133,8 @@ export function sanitizujSql(sadrzaj: string): string {
       kraj = krajBlokKomentara(sadrzaj, i)
     } else if (sadrzaj[i] === "'") {
       kraj = krajStringa(sadrzaj, i)
+    } else if (sadrzaj[i] === "$") {
+      kraj = krajDollarQuote(sadrzaj, i)
     }
     if (kraj === null) {
       i++
@@ -110,9 +148,6 @@ export function sanitizujSql(sadrzaj: string): string {
   return dijelovi.join("")
 }
 
-/** Ime tabele iz poruke pravila "tabela-bez-politike" (v. pravila.ts `provjeriSql`). */
-const IME_IZ_PORUKE = /^tabela (\S+) nema RLS politiku/
-
 /**
  * Izbaci nalaze pravila "tabela-bez-politike" za tabele iz `allowlist` — tabele koje
  * su POZNATO, namjerno policyless (RLS uključen, pristup isključivo preko service-role
@@ -122,14 +157,11 @@ const IME_IZ_PORUKE = /^tabela (\S+) nema RLS politiku/
  * filter umjesto da izmišlja novi mehanizam ili gasi pravilo. Svi ostali nalazi
  * (uključujući "tabela-bez-politike" za tabele van allowlist-e) prolaze nepromijenjeni.
  *
- * Ime tabele se parsira regexom iz teksta `Nalaz.poruka` — krhko (zavisi od tačnog
- * teksta poruke u pravila.ts `provjeriSql`), ali prihvaćeno: dodavanje strukturiranog
- * polja u `Nalaz` bi značilo mijenjanje pravila.ts, što je van dozvoljenog obuhvata
- * ovog zadatka. Ako se tekst poruke ikad promijeni, ova funkcija prestaje prepoznavati
- * izuzetke — ALI to NIJE garantovano vidljivo u praksi: sve tri tabele iz
- * RLS_INTENTIONAL_POLICYLESS su u ISTORIJSKIM migracijama, van dometa podrazumijevanog
- * (git-diff suženog) režima. Regresija bi se pojavila TEK pod `--sve` (ili ako neka od
- * te tri migracije ikad uđe u obuhvat git diff-a), ne u podrazumijevanom CI toku.
+ * Ime tabele se čita iz STRUKTURIRANOG polja `Nalaz.tabela` koje popunjava pravila.ts.
+ * Ranije se parsiralo regexom iz teksta `Nalaz.poruka` — krhka spona koja bi pukla na
+ * bilo kakvu preformulaciju poruke, i to TIHO (izuzeci bi prestali da važe, a nijedan
+ * test ne bi pao jer je poruka slobodan tekst). Nalaz bez `tabela` polja se ZADRŽAVA
+ * (fail-loud: nepoznata tabela se ne izuzima).
  */
 export function filtrirajNamjernePolicyless(
   nalazi: readonly Nalaz[],
@@ -137,7 +169,6 @@ export function filtrirajNamjernePolicyless(
 ): Nalaz[] {
   return nalazi.filter((n) => {
     if (n.pravilo !== "tabela-bez-politike") return true
-    const ime = IME_IZ_PORUKE.exec(n.poruka)?.[1]
-    return ime === undefined || !allowlist.includes(ime)
+    return n.tabela === undefined || !allowlist.includes(n.tabela)
   })
 }

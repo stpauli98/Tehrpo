@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { href } from "@/i18n/routes"
 import { podsjetniciAktivni as citajPodsjetniciAktivni } from "@/lib/reminders/gating"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
-import { izracunajIshodReda, type RazlogNePrima } from "@/lib/podsjetnici/koStaPrima"
+import { izracunajIshodReda, izracunajStatusRadnika, type RazlogNePrima } from "@/lib/podsjetnici/koStaPrima"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
@@ -63,11 +63,12 @@ export async function KoStaPrimaTab() {
   }
 
   const redovi = (klijentiRes.data ?? []).map((k) => {
-    const radnici = dodjele
-      .filter((d) => d.klijent_id === k.id)
+    const dodijeljeniSvi = dodjele.filter((d) => d.klijent_id === k.id)
+    const radnici = dodijeljeniSvi
       .map((d) => d.korisnik_id)
       .filter((uid) => primaZa(uid))
       .map((uid) => imeZa(uid))
+    const statusRadnika = izracunajStatusRadnika(dodijeljeniSvi.length, radnici.length)
     const adrese = [...(adreseByKlijent.get(k.id) ?? [])]
     const { prima: firmaPrima, razlog } = izracunajIshodReda({
       podsjetniciAktivni: automatikaAktivna,
@@ -79,6 +80,7 @@ export async function KoStaPrimaTab() {
       id: k.id,
       naziv: k.naziv,
       radnici,
+      statusRadnika,
       adrese,
       firmaPrima,
       razlog,
@@ -152,10 +154,12 @@ export async function KoStaPrimaTab() {
               >
                 <td className="px-4 py-2.5 font-medium">{r.naziv}</td>
                 <td className="px-4 py-2.5">
-                  {r.radnici.length > 0 ? (
+                  {r.statusRadnika === "ima" ? (
                     r.radnici.join(", ")
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground" data-testid={`ksp-radnici-razlog-${r.id}`}>
+                      {r.statusRadnika === "optOut" ? t("radniciOptOut") : t("radniciNema")}
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-2.5 text-center">

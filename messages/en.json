@@ -994,6 +994,8 @@
       "opis": "For each client: which workers and which client addresses get the reminder. Sending to the client is edited here, recipients on the client's page.",
       "firma": "Client",
       "radnici": "Assigned workers",
+      "radniciNema": "none assigned",
+      "radniciOptOut": "assigned, but they do not receive reminders",
       "saljiFirmi": "Send to client",
       "saljiFirmiAria": "Send reminders to {firma}",
       "saljiFirmiIskljuceno": "First enable “Send reminders to clients as well” — while it is off, this does nothing.",

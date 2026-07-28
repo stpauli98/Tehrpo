@@ -994,6 +994,8 @@
       "opis": "Za svaku firmu: koji radnici i koje adrese firme dobijaju podsjetnik. Slanje firmi mijenjaš ovdje, primaoce na kartici firme.",
       "firma": "Firma",
       "radnici": "Dodijeljeni radnici",
+      "radniciNema": "nema dodijeljenih",
+      "radniciOptOut": "dodijeljeni su, ali ne primaju podsjetnike",
       "saljiFirmi": "Šalji firmi",
       "saljiFirmiAria": "Šalji podsjetnike firmi {firma}",
       "saljiFirmiIskljuceno": "Prvo uključi „Šalji podsjetnike i firmama“ — dok je isključen, ovo ne radi.",

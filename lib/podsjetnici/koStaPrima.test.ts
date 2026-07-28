@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import sr from "@/messages/sr.json"
 import en from "@/messages/en.json"
 import de from "@/messages/de.json"
-import { izracunajIshodReda } from "./koStaPrima"
+import { izracunajIshodReda, izracunajStatusRadnika } from "./koStaPrima"
 
 describe("izracunajIshodReda", () => {
   const ok = { podsjetniciAktivni: true, saljiGlobalno: true, saljiFirmi: true, brojAdresa: 1 }
@@ -59,5 +59,20 @@ describe("katalozi — opis automatskog slanja", () => {
     expect(sr.postavke.podsjetniciKontrole.opis).toContain("zakazivanju")
     expect(en.postavke.podsjetniciKontrole.opis.toLowerCase()).toContain("scheduling")
     expect(de.postavke.podsjetniciKontrole.opis.toLowerCase()).toContain("terminierung")
+  })
+})
+
+describe("izracunajStatusRadnika", () => {
+  it("nema dodijeljenih", () => {
+    expect(izracunajStatusRadnika(0, 0)).toBe("nemaDodijeljenih")
+  })
+
+  it("ima dodijeljenih ali nijedan ne prima → optOut", () => {
+    expect(izracunajStatusRadnika(3, 0)).toBe("optOut")
+  })
+
+  it("barem jedan prima → ima", () => {
+    expect(izracunajStatusRadnika(3, 1)).toBe("ima")
+    expect(izracunajStatusRadnika(1, 1)).toBe("ima")
   })
 })

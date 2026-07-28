@@ -994,6 +994,8 @@
       "opis": "Für jede Firma: welche Mitarbeiter und welche Firmenadressen die Erinnerung erhalten. Der Versand an die Firma wird hier geändert, die Empfänger auf der Firmenseite.",
       "firma": "Firma",
       "radnici": "Zugewiesene Mitarbeiter",
+      "radniciNema": "keine zugewiesen",
+      "radniciOptOut": "zugewiesen, erhalten aber keine Erinnerungen",
       "saljiFirmi": "An Firma senden",
       "saljiFirmiAria": "Erinnerungen an {firma} senden",
       "saljiFirmiIskljuceno": "Aktiviere zuerst „Erinnerungen auch an Firmen senden“ — solange er aus ist, wirkt dies nicht.",

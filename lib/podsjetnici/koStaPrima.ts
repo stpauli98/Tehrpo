@@ -28,3 +28,14 @@ export function izracunajIshodReda(u: UlazReda): IshodReda {
   if (u.brojAdresa <= 0) return { prima: false, razlog: "nemaAdrese" }
   return { prima: true, razlog: null }
 }
+
+/** „—" u koloni radnika ima dva različita značenja; ovo ih razdvaja. */
+export type StatusRadnika = "ima" | "optOut" | "nemaDodijeljenih"
+
+export function izracunajStatusRadnika(
+  ukupnoDodijeljenih: number,
+  brojPrimalaca: number,
+): StatusRadnika {
+  if (brojPrimalaca > 0) return "ima"
+  return ukupnoDodijeljenih > 0 ? "optOut" : "nemaDodijeljenih"
+}

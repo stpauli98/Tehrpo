@@ -1,5 +1,14 @@
 import { test, expect } from "@playwright/test"
-import { db, insertKlijent, deleteKlijentByNaziv, setPostavkeV2, getPostavkeV2 } from "./db"
+import {
+  db,
+  insertKlijent,
+  deleteKlijentByNaziv,
+  setPostavkeV2,
+  getPostavkeV2,
+  ensureKorisnik,
+  deleteKorisnikByEmail,
+  assignKlijent,
+} from "./db"
 
 // Postavke → „Ko šta prima": sirovi per-firma prekidač je uređiv iz tabele, dok kolona
 // „Firma prima?" ostaje IZVEDENA (globalno && firma && ima adrese) i read-only. Test brani
@@ -156,6 +165,42 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       await expect(page.getByTestId("podsjetnici-global-off")).toHaveCount(0)
     } finally {
       await setPostavkeV2({ salji_klijentima: false })
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+
+  test("kolona radnika razlikuje „nema dodijeljenih\" od „dodijeljeni ne primaju\"", async ({ page }) => {
+    const naziv = "E2E-TMP KSP RAD " + Date.now()
+    const email = `e2e-optout-${Date.now()}@example.com`
+    const kid = await insertKlijent(naziv)
+    let uid: string | null = null
+    try {
+      // Prvo bez dodjele → „nema dodijeljenih".
+      await page.goto("/postavke")
+      await page.getByRole("button", { name: "Ko šta prima" }).click()
+      await expect(page.getByTestId(`ksp-radnici-razlog-${kid}`)).toHaveText("nema dodijeljenih")
+
+      // Dodijeli operatera koji NE prima podsjetnike → „dodijeljeni su, ali ne primaju".
+      uid = await ensureKorisnik(email, "E2eLozinka!23", "E2E OptOut", "operater")
+      const { error } = await db.from("korisnici").update({ prima_podsjetnike: false }).eq("id", uid)
+      if (error) throw new Error(`opt-out: ${error.message}`)
+      await assignKlijent(uid, kid)
+
+      await page.reload()
+      await page.getByRole("button", { name: "Ko šta prima" }).click()
+      await expect(page.getByTestId(`ksp-radnici-razlog-${kid}`)).toHaveText(
+        "dodijeljeni su, ali ne primaju podsjetnike",
+      )
+
+      // Uključi mu podsjetnike → ime se pojavi, razloga više nema.
+      const { error: e2 } = await db.from("korisnici").update({ prima_podsjetnike: true }).eq("id", uid)
+      if (e2) throw new Error(`opt-in: ${e2.message}`)
+      await page.reload()
+      await page.getByRole("button", { name: "Ko šta prima" }).click()
+      await expect(page.getByTestId(`ksp-radnici-razlog-${kid}`)).toHaveCount(0)
+      await expect(page.getByTestId(`ksp-red-${kid}`)).toContainText("E2E OptOut")
+    } finally {
+      if (uid) await deleteKorisnikByEmail(email)
       await deleteKlijentByNaziv(naziv)
     }
   })

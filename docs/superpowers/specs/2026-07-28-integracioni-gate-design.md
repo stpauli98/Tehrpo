@@ -155,7 +155,19 @@ Statičke provjere koje ciljaju klase iz §1.1 — one koje daju čist merge i p
 6. **Cron ↔ postavke** — raspored u `vercel.json` nesaglasan s `lib/reminders/rasporedSlanja.ts`
 7. **Ref-guard** — nijedna izmjena ne prebacuje razriješeni cilj s DEMO na PROD
 
-Skripta dobija vlastite unit testove (`scripts/provjeri-integraciju.test.ts`, sintetički ulazi, bez dodirivanja stvarnog repozitorija), po obrascu ostatka `lib/`.
+### 5.1 Gdje logika živi
+
+`vitest.config.ts` obuhvata samo `lib/**`, `i18n/**` i `app/**` — `scripts/` nije u `include`, pa test smješten uz skriptu nikad ne bi bio pokrenut.
+
+Zato se dijeli po konvenciji repoa:
+
+- **`lib/integracija/*.ts`** — čiste funkcije bez dodira s diskom, sa co-lociranim `*.test.ts` nad sintetičkim ulazima
+- **`scripts/provjeri-integraciju.ts`** — tanka ljuska: čita fajlove, poziva čiste funkcije, formatira nalaze, postavlja izlazni kod
+
+Provjere 3 i 6 iz gornjeg spiska nemaju vlastiti kod:
+
+- **`db/types.ts`** se provjerava kroz fazu 4.3 (regeneracija pa `git diff`), ne statički
+- **cron ↔ postavke** već čuva postojeći `lib/reminders/rasporedSlanja.test.ts`, koji `pnpm test:unit` ionako pušta
 
 ---
 

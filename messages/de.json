@@ -967,7 +967,7 @@
     },
     "podsjetniciKontrole": {
       "naslov": "Automatischer Versand",
-      "opis": "Schaltet den automatischen täglichen Versand ab (beide Tagesläufe, Erinnerungen vor und nach dem Termin). „Jetzt ausführen\" funktioniert auch im ausgeschalteten Zustand. Es schaltet „Hinweis zur Terminierung nach Fristablauf\" nicht ab — dieser hat seinen eigenen Schalter darunter.",
+      "opis": "Schaltet den automatischen täglichen Versand ab (beide Tagesläufe, Erinnerungen vor und nach dem Termin). „Jetzt ausführen” funktioniert auch im ausgeschalteten Zustand. Es schaltet „Hinweis zur Terminierung nach Fristablauf” nicht ab — dieser hat seinen eigenen Schalter darunter.",
       "pokreni": "Jetzt ausführen",
       "potvrda": "Erinnerungen jetzt an alle Empfänger senden?",
       "saljem": "Wird gesendet…",

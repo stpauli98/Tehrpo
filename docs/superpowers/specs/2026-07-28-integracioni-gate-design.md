@@ -153,7 +153,7 @@ Statičke provjere koje ciljaju klase iz §1.1 — one koje daju čist merge i p
 4. **Admin klijent u zahtjevnoj putanji** — `createAdminSupabaseClient` uvezen iz `app/` ili `components/` (zaobilazi RLS)
 5. **SQL bez zaštite** — novi `VIEW` bez `security_invoker=on`; nova tabela bez ijedne RLS politike (tiho vraća nula redova)
 6. **Cron ↔ postavke** — raspored u `vercel.json` nesaglasan s `lib/reminders/rasporedSlanja.ts`
-7. **Ref-guard** — nijedna izmjena ne prebacuje razriješeni cilj s DEMO na PROD
+7. **Ref-guard** — nijedna izmjena ne prebacuje razriješeni cilj s DEMO na PROD. **Isporučeno usko:** pravilo `prod-ref-u-testovima` prijavljuje doslovan PROD ref (`lib/supabase/refs.ts` `PROD_REF`) u bilo kom fajlu pod `tests/`. Ne prati razrješavanje env varijabli niti precedenciju `.env.development.local` nad `.env.local` — to ostaje na `globalSetup` guard-u iz `tests/e2e/global-setup.ts`, koji provjerava stvarno razriješen cilj u vrijeme izvršavanja.
 
 ### 5.1 Gdje logika živi
 

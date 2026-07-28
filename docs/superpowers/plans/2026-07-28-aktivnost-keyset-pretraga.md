@@ -376,23 +376,50 @@ async function main() {
 
     await kaoKorisnik(admin.rows[0].id)
 
+    // MJERI SERVERSKO VRIJEME, NE WALL-CLOCK. Baza je u eu-west-1, a mrežni
+    // round-trip s ove mašine je 70–175 ms sam po sebi (izmjereno golim `select 1`),
+    // pa bi wall-clock mjerio internet vezu umjesto upita. `Execution Time` iz
+    // EXPLAIN ANALYZE je serverski i nezavisan od mreže — to je jedini brojač
+    // koji ovdje išta znači.
     const mjeri = async (naziv: string, sql: string, params: unknown[] = []) => {
-      const t = Date.now()
-      const r = await c.query(sql, params)
-      console.log(`${naziv.padEnd(34)} ${String(Date.now() - t).padStart(5)} ms  redova=${r.rowCount}`)
-      return r
+      const wall = Date.now()
+      const plan = await c.query(`explain (analyze, buffers) ${sql}`, params)
+      const tekst = plan.rows.map((x) => x["QUERY PLAN"]).join("\n")
+      const ms = Number(tekst.match(/Execution Time: ([\d.]+) ms/)?.[1] ?? NaN)
+      if (Number.isNaN(ms)) throw new Error(`Ne mogu pročitati Execution Time za: ${naziv}`)
+      console.log(`${naziv.padEnd(34)} server=${ms.toFixed(1).padStart(8)} ms  (wall=${Date.now() - wall} ms)`)
+      return { ms, r: await c.query(sql, params) }
     }
+
+    const PRAG_MS = 50
+    const mjerenja: { naziv: string; ms: number }[] = []
 
     const prva = await mjeri("prva porcija",
       `select * from get_aktivnost_strana(null,null,null,null,null,null,null,null,51)`)
-    const zadnji = prva.rows[prva.rows.length - 1]
-    await mjeri("druga porcija (keyset)",
+    mjerenja.push({ naziv: "prva porcija", ms: prva.ms })
+    const zadnji = prva.r.rows[prva.r.rows.length - 1]
+
+    const druga = await mjeri("druga porcija (keyset)",
       `select * from get_aktivnost_strana(null,null,null,null,null,null,$1,$2,51)`,
       [zadnji.vrijeme, zadnji.id])
-    await mjeri("pretraga 'termin'",
+    mjerenja.push({ naziv: "druga porcija (keyset)", ms: druga.ms })
+
+    const pretraga = await mjeri("pretraga 'termin'",
       `select * from get_aktivnost_strana(null,null,null,null,null,'termin',null,null,51)`)
-    await mjeri("filter akcija=UPDATE",
+    mjerenja.push({ naziv: "pretraga 'termin'", ms: pretraga.ms })
+
+    const filter = await mjeri("filter akcija=UPDATE",
       `select * from get_aktivnost_strana(null,null,null,'UPDATE',null,null,null,null,51)`)
+    mjerenja.push({ naziv: "filter akcija=UPDATE", ms: filter.ms })
+
+    const preko = mjerenja.filter((m) => m.ms > PRAG_MS)
+    if (preko.length > 0) {
+      console.log(`\nPRAG PROBIJEN (${PRAG_MS} ms serverski): ` +
+        preko.map((m) => `${m.naziv}=${m.ms.toFixed(1)} ms`).join(", "))
+      process.exitCode = 1
+    } else {
+      console.log(`\nSva mjerenja ispod ${PRAG_MS} ms serverski. Stara get_aktivnost je na istoj bazi trajala 9.434 ms.`)
+    }
 
     // Guard: operater ne smije dobiti nijedan red.
     await kaoPostgres()
@@ -424,11 +451,14 @@ cd .claude/worktrees/aktivnost-perf
 pnpm exec tsx --env-file=.env.development.local scripts/mjeri-aktivnost.ts
 ```
 Expected:
-- `prva porcija` i `druga porcija (keyset)` **ispod 50 ms**, `redova=51`
-- `pretraga 'termin'` **ispod 50 ms**
+- sve četiri linije `server=… ms` **ispod 50 ms** — to je serversko `Execution Time` iz `EXPLAIN ANALYZE`, ne wall-clock
+- `Sva mjerenja ispod 50 ms serverski.`
 - `guard OK: operater odbijen (42501) nije dozvoljeno`
+- izlazni kod 0
 
-Ako je bilo koje mjerenje preko 200 ms, ne nastavljaj — vrati se na SQL. Poređenja radi, stara `get_aktivnost` je na istoj bazi trajala 9.688 ms.
+**Wall-clock se NE gleda i nije prag.** Baza je u eu-west-1; goli `select 1` s ove mašine traje 70–175 ms, pa wall-clock mjeri internet vezu, ne upit. Očekuj `wall=` vrijednosti od 100–300 ms uz `server=` od nekoliko milisekundi — to je normalno, nije problem.
+
+Ako neko serversko mjerenje pređe 50 ms, skripta izađe s kodom 1 — ne nastavljaj, vrati se na SQL. Poređenja radi, stara `get_aktivnost` je na istoj bazi imala `Execution Time: 9434 ms`.
 
 - [ ] **Step 5: Commit**
 

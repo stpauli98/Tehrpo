@@ -967,7 +967,7 @@
     },
     "podsjetniciKontrole": {
       "naslov": "Automatsko slanje",
-      "opis": "Dnevno slanje podsjetnika (06:00 UTC). Isključivanje zaustavlja samo automatiku — ručno pokretanje uvijek radi.",
+      "opis": "Gasi automatsko dnevno slanje (oba dnevna termina, i podsjetnike prije roka i one poslije roka). „Pokreni sada\" radi i dok je isključeno. Ne gasi „Obavijest o zakazivanju poslije roka\" — ona ima svoj prekidač ispod.",
       "pokreni": "Pokreni sada",
       "potvrda": "Poslati podsjetnike svim primaocima odmah?",
       "saljem": "Šaljem…",

@@ -967,7 +967,7 @@
     },
     "podsjetniciKontrole": {
       "naslov": "Automatic sending",
-      "opis": "Daily reminder sending (06:00 UTC). Turning it off stops only the schedule — manual runs always work.",
+      "opis": "Turns off automatic daily sending (both daily runs, pre-due and post-due reminders alike). \"Run now\" works even while it is off. It does not turn off \"Notice about scheduling after the deadline\" — that has its own switch below.",
       "pokreni": "Run now",
       "potvrda": "Send reminders to all recipients now?",
       "saljem": "Sending…",

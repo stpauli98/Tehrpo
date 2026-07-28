@@ -9,26 +9,29 @@ Argument (opciono): spisak grana. Bez argumenta — sam sastavi spisak.
 ## Faza 0 — Prijem
 
 - `git fetch origin --prune`
-- `gh pr list --state open` i `git branch --format='%(refname:short)'`
+- Ako je argument komande dat, tretiraj ga kao gotov spisak grana i preskoči popis ispod. Bez argumenta, sastavi spisak sam: `gh pr list --state open` i `git branch --format='%(refname:short)'`.
 - Za svaku granu: `git rev-list --left-right --count origin/main...<grana>`
-- Ispiši predloženu seriju (grane, redoslijed po rastućem broju PR-a) i **sačekaj potvrdu vlasnika**. Ne nastavljaj bez nje.
+- Odredi redoslijed serije: grane sa otvorenim PR-om idu prve, sortirane po rastućem broju PR-a. Grane **bez** PR-a idu poslije njih, međusobno sortirane po datumu prvog commita koji nije na `origin/main` — najstariji prvi (`git log origin/main..<grana> --reverse --format=%aI | head -1`). Ovaj redoslijed nije kozmetički: to je mehanizam kojim Faza 2 hvata sudar timestampova migracija (dvije grane koje uvedu migraciju istog trenutka se spajaju u poznatom, ponovljivom redu) — drži ga se dosljedno kroz Fazu 1.
+- Ispiši predloženu seriju sa određenim redoslijedom i **sačekaj potvrdu vlasnika**. Ne nastavljaj bez nje.
 
 ## Faza 1 — Sklapanje
 
-- `git worktree add .claude/worktrees/integracija -b integracija/$(date +%F) origin/main`
+- Izračunaj datum **jednom** i drži ga u varijabli — koristi istu vrijednost u ovoj fazi i u Fazama 6, 7 i 8 umjesto ponovnog pozivanja `date`: `DATUM=$(date +%F)`. Gate sa punim E2E i build-om lako pređe ponoć; dvije nezavisne evaluacije `$(date +%F)` bi tada dale različite nazive grane.
+- `git worktree add .claude/worktrees/integracija -b integracija/$DATUM origin/main`
 - U tom worktree-u: `pnpm install --frozen-lockfile`
-- Spajaj grane **serijski, po rastućem broju PR-a**: `git merge --no-ff <grana>`
+- Spajaj grane **serijski, tačno redoslijedom određenim u Fazi 0**: `git merge --no-ff <grana>`
 - Konflikt zabilježi i **stani** — ne rješavaj napamet. Prijavi vlasniku čije su grane u sudaru.
 
 ## Faza 2 — Statičke provjere
 
 - Pokreni `pnpm provjeri:integraciju` (podrazumijevana bazna grana: `origin/main`).
-- Zastavice postoje, ali `pnpm` traži `--` prije njih, inače ih pojede sam `pnpm`:
+- Zastavice postoje. Radi sigurnosti dodaj `--` prije njih — prosljeđivanje bez `--` zavisi od verzije `pnpm`-a, ne oslanjaj se na to da će uvijek proći:
   - `pnpm provjeri:integraciju -- --baza <ref>` — eksplicitna bazna grana umjesto `origin/main`
   - `pnpm provjeri:integraciju -- --sve` — svi fajlovi migracija bez obzira na git stanje (ignoriše `--baza` ako je zadan uz njega)
-- Izlazni kod: `0` čisto, `1` ima nalaza (svaki ispisan kao `putanja:linija — [pravilo] poruka`), `2` greška u opcijama ili bazna grana nije razrešiva lokalno (obično treba `git fetch origin` prvo — vrati se na Fazu 1 provjeriti fetch, ne tretiraj kao "čisto").
+- Izlazni kod: `0` čisto, `1` ima nalaza (svaki ispisan kao `putanja:linija — [pravilo] poruka`), `2` greška u opcijama ili bazna grana nije razrešiva lokalno (obično treba `git fetch origin` prvo — vrati se na **Fazu 0** ponoviti fetch, ne tretiraj kao "čisto").
 - Obuhvat migracija u podrazumijevanom/`--baza` režimu je **unija**: commitovane izmjene prema baznoj grani (`git diff <baza>...HEAD`) **i** necommitovane izmjene u radnom stablu (untracked/staged/modified). U integracionom worktree-u je sve već commitovano kroz merge-eve iz Faze 1, pa je ovo uglavnom bez efekta — ali ako u toku gate-a napraviš ručnu ispravku (Faza 4 rebase, paritet prevoda...) prije nego je komituješ, ona već ulazi u obuhvat sljedećeg pokretanja.
 - Svaki nalaz nosi grana koja ga je uvela. Utvrdi je preko `git log -S "<karakterističan string iz nalaza>" -- <fajl>` (ili `git blame <fajl>` pa provjeri koji merge commit je unio liniju) — obavezno prije nego nalaz pripišeš nekoj grani u izvještaju.
+- Ako ima nalaza: ne popravljaš ih ovdje u integracionoj grani. Ispravka ide u izvornu granu po pravilima iz odjeljka „Ovlaštenja" niže (mehaničko popravljaš sam, suštinsko vraćaš vlasniku), grana se ponovo spaja u integracionu (Faza 1), i Faza 2 se ponavlja.
 
 ## Faza 3 — Kvalitet
 
@@ -61,7 +64,7 @@ Nalaz piši kao `fajl:linija — šta se lomi — čija je grana`. Ishod: **GO**
 
 ## Faza 6 — Preview
 
-- `git push -u origin integracija/$(date +%F)`
+- `git push -u origin integracija/$DATUM` (ista varijabla iz Faze 1, ne ponovno `$(date +%F)`)
 - Sačekaj Vercel Preview i provjeri deployanu aplikaciju
 
 ## Faza 7 — Merge
@@ -69,12 +72,12 @@ Nalaz piši kao `fajl:linija — šta se lomi — čija je grana`. Ishod: **GO**
 - Izvijesti **GO / NE-GO po grani** i sačekaj odobrenje vlasnika
 - Ako serija nosi migracije: PROD migracija ide **prije** merge-a, uz izričitu potvrdu vlasnika, kroz `POTVRDI_PROD=da pnpm db:apply-cloud --prod <fajl>`. Ovo agent **nikad ne izvršava sam** bez te potvrde.
 - Mergaj PR-ove provjerenim redom
-- **Invarijanta:** `git fetch origin && git diff integracija/<datum> origin/main` mora biti prazan. Ako nije — stani i javi; deployano stanje nije ono koje je provjereno.
+- **Invarijanta:** `git fetch origin && git diff integracija/$DATUM origin/main` mora biti prazan. Ako nije — stani i javi; deployano stanje nije ono koje je provjereno.
 
 ## Faza 8 — Čišćenje
 
 - `git worktree remove .claude/worktrees/integracija`
-- `git push origin --delete integracija/<datum>` i `git branch -D integracija/<datum>`
+- `git push origin --delete integracija/$DATUM` i `git branch -D integracija/$DATUM`
 
 ## Ovlaštenja
 

@@ -32,6 +32,9 @@ export const TIP_KEY = {
 export const STATUS_KEY = {
   poslato: "poslato",
   greska_slanja: "greskaSlanja",
+  // Demo režim: mejl je sastavljen do kraja ali namjerno nije poslat. NIJE greška —
+  // `jeGreska` ga zato ne hvata, pa red nema crvenu pozadinu ni „Označi pregledanim".
+  demo: "demo",
 } as const satisfies Record<MejlStatus, string>
 
 export const DOSTAVA_KEY = {

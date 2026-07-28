@@ -387,6 +387,7 @@ export type Database = {
           id: string
           ime: string
           klijent_id: string
+          lokacija_id: string | null
           podsjetnik_primalac: boolean
           telefon: string | null
         }
@@ -397,6 +398,7 @@ export type Database = {
           id?: string
           ime: string
           klijent_id: string
+          lokacija_id?: string | null
           podsjetnik_primalac?: boolean
           telefon?: string | null
         }
@@ -407,6 +409,7 @@ export type Database = {
           id?: string
           ime?: string
           klijent_id?: string
+          lokacija_id?: string | null
           podsjetnik_primalac?: boolean
           telefon?: string | null
         }

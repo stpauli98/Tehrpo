@@ -204,4 +204,14 @@ test.describe("Postavke → Ko šta prima (uređivanje)", () => {
       await deleteKlijentByNaziv(naziv)
     }
   })
+
+  test("iznad tabele piše ko uvijek prima (admini + REMINDER_TO)", async ({ page }) => {
+    await page.goto("/postavke")
+    await page.getByRole("button", { name: "Ko šta prima" }).click()
+    const red = page.getByTestId("ksp-uvijek-primaju")
+    await expect(red).toBeVisible()
+    // E2E se prijavljuje kao admin koji prima podsjetnike, pa spisak ne smije biti prazan.
+    await expect(red).toContainText("Uvijek primaju")
+    await expect(red).toContainText("@")
+  })
 })

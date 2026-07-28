@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import sr from "@/messages/sr.json"
 import en from "@/messages/en.json"
 import de from "@/messages/de.json"
-import { izracunajIshodReda, izracunajStatusRadnika } from "./koStaPrima"
+import { izracunajIshodReda, izracunajStatusRadnika, stalniPrimaoci } from "./koStaPrima"
 
 describe("izracunajIshodReda", () => {
   const ok = { podsjetniciAktivni: true, saljiGlobalno: true, saljiFirmi: true, brojAdresa: 1 }
@@ -74,5 +74,31 @@ describe("izracunajStatusRadnika", () => {
   it("barem jedan prima → ima", () => {
     expect(izracunajStatusRadnika(3, 1)).toBe("ima")
     expect(izracunajStatusRadnika(1, 1)).toBe("ima")
+  })
+})
+
+describe("stalniPrimaoci", () => {
+  const admin = {
+    id: "a1", email: "admin@firma.ba", uloga: "admin", aktivan: true, prima_podsjetnike: true,
+  }
+
+  it("uključuje aktivnog admina koji prima i REMINDER_TO adrese, lowercase i bez duplikata", () => {
+    expect(stalniPrimaoci([admin], "Sef@Firma.ba, admin@firma.ba")).toEqual([
+      "sef@firma.ba",
+      "admin@firma.ba",
+    ])
+  })
+
+  it("izostavlja admina koji je deaktiviran ili je isključio podsjetnike", () => {
+    expect(stalniPrimaoci([{ ...admin, aktivan: false }], "")).toEqual([])
+    expect(stalniPrimaoci([{ ...admin, prima_podsjetnike: false }], "")).toEqual([])
+  })
+
+  it("izostavlja ne-admine (oni primaju samo preko dodjele)", () => {
+    expect(stalniPrimaoci([{ ...admin, uloga: "operater" }], "")).toEqual([])
+  })
+
+  it("preskače nevalidne adrese i prazan REMINDER_TO", () => {
+    expect(stalniPrimaoci([{ ...admin, email: "nije-mejl" }], undefined)).toEqual([])
   })
 })

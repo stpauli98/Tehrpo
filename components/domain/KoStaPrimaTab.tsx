@@ -4,7 +4,13 @@ import { getTranslations } from "next-intl/server"
 import { href } from "@/i18n/routes"
 import { podsjetniciAktivni as citajPodsjetniciAktivni } from "@/lib/reminders/gating"
 import { EMAIL_RE } from "@/lib/reminders/recipients"
-import { izracunajIshodReda, izracunajStatusRadnika, type RazlogNePrima } from "@/lib/podsjetnici/koStaPrima"
+import {
+  izracunajIshodReda,
+  izracunajStatusRadnika,
+  stalniPrimaoci,
+  type RazlogNePrima,
+} from "@/lib/podsjetnici/koStaPrima"
+import { env } from "@/lib/env"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
@@ -26,7 +32,7 @@ export async function KoStaPrimaTab() {
   const supabase = await createServerSupabaseClient()
   const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
-    supabase.from("korisnici").select("id, ime, prima_podsjetnike, aktivan").order("ime"),
+    supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
     supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
     supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac"),
@@ -36,6 +42,15 @@ export async function KoStaPrimaTab() {
   const automatikaAktivna = citajPodsjetniciAktivni(postRes.data)
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
+  // KorisnikRow očekuje email: string — red bez mejla ne može biti primalac, pa ispada.
+  const stalni = stalniPrimaoci(
+    korisnici
+      .filter((k) => !!k.email)
+      .map((k) => ({
+        id: k.id, email: k.email!, uloga: k.uloga, aktivan: k.aktivan, prima_podsjetnike: k.prima_podsjetnike,
+      })),
+    env.REMINDER_TO,
+  )
   // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
   const adreseByKlijent = new Map<string, Set<string>>()
   for (const ko of kontaktiRes.data ?? []) {
@@ -126,8 +141,11 @@ export async function KoStaPrimaTab() {
         </div>
       )}
 
-      <div className="mb-2 flex items-center justify-end">
-        <span className="text-xs text-muted-foreground" data-testid="ksp-sazetak">
+      <div className="mb-2 flex items-start justify-between gap-4">
+        <span className="text-xs text-muted-foreground" data-testid="ksp-uvijek-primaju">
+          {stalni.length > 0 ? t("uvijekPrimaju", { adrese: stalni.join(", ") }) : t("uvijekPrimajuPrazno")}
+        </span>
+        <span className="shrink-0 text-xs text-muted-foreground" data-testid="ksp-sazetak">
           {automatikaAktivna
             ? t("sazetak", { prima: brojPrima, ukupno: redovi.length })
             : t("sazetakAutomatikaOff", { prima: brojAdresaKandidata, ukupno: redovi.length })}

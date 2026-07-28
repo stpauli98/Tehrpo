@@ -1,6 +1,8 @@
 // Čista logika ekrana „Postavke → Ko šta prima". Bez React-a i bez Supabase-a, da
 // precedencija razloga može imati testove i da JSX ne bude jedino mjesto gdje živi.
 
+import { assembleRecipients, parseEmailList, type KorisnikRow } from "@/lib/reminders/recipients"
+
 /** Zašto firma NE prima — poredano po precedenciji (viši razlog nadjačava niže). */
 export type RazlogNePrima = "automatika" | "globalno" | "firma" | "nemaAdrese"
 
@@ -38,4 +40,20 @@ export function izracunajStatusRadnika(
 ): StatusRadnika {
   if (brojPrimalaca > 0) return "ima"
   return ukupnoDodijeljenih > 0 ? "optOut" : "nemaDodijeljenih"
+}
+
+/**
+ * Primaoci koje NIJEDNA per-firma postavka ne mijenja: admini (aktivni i sa uključenim
+ * podsjetnicima) + adrese iz env `REMINDER_TO`. Namjerno se koriste iste funkcije koje
+ * koristi engine (`recipientsForKlijent` → `assembleRecipients`), da prikaz i stvarno
+ * slanje ne mogu razići; redoslijed je isti kao tamo (base pa admini).
+ */
+export function stalniPrimaoci(
+  korisnici: KorisnikRow[],
+  reminderToRaw: string | null | undefined,
+): string[] {
+  const adminEmails = korisnici
+    .filter((k) => k.aktivan && k.prima_podsjetnike && k.uloga === "admin")
+    .map((k) => k.email)
+  return assembleRecipients({ base: parseEmailList(reminderToRaw), adminEmails })
 }

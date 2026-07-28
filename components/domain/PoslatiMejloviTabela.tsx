@@ -64,7 +64,15 @@ export async function PoslatiMejloviTabela({
               <td className="px-3 py-2">{r.subject}</td>
               <td className="px-3 py-2">{r.klijent_naziv ?? "—"}</td>
               <td className="px-3 py-2">
-                {t(`status.${STATUS_KEY[r.status]}` as never)}
+                {/* Demo red dobija bedž, ne običan tekst — da se na prvi pogled razlikuje
+                    od stvarno poslatog mejla i kad je traka iznad odskrolana. */}
+                {r.status === "demo" ? (
+                  <Badge variant="secondary" data-testid="mejl-demo-bedz">
+                    {t("status.demo")}
+                  </Badge>
+                ) : (
+                  t(`status.${STATUS_KEY[r.status]}` as never)
+                )}
                 {r.greska && <span className="block text-xs text-destructive">{r.greska}</span>}
               </td>
               <td className="px-3 py-2">

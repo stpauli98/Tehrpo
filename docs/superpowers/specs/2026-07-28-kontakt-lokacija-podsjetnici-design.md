@@ -72,15 +72,24 @@ sa jednom kolonom je njen podskup, pa se prelazak kasnije radi bez bacanja posla
 
 `firmaRecipientsForKlijent(index, klijentId)` → `firmaRecipientsZa(index, klijentId, lokacijaId)`:
 
+**Lokacijski kontakti se DODAJU firminim, ne zamjenjuju ih.**
+
 | slučaj | primaoci |
 |---|---|
-| termin **bez** lokacije | samo kontakti sa `lokacija_id = null` |
-| lokacija **ima** vezane kontakte | ti kontakti |
-| lokacija **nema** vezane kontakte | fallback na kontakte sa `null` |
+| termin **bez** lokacije | kontakti sa `lokacija_id = null` |
+| termin **sa** lokacijom L | kontakti vezani za L **+** kontakti sa `null` |
 | uvijek uz to | `klijenti.podsjetnik_emails` (opšte adrese firme) |
 
-Fallback je svjesna odluka korisnika: lokacija koju neko zaboravi povezati ne smije
-tiho prestati da šalje — kod ZNR rokova propušten rok se ne primijeti dok ne bude kasno.
+Zašto dodavanje a ne zamjena: „kontakt firme" doslovno znači „prati sve" — npr.
+menadžer ZNR u centrali. Kod zamjene bi centrala **tiho** prestala da prima podsjetnike
+za gradilište čim mu se dodijeli koordinator, i to bez ikakvog traga. Kod ZNR rokova
+propušten rok se ne primijeti dok ne bude kasno.
+
+Korisnikov zahtjev je i dalje ispunjen: kontakt lokacije 2 **ne** dobija podsjetnik za
+lokaciju 1. Ko ne treba da prima sve — veže se za svoju lokaciju.
+
+Posljedica: „lokacija bez vezanih kontakata" nije poseban slučaj nego prirodno pada na
+kontakte firme.
 
 ### 3. RPC izmjene
 
@@ -125,10 +134,11 @@ zahvatu kad podaci pređu — ne u istom potezu.
 Jezgro je čista funkcija (`firmaRecipientsZa`) pa ide unit testovima:
 1. termin bez lokacije → samo kontakti firme
 2. lokacija sa vezanim kontaktima → samo oni
-3. lokacija bez vezanih → fallback na kontakte firme
+3. lokacija bez vezanih → dobiju kontakti firme (prirodno, ne poseban slučaj)
 4. **kontakt lokacije 2 NE dobija podsjetnik za lokaciju 1** — doslovno korisnikov primjer
-5. `podsjetnik_emails` firme uvijek prisutne
-6. isključen `podsjetnik_primalac` isključuje kontakt bez obzira na lokaciju
+5. kontakt firme prima i za lokaciju koja IMA svoje kontakte (dodavanje, ne zamjena)
+6. `podsjetnik_emails` firme uvijek prisutne
+7. isključen `podsjetnik_primalac` isključuje kontakt bez obzira na lokaciju
 
 E2E: vezivanje kontakta za lokaciju kroz obje forme.
 

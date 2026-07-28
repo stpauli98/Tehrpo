@@ -7,6 +7,7 @@ import {
   DOSTAVA_KEY,
   DOSTAVA_VARIJANTA,
   jeGreska,
+  jeDemo,
   jeIsoDatum,
   type MejlRed,
 } from "./poslati-mejlovi"
@@ -35,6 +36,18 @@ describe("jeGreska", () => {
     expect(jeGreska(red("poslato", "nepoznato"))).toBe(false)
     expect(jeGreska(red("poslato", "delivered"))).toBe(false)
     expect(jeGreska(red("poslato", "opened"))).toBe(false)
+  })
+})
+
+describe("jeDemo", () => {
+  it("demo red nije greška — ne smije dobiti crvenu pozadinu ni „Označi pregledanim\"", () => {
+    expect(jeDemo(red("demo", "nepoznato"))).toBe(true)
+    expect(jeGreska(red("demo", "nepoznato"))).toBe(false)
+  })
+
+  it("stvarna slanja nisu demo", () => {
+    expect(jeDemo(red("poslato", "delivered"))).toBe(false)
+    expect(jeDemo(red("greska_slanja", "nepoznato"))).toBe(false)
   })
 })
 

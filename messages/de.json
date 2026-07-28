@@ -52,7 +52,9 @@
     "topBar": {
       "odjava": "Abmelden",
       "korisnickiMeni": "Kontomenü",
-      "prijavljenKao": "Angemeldet als"
+      "prijavljenKao": "Angemeldet als",
+      "demoBedz": "DEMO",
+      "demoBedzOpis": "Demo-Version — es werden keine E-Mails versendet"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — demnächst"
@@ -1252,6 +1254,7 @@
   "poslatiMejlovi": {
     "naslov": "Gesendete Mails",
     "opis": "Protokoll automatischer und manueller E-Mails mit Zustellstatus.",
+    "demoTraka": "Dies ist eine Demo — es werden keine E-Mails versendet. Unten sehen Sie, wie sie im echten Betrieb aussehen würden.",
     "prazno": "Es wurden noch keine E-Mails gesendet.",
     "kolone": {
       "vrijeme": "Zeit",
@@ -1275,7 +1278,7 @@
     "status": {
       "poslato": "Gesendet",
       "greskaSlanja": "Versand fehlgeschlagen",
-      "demo": "Demo"
+      "demo": "Demo (nicht gesendet)"
     },
     "dostava": {
       "nepoznato": "Unbekannt",

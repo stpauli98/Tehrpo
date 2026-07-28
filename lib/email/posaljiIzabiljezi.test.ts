@@ -39,6 +39,23 @@ describe("posaljiIzabiljezi", () => {
     expect(sb.calls).toHaveLength(0)
   })
 
+  // Demo režim mora BITI zabilježen (tab prikazuje kako bi izgledalo), za razliku od
+  // običnog dry-runa koji ostaje tih — inače bi svaki unit test punio dnevnik.
+  it("demo: rpc sa status=demo, iste primaoce i naslov kao stvarno slanje", async () => {
+    const sb = fakeSupabase()
+    const send = vi.fn(async (): Promise<SendResult> => ({ id: "demo", dryRun: true, demo: true }))
+    const res = await posaljiIzabiljezi(sb, { ...base, klijentId: "k1" }, send)
+    expect(res.demo).toBe(true)
+    expect(sb.calls).toHaveLength(1)
+    const a = sb.calls[0].args as Record<string, unknown>
+    expect(a.p_status).toBe("demo")
+    expect(a.p_resend_id).toBe("demo")
+    expect(a.p_greska).toBeNull()
+    expect(a.p_klijent_id).toBe("k1")
+    expect(a.p_primaoci).toEqual(["a@x.com", "b@x.com"])
+    expect(a.p_subject).toBe("S")
+  })
+
   it("neuspjeh: rpc sa greska_slanja; funkcija re-throw-uje", async () => {
     const sb = fakeSupabase()
     const send = vi.fn(async (): Promise<SendResult> => { throw new Error("resend pao") })

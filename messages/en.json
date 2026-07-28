@@ -399,6 +399,13 @@
       "poljeKontaktOsoba": "Contact person",
       "poljeEmail": "Email",
       "poljeTelefon": "Phone",
+      "kontaktNaslov": "Contact for this location",
+      "kontaktBez": "No contact",
+      "kontaktPostojeci": "Existing company contact",
+      "kontaktNovi": "New contact",
+      "kontaktIme": "Full name",
+      "kontaktPrima": "Receives reminders for this location",
+      "kontaktPomoc": "A bound contact receives reminders only for this location. Company contacts get them regardless.",
       "submitPending": "Saving…",
       "submitEdit": "Save changes",
       "submitNovi": "Create location"

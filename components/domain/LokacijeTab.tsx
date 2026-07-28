@@ -12,15 +12,18 @@ type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 export async function LokacijeTab({
   klijentId,
   lokacije,
+  kontakti = [],
 }: {
   klijentId: string
   lokacije: LokacijaRow[]
+  /** Kontakti firme — forma lokacije nudi vezivanje postojećeg umjesto ponovnog kucanja. */
+  kontakti?: { id: string; ime: string; lokacija_id: string | null }[]
 }) {
   const t = await getTranslations("klijenti.lokacije")
   return (
     <div data-testid="tab-lokacije-content" className="space-y-4">
       <div className="flex justify-end">
-        <LokacijaSheet klijentId={klijentId} />
+        <LokacijaSheet klijentId={klijentId} kontakti={kontakti} />
       </div>
 
       {lokacije.length === 0 ? (
@@ -78,7 +81,7 @@ export async function LokacijeTab({
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex gap-2">
-                      <LokacijaSheet klijentId={klijentId} lokacija={l} />
+                      <LokacijaSheet klijentId={klijentId} lokacija={l} kontakti={kontakti} />
                       <ObrisiLokacijuButton lokacijaId={l.id} />
                     </div>
                   </td>

@@ -399,6 +399,13 @@
       "poljeKontaktOsoba": "Kontaktperson",
       "poljeEmail": "E-Mail",
       "poljeTelefon": "Telefon",
+      "kontaktNaslov": "Kontakt für diesen Standort",
+      "kontaktBez": "Kein Kontakt",
+      "kontaktPostojeci": "Vorhandener Firmenkontakt",
+      "kontaktNovi": "Neuer Kontakt",
+      "kontaktIme": "Vor- und Nachname",
+      "kontaktPrima": "Erhält Erinnerungen für diesen Standort",
+      "kontaktPomoc": "Ein gebundener Kontakt erhält Erinnerungen nur für diesen Standort. Firmenkontakte erhalten sie ohnehin.",
       "submitPending": "Wird gespeichert…",
       "submitEdit": "Änderungen speichern",
       "submitNovi": "Standort erstellen"

@@ -399,6 +399,13 @@
       "poljeKontaktOsoba": "Kontakt osoba",
       "poljeEmail": "Email",
       "poljeTelefon": "Telefon",
+      "kontaktNaslov": "Kontakt za ovu lokaciju",
+      "kontaktBez": "Bez kontakta",
+      "kontaktPostojeci": "Postojeći kontakt firme",
+      "kontaktNovi": "Novi kontakt",
+      "kontaktIme": "Ime i prezime",
+      "kontaktPrima": "Prima podsjetnike za ovu lokaciju",
+      "kontaktPomoc": "Vezan kontakt prima podsjetnike samo za ovu lokaciju. Kontakti firme ih dobijaju svakako.",
       "submitPending": "Spremam…",
       "submitEdit": "Spremi izmjene",
       "submitNovi": "Kreiraj lokaciju"

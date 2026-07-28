@@ -476,7 +476,13 @@ export default async function KlijentDetailPage({
             </div>
           )}
 
-          {tab === "lokacije" && <LokacijeTab klijentId={id} lokacije={lokacije} />}
+          {tab === "lokacije" && (
+            <LokacijeTab
+              klijentId={id}
+              lokacije={lokacije}
+              kontakti={kontakti.map((k) => ({ id: k.id, ime: k.ime, lokacija_id: k.lokacija_id }))}
+            />
+          )}
 
           {tab === "podsjetnici" && <KlijentPodsjetniciTab klijentId={id} />}
 

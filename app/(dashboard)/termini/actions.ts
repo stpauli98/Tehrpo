@@ -146,8 +146,10 @@ export async function updateTermin(
   // Pravila „Zaduženi" po ulozi — vrijede i pri izmjeni; treba firma termina
   let klijentIdTermina: string | null = null
   if (typeof patch.zaduzeni === "string" && patch.zaduzeni) {
-    const { data: red } = await supabase
+    // S1: pad lookup-a NIJE "nema reda" — bez firme se pravilo ne može provjeriti, pa se upis odbija
+    const { data: red, error: redGreska } = await supabase
       .from("termini").select("klijent_id").eq("id", id).maybeSingle()
+    if (redGreska) return { ok: false, message: friendlyDbError(redGreska) }
     klijentIdTermina = red?.klijent_id ?? null
     if (klijentIdTermina) {
       const zaduzeniGreska = await provjeriZaduzenogZaFirmu(supabase, klijentIdTermina, patch.zaduzeni)

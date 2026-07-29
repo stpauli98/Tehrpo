@@ -9,6 +9,7 @@ import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import type { UiPoruka } from "@/components/domain/ChatMessage"
 import { href } from "@/i18n/routes"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { jeAdmin } from "@/lib/auth/roles"
 import type { Database } from "@/db/types"
 
 type PorukaRow = Database["public"]["Tables"]["chat_poruke"]["Row"]
@@ -39,7 +40,7 @@ export default async function AsistentPage({
   // Asistent je admin-only (yoink zahtjev 2026-07-29): tab je ne-adminima sakriven
   // (Sidebar), a ovdje se zatvara i direktan URL pristup.
   const korisnik = await getTrenutniKorisnik()
-  if (korisnik?.uloga !== "admin") redirect(href("/pregled"))
+  if (!korisnik || !jeAdmin(korisnik.uloga)) redirect(href("/pregled"))
 
   const sp = await searchParams
   const aktivni = typeof sp.k === "string" ? sp.k : null

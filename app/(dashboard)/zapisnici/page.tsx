@@ -11,6 +11,7 @@ import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
 import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
 import { href } from "@/i18n/routes"
+import { jeAdmin } from "@/lib/auth/roles"
 import mammoth from "mammoth"
 
 // Isti page-size obrazac kao poslati-mejlovi/page.tsx (PER_PAGE + offset/range).
@@ -34,7 +35,7 @@ export default async function ZapisniciPage({
   // Zapisnici su admin-only (yoink zahtjev 2026-07-29): tab je ne-adminima sakriven
   // (Sidebar), a ovdje se zatvara i direktan URL pristup — isti obrazac kao /asistent.
   const korisnik = await getTrenutniKorisnik()
-  if (korisnik?.uloga !== "admin") redirect(href("/pregled"))
+  if (!korisnik || !jeAdmin(korisnik.uloga)) redirect(href("/pregled"))
 
   const sp = await searchParams
   const previewId = typeof sp.preview === "string" ? sp.preview : null

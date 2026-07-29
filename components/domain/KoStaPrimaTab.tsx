@@ -40,44 +40,61 @@ export async function KoStaPrimaTab() {
   // odsječene `lokacije` ga sakriju, odsječeni `klijenti` skrate cijelu tabelu. Sve tri zato
   // nose `{ count: "exact" }` + eksplicitan `.range()` na istih 5000 redova, provjereno niže.
   const RASPON_GORNJA_GRANICA = 4999
-  const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes, lokacijeRes] = await Promise.all([
-    supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
-    // NAPOMENA (van obima ove izmjene, namjerno neriješeno): `korisnici` i `korisnik_klijent`
-    // nemaju isti { count: "exact" } + .range() tretman. Preko ~1000 dodjela bi PostgREST
-    // tiho odsjekao `korisnik_klijent`, kolona „Radnici" bi pogrešno prikazala „nema
-    // dodijeljenih"/optOut, i BEZ ikakvog banera (podaciNepotpuni ovo ne provjerava). Ista
-    // klasa kvara kao kontakt_osobe/klijenti/lokacije — zaseban posao.
-    supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
-    supabase
-      .from("klijenti")
-      .select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails", { count: "exact" })
-      .order("naziv")
-      .range(0, RASPON_GORNJA_GRANICA),
-    supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
-    supabase
-      .from("kontakt_osobe")
-      .select("klijent_id, email, podsjetnik_primalac, lokacija_id", { count: "exact" })
-      .order("klijent_id")
-      .range(0, RASPON_GORNJA_GRANICA),
-    supabase
-      .from("lokacije")
-      .select("id, naziv, klijent_id", { count: "exact" })
-      .order("naziv")
-      .range(0, RASPON_GORNJA_GRANICA),
-  ])
+  const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes, lokacijeRes, terminiBezLokacijeRes] =
+    await Promise.all([
+      supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
+      // NAPOMENA (van obima ove izmjene, namjerno neriješeno): `korisnici` i `korisnik_klijent`
+      // nemaju isti { count: "exact" } + .range() tretman. Preko ~1000 dodjela bi PostgREST
+      // tiho odsjekao `korisnik_klijent`, kolona „Radnici" bi pogrešno prikazala „nema
+      // dodijeljenih"/optOut, i BEZ ikakvog banera (podaciNepotpuni ovo ne provjerava). Ista
+      // klasa kvara kao kontakt_osobe/klijenti/lokacije — zaseban posao.
+      supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
+      supabase
+        .from("klijenti")
+        .select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails", { count: "exact" })
+        .order("naziv")
+        .range(0, RASPON_GORNJA_GRANICA),
+      supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
+      supabase
+        .from("kontakt_osobe")
+        .select("klijent_id, email, podsjetnik_primalac, lokacija_id", { count: "exact" })
+        .order("klijent_id")
+        .range(0, RASPON_GORNJA_GRANICA),
+      supabase
+        .from("lokacije")
+        .select("id, naziv, klijent_id", { count: "exact" })
+        .order("naziv")
+        .range(0, RASPON_GORNJA_GRANICA),
+      // Koje firme imaju bar jedan termin bez lokacije — treba i njemu { count: "exact" } +
+      // .range() (isti tretman kao klijenti/kontakt_osobe/lokacije): tiho odsijecanje ovdje
+      // bi dalo lažno negativno (firma bi izgledala pokriveno iako joj fali baš ta adresa).
+      // NAPOMENA (van obima ove izmjene, namjerno neriješeno): ovaj upit povlači do 5000 redova
+      // `termini` samo da bi se izračunao skup različitih `klijent_id`-jeva — konvencija repoa
+      // (vidi CLAUDE.md „Read-model convention") je agregacija kroz view ili stabilan RPC
+      // (npr. distinct klijent_id gdje lokacija_id is null), ne fetch pa distinct u aplikaciji.
+      // Zaseban posao.
+      supabase
+        .from("termini")
+        .select("klijent_id", { count: "exact" })
+        .is("lokacija_id", null)
+        .order("klijent_id")
+        .range(0, RASPON_GORNJA_GRANICA),
+    ])
   // Vidljiva napomena, ne samo log: recenzija je pokazala da je ekran sa odsječenim
   // podacima bajt-identičan ekranu koji je stvarno pokriven — `console.warn` ide u
   // Vercel logove koje korisnik nikad ne vidi.
   const podaciNepotpuni =
     jeOdsjeceno(klijentiRes.count, klijentiRes.data?.length ?? 0) ||
     jeOdsjeceno(kontaktiRes.count, kontaktiRes.data?.length ?? 0) ||
-    jeOdsjeceno(lokacijeRes.count, lokacijeRes.data?.length ?? 0)
+    jeOdsjeceno(lokacijeRes.count, lokacijeRes.data?.length ?? 0) ||
+    jeOdsjeceno(terminiBezLokacijeRes.count, terminiBezLokacijeRes.data?.length ?? 0)
   if (podaciNepotpuni) {
     console.warn(
       `[ko-sta-prima] podaci odsječeni na ${RASPON_GORNJA_GRANICA + 1} redova ` +
         `(klijenti ${klijentiRes.data?.length ?? 0}/${klijentiRes.count ?? "?"}, ` +
         `kontakt_osobe ${kontaktiRes.data?.length ?? 0}/${kontaktiRes.count ?? "?"}, ` +
-        `lokacije ${lokacijeRes.data?.length ?? 0}/${lokacijeRes.count ?? "?"}) — tabela i upozorenja o pokrivenosti mogu biti nepotpuni`,
+        `lokacije ${lokacijeRes.data?.length ?? 0}/${lokacijeRes.count ?? "?"}, ` +
+        `termini_bez_lokacije ${terminiBezLokacijeRes.data?.length ?? 0}/${terminiBezLokacijeRes.count ?? "?"}) — tabela i upozorenja o pokrivenosti mogu biti nepotpuni`,
     )
   }
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
@@ -107,6 +124,8 @@ export async function KoStaPrimaTab() {
     arr.push({ id: lok.id, naziv: lok.naziv })
     lokacijeByKlijent.set(lok.klijent_id, arr)
   }
+  // klijent_id-jevi firmi koje imaju bar jedan termin bez lokacije (lokacija_id IS NULL).
+  const klijentiSaTerminimaBezLokacije = new Set((terminiBezLokacijeRes.data ?? []).map((t) => t.klijent_id))
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
   const primaZa = (id: string) => {
     const k = korisnici.find((k) => k.id === id)
@@ -130,8 +149,9 @@ export async function KoStaPrimaTab() {
     })
     // `trebaUpozorenje` nosi isti predikat kao `brojAdresaKandidata` (automatika ignorisana):
     // precedencija razloga iz izracunajIshodReda mora nadjačati upozorenje — dok globalni
-    // prekidač ili firmin flag već kažu „ne prima", rupa po lokaciji je šum, ne novi razlog.
-    const nepokrivene = trebaUpozorenje({
+    // prekidač ili firmin flag već kažu „ne prima", rupa po lokaciji (ili po terminima bez
+    // lokacije) je šum, ne novi razlog.
+    const { lokacije: nepokrivene, terminiBezLokacije } = trebaUpozorenje({
       saljiGlobalno,
       saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
       brojAdresa: adrese.length,
@@ -142,8 +162,9 @@ export async function KoStaPrimaTab() {
           adresePoLokaciji: new Map(
             [...(grupa?.poLokaciji ?? new Map<string, Set<string>>())].map(([id, set]) => [id, set.size]),
           ),
+          imaTerminaBezLokacije: klijentiSaTerminimaBezLokacije.has(k.id),
         })
-      : []
+      : { lokacije: [], terminiBezLokacije: false }
     return {
       id: k.id,
       naziv: k.naziv,
@@ -153,6 +174,7 @@ export async function KoStaPrimaTab() {
       firmaPrima,
       razlog,
       nepokrivene,
+      terminiBezLokacije,
       // Sirovi flag — ulazi u toggle. Razlikuje se od `firmaPrima` (izvedeno).
       salji: k.salji_podsjetnik_klijentu ?? false,
     }
@@ -244,18 +266,21 @@ export async function KoStaPrimaTab() {
               >
                 <td className="px-4 py-2.5 font-medium">
                   {r.naziv}
-                  {r.nepokrivene.length > 0 && (
+                  {(r.nepokrivene.length > 0 || r.terminiBezLokacije) && (
                     <div
                       data-testid={`ksp-nepokrivene-${r.id}`}
                       className="mt-0.5 flex items-center gap-1 text-xs font-normal text-warning"
                     >
                       <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
                       <span>
-                        {t("nepokriveneLokacije", {
-                          // `naziv` je NOT NULL bez check constrainta — prazan string prolazi
-                          // u bazu, pa fallback na id spriječava „, Lokacija B" bez prvog imena.
-                          lokacije: r.nepokrivene.map((l) => l.naziv || l.id).join(", "),
-                        })}
+                        {r.nepokrivene.length > 0 &&
+                          t("nepokriveneLokacije", {
+                            // `naziv` je NOT NULL bez check constrainta — prazan string prolazi
+                            // u bazu, pa fallback na id spriječava „, Lokacija B" bez prvog imena.
+                            lokacije: r.nepokrivene.map((l) => l.naziv || l.id).join(", "),
+                          })}
+                        {r.nepokrivene.length > 0 && r.terminiBezLokacije && " "}
+                        {r.terminiBezLokacije && t("terminiBezLokacijeNepokriveni")}
                       </span>
                     </div>
                   )}

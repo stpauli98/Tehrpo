@@ -93,6 +93,7 @@ function makeSupabaseMock(cfg: {
   korisnik_klijent?: Row[]
   kontakt_osobe?: Row[]
   lokacije?: Row[]
+  termini?: Row[]
 }) {
   const calls: Call[] = []
   const tableRows: Record<string, Row[]> = {
@@ -101,11 +102,16 @@ function makeSupabaseMock(cfg: {
     korisnik_klijent: cfg.korisnik_klijent ?? [],
     kontakt_osobe: cfg.kontakt_osobe ?? [],
     lokacije: cfg.lokacije ?? [],
+    // `.eq`/`.is` STVARNO filtriraju (vidi builder ispod) — `cfg.termini` ovdje nosi SIROVE
+    // redove (mogu imati i `lokacija_id` postavljen), da mutant koji ukloni/zamijeni filter
+    // na termini upitu (M5/M11) propusti pogrešne redove kroz i test to uhvati.
+    termini: cfg.termini ?? [],
   }
 
   function builder(table: string) {
     let countExact = false
     let ranged: { from: number; to: number } | null = null
+    const predikati: Array<(r: Row) => boolean> = []
 
     const chain = {
       select(cols: string, opts?: { count?: string }) {
@@ -115,6 +121,15 @@ function makeSupabaseMock(cfg: {
       },
       eq(col: string, val: unknown) {
         calls.push({ table, method: "eq", args: [col, val] })
+        predikati.push((r) => r[col] === val)
+        return chain
+      },
+      is(col: string, val: unknown) {
+        calls.push({ table, method: "is", args: [col, val] })
+        // `IS` u SQL/PostgREST tretira nedostajuću kolonu kao NULL (za razliku od `=`,
+        // koje na NULL nikad ne pogađa) — otud `?? null`, da mock ostane vjeran stvarnom
+        // ponašanju i da mutant is→eq stvarno promijeni rezultat filtriranja.
+        predikati.push((r) => (r[col] ?? null) === val)
         return chain
       },
       order(col: string) {
@@ -130,9 +145,10 @@ function makeSupabaseMock(cfg: {
       // Chain je thenable — `await` radi bilo gdje se lanac završi (sa ili bez .range()),
       // baš zato da mutant koji ukloni .range() i dalje "radi" (ali ga dnevnik poziva uhvati).
       then(resolve: (v: { data: Row[]; count: number | null; error: null }) => void) {
-        const rows = tableRows[table] ?? []
-        const data = ranged ? rows.slice(ranged.from, ranged.to + 1) : rows
-        resolve({ data, count: countExact ? rows.length : null, error: null })
+        const sve = tableRows[table] ?? []
+        const filtrirano = predikati.length > 0 ? sve.filter((r) => predikati.every((p) => p(r))) : sve
+        const data = ranged ? filtrirano.slice(ranged.from, ranged.to + 1) : filtrirano
+        resolve({ data, count: countExact ? filtrirano.length : null, error: null })
       },
     }
     return chain
@@ -277,5 +293,204 @@ describe("KoStaPrimaTab — wiring (mutation-killing)", () => {
     const selectPozivi = pozivi("kontakt_osobe", "select")
     expect(selectPozivi).toHaveLength(1)
     expect(selectPozivi[0]!.args[1]).toEqual({ count: "exact" })
+  })
+
+  // ---- termini bez lokacije -----------------------------------------------------------
+
+  it("upozorenje se pojavljuje kad firma ima termine bez lokacije, a nema adresu koja pokriva cijelu firmu", async () => {
+    // k1 ima SAMO lokacijski kontakt (locX — namjerno bez odgovarajućeg reda u `lokacije`,
+    // da izolujemo tvrdnju od postojeće „nepokrivene lokacije" poruke) → brojAdresaFirme=0,
+    // ali adrese.length=1 (pa trebaUpozorenje uopšte razmatra red). Termin bez lokacije za
+    // k1 postoji → poruka o terminima bez lokacije mora se pojaviti.
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      lokacije: [],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "kontakt.locX@firma.ba", podsjetnik_primalac: true, lokacija_id: "locX" },
+      ],
+      termini: [{ klijent_id: "k1", lokacija_id: null }],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    const upozorenje = findByTestId(root, "ksp-nepokrivene-k1")
+    expect(upozorenje).toBeDefined()
+    expect(textOf(upozorenje)).toContain("terminiBezLokacijeNepokriveni")
+  })
+
+  it("ne pojavljuje se kad firma ima adresu koja pokriva cijelu firmu, uprkos terminima bez lokacije", async () => {
+    // Isti termin bez lokacije kao gore, ali kontakt je sada firma-širok (lokacija_id: null)
+    // → brojAdresaFirme=1 pokriva i termine bez lokacije i (nepostojeće) lokacije.
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      lokacije: [],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "kontakt.firma@firma.ba", podsjetnik_primalac: true, lokacija_id: null },
+      ],
+      termini: [{ klijent_id: "k1", lokacija_id: null }],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeUndefined()
+  })
+
+  it("odsijecanje novog upita (termini bez lokacije) pali baner o nepotpunim podacima", async () => {
+    // Preko RASPON_GORNJA_GRANICA+1 (5000) redova → `count` (puna dužina) veći od `data`
+    // (isječeno na .range(0, 4999)) → jeOdsjeceno vraća true baš za ovaj upit.
+    const mnogoTermina = Array.from({ length: 5001 }, () => ({ klijent_id: "k1", lokacija_id: null }))
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      kontakt_osobe: [],
+      lokacije: [],
+      termini: mnogoTermina,
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    expect(findByTestId(root, "ksp-nepotpuni-banner")).toBeDefined()
+  })
+
+  it("termini upit koristi .is(\"lokacija_id\", null) — poziv se bilježi u dnevniku, i red čiji termin IMA lokaciju ne proizvodi upozorenje o terminima bez lokacije (M11: is→eq)", async () => {
+    // k1 ima SAMO lokacijski kontakt (locZ, bez odgovarajuće `lokacije` — izoluje se od
+    // „nepokrivene lokacije" poruke) → brojAdresaFirme=0, adrese.length=1 (gejt otvoren).
+    // Jedini termin k1 IMA lokaciju (locX) → nakon ispravnog is(lokacija_id, null) filtera
+    // taj red uopšte ne ulazi u `terminiBezLokacijeRes`, pa upozorenje ne smije da se pojavi.
+    const { supabase, pozivi } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      lokacije: [],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "kontakt.locZ@firma.ba", podsjetnik_primalac: true, lokacija_id: "locZ" },
+      ],
+      termini: [{ klijent_id: "k1", lokacija_id: "locX" }],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    const isPozivi = pozivi("termini", "is")
+    expect(isPozivi).toHaveLength(1)
+    expect(isPozivi[0]!.args).toEqual(["lokacija_id", null])
+    expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeUndefined()
+  })
+
+  it("klijentiSaTerminimaBezLokacije mora biti per-firma: k2 (termin SA lokacijom) ne smije naslijediti upozorenje k1 (termin BEZ lokacije) (M5/M8/M13)", async () => {
+    // Dvije firme, obje sa SAMO lokacijskim kontaktom (brojAdresaFirme=0 za obje, gejt
+    // otvoren jer adrese.length=1>0 za svaku). k1 ima termin bez lokacije → mora dobiti
+    // upozorenje. k2 ima termin SA lokacijom (locY) → ne smije. Mutant koji ukloni/pokvari
+    // filter na termini upitu (M5), hardkoduje imaTerminaBezLokacije na true (M8), ili
+    // pretvori `.has(k.id)` u globalni `.size > 0` (M13) — bilo koji od njih bi k2 lažno
+    // prijavio kao pogođenog.
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [
+        { id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] },
+        { id: "k2", naziv: "Firma Dva", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] },
+      ],
+      lokacije: [],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "k1@firma.ba", podsjetnik_primalac: true, lokacija_id: "locX" },
+        { klijent_id: "k2", email: "k2@firma.ba", podsjetnik_primalac: true, lokacija_id: "locY" },
+      ],
+      termini: [
+        { klijent_id: "k1", lokacija_id: null },
+        { klijent_id: "k2", lokacija_id: "locY" },
+      ],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeDefined()
+    expect(findByTestId(root, "ksp-nepokrivene-k2")).toBeUndefined()
+  })
+
+  it("prazan spisak: sve lokacije pokrivene ali termini bez lokacije nisu → 'nepokriveneLokacije' dio se NE prikazuje, samo poruka o terminima (M12)", async () => {
+    // LOK_A ima svoj kontakt → pokrivena (nepokrivene=[]). k1 nema firma-široku adresu
+    // (kontakt je lokacijski) i ima termin bez lokacije → terminiBezLokacije=true, pa se
+    // red i dalje prikazuje (uslov na liniji sa `r.terminiBezLokacije`), ali „Bez primaoca
+    // za lokacije:" dio ne smije procuriti u tekst jer je nepokrivene.length === 0.
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      lokacije: [LOK_A],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "kontakt.locA@firma.ba", podsjetnik_primalac: true, lokacija_id: "locA" },
+      ],
+      termini: [{ klijent_id: "k1", lokacija_id: null }],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    const upozorenje = findByTestId(root, "ksp-nepokrivene-k1")
+    expect(upozorenje).toBeDefined()
+    const tekst = textOf(upozorenje)
+    expect(tekst).toContain("terminiBezLokacijeNepokriveni")
+    expect(tekst).not.toContain("nepokriveneLokacije")
+  })
+
+  describe("gejt trebaUpozorenje mora važiti i za terminiBezLokacije, ne samo za nepokrivene lokacije (M15)", () => {
+    // Sva tri testa: k1 ima termin bez lokacije (bi trebalo terminiBezLokacije=true da nije
+    // gejta) — svaki test zatvara gejt jednim drugim razlogom iz precedencije
+    // (izracunajIshodReda/trebaUpozorenje): globalno, firma, nemaAdrese. Mutant koji računa
+    // terminiBezLokacije mimo `trebaUpozorenje` ternarnog izraza bi ga u sva tri slučaja
+    // pogrešno prikazao.
+
+    it("saljiGlobalno (salji_klijentima) = false gasi i poruku o terminima bez lokacije", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: false, podsjetnici_aktivni: true },
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+        lokacije: [],
+        kontakt_osobe: [
+          { klijent_id: "k1", email: "k1@firma.ba", podsjetnik_primalac: true, lokacija_id: "locX" },
+        ],
+        termini: [{ klijent_id: "k1", lokacija_id: null }],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+
+      expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeUndefined()
+    })
+
+    it("saljiFirmi (salji_podsjetnik_klijentu) = false gasi i poruku o terminima bez lokacije", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: false, podsjetnik_emails: [] }],
+        lokacije: [],
+        kontakt_osobe: [
+          { klijent_id: "k1", email: "k1@firma.ba", podsjetnik_primalac: true, lokacija_id: "locX" },
+        ],
+        termini: [{ klijent_id: "k1", lokacija_id: null }],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+
+      expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeUndefined()
+    })
+
+    it("brojAdresa = 0 (bez ijednog kontakta) gasi i poruku o terminima bez lokacije", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+        lokacije: [],
+        kontakt_osobe: [],
+        termini: [{ klijent_id: "k1", lokacija_id: null }],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+
+      expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeUndefined()
+    })
   })
 })

@@ -38,8 +38,16 @@ export async function KoStaPrimaTab() {
     supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
     supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac, lokacija_id"),
-    supabase.from("lokacije").select("id, naziv, klijent_id").order("naziv"),
+    // PostgREST implicitno limitira na ~1000 redova (isti rizik kao u recipients.ts:192-193):
+    // eksplicitan range + count, da tiha trunkacija ne izbriše lokacije iz upozorenja i ne
+    // prijavi „sve pokriveno" za firmu koja to nije.
+    supabase.from("lokacije").select("id, naziv, klijent_id", { count: "exact" }).order("naziv").range(0, 4999),
   ])
+  if (lokacijeRes.count != null && lokacijeRes.count > (lokacijeRes.data?.length ?? 0)) {
+    console.warn(
+      `[ko-sta-prima] lokacije odsječene na ${lokacijeRes.data?.length ?? 0}/${lokacijeRes.count} — upozorenje o nepokrivenim lokacijama može biti nepotpuno`,
+    )
+  }
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
   // Fallback „nema reda/kolone = uključeno" je isti onaj kojim se vodi cron ruta.
   const automatikaAktivna = citajPodsjetniciAktivni(postRes.data)
@@ -67,11 +75,14 @@ export async function KoStaPrimaTab() {
     const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
     set.add(email)
     adreseByKlijent.set(ko.klijent_id, set)
-    if (ko.lokacija_id) {
+    // `?? null` a ne truthy provjera: usklađeno s engine-om (recipients.ts:106), da se prikaz
+    // i stvarno slanje ne razmimoiđu za rubne vrijednosti (npr. prazan string).
+    const lokacijaId = ko.lokacija_id ?? null
+    if (lokacijaId !== null) {
       const poLok = lokacijaAdreseByKlijent.get(ko.klijent_id) ?? new Map<string, Set<string>>()
-      const lokSet = poLok.get(ko.lokacija_id) ?? new Set<string>()
+      const lokSet = poLok.get(lokacijaId) ?? new Set<string>()
       lokSet.add(email)
-      poLok.set(ko.lokacija_id, lokSet)
+      poLok.set(lokacijaId, lokSet)
       lokacijaAdreseByKlijent.set(ko.klijent_id, poLok)
     } else {
       const firmaSet = firmaAdreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
@@ -120,16 +131,28 @@ export async function KoStaPrimaTab() {
       saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
       brojAdresa: adrese.length,
     })
+    // Isti predikat kao `brojAdresaKandidata` (automatika:true) — precedencija razloga iz
+    // izracunajIshodReda mora nadjačati upozorenje: dok globalni prekidač ili firmin flag već
+    // kažu „ne prima", rupa po lokaciji je šum, ne novi razlog. Bez ovog gejta bi npr. globalno
+    // isključena firma dobila i „Ne — globalni prekidač isključen" i „Bez primaoca za lokacije".
+    const biPrimila = izracunajIshodReda({
+      podsjetniciAktivni: true,
+      saljiGlobalno,
+      saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
+      brojAdresa: adrese.length,
+    }).prima
     const lokacijePoKlijentu = lokacijaAdreseByKlijent.get(k.id) ?? new Map<string, Set<string>>()
     const adresePoLokaciji = new Map<string, number>()
     for (const [lokacijaId, set] of lokacijePoKlijentu) {
       adresePoLokaciji.set(lokacijaId, set.size)
     }
-    const nepokrivene = nepokriveneLokacije({
-      lokacije: lokacijeByKlijent.get(k.id) ?? [],
-      brojAdresaFirme: firmaAdreseByKlijent.get(k.id)?.size ?? 0,
-      adresePoLokaciji,
-    })
+    const nepokrivene = biPrimila
+      ? nepokriveneLokacije({
+          lokacije: lokacijeByKlijent.get(k.id) ?? [],
+          brojAdresaFirme: firmaAdreseByKlijent.get(k.id)?.size ?? 0,
+          adresePoLokaciji,
+        })
+      : []
     return {
       id: k.id,
       naziv: k.naziv,
@@ -228,7 +251,9 @@ export async function KoStaPrimaTab() {
                       <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
                       <span>
                         {t("nepokriveneLokacije", {
-                          lokacije: r.nepokrivene.map((l) => l.naziv).join(", "),
+                          // `naziv` je NOT NULL bez check constrainta — prazan string prolazi
+                          // u bazu, pa fallback na id spriječava „, Lokacija B" bez prvog imena.
+                          lokacije: r.nepokrivene.map((l) => l.naziv || l.id).join(", "),
                         })}
                       </span>
                     </div>

@@ -59,6 +59,12 @@ describe("katalozi — opis automatskog slanja", () => {
     }
   })
 
+  it("čuva placeholder {lokacije} u poruci o nepokrivenim lokacijama", () => {
+    for (const [jezik, k] of Object.entries(katalozi)) {
+      expect(k.postavke.koStaPrima.nepokriveneLokacije, jezik).toContain("{lokacije}")
+    }
+  })
+
   it("kaže da obavijest o zakazivanju ima svoj prekidač", () => {
     // Nalaz #3: podsjetnici_aktivni NE gasi zabiljezi_zakazano_obavijest (gejtuje ga
     // samo zakazano_obavijest_aktivna). Opis to mora reći, jer se inače čita kao master.

@@ -21,9 +21,12 @@ import type { Database } from "@/db/types"
 export function MatricaView({
   godine,
   zaduzeniPrijedloziByFirma,
+  sviRadnici,
 }: {
   godine: number[]
   zaduzeniPrijedloziByFirma: Record<string, string[]>
+  /** Prazno za ne-admine; admin dobija sva imena (v. plan-aktivnosti/page.tsx). */
+  sviRadnici: string[]
 }) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.matrica")
@@ -192,6 +195,7 @@ export function MatricaView({
           dokumenti={dokumenti}
           closeHref={closeHref}
           zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
+          sviRadnici={sviRadnici}
         />
       )}
     </div>

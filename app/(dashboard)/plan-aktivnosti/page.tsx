@@ -5,7 +5,12 @@ import { PlanViewSwitcher } from "@/components/domain/PlanViewSwitcher"
 import { PlanIzvozModal } from "@/components/domain/PlanIzvozModal"
 import { jeValidanView, type PlanView } from "@/lib/plan-view"
 import { dohvatiGodineTermina } from "@/lib/queries/godine"
-import { dohvatiZaduzeniPrijedlogeByFirma } from "@/lib/queries/aktivni-korisnici"
+import {
+  dohvatiImenaAktivnihKorisnika,
+  dohvatiZaduzeniPrijedlogeByFirma,
+} from "@/lib/queries/aktivni-korisnici"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { jeAdmin } from "@/lib/auth/roles"
 import { ListaView } from "./_views/lista"
 import { KalendarView } from "./_views/kalendar"
 import { MatricaView } from "./_views/matrica"
@@ -45,9 +50,13 @@ export default async function PlanAktivnostiPage({
   // server komponenta ih dohvati jednom i proslijedi svim potrošačima (filteri,
   // PlanNav, PrikazToolbar, izvoz modal, forme), umjesto pet nezavisnih izvora.
   // Oba helpera na grešku vraćaju fallback/prazno i nikad ne obaraju ekran.
-  const [godine, zaduzeniPrijedloziByFirma] = await Promise.all([
+  // Admin za „Zaduženi" dobija SVA imena (smije zadužiti bilo koga — auto-dodjela
+  // firme u termini/actions); ne-admin ostaje na prijedlozima suženim po firmi.
+  const korisnik = await getTrenutniKorisnik()
+  const [godine, zaduzeniPrijedloziByFirma, sviRadnici] = await Promise.all([
     dohvatiGodineTermina(),
     dohvatiZaduzeniPrijedlogeByFirma(),
+    korisnik && jeAdmin(korisnik.uloga) ? dohvatiImenaAktivnihKorisnika() : Promise.resolve([]),
   ])
 
   return (
@@ -61,17 +70,17 @@ export default async function PlanAktivnostiPage({
       </div>
       {view === "lista" && (
         <Suspense fallback={<ViewSkeleton />}>
-          <ListaView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} />
+          <ListaView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} sviRadnici={sviRadnici} />
         </Suspense>
       )}
       {view === "kalendar" && (
         <Suspense fallback={<ViewSkeleton />}>
-          <KalendarView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} />
+          <KalendarView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} sviRadnici={sviRadnici} />
         </Suspense>
       )}
       {view === "matrica" && (
         <Suspense fallback={<ViewSkeleton />}>
-          <MatricaView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} />
+          <MatricaView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} sviRadnici={sviRadnici} />
         </Suspense>
       )}
     </div>

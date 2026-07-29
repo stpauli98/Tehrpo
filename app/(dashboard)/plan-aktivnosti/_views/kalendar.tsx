@@ -22,9 +22,12 @@ import type { Database } from "@/db/types"
 export function KalendarView({
   godine,
   zaduzeniPrijedloziByFirma,
+  sviRadnici,
 }: {
   godine: number[]
   zaduzeniPrijedloziByFirma: Record<string, string[]>
+  /** Prazno za ne-admine; admin dobija sva imena (v. plan-aktivnosti/page.tsx). */
+  sviRadnici: string[]
 }) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.kalendar")
@@ -206,6 +209,7 @@ export function KalendarView({
           dokumenti={dokumenti}
           closeHref={closeHref}
           zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
+          sviRadnici={sviRadnici}
         />
       )}
     </div>

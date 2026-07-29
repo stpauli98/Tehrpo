@@ -27,7 +27,10 @@
     "greskaNeocekivana": "Ein unerwarteter Fehler ist aufgetreten.",
     "greskaUcitavanja": "Fehler beim Laden der Daten.",
     "samoAdministrator": "Nur Administrator.",
-    "pokusajPonovo": "Erneut versuchen"
+    "pokusajPonovo": "Erneut versuchen",
+    "zaduzeniTi": "(Sie)",
+    "zaduzeniPrikaziListu": "Vorschläge anzeigen",
+    "zaduzeniSlobodanUnos": "Keine Treffer — der eingegebene Name bleibt"
   },
   "shell": {
     "nav": {
@@ -552,7 +555,9 @@
       "ariaMjesec": "Monat",
       "ariaNacin": "Ausführungsart",
       "ariaGodina": "Jahr",
-      "ariaPretraga": "Firmen suchen"
+      "ariaPretraga": "Firmen suchen",
+      "ponisti": "Filter zurücksetzen",
+      "ariaStatus": "Status"
     },
     "sheet": {
       "naslovFallback": "Termin",
@@ -600,7 +605,9 @@
       "poljeZaduzeni": "Zuständig",
       "placeholderZaduzeni": "z. B. Marija K.",
       "kreiram": "Erstelle…",
-      "kreirajTermin": "Termin erstellen"
+      "kreirajTermin": "Termin erstellen",
+      "zaduzeniHintAdmin": "Sie können jeden Mitarbeiter zuweisen — die Firma wird ihm automatisch freigegeben.",
+      "zaduzeniHintRadnik": "Sie können sich selbst oder eine Kollegin/einen Kollegen zuweisen, die/der bereits Zugriff auf diese Firma hat."
     },
     "actions": {
       "datumNeispravan": "Ungültiges Datum",
@@ -611,7 +618,8 @@
       "rokObavezan": "Frist ist erforderlich",
       "lokacijaNePripada": "Der Standort gehört nicht zum ausgewählten Kunden.",
       "terminVecPostoji": "Ein Termin für diese Firma, Art und Frist existiert bereits.",
-      "datumObavezan": "Datum ist erforderlich"
+      "datumObavezan": "Datum ist erforderlich",
+      "zaduzeniNemaPristup": "Diese Person hat keinen Zugriff auf die ausgewählte Firma. Firmenzugriff wird vom Admin unter Einstellungen → Benutzer zugewiesen."
     }
   },
   "status": {

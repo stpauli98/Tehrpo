@@ -36,10 +36,10 @@ export default async function AsistentPage({
 }) {
   const t = await getTranslations("asistent")
 
-  // 'pregled' (read-only) ne koristi AI asistenta — tab mu je sakriven (Sidebar) i RLS blokira upis;
-  // ovdje se zatvara i direktan URL pristup.
+  // Asistent je admin-only (yoink zahtjev 2026-07-29): tab je ne-adminima sakriven
+  // (Sidebar), a ovdje se zatvara i direktan URL pristup.
   const korisnik = await getTrenutniKorisnik()
-  if (korisnik?.uloga === "pregled") redirect(href("/pregled"))
+  if (korisnik?.uloga !== "admin") redirect(href("/pregled"))
 
   const sp = await searchParams
   const aktivni = typeof sp.k === "string" ? sp.k : null

@@ -40,13 +40,17 @@ export function NoviTerminButton({
   vrste,
   lokacijeByFirma,
   zaduzeniPrijedloziByFirma,
+  sviRadnici,
 }: {
   klijenti: Opt[]
   vrste: Opt[]
   lokacijeByFirma: Record<string, Opt[]>
-  /** Imena korisnika koji imaju pristup toj firmi (prijedlozi, ne ograničenje) — vidi
-   * docs/superpowers/specs/2026-07-29-zaduzeni-po-firmi-design.md. */
+  /** Imena korisnika koji imaju pristup toj firmi (za ne-admine i ograničenje na
+   * serveru) — vidi docs/superpowers/specs/2026-07-29-zaduzeni-po-firmi-design.md. */
   zaduzeniPrijedloziByFirma: Record<string, string[]>
+  /** Prazno za ne-admine; admin dobija sva aktivna imena (smije zadužiti bilo koga,
+   * firma se radniku auto-dodijeli u termini/actions). */
+  sviRadnici: string[]
 }) {
   const router = useRouter()
   const invalidirajPlan = useInvalidatePlanQueries()
@@ -70,9 +74,13 @@ export function NoviTerminButton({
 
   const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
 
-  // Prazno dok firma nije izabrana — najjasnije ponašanje (potvrđeno u dizajnu), nema
-  // fallback-a na globalnu listu.
-  const zaduzeniPrijedlozi = klijentId ? zaduzeniPrijedloziByFirma[klijentId] ?? [] : []
+  // Admin (sviRadnici popunjeno) bira iz svih aktivnih imena; ne-admin dobija samo
+  // imena s pristupom izabranoj firmi — prazno dok firma nije izabrana (potvrđeno
+  // u dizajnu), bez fallback-a na globalnu listu.
+  const jeAdminLista = sviRadnici.length > 0
+  const zaduzeniPrijedlozi = jeAdminLista
+    ? sviRadnici
+    : klijentId ? zaduzeniPrijedloziByFirma[klijentId] ?? [] : []
 
   // S2: `errors` idu isključivo inline (FieldError), `message` isključivo u toast.
   const greske: Greske = {
@@ -250,6 +258,9 @@ export function NoviTerminButton({
               testId="novi-zaduzeni"
               describedBy={greske.zaduzeni ? "greska-novi-zaduzeni" : undefined}
             />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {jeAdminLista ? t("zaduzeniHintAdmin") : t("zaduzeniHintRadnik")}
+            </span>
           </label>
           <FieldError id="greska-novi-zaduzeni" errors={greske.zaduzeni} />
 

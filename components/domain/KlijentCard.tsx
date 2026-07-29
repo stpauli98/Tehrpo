@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { Users, MapPin, AlertTriangle } from "lucide-react"
+import { Users, MapPin, AlertTriangle, CircleCheck } from "lucide-react"
 import type { Database } from "@/db/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -18,11 +18,11 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
       data-testid="klijent-card"
       className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-xl"
     >
-      <Card className="h-full transition motion-reduce:transition-none hover:ring-foreground/20">
+      <Card className="h-full transition motion-reduce:transition-none hover:ring-foreground/20 hover:shadow-sm">
         <CardContent className="p-4 space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <h3 className="font-semibold text-foreground leading-tight">{klijent.naziv}</h3>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1.5">
+              <h3 className="font-semibold text-foreground leading-tight truncate">{klijent.naziv}</h3>
               <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
             </div>
             {/* Kasni badge UVIJEK prikazan (spec §7.2 E); crven kad >0, neutralan kad 0 */}
@@ -36,11 +36,15 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
                   : "bg-muted text-muted-foreground ring-border"
               )}
             >
-              <AlertTriangle className="w-3 h-3" aria-hidden />
+              {kasni > 0 ? (
+                <AlertTriangle className="w-3 h-3" aria-hidden />
+              ) : (
+                <CircleCheck className="w-3 h-3" aria-hidden />
+              )}
               {t("kasniBadge", { count: kasni })}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4 border-t border-border/60 pt-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" aria-hidden />
               {t("lokacija", { count: klijent.broj_lokacija ?? 0 })}
@@ -49,7 +53,7 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
               <Users className="w-3.5 h-3.5" aria-hidden />
               {t("aktivnih", { count: klijent.broj_aktivnih ?? 0 })}
             </span>
-            <span className={cn("ml-auto tabular-nums", "text-muted-foreground")}>
+            <span className="ml-auto tabular-nums text-muted-foreground">
               {t("ukupno", { count: klijent.broj_termina ?? 0 })}
             </span>
           </div>

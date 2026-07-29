@@ -44,21 +44,27 @@ export function TerminSheet({
   dokumenti,
   closeHref,
   zaduzeniPrijedloziByFirma,
+  sviRadnici,
 }: {
   termin: TerminRow
   istorija: TerminRow[]
   dokumenti: Database["public"]["Tables"]["dokumenti"]["Row"][]
   closeHref: string
-  /** Imena korisnika koji imaju pristup toj firmi (prijedlozi, ne ograničenje) — vidi
-   * docs/superpowers/specs/2026-07-29-zaduzeni-po-firmi-design.md. */
+  /** Imena korisnika koji imaju pristup toj firmi (za ne-admine i ograničenje na
+   * serveru) — vidi docs/superpowers/specs/2026-07-29-zaduzeni-po-firmi-design.md. */
   zaduzeniPrijedloziByFirma: Record<string, string[]>
+  /** Prazno za ne-admine; admin dobija sva aktivna imena (smije zadužiti bilo koga,
+   * firma se radniku auto-dodijeli u termini/actions). */
+  sviRadnici: string[]
 }) {
   const router = useRouter()
   const invalidirajPlan = useInvalidatePlanQueries()
   const t = useTranslations("termini.sheet")
   const tc = useTranslations("common")
   const tz = useTranslations("termini.zakazanoUpozorenje")
-  const zaduzeniPrijedlozi = termin.klijent_id ? (zaduzeniPrijedloziByFirma[termin.klijent_id] ?? []) : []
+  const zaduzeniPrijedlozi = sviRadnici.length > 0
+    ? sviRadnici
+    : termin.klijent_id ? (zaduzeniPrijedloziByFirma[termin.klijent_id] ?? []) : []
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
   const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)

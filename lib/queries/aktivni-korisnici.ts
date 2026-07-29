@@ -42,3 +42,22 @@ export async function dohvatiZaduzeniPrijedlogeByFirma(): Promise<Record<string,
   if (error) return {}
   return grupisiPrijedlogeByFirma(data)
 }
+
+/**
+ * Server-only: imena SVIH aktivnih korisnika (RPC `get_aktivni_korisnici`).
+ * Namijenjeno ADMIN prijedlozima za „Zaduženi" — admin smije zadužiti bilo kog
+ * radnika (firma mu se tada auto-dodijeli u `korisnik_klijent`, v. termini/actions),
+ * pa mu se ne nudi lista sužena po firmi. Pozivalac je dužan provjeriti ulogu i za
+ * ne-admine proslijediti prazan niz. Na grešku vraća [] (isti princip kao gore).
+ */
+export async function dohvatiImenaAktivnihKorisnika(): Promise<string[]> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase.rpc("get_aktivni_korisnici")
+  if (error) return []
+  const imena = new Set<string>()
+  for (const red of data ?? []) {
+    const ime = (red.ime ?? "").trim()
+    if (ime !== "") imena.add(ime)
+  }
+  return [...imena].sort((a, b) => a.localeCompare(b))
+}

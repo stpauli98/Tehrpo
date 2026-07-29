@@ -3,6 +3,8 @@
 import { z } from "zod"
 import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { jeAdmin } from "@/lib/auth/roles"
 import { friendlyDbError } from "@/lib/db-errors"
 import { todayIso } from "@/lib/date"
 import { jeZakazanoPoslijeRoka } from "@/lib/plan-datum"
@@ -46,6 +48,69 @@ function zodRezultat<T>(greska: z.ZodError<T>): ActionResult {
   return { ok: false, errors: poljaGreske }
 }
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createServerSupabaseClient>>
+
+/**
+ * Pravila za polje „Zaduženi" po ulozi (yoink zahtjev 2026-07-29):
+ * - ne-admin smije upisati SAMO sebe ili osobu koja već ima pristup firmi
+ *   (`get_zaduzeni_dodjele()` = admini + `korisnik_klijent` dodjele) — inače
+ *   field-greška na `zaduzeni`;
+ * - admin smije bilo koga; slobodan tekst koji ne odgovara nijednom korisniku
+ *   i dalje prolazi (`termini.zaduzeni` nije FK).
+ * Vraća `null` kad je unos dozvoljen.
+ */
+async function provjeriZaduzenogZaFirmu(
+  supabase: SupabaseServerClient,
+  klijentId: string,
+  zaduzeni: string | undefined,
+): Promise<ActionResult | null> {
+  if (!zaduzeni) return null
+  const korisnik = await getTrenutniKorisnik()
+  if (!korisnik || jeAdmin(korisnik.uloga)) return null
+  if (zaduzeni === korisnik.ime) return null
+  const { data } = await supabase.rpc("get_zaduzeni_dodjele")
+  const imaPristup = (data ?? []).some(
+    (red) => red.klijent_id === klijentId && red.ime === zaduzeni,
+  )
+  if (!imaPristup) {
+    return { ok: false, errors: { zaduzeni: [t("zaduzeniNemaPristup")] } }
+  }
+  return null
+}
+
+/**
+ * Admin auto-dodjela: ako uneseno ime „Zaduženi" odgovara aktivnom ne-admin
+ * korisniku, firma mu se upiše u `korisnik_klijent` (pristup + pregled) — isti
+ * efekat kao ručna dodjela u Postavke → Korisnici. Best-effort NAKON uspješnog
+ * upisa termina: termin je već sačuvan, pa greška dodjele ne smije oboriti akciju
+ * (RLS `kk_wr` ionako dozvoljava upis samo adminu). Slobodan tekst bez podudaranja
+ * se preskače.
+ */
+async function dodijeliFirmuZaduzenom(
+  supabase: SupabaseServerClient,
+  klijentId: string,
+  zaduzeni: string | undefined,
+): Promise<void> {
+  if (!zaduzeni) return
+  const korisnik = await getTrenutniKorisnik()
+  if (!korisnik || !jeAdmin(korisnik.uloga)) return
+  const { data: mete } = await supabase
+    .from("korisnici")
+    .select("id, uloga")
+    .eq("ime", zaduzeni)
+    .eq("aktivan", true)
+  const redovi = (mete ?? [])
+    .filter((m) => m.uloga !== "admin") // admini već vide sve firme
+    .map((m) => ({ korisnik_id: m.id, klijent_id: klijentId }))
+  if (redovi.length === 0) return
+  const { error } = await supabase
+    .from("korisnik_klijent")
+    .upsert(redovi, { onConflict: "korisnik_id,klijent_id", ignoreDuplicates: true })
+  if (error) {
+    console.warn(`[zaduzeni-auto-dodjela] dodjela firme ${klijentId} nije upisana: ${error.message}`)
+  }
+}
+
 const updateSchema = z.object({
   id: z.string().uuid(),
   datum_zakazan: optionalDate,
@@ -78,6 +143,18 @@ export async function updateTermin(
 
   const supabase = await createServerSupabaseClient()
 
+  // Pravila „Zaduženi" po ulozi — vrijede i pri izmjeni; treba firma termina
+  let klijentIdTermina: string | null = null
+  if (typeof patch.zaduzeni === "string" && patch.zaduzeni) {
+    const { data: red } = await supabase
+      .from("termini").select("klijent_id").eq("id", id).maybeSingle()
+    klijentIdTermina = red?.klijent_id ?? null
+    if (klijentIdTermina) {
+      const zaduzeniGreska = await provjeriZaduzenogZaFirmu(supabase, klijentIdTermina, patch.zaduzeni)
+      if (zaduzeniGreska) return zaduzeniGreska
+    }
+  }
+
   // Sinhronizuj status sa "Datum zakazan": planirano ↔ zakazano; usput dohvati rok
   // (treba za detekciju zakazano-poslije-roka nakon upisa).
   let rokDospijeca: string | null = null
@@ -96,6 +173,11 @@ export async function updateTermin(
   const { error } = await supabase.from("termini").update(patch).eq("id", id)
 
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  // Admin: zaduženom radniku auto-dodijeli firmu (pristup) — tek nakon uspješnog upisa
+  if (typeof patch.zaduzeni === "string" && patch.zaduzeni && klijentIdTermina) {
+    await dodijeliFirmuZaduzenom(supabase, klijentIdTermina, patch.zaduzeni)
+  }
 
   // Best-effort: obavijest kad je zakazano poslije roka. Ne obara čuvanje.
   const noviZakazan = patch.datum_zakazan
@@ -147,6 +229,10 @@ export async function createTermin(
 
   const supabase = await createServerSupabaseClient()
 
+  // Pravila „Zaduženi" po ulozi — prije bilo kakvog upisa
+  const zaduzeniGreska = await provjeriZaduzenogZaFirmu(supabase, klijent_id, zaduzeni)
+  if (zaduzeniGreska) return zaduzeniGreska
+
   // Integritet: izabrana lokacija mora pripadati izabranoj firmi (klijentu)
   if (lokacija_id) {
     const { data: lok } = await supabase
@@ -183,6 +269,9 @@ export async function createTermin(
   }).select("id").single()
 
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  // Admin: zaduženom radniku auto-dodijeli firmu (pristup) — tek nakon uspješnog upisa
+  await dodijeliFirmuZaduzenom(supabase, klijent_id, zaduzeni)
 
   // Best-effort: obavijest kad je zakazano poslije roka. Ne obara kreiranje.
   if (datum_zakazan && novi?.id && jeZakazanoPoslijeRoka(rok_dospijeca, datum_zakazan)) {

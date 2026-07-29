@@ -6,7 +6,7 @@ import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
 import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
 import { buildTerminIcs } from "@/lib/email/ics"
 import { reminderSubject, reminderHtml, reminderHtmlFirma } from "@/lib/email/templates"
-import { recipientsForKlijent, firmaRecipientsForKlijent, loadRecipientIndex } from "@/lib/reminders/recipients"
+import { recipientsForKlijent, firmaRecipientsZa, loadRecipientIndex } from "@/lib/reminders/recipients"
 import { firmBrand } from "@/lib/email/firmBrand"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
@@ -113,7 +113,7 @@ export async function runReminders(
       }))
     }
     // Kanal 2: firma (Krug 2) — mejl bez dugmadi, TEHPRO brend, adrese u BCC.
-    const firma = firmaRecipientsForKlijent(recipientIndex, r.klijent_id)
+    const firma = firmaRecipientsZa(recipientIndex, r.klijent_id, r.lokacija_id ?? null)
     if (firma.length > 0) {
       out.push(await posalji("firma", {
         to: [fromAddr], bcc: firma, subject, attachments: prilogFirma,

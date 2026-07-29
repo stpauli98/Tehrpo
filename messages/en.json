@@ -368,6 +368,9 @@
       "naslovNovi": "New contact",
       "poljeIme": "Full name *",
       "poljeFunkcija": "Role",
+      "poljeLokacija": "Location",
+      "lokacijaSve": "All locations — company contact",
+      "lokacijaPomoc": "A company contact receives reminders for all locations. Bound to a location — only for that one.",
       "poljeTelefon": "Phone",
       "poljeEmail": "Email",
       "submitPending": "Saving…",
@@ -382,7 +385,8 @@
       "obrisiAriaLabel": "Delete contact",
       "vidiSve": "See all ({count}) →",
       "obrisiDialogNaslov": "Delete contact person?",
-      "obrisiDialogOpis": "The contact is permanently deleted. If marked as a reminder recipient, it stops receiving reminders."
+      "obrisiDialogOpis": "The contact is permanently deleted. If marked as a reminder recipient, it stops receiving reminders.",
+      "lokacijaSve": "All locations"
     },
     "lokacijaSheet": {
       "uredi": "Edit",
@@ -396,6 +400,13 @@
       "poljeKontaktOsoba": "Contact person",
       "poljeEmail": "Email",
       "poljeTelefon": "Phone",
+      "kontaktNaslov": "Contact for this location",
+      "kontaktBez": "No contact",
+      "kontaktPostojeci": "Existing company contact",
+      "kontaktNovi": "New contact",
+      "kontaktIme": "Full name",
+      "kontaktPrima": "Receives reminders for this location",
+      "kontaktPomoc": "A bound contact receives reminders only for this location. Company contacts get them regardless.",
       "submitPending": "Saving…",
       "submitEdit": "Save changes",
       "submitNovi": "Create location"

@@ -368,6 +368,9 @@
       "naslovNovi": "Novi kontakt",
       "poljeIme": "Ime i prezime *",
       "poljeFunkcija": "Funkcija",
+      "poljeLokacija": "Lokacija",
+      "lokacijaSve": "Sve lokacije — kontakt firme",
+      "lokacijaPomoc": "Kontakt firme prima podsjetnike za sve lokacije. Vezan za lokaciju — samo za tu.",
       "poljeTelefon": "Telefon",
       "poljeEmail": "Email",
       "submitPending": "Spremam…",
@@ -382,7 +385,8 @@
       "obrisiAriaLabel": "Obriši kontakt",
       "vidiSve": "Vidi sve ({count}) →",
       "obrisiDialogNaslov": "Obrisati kontakt osobu?",
-      "obrisiDialogOpis": "Kontakt se trajno briše. Ako je označen kao primalac podsjetnika, prestaje da ih prima."
+      "obrisiDialogOpis": "Kontakt se trajno briše. Ako je označen kao primalac podsjetnika, prestaje da ih prima.",
+      "lokacijaSve": "Sve lokacije"
     },
     "lokacijaSheet": {
       "uredi": "Uredi",
@@ -396,6 +400,13 @@
       "poljeKontaktOsoba": "Kontakt osoba",
       "poljeEmail": "Email",
       "poljeTelefon": "Telefon",
+      "kontaktNaslov": "Kontakt za ovu lokaciju",
+      "kontaktBez": "Bez kontakta",
+      "kontaktPostojeci": "Postojeći kontakt firme",
+      "kontaktNovi": "Novi kontakt",
+      "kontaktIme": "Ime i prezime",
+      "kontaktPrima": "Prima podsjetnike za ovu lokaciju",
+      "kontaktPomoc": "Vezan kontakt prima podsjetnike samo za ovu lokaciju. Kontakti firme ih dobijaju svakako.",
       "submitPending": "Spremam…",
       "submitEdit": "Spremi izmjene",
       "submitNovi": "Kreiraj lokaciju"

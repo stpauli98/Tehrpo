@@ -6,7 +6,7 @@ import { sendEmail, type SendArgs, type SendResult } from "@/lib/email/resend"
 import { posaljiIzabiljezi } from "@/lib/email/posaljiIzabiljezi"
 import { buildTerminIcs } from "@/lib/email/ics"
 import { reminderSubject, reminderHtml, rokIstekaoFirmaSubject, rokIstekaoFirmaHtml } from "@/lib/email/templates"
-import { loadRecipientIndex, recipientsForKlijent, firmaRecipientsForKlijent } from "@/lib/reminders/recipients"
+import { loadRecipientIndex, recipientsForKlijent, firmaRecipientsZa } from "@/lib/reminders/recipients"
 import { firmBrand } from "@/lib/email/firmBrand"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
@@ -91,7 +91,7 @@ export async function runPostDue(
 
     const primaoci = kanal === "interni"
       ? recipientsForKlijent(index, r.klijent_id!, base)
-      : firmaRecipientsForKlijent(index, r.klijent_id!)
+      : firmaRecipientsZa(index, r.klijent_id!, r.lokacija_id ?? null)
     if (primaoci.length === 0) {
       if (claimId) await oznaci(claimId, { stanje: "preskoceno", razlog: "nema_primalaca" })
       return { kind: "skip", terminId, kanal, razlog: "nema primalaca" }

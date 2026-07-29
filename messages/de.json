@@ -368,6 +368,9 @@
       "naslovNovi": "Neuer Kontakt",
       "poljeIme": "Vor- und Nachname *",
       "poljeFunkcija": "Funktion",
+      "poljeLokacija": "Standort",
+      "lokacijaSve": "Alle Standorte — Firmenkontakt",
+      "lokacijaPomoc": "Ein Firmenkontakt erhält Erinnerungen für alle Standorte. An einen Standort gebunden — nur für diesen.",
       "poljeTelefon": "Telefon",
       "poljeEmail": "E-Mail",
       "submitPending": "Wird gespeichert…",
@@ -382,7 +385,8 @@
       "obrisiAriaLabel": "Kontakt löschen",
       "vidiSve": "Alle anzeigen ({count}) →",
       "obrisiDialogNaslov": "Kontaktperson löschen?",
-      "obrisiDialogOpis": "Der Kontakt wird dauerhaft gelöscht. Ist er als Empfänger von Erinnerungen markiert, erhält er keine mehr."
+      "obrisiDialogOpis": "Der Kontakt wird dauerhaft gelöscht. Ist er als Empfänger von Erinnerungen markiert, erhält er keine mehr.",
+      "lokacijaSve": "Alle Standorte"
     },
     "lokacijaSheet": {
       "uredi": "Bearbeiten",
@@ -396,6 +400,13 @@
       "poljeKontaktOsoba": "Kontaktperson",
       "poljeEmail": "E-Mail",
       "poljeTelefon": "Telefon",
+      "kontaktNaslov": "Kontakt für diesen Standort",
+      "kontaktBez": "Kein Kontakt",
+      "kontaktPostojeci": "Vorhandener Firmenkontakt",
+      "kontaktNovi": "Neuer Kontakt",
+      "kontaktIme": "Vor- und Nachname",
+      "kontaktPrima": "Erhält Erinnerungen für diesen Standort",
+      "kontaktPomoc": "Ein gebundener Kontakt erhält Erinnerungen nur für diesen Standort. Firmenkontakte erhalten sie ohnehin.",
       "submitPending": "Wird gespeichert…",
       "submitEdit": "Änderungen speichern",
       "submitNovi": "Standort erstellen"

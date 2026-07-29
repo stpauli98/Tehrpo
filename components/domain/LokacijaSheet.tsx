@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 import { FieldError } from "@/components/domain/FieldError"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { createLokacija, updateLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -29,15 +33,31 @@ const initial: ActionResult = { ok: true }
 export function LokacijaSheet({
   klijentId,
   lokacija,
+  kontakti = [],
 }: {
   klijentId: string
   lokacija?: LokacijaRow
+  /**
+   * Kontakti te firme. Ponuđeni su samo oni koji NISU već vezani za drugu lokaciju —
+   * kontakt pripada najviše jednoj lokaciji, pa bi ostali samo zbunjivali.
+   */
+  kontakti?: { id: string; ime: string; lokacija_id: string | null }[]
 }) {
   const t = useTranslations("klijenti.lokacijaSheet")
   const tc = useTranslations("common")
   const router = useRouter()
   const mozeUrediti = useMozeUrediti()
   const isEdit = !!lokacija
+  // "bez" | "postojeci" | "novi" — određuje šta server akcija radi poslije upisa lokacije.
+  const [kontaktIzbor, setKontaktIzbor] = useState("bez")
+  // Kontakt pripada najviše jednoj lokaciji: nudimo one bez veze i one već vezane
+  // za OVU lokaciju (kod uređivanja), da izbor ne bude prazan bez objašnjenja.
+  const slobodniKontakti = kontakti.filter(
+    (k) => k.lokacija_id === null || k.lokacija_id === lokacija?.id,
+  )
+  const kontaktItems: Record<string, string> = Object.fromEntries(
+    slobodniKontakti.map((k) => [k.id, k.ime]),
+  )
 
   // [name, label, obavezno, inputType] — tip polja se grana ovdje da bi browser
   // uhvatio nevalidan email prije round-tripa (S2).
@@ -125,6 +145,82 @@ export function LokacijaSheet({
               <FieldError id={`lokacija-${name}-err`} errors={errors?.[name]} />
             </label>
           ))}
+
+          {/* Kontakt za lokaciju. Nova lokacija po pravilu znači i novog čovjeka na njoj,
+              pa se veza nudi odmah — inače bi korisnik morao u drugi tab i tražiti kontakt.
+              Vezan kontakt prima podsjetnike SAMO za ovu lokaciju; kontakti firme ih
+              dobijaju svakako (v. firmaRecipientsZa). */}
+          <fieldset className="space-y-2 rounded-lg border border-border p-3">
+            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {t("kontaktNaslov")}
+            </legend>
+            <RadioGroup
+              name="kontakt_izbor"
+              value={kontaktIzbor}
+              onValueChange={(v) => setKontaktIzbor(String(v))}
+              data-testid="lokacija-kontakt-izbor"
+            >
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="bez" /> {t("kontaktBez")}
+              </label>
+              {slobodniKontakti.length > 0 && (
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="postojeci" /> {t("kontaktPostojeci")}
+                </label>
+              )}
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="novi" /> {t("kontaktNovi")}
+              </label>
+            </RadioGroup>
+
+            {kontaktIzbor === "postojeci" && slobodniKontakti.length > 0 && (
+              <Select name="kontakt_id" defaultValue={slobodniKontakti[0]?.id ?? ""} items={kontaktItems}>
+                <SelectTrigger className="w-full" data-testid="lokacija-kontakt-postojeci">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {slobodniKontakti.map((k) => (
+                    <SelectItem key={k.id} value={k.id}>{k.ime}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {kontaktIzbor === "novi" && (
+              <div className="space-y-2">
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">{t("kontaktIme")}</span>
+                  <Input name="kontakt_ime" required data-testid="lokacija-kontakt-ime" />
+                  <FieldError id="lokacija-kontakt-ime-err" errors={errors?.kontakt_ime} />
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">{t("poljeEmail")}</span>
+                    <Input name="kontakt_novi_email" type="email" data-testid="lokacija-kontakt-email" />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">{t("poljeTelefon")}</span>
+                    <Input name="kontakt_novi_telefon" data-testid="lokacija-kontakt-telefon" />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {kontaktIzbor !== "bez" && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="kontakt_prima"
+                  value="1"
+                  defaultChecked
+                  data-testid="lokacija-kontakt-prima"
+                  className="size-4 rounded border-input"
+                />
+                {t("kontaktPrima")}
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">{t("kontaktPomoc")}</p>
+          </fieldset>
 
           {state.ok === false && state.message && (
             <p className="text-sm text-destructive" role="alert">

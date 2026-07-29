@@ -1,0 +1,60 @@
+name: gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["integracija/**"]
+
+concurrency:
+  group: gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  provjera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+
+    env:
+      # DEMO vrijednosti. PROD ključevi ne smiju postojati u ovom workflow-u.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEMO_SUPABASE_ANON_KEY }}
+      ZAPISNIK_DRY_RUN: "1"
+      CHAT_DRY_RUN: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # provjeri:integraciju radi `git diff origin/main...HEAD` — plitki klon
+          # (podrazumijevani fetch-depth: 1) ostavlja origin/main nerazrešiv i
+          # skripta bi izašla kodom 2. Puna historija je obavezna.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: provjera tipova
+        run: pnpm typecheck
+
+      - name: lint
+        run: pnpm lint
+
+      - name: statičke provjere integracije
+        run: pnpm provjeri:integraciju
+
+      - name: unit testovi
+        run: pnpm test:unit
+
+      - name: izgradnja
+        run: pnpm build

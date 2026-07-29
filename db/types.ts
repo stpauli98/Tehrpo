@@ -255,7 +255,7 @@ export type Database = {
           id: string
           interval_mjeseci: number | null
           klijent_id: string
-          lokacija_id: string | null
+          lokacija_id: string
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id: string | null
           vrsta_provjere_id: string
@@ -267,7 +267,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id: string
-          lokacija_id?: string | null
+          lokacija_id: string
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id: string
@@ -279,7 +279,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id?: string
-          lokacija_id?: string | null
+          lokacija_id?: string
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id?: string

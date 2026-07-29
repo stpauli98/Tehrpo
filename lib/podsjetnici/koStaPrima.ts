@@ -72,16 +72,33 @@ export type UlazPokrivenosti = {
   brojAdresaFirme: number
   /** lokacija_id → broj validnih adresa vezanih baš za tu lokaciju. */
   adresePoLokaciji: ReadonlyMap<string, number>
+  /** Ima li firma ijedan termin bez lokacije (lokacija_id IS NULL). */
+  imaTerminaBezLokacije: boolean
+}
+
+export type IshodPokrivenosti = {
+  /** Lokacije bez ijednog primaoca — isto ponašanje kao ranije. */
+  lokacije: LokacijaRef[]
+  /**
+   * true kad firma ima termine bez lokacije, a nijednu adresu koja pokriva cijelu firmu —
+   * podsjetnici za te termine tad ne stižu nikome (lokacijski kontakt ne može znati tiče
+   * li ga se termin bez lokacije, isto pravilo kao u `firmaRecipientsZa`).
+   */
+  terminiBezLokacije: boolean
 }
 
 /**
- * Lokacije kojima podsjetnik ne bi stigao nikome: red ostaje po firmi
- * (`izracunajIshodReda`), ovo je dodatno upozorenje kad pokrivenost firme kao cjeline
- * krije rupu na nivou pojedine lokacije. Vraća lokacije istim redom kao u ulazu.
+ * Rupe u pokrivenosti koje red-po-firmi (`izracunajIshodReda`) ne vidi: red gleda samo
+ * „ima li firma ijednu adresu", ovo je dodatno upozorenje kad ta adresa ipak ne pokriva
+ * baš sve što firma ima — ili pojedinu lokaciju, ili termine koji nemaju lokaciju uopšte.
+ * Namjerno se vraćaju oba nezavisno (nema sentinel `LokacijaRef` za drugi slučaj — to bi
+ * procurilo u UI kao izmišljen naziv lokacije).
  */
-export function nepokriveneLokacije(u: UlazPokrivenosti): LokacijaRef[] {
-  if (u.brojAdresaFirme > 0) return []
-  return u.lokacije.filter((l) => (u.adresePoLokaciji.get(l.id) ?? 0) <= 0)
+export function nepokriveneLokacije(u: UlazPokrivenosti): IshodPokrivenosti {
+  const lokacije =
+    u.brojAdresaFirme > 0 ? [] : u.lokacije.filter((l) => (u.adresePoLokaciji.get(l.id) ?? 0) <= 0)
+  const terminiBezLokacije = u.imaTerminaBezLokacije && u.brojAdresaFirme === 0
+  return { lokacije, terminiBezLokacije }
 }
 
 export type KontaktZaGrupisanje = {

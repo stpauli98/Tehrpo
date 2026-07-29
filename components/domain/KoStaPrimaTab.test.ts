@@ -93,6 +93,7 @@ function makeSupabaseMock(cfg: {
   korisnik_klijent?: Row[]
   kontakt_osobe?: Row[]
   lokacije?: Row[]
+  termini?: Row[]
 }) {
   const calls: Call[] = []
   const tableRows: Record<string, Row[]> = {
@@ -101,6 +102,10 @@ function makeSupabaseMock(cfg: {
     korisnik_klijent: cfg.korisnik_klijent ?? [],
     kontakt_osobe: cfg.kontakt_osobe ?? [],
     lokacije: cfg.lokacije ?? [],
+    // Napomena: mock ne filtrira stvarno po `.is("lokacija_id", null)` — `cfg.termini`
+    // se očekuje da već predstavlja SAMO redove gdje je `lokacija_id IS NULL` (isto kao
+    // što `.eq()` ispod ne filtrira `postavke`; filter se ovdje samo bilježi u dnevnik).
+    termini: cfg.termini ?? [],
   }
 
   function builder(table: string) {
@@ -115,6 +120,10 @@ function makeSupabaseMock(cfg: {
       },
       eq(col: string, val: unknown) {
         calls.push({ table, method: "eq", args: [col, val] })
+        return chain
+      },
+      is(col: string, val: unknown) {
+        calls.push({ table, method: "is", args: [col, val] })
         return chain
       },
       order(col: string) {
@@ -277,5 +286,67 @@ describe("KoStaPrimaTab — wiring (mutation-killing)", () => {
     const selectPozivi = pozivi("kontakt_osobe", "select")
     expect(selectPozivi).toHaveLength(1)
     expect(selectPozivi[0]!.args[1]).toEqual({ count: "exact" })
+  })
+
+  // ---- termini bez lokacije -----------------------------------------------------------
+
+  it("upozorenje se pojavljuje kad firma ima termine bez lokacije, a nema adresu koja pokriva cijelu firmu", async () => {
+    // k1 ima SAMO lokacijski kontakt (locX — namjerno bez odgovarajućeg reda u `lokacije`,
+    // da izolujemo tvrdnju od postojeće „nepokrivene lokacije" poruke) → brojAdresaFirme=0,
+    // ali adrese.length=1 (pa trebaUpozorenje uopšte razmatra red). Termin bez lokacije za
+    // k1 postoji → poruka o terminima bez lokacije mora se pojaviti.
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      lokacije: [],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "kontakt.locX@firma.ba", podsjetnik_primalac: true, lokacija_id: "locX" },
+      ],
+      termini: [{ klijent_id: "k1" }],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    const upozorenje = findByTestId(root, "ksp-nepokrivene-k1")
+    expect(upozorenje).toBeDefined()
+    expect(textOf(upozorenje)).toContain("terminiBezLokacijeNepokriveni")
+  })
+
+  it("ne pojavljuje se kad firma ima adresu koja pokriva cijelu firmu, uprkos terminima bez lokacije", async () => {
+    // Isti termin bez lokacije kao gore, ali kontakt je sada firma-širok (lokacija_id: null)
+    // → brojAdresaFirme=1 pokriva i termine bez lokacije i (nepostojeće) lokacije.
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      lokacije: [],
+      kontakt_osobe: [
+        { klijent_id: "k1", email: "kontakt.firma@firma.ba", podsjetnik_primalac: true, lokacija_id: null },
+      ],
+      termini: [{ klijent_id: "k1" }],
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    expect(findByTestId(root, "ksp-nepokrivene-k1")).toBeUndefined()
+  })
+
+  it("odsijecanje novog upita (termini bez lokacije) pali baner o nepotpunim podacima", async () => {
+    // Preko RASPON_GORNJA_GRANICA+1 (5000) redova → `count` (puna dužina) veći od `data`
+    // (isječeno na .range(0, 4999)) → jeOdsjeceno vraća true baš za ovaj upit.
+    const mnogoTermina = Array.from({ length: 5001 }, () => ({ klijent_id: "k1" }))
+    const { supabase } = makeSupabaseMock({
+      postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+      klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+      kontakt_osobe: [],
+      lokacije: [],
+      termini: mnogoTermina,
+    })
+    createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+    const root = await KoStaPrimaTab()
+
+    expect(findByTestId(root, "ksp-nepotpuni-banner")).toBeDefined()
   })
 })

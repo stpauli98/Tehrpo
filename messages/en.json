@@ -1042,6 +1042,7 @@
       "uvijekPrimaju": "Always receive (regardless of client settings): {adrese}",
       "uvijekPrimajuPrazno": "Always receive: no admin currently receives reminders and REMINDER_TO is not set.",
       "nepokriveneLokacije": "No recipients for locations: {lokacije}",
+      "terminiBezLokacijeNepokriveni": "The client has appointments that are not tied to a location, and no address covers the whole client — reminders for those appointments currently reach no one.",
       "nepotpuniPodaciBanner": "The client, location, or contact list was truncated (too many rows) — the table and coverage warnings may be incomplete."
     },
     "reminderForm": {

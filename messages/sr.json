@@ -1042,6 +1042,7 @@
       "uvijekPrimaju": "Uvijek primaju (bez obzira na postavke firme): {adrese}",
       "uvijekPrimajuPrazno": "Uvijek primaju: nijedan admin trenutno ne prima podsjetnike i REMINDER_TO nije postavljen.",
       "nepokriveneLokacije": "Bez primaoca za lokacije: {lokacije}",
+      "terminiBezLokacijeNepokriveni": "Firma ima termine koji nisu vezani za lokaciju, a nema nijednu adresu koja pokriva cijelu firmu — podsjetnici za te termine trenutno ne stižu nikome.",
       "nepotpuniPodaciBanner": "Spisak firmi, lokacija ili kontakata je odsječen (previše redova) — tabela i upozorenja o pokrivenosti možda nisu potpuni."
     },
     "reminderForm": {

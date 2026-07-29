@@ -544,15 +544,13 @@
       "nacinIzvrsava": "Performs",
       "nacinPracenje": "Tracking only",
       "godina": "Year",
-      "pretragaPlaceholder": "Search company...",
       "tekuciNaredni": "Current + next month",
       "ariaFirma": "Company",
       "ariaLokacija": "Location",
       "ariaVrsta": "Inspection type",
       "ariaMjesec": "Month",
       "ariaNacin": "Execution method",
-      "ariaGodina": "Year",
-      "ariaPretraga": "Search companies"
+      "ariaGodina": "Year"
     },
     "sheet": {
       "naslovFallback": "Appointment",
@@ -642,6 +640,7 @@
     "naslov": "Activity plan",
     "izvoz": {
       "preuzmi": "Download",
+      "preuzmiOpis": "Export activity plan to PDF or Excel",
       "naslovModala": "Download report",
       "format": "Format",
       "formatPdf": "PDF",
@@ -671,8 +670,11 @@
     },
     "viewSwitcher": {
       "kalendar": "Calendar",
+      "kalendarOpis": "View appointments by day of the month",
       "lista": "List",
-      "matrica": "Matrix"
+      "listaOpis": "View appointments as a filterable list",
+      "matrica": "Matrix",
+      "matricaOpis": "View appointments in a client × type matrix"
     },
     "nav": {
       "prethodniMjesec": "Previous month",

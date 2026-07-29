@@ -85,37 +85,8 @@ test.describe("Faza 3 — Termini filteri", () => {
     )
   })
 
-  test("pretraga firme filtrira tabelu", async ({ page }) => {
-    await page.goto("/termini?mjesec=svi")
-    // Pojam izvedemo iz stvarnih podataka (prvi red) — bez zavisnosti od konkretnog seeda.
-    const prviKlijent = ((await page.getByTestId("termin-row").first().locator("td").nth(1).textContent()) ?? "").trim()
-    expect(prviKlijent.length).toBeGreaterThan(0)
-    const term = prviKlijent.slice(0, 4)
-    const rx = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i")
-    const input = page.getByTestId("filter-search")
-    await input.fill(term)
-    await input.press("Enter")
-    await page.waitForURL(/q=/)
-    const rows = page.getByTestId("termin-row")
-    await expect(rows.first()).toBeVisible()
-    expect(await rows.count()).toBeGreaterThan(0)
-    await expect(rows.first()).toContainText(rx)
-  })
-
-  test("pretraga filtrira živo dok se kuca (bez Entera)", async ({ page }) => {
-    await page.goto("/termini?mjesec=svi")
-    const prviKlijent = ((await page.getByTestId("termin-row").first().locator("td").nth(1).textContent()) ?? "").trim()
-    const term = prviKlijent.slice(0, 4)
-    const rx = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i")
-    const input = page.getByTestId("filter-search")
-    // kucanje karakter-po-karakter, NE pritiskamo Enter
-    await input.pressSequentially(term)
-    await page.waitForURL(/q=/)
-    const rows = page.getByTestId("termin-row")
-    await expect(rows.first()).toBeVisible()
-    expect(await rows.count()).toBeGreaterThan(0)
-    await expect(rows.first()).toContainText(rx)
-  })
+  // "pretraga firme filtrira tabelu" i "pretraga filtrira živo dok se kuca" testovi
+  // uklonjeni zajedno sa filter-search inputom (TerminiFilters — search input uklonjen).
 
   test("klik na red (ne na Detalji) otvara TerminSheet", async ({ page }) => {
     await page.goto("/termini")

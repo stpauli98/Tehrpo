@@ -19,11 +19,12 @@ test.afterAll(async () => {
 test.describe("Temelj — Lokacija kolona u termini tabeli", () => {
   test("bar jedan termin fiksture ima popunjenu lokaciju (ne '—')", async ({ page }) => {
     await page.goto("/termini")
-    // Filtriraj po firmi koristeći filter-search koji pretražuje i lokaciju_naziv
-    const search = page.getByTestId("filter-search")
-    await search.fill(fx.naziv)
-    await search.press("Enter")
-    await page.waitForURL(/q=E2E-TMP/)
+    // Filtriraj po firmi preko filter-klijent dropdown-a (filter-search je uklonjen).
+    await page.getByTestId("filter-klijent").click()
+    const firmaOpt = page.getByRole("option", { name: fx.naziv, exact: true })
+    await expect(firmaOpt).toBeVisible()
+    await firmaOpt.click()
+    await page.waitForURL(/klijent_id=/)
     const rows = page.getByTestId("termin-row")
     await expect(rows.first()).toBeVisible()
     // Treća ćelija (lokacija, index 2) u barem prvom redu ne smije biti "—"

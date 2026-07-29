@@ -1,9 +1,8 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo } from "react"
 import { useTranslations } from "next-intl"
-import { Input } from "@/components/ui/input"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
@@ -32,7 +31,6 @@ export function TerminiFilters({
   const tStatus = useTranslations("status")
 
   const status = params.get("status") ?? "svi"
-  const q = params.get("q") ?? ""
   const klijentId = params.get("klijent_id") ?? "svi"
   const vrstaId = params.get("vrsta_id") ?? "svi"
   const mjesec = params.get("mjesec") ?? "tn"
@@ -97,37 +95,14 @@ export function TerminiFilters({
     push(href(`/plan-aktivnosti?${next.toString()}`))
   }
 
-  // Live search: kontrolisani input + debounce (filtrira čim se kuca, bez Entera).
-  const [term, setTerm] = useState(q)
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Otkaži pending debounce pri unmount-u — inače zaostali timer okine router.push
-  // (bez view=kalendar) i poništi prebacivanje prikaza / navigaciju.
-  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current) }, [])
-  // Sinhronizuj kad se q promijeni izvana (reset filtera / nazad dugme) —
-  // adjust-state-during-render obrazac (bez useEffect-a, bez kaskadnih rendera)
-  const [prevQ, setPrevQ] = useState(q)
-  if (q !== prevQ) {
-    setPrevQ(q)
-    setTerm(q)
-  }
-  function pushSearch(value: string) {
-    if (searchTimer.current) clearTimeout(searchTimer.current)
-    setParam("q", value)
-  }
-  function onSearchChange(value: string) {
-    setTerm(value)
-    if (searchTimer.current) clearTimeout(searchTimer.current)
-    searchTimer.current = setTimeout(() => setParam("q", value), 300)
-  }
-
   return (
     <div
-      className={cn("flex flex-wrap items-center gap-2", pending && "opacity-60")}
+      className={cn("space-y-2", pending && "opacity-60")}
       data-testid="termini-filters"
       data-pending={pending}
       aria-busy={pending}
     >
-      {/* Status pills */}
+      {/* Red 1: status (glavni filter). */}
       <div className="flex items-center gap-1">
         {STATUS_FILTER_OPTIONS.map((o) => (
           <button
@@ -151,101 +126,94 @@ export function TerminiFilters({
         ))}
       </div>
 
-      {/* Klijent (firma) dropdown */}
-      <Select value={klijentId} onValueChange={(v) => setKlijent(v ?? "svi")} items={firmaItems}>
-        <SelectTrigger className="w-48" data-testid="filter-klijent" disabled={pending} aria-label={t("ariaFirma")}>
-          <SelectValue placeholder={t("sveFirme")} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="svi">{t("sveFirme")}</SelectItem>
-          {klijenti.map((k) => (
-            <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* Red 2: precizni filteri, grupisani po smislu (ko/šta → kad → kako),
+          razdvojeni tankom linijom umjesto da svi plutaju u istom nizu. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {/* Ko / šta: firma → lokacija (zavisna) → vrsta */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={klijentId} onValueChange={(v) => setKlijent(v ?? "svi")} items={firmaItems}>
+            <SelectTrigger className="w-48" data-testid="filter-klijent" disabled={pending} aria-label={t("ariaFirma")}>
+              <SelectValue placeholder={t("sveFirme")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="svi">{t("sveFirme")}</SelectItem>
+              {klijenti.map((k) => (
+                <SelectItem key={k.id} value={k.id}>{k.naziv}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      {/* Lokacija dropdown — samo kad je firma izabrana i ima lokacija */}
-      {firmaLokacije.length > 0 && (
-        <Select value={lokacijaId} onValueChange={(v) => setParam("lokacija", v)} items={lokacijaItems}>
-          <SelectTrigger className="w-48" data-testid="filter-lokacija" disabled={pending} aria-label={t("ariaLokacija")}>
-            <SelectValue placeholder={t("sveLokacije")} />
+          {firmaLokacije.length > 0 && (
+            <Select value={lokacijaId} onValueChange={(v) => setParam("lokacija", v)} items={lokacijaItems}>
+              <SelectTrigger className="w-48" data-testid="filter-lokacija" disabled={pending} aria-label={t("ariaLokacija")}>
+                <SelectValue placeholder={t("sveLokacije")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="svi">{t("sveLokacije")}</SelectItem>
+                {firmaLokacije.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.naziv}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <Select value={vrstaId} onValueChange={(v) => setParam("vrsta_id", v)} items={vrstaItems}>
+            <SelectTrigger className="w-48" data-testid="filter-vrsta" disabled={pending} aria-label={t("ariaVrsta")}>
+              <SelectValue placeholder={t("sveVrste")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="svi">{t("sveVrste")}</SelectItem>
+              {vrste.map((v) => (
+                <SelectItem key={v.id} value={v.id}>{v.naziv}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
+
+        {/* Kad: mjesec → godina (zavisna) */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={mjesec} onValueChange={(v) => setMjesec(v ?? "tn")} items={mjesecItems}>
+            <SelectTrigger className="w-36" data-testid="filter-mjesec" disabled={pending} aria-label={t("ariaMjesec")}>
+              <SelectValue placeholder={t("sviMjeseci")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="svi">{t("sviMjeseci")}</SelectItem>
+              {monthsOption.map((m) => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {mjesec !== "svi" && mjesec !== "tn" && (
+            <Select value={godina} onValueChange={(v) => setParam("godina", v)} items={godinaItems}>
+              <SelectTrigger className="w-24" data-testid="filter-godina" disabled={pending} aria-label={t("ariaGodina")}>
+                <SelectValue placeholder={t("godina")} />
+              </SelectTrigger>
+              <SelectContent>
+                {godine.map((g) => (
+                  <SelectItem key={g} value={String(g)}>{g}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
+
+        {/* Kako: način izvršenja */}
+        <Select value={nacin} onValueChange={(v) => setParam("nacin", v)} items={nacinItems}>
+          <SelectTrigger className="w-40" data-testid="filter-nacin" disabled={pending} aria-label={t("ariaNacin")}>
+            <SelectValue placeholder={t("sviNacini")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="svi">{t("sveLokacije")}</SelectItem>
-            {firmaLokacije.map((l) => (
-              <SelectItem key={l.id} value={l.id}>{l.naziv}</SelectItem>
-            ))}
+            <SelectItem value="svi">{t("sviNacini")}</SelectItem>
+            <SelectItem value="izvrsava">{t("nacinIzvrsava")}</SelectItem>
+            <SelectItem value="pracenje">{t("nacinPracenje")}</SelectItem>
           </SelectContent>
         </Select>
-      )}
-
-      {/* Vrsta dropdown */}
-      <Select value={vrstaId} onValueChange={(v) => setParam("vrsta_id", v)} items={vrstaItems}>
-        <SelectTrigger className="w-48" data-testid="filter-vrsta" disabled={pending} aria-label={t("ariaVrsta")}>
-          <SelectValue placeholder={t("sveVrste")} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="svi">{t("sveVrste")}</SelectItem>
-          {vrste.map((v) => (
-            <SelectItem key={v.id} value={v.id}>{v.naziv}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Mjesec dropdown */}
-      <Select value={mjesec} onValueChange={(v) => setMjesec(v ?? "tn")} items={mjesecItems}>
-        <SelectTrigger className="w-36" data-testid="filter-mjesec" disabled={pending} aria-label={t("ariaMjesec")}>
-          <SelectValue placeholder={t("sviMjeseci")} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="svi">{t("sviMjeseci")}</SelectItem>
-          {monthsOption.map((m) => (
-            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Način izvršenja dropdown */}
-      <Select value={nacin} onValueChange={(v) => setParam("nacin", v)} items={nacinItems}>
-        <SelectTrigger className="w-40" data-testid="filter-nacin" disabled={pending} aria-label={t("ariaNacin")}>
-          <SelectValue placeholder={t("sviNacini")} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="svi">{t("sviNacini")}</SelectItem>
-          <SelectItem value="izvrsava">{t("nacinIzvrsava")}</SelectItem>
-          <SelectItem value="pracenje">{t("nacinPracenje")}</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Godina — relevantna samo uz odabran numerički mjesec */}
-      {mjesec !== "svi" && mjesec !== "tn" && (
-        <Select value={godina} onValueChange={(v) => setParam("godina", v)} items={godinaItems}>
-          <SelectTrigger className="w-24" data-testid="filter-godina" disabled={pending} aria-label={t("ariaGodina")}>
-            <SelectValue placeholder={t("godina")} />
-          </SelectTrigger>
-          <SelectContent>
-            {godine.map((g) => (
-              <SelectItem key={g} value={String(g)}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {/* Search — live (debounce); Enter samo ubrza. Namjerno BEZ `disabled={pending}`:
-          input je kontrolisan i debounce-ovan, pa bi ga onemogućavanje usred kucanja
-          rasfokusiralo i pojelo znakove; pending signal nosi kontejner (aria-busy + opacity). */}
-      <Input
-        type="search"
-        placeholder={t("pretragaPlaceholder")}
-        aria-label={t("ariaPretraga")}
-        value={term}
-        data-testid="filter-search"
-        className="w-56 ml-auto"
-        onChange={(e) => onSearchChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") pushSearch((e.target as HTMLInputElement).value)
-        }}
-      />
+      </div>
     </div>
   )
 }

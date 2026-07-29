@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { usePendingFilteri } from "@/lib/use-pending-filteri"
 import { PLAN_VIEWS, buildViewHref, type PlanView } from "@/lib/plan-view"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 
 export function PlanViewSwitcher({ current }: { current: PlanView }) {
   const params = useSearchParams()
@@ -29,7 +30,7 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
           disabled={pending}
           onClick={() => push(buildViewHref(new URLSearchParams(params.toString()), v))}
           className={cn(
-            "px-3 py-1 rounded-full text-sm border transition-colors",
+            "group/tt relative px-3 py-1 rounded-full text-sm border transition-colors",
             FOCUS_RING,
             current === v
               ? "bg-brand text-white border-brand"
@@ -37,6 +38,7 @@ export function PlanViewSwitcher({ current }: { current: PlanView }) {
           )}
         >
           {t(v)}
+          <Tooltip>{t(`${v}Opis`)}</Tooltip>
         </button>
       ))}
     </div>

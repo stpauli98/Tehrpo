@@ -544,15 +544,13 @@
       "nacinIzvrsava": "Izvršava",
       "nacinPracenje": "Samo praćenje",
       "godina": "Godina",
-      "pretragaPlaceholder": "Pretraga firme...",
       "tekuciNaredni": "Tekući + naredni mjesec",
       "ariaFirma": "Firma",
       "ariaLokacija": "Lokacija",
       "ariaVrsta": "Vrsta provjere",
       "ariaMjesec": "Mjesec",
       "ariaNacin": "Način izvršenja",
-      "ariaGodina": "Godina",
-      "ariaPretraga": "Pretraga firmi"
+      "ariaGodina": "Godina"
     },
     "sheet": {
       "naslovFallback": "Termin",
@@ -642,6 +640,7 @@
     "naslov": "Plan aktivnosti",
     "izvoz": {
       "preuzmi": "Preuzmi",
+      "preuzmiOpis": "Izvezi plan aktivnosti u PDF ili Excel",
       "naslovModala": "Preuzmi izvještaj",
       "format": "Format",
       "formatPdf": "PDF",
@@ -671,8 +670,11 @@
     },
     "viewSwitcher": {
       "kalendar": "Kalendar",
+      "kalendarOpis": "Prikaz termina po danima mjeseca",
       "lista": "Lista",
-      "matrica": "Matrica"
+      "listaOpis": "Prikaz termina kao lista sa filterima",
+      "matrica": "Matrica",
+      "matricaOpis": "Prikaz termina u matrici klijent × vrsta"
     },
     "nav": {
       "prethodniMjesec": "Prethodni mjesec",

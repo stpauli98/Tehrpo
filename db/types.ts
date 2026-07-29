@@ -1349,7 +1349,7 @@ export type Database = {
         | "delivery_failed"
         | "bounced"
         | "complained"
-      mejl_status: "poslato" | "greska_slanja"
+      mejl_status: "poslato" | "greska_slanja" | "demo"
       mejl_tip:
         | "podsjetnik_interni"
         | "podsjetnik_firma"
@@ -1500,7 +1500,7 @@ export const Constants = {
         "bounced",
         "complained",
       ],
-      mejl_status: ["poslato", "greska_slanja"],
+      mejl_status: ["poslato", "greska_slanja", "demo"],
       mejl_tip: [
         "podsjetnik_interni",
         "podsjetnik_firma",

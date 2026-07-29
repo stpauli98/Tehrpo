@@ -5,7 +5,7 @@ import { PlanViewSwitcher } from "@/components/domain/PlanViewSwitcher"
 import { PlanIzvozModal } from "@/components/domain/PlanIzvozModal"
 import { jeValidanView, type PlanView } from "@/lib/plan-view"
 import { dohvatiGodineTermina } from "@/lib/queries/godine"
-import { dohvatiImenaAktivnihKorisnika } from "@/lib/queries/aktivni-korisnici"
+import { dohvatiZaduzeniPrijedlogeByFirma } from "@/lib/queries/aktivni-korisnici"
 import { ListaView } from "./_views/lista"
 import { KalendarView } from "./_views/kalendar"
 import { MatricaView } from "./_views/matrica"
@@ -45,9 +45,9 @@ export default async function PlanAktivnostiPage({
   // server komponenta ih dohvati jednom i proslijedi svim potrošačima (filteri,
   // PlanNav, PrikazToolbar, izvoz modal, forme), umjesto pet nezavisnih izvora.
   // Oba helpera na grešku vraćaju fallback/prazno i nikad ne obaraju ekran.
-  const [godine, zaduzeniPrijedlozi] = await Promise.all([
+  const [godine, zaduzeniPrijedloziByFirma] = await Promise.all([
     dohvatiGodineTermina(),
-    dohvatiImenaAktivnihKorisnika(),
+    dohvatiZaduzeniPrijedlogeByFirma(),
   ])
 
   return (
@@ -61,17 +61,17 @@ export default async function PlanAktivnostiPage({
       </div>
       {view === "lista" && (
         <Suspense fallback={<ViewSkeleton />}>
-          <ListaView godine={godine} zaduzeniPrijedlozi={zaduzeniPrijedlozi} />
+          <ListaView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} />
         </Suspense>
       )}
       {view === "kalendar" && (
         <Suspense fallback={<ViewSkeleton />}>
-          <KalendarView godine={godine} zaduzeniPrijedlozi={zaduzeniPrijedlozi} />
+          <KalendarView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} />
         </Suspense>
       )}
       {view === "matrica" && (
         <Suspense fallback={<ViewSkeleton />}>
-          <MatricaView godine={godine} zaduzeniPrijedlozi={zaduzeniPrijedlozi} />
+          <MatricaView godine={godine} zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma} />
         </Suspense>
       )}
     </div>

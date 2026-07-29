@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
  * sprječava da svako ime ima pet varijanti. Zato `<datalist>`, ne combobox koji
  * zaključava izbor.
  *
- * Imena stižu propom iz server komponente (`dohvatiImenaAktivnihKorisnika`) —
+ * Imena stižu propom iz server komponente (`dohvatiZaduzeniPrijedlogeByFirma`) —
  * nikad direktnim `from("korisnici")` upitom (RLS self-select bi operateru dao
  * samo njega samog).
  */

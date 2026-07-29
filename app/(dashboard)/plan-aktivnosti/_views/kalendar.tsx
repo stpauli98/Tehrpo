@@ -21,10 +21,10 @@ import type { Database } from "@/db/types"
 
 export function KalendarView({
   godine,
-  zaduzeniPrijedlozi,
+  zaduzeniPrijedloziByFirma,
 }: {
   godine: number[]
-  zaduzeniPrijedlozi: string[]
+  zaduzeniPrijedloziByFirma: Record<string, string[]>
 }) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.kalendar")
@@ -205,7 +205,7 @@ export function KalendarView({
           istorija={istorija}
           dokumenti={dokumenti}
           closeHref={closeHref}
-          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
+          zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
         />
       )}
     </div>

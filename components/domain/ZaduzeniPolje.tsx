@@ -4,7 +4,7 @@ import { useId } from "react"
 import { Input } from "@/components/ui/input"
 
 /**
- * Polje „Zaduženi" sa prijedlozima imena aktivnih korisnika (S8.6).
+ * Polje „Zaduženi" sa prijedlozima imena korisnika koji imaju pristup izabranoj firmi.
  *
  * Slobodan unos OSTAJE dozvoljen — `termini.zaduzeni` je slobodan tekst u bazi
  * (nije FK) i postojeći podaci su unošeni ručno; prijedlozi su UX sloj koji

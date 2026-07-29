@@ -1295,6 +1295,13 @@ export type Database = {
           ukupno: number
         }[]
       }
+      get_zaduzeni_dodjele: {
+        Args: never
+        Returns: {
+          ime: string
+          klijent_id: string
+        }[]
+      }
       ima_pristup_dokumentu: { Args: { p_path: string }; Returns: boolean }
       ima_pristup_klijentu: { Args: { p_klijent_id: string }; Returns: boolean }
       je_admin: { Args: never; Returns: boolean }

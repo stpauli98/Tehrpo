@@ -20,10 +20,10 @@ import type { Database } from "@/db/types"
 
 export function MatricaView({
   godine,
-  zaduzeniPrijedlozi,
+  zaduzeniPrijedloziByFirma,
 }: {
   godine: number[]
-  zaduzeniPrijedlozi: string[]
+  zaduzeniPrijedloziByFirma: Record<string, string[]>
 }) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.matrica")
@@ -191,7 +191,7 @@ export function MatricaView({
           istorija={istorija}
           dokumenti={dokumenti}
           closeHref={closeHref}
-          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
+          zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
         />
       )}
     </div>

@@ -4,14 +4,14 @@ import { useId } from "react"
 import { Input } from "@/components/ui/input"
 
 /**
- * Polje „Zaduženi" sa prijedlozima imena aktivnih korisnika (S8.6).
+ * Polje „Zaduženi" sa prijedlozima imena korisnika koji imaju pristup izabranoj firmi.
  *
  * Slobodan unos OSTAJE dozvoljen — `termini.zaduzeni` je slobodan tekst u bazi
  * (nije FK) i postojeći podaci su unošeni ručno; prijedlozi su UX sloj koji
  * sprječava da svako ime ima pet varijanti. Zato `<datalist>`, ne combobox koji
  * zaključava izbor.
  *
- * Imena stižu propom iz server komponente (`dohvatiImenaAktivnihKorisnika`) —
+ * Imena stižu propom iz server komponente (`dohvatiZaduzeniPrijedlogeByFirma`) —
  * nikad direktnim `from("korisnici")` upitom (RLS self-select bi operateru dao
  * samo njega samog).
  */

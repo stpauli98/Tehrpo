@@ -18,10 +18,10 @@ import type { Database } from "@/db/types"
 
 export function ListaView({
   godine,
-  zaduzeniPrijedlozi,
+  zaduzeniPrijedloziByFirma,
 }: {
   godine: number[]
-  zaduzeniPrijedlozi: string[]
+  zaduzeniPrijedloziByFirma: Record<string, string[]>
 }) {
   const searchParams = useSearchParams()
   const t = useTranslations("plan.lista")
@@ -137,7 +137,7 @@ export function ListaView({
           klijenti={klijenti}
           vrste={vrste}
           lokacijeByFirma={lokacijeByFirma}
-          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
+          zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
         />
       </div>
 
@@ -181,7 +181,7 @@ export function ListaView({
           istorija={istorija}
           dokumenti={dokumenti}
           closeHref={closeHref}
-          zaduzeniPrijedlozi={zaduzeniPrijedlozi}
+          zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
         />
       )}
     </div>

@@ -934,6 +934,7 @@
       "sveFirme": "sve firme",
       "sveFirmeTitle": "Administrator vidi sve firme",
       "nemaDodijeljenih": "nema dodijeljenih",
+      "primaDeaktiviran": "Deaktiviran korisnik ne prima podsjetnike, bez obzira na ovu postavku.",
       "prazno": "Nema korisnika za „{upit}”."
     },
     "korisnikAkcije": {
@@ -985,7 +986,7 @@
     },
     "podsjetniciKontrole": {
       "naslov": "Automatsko slanje",
-      "opis": "Dnevno slanje podsjetnika (06:00 UTC). Isključivanje zaustavlja samo automatiku — ručno pokretanje uvijek radi.",
+      "opis": "Gasi automatsko dnevno slanje (oba dnevna termina, i podsjetnike prije roka i one poslije roka). „Pokreni sada“ radi i dok je isključeno. Ne gasi „Obavijest o zakazivanju poslije roka“ — ona ima svoj prekidač ispod.",
       "pokreni": "Pokreni sada",
       "potvrda": "Poslati podsjetnike svim primaocima odmah?",
       "saljem": "Šaljem…",
@@ -1009,11 +1010,18 @@
     },
     "koStaPrima": {
       "naslov": "Ko šta prima",
-      "opis": "Pregled: za svaku firmu koji radnici i koje adrese firme dobijaju podsjetnik.",
+      "opis": "Za svaku firmu: koji radnici i koje adrese firme dobijaju podsjetnik. Slanje firmi mijenjaš ovdje, primaoce na kartici firme.",
       "firma": "Firma",
       "radnici": "Dodijeljeni radnici",
+      "radniciNema": "nema dodijeljenih",
+      "radniciOptOut": "dodijeljeni su, ali ne primaju podsjetnike",
+      "saljiFirmi": "Šalji firmi",
+      "saljiFirmiAria": "Šalji podsjetnike firmi {firma}",
+      "saljiFirmiIskljuceno": "Prvo uključi „Šalji podsjetnike i firmama“ — dok je isključen, ovo ne radi.",
       "firmaPrima": "Firma prima?",
       "adrese": "Adrese firme",
+      "uredi": "Uredi primaoce na kartici firme",
+      "ukljuciGlobalno": "Uključi slanje firmama",
       "sazetak": "{prima} od {ukupno} firmi prima podsjetnike",
       "prazno": "Nema firmi za prikaz.",
       "da": "Da",
@@ -1021,7 +1029,12 @@
       "globalnoIskljucenoBanner": "Globalni prekidač „{prekidac}“ je isključen — trenutno nijedna firma ne prima podsjetnike, bez obzira na pojedinačne postavke. Uključi ga u postavkama iznad.",
       "razlogGlobalno": "globalni prekidač isključen",
       "razlogFirma": "firma isključena",
-      "razlogNemaAdrese": "nema adrese"
+      "razlogNemaAdrese": "nema adrese",
+      "razlogAutomatika": "automatsko slanje isključeno",
+      "automatikaIskljucenaBanner": "„Automatsko slanje“ je isključeno — po rasporedu se ne šalje ništa, nijednoj firmi ni radniku. Pojedinačne postavke ispod se čuvaju i važe za „Pokreni sada“.",
+      "sazetakAutomatikaOff": "{prima} od {ukupno} firmi bi primilo — automatsko slanje je isključeno",
+      "uvijekPrimaju": "Uvijek primaju (bez obzira na postavke firme): {adrese}",
+      "uvijekPrimajuPrazno": "Uvijek primaju: nijedan admin trenutno ne prima podsjetnike i REMINDER_TO nije postavljen."
     },
     "reminderForm": {
       "naDan": "na dan",

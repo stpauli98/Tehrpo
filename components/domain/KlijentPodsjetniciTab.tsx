@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { KlijentPodsjetniciForm } from "./KlijentPodsjetniciForm"
 import { DodjelaRadnikaFirmi } from "./DodjelaRadnikaFirmi"
+import { UkljuciSlanjeFirmamaButton } from "./UkljuciSlanjeFirmamaButton"
 
 export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }) {
   const t = await getTranslations("klijenti.podsjetnici")
@@ -37,17 +38,24 @@ export async function KlijentPodsjetniciTab({ klijentId }: { klijentId: string }
         {saljiGlobalno ? (
           <KlijentPodsjetniciForm klijentId={klijentId} salji={salji} kontakti={kontakti} adHocEmails={adHocEmails} />
         ) : (
-          <p className="max-w-xl text-sm text-muted-foreground" data-testid="podsjetnici-global-off">
-            {t("globalnoIskljuceno")}
-            {jeAdmin && (
-              <>
-                {" "}
-                <Link href={href("/postavke")} className="font-medium text-brand hover:underline">
-                  {t("otvoriPostavke")}
-                </Link>
-              </>
-            )}
-          </p>
+          <div className="max-w-xl space-y-3" data-testid="podsjetnici-global-off">
+            <p className="text-sm text-muted-foreground">
+              {t("globalnoIskljuceno")}
+              {jeAdmin && (
+                <>
+                  {" "}
+                  <Link href={href("/postavke")} className="font-medium text-brand hover:underline">
+                    {t("otvoriPostavke")}
+                  </Link>
+                </>
+              )}
+            </p>
+            {/* Admin ne mora natrag u Postavke tražiti prekidač (koji je tamo i u
+                zatvorenoj sekciji) — uključuje ga odmah tu, pa se forma pojavi u mjestu.
+                `operater` nema pravo na globalni prekidač (akcija je admin-gated), zato
+                mu se dugme ne prikazuje. */}
+            {jeAdmin && <UkljuciSlanjeFirmamaButton />}
+          </div>
         )}
       </section>
       {jeAdmin && (

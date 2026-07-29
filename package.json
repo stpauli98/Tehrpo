@@ -24,6 +24,7 @@
     "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts",
     "rls:check": "tsx scripts/check-rls-coverage.ts",
     "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts",
+    "seed:demo-de": "tsx --env-file=.env.development.local scripts/seed-demo-de.ts",
     "gc:dokumenti": "tsx --env-file=.env.local scripts/gc-orphan-dokumenti.ts",
     "provjeri:integraciju": "tsx scripts/provjeri-integraciju.ts"
   },

@@ -3,12 +3,14 @@ import { AlertTriangle, ArrowUp, Send } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { href } from "@/i18n/routes"
 import { podsjetniciAktivni as citajPodsjetniciAktivni } from "@/lib/reminders/gating"
-import { EMAIL_RE } from "@/lib/reminders/recipients"
 import {
   izracunajIshodReda,
   izracunajStatusRadnika,
   stalniPrimaoci,
   nepokriveneLokacije,
+  grupisiAdrese,
+  trebaUpozorenje,
+  jeOdsjeceno,
   type RazlogNePrima,
   type LokacijaRef,
 } from "@/lib/podsjetnici/koStaPrima"
@@ -32,20 +34,45 @@ export async function KoStaPrimaTab() {
   const t = await getTranslations("postavke.koStaPrima")
   const tSalji = await getTranslations("postavke.saljiKlijentima")
   const supabase = await createServerSupabaseClient()
+  // PostgREST implicitno limitira na ~1000 redova (isti rizik kao u recipients.ts:192-193).
+  // Tiha trunkacija bi ovdje bila GORA od kvara koji se popravlja: odsječeni `kontakt_osobe`
+  // daju lažno pozitivno upozorenje (lokacija prijavljena kao bez primaoca iako ima kontakt),
+  // odsječene `lokacije` ga sakriju, odsječeni `klijenti` skrate cijelu tabelu. Sve tri zato
+  // nose `{ count: "exact" }` + eksplicitan `.range()` na istih 5000 redova, provjereno niže.
+  const RASPON_GORNJA_GRANICA = 4999
   const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes, lokacijeRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
-    supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
+    supabase
+      .from("klijenti")
+      .select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails", { count: "exact" })
+      .order("naziv")
+      .range(0, RASPON_GORNJA_GRANICA),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
-    supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac, lokacija_id"),
-    // PostgREST implicitno limitira na ~1000 redova (isti rizik kao u recipients.ts:192-193):
-    // eksplicitan range + count, da tiha trunkacija ne izbriše lokacije iz upozorenja i ne
-    // prijavi „sve pokriveno" za firmu koja to nije.
-    supabase.from("lokacije").select("id, naziv, klijent_id", { count: "exact" }).order("naziv").range(0, 4999),
+    supabase
+      .from("kontakt_osobe")
+      .select("klijent_id, email, podsjetnik_primalac, lokacija_id", { count: "exact" })
+      .order("klijent_id")
+      .range(0, RASPON_GORNJA_GRANICA),
+    supabase
+      .from("lokacije")
+      .select("id, naziv, klijent_id", { count: "exact" })
+      .order("naziv")
+      .range(0, RASPON_GORNJA_GRANICA),
   ])
-  if (lokacijeRes.count != null && lokacijeRes.count > (lokacijeRes.data?.length ?? 0)) {
+  // Vidljiva napomena, ne samo log: recenzija je pokazala da je ekran sa odsječenim
+  // podacima bajt-identičan ekranu koji je stvarno pokriven — `console.warn` ide u
+  // Vercel logove koje korisnik nikad ne vidi.
+  const podaciNepotpuni =
+    jeOdsjeceno(klijentiRes.count, klijentiRes.data?.length ?? 0) ||
+    jeOdsjeceno(kontaktiRes.count, kontaktiRes.data?.length ?? 0) ||
+    jeOdsjeceno(lokacijeRes.count, lokacijeRes.data?.length ?? 0)
+  if (podaciNepotpuni) {
     console.warn(
-      `[ko-sta-prima] lokacije odsječene na ${lokacijeRes.data?.length ?? 0}/${lokacijeRes.count} — upozorenje o nepokrivenim lokacijama može biti nepotpuno`,
+      `[ko-sta-prima] podaci odsječeni na ${RASPON_GORNJA_GRANICA + 1} redova ` +
+        `(klijenti ${klijentiRes.data?.length ?? 0}/${klijentiRes.count ?? "?"}, ` +
+        `kontakt_osobe ${kontaktiRes.data?.length ?? 0}/${kontaktiRes.count ?? "?"}, ` +
+        `lokacije ${lokacijeRes.data?.length ?? 0}/${lokacijeRes.count ?? "?"}) — tabela i upozorenja o pokrivenosti mogu biti nepotpuni`,
     )
   }
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
@@ -62,48 +89,12 @@ export async function KoStaPrimaTab() {
       })),
     env.REMINDER_TO,
   )
-  // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
-  const adreseByKlijent = new Map<string, Set<string>>()
-  // klijent_id → adrese koje pokrivaju CIJELU firmu (kontakt bez lokacija_id + ad-hoc).
-  const firmaAdreseByKlijent = new Map<string, Set<string>>()
-  // klijent_id → lokacija_id → adrese vezane baš za tu lokaciju.
-  const lokacijaAdreseByKlijent = new Map<string, Map<string, Set<string>>>()
-  for (const ko of kontaktiRes.data ?? []) {
-    if (!ko.podsjetnik_primalac) continue
-    const email = (ko.email ?? "").trim().toLowerCase()
-    if (!EMAIL_RE.test(email)) continue
-    const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
-    set.add(email)
-    adreseByKlijent.set(ko.klijent_id, set)
-    // `?? null` a ne truthy provjera: usklađeno s engine-om (recipients.ts:106), da se prikaz
-    // i stvarno slanje ne razmimoiđu za rubne vrijednosti (npr. prazan string).
-    const lokacijaId = ko.lokacija_id ?? null
-    if (lokacijaId !== null) {
-      const poLok = lokacijaAdreseByKlijent.get(ko.klijent_id) ?? new Map<string, Set<string>>()
-      const lokSet = poLok.get(lokacijaId) ?? new Set<string>()
-      lokSet.add(email)
-      poLok.set(lokacijaId, lokSet)
-      lokacijaAdreseByKlijent.set(ko.klijent_id, poLok)
-    } else {
-      const firmaSet = firmaAdreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
-      firmaSet.add(email)
-      firmaAdreseByKlijent.set(ko.klijent_id, firmaSet)
-    }
-  }
-  // Ad-hoc „čiste" adrese (nisu kontakti) — pokrivaju cijelu firmu; u oba Seta
-  // (dedup s kontakt-adresama je automatski).
-  for (const k of klijentiRes.data ?? []) {
-    const set = adreseByKlijent.get(k.id) ?? new Set<string>()
-    const firmaSet = firmaAdreseByKlijent.get(k.id) ?? new Set<string>()
-    for (const raw of k.podsjetnik_emails ?? []) {
-      const email = (raw ?? "").trim().toLowerCase()
-      if (!EMAIL_RE.test(email)) continue
-      set.add(email)
-      firmaSet.add(email)
-    }
-    if (set.size > 0) adreseByKlijent.set(k.id, set)
-    if (firmaSet.size > 0) firmaAdreseByKlijent.set(k.id, firmaSet)
-  }
+  // klijent_id → { sve, firma, poLokaciji } — grupisanje je čista, testirana funkcija
+  // (`grupisiAdrese`) baš zato što je ovo mjesto gdje su se prikaz i engine prvi put razišli.
+  const grupisano = grupisiAdrese({
+    kontakti: kontaktiRes.data ?? [],
+    klijenti: klijentiRes.data ?? [],
+  })
   // klijent_id → lokacije te firme (za upozorenje o nepokrivenim lokacijama).
   const lokacijeByKlijent = new Map<string, LokacijaRef[]>()
   for (const lok of lokacijeRes.data ?? []) {
@@ -124,33 +115,28 @@ export async function KoStaPrimaTab() {
       .filter((uid) => primaZa(uid))
       .map((uid) => imeZa(uid))
     const statusRadnika = izracunajStatusRadnika(dodijeljeniSvi.length, radnici.length)
-    const adrese = [...(adreseByKlijent.get(k.id) ?? [])]
+    const grupa = grupisano.get(k.id)
+    const adrese = [...(grupa?.sve ?? [])]
     const { prima: firmaPrima, razlog } = izracunajIshodReda({
       podsjetniciAktivni: automatikaAktivna,
       saljiGlobalno,
       saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
       brojAdresa: adrese.length,
     })
-    // Isti predikat kao `brojAdresaKandidata` (automatika:true) — precedencija razloga iz
-    // izracunajIshodReda mora nadjačati upozorenje: dok globalni prekidač ili firmin flag već
-    // kažu „ne prima", rupa po lokaciji je šum, ne novi razlog. Bez ovog gejta bi npr. globalno
-    // isključena firma dobila i „Ne — globalni prekidač isključen" i „Bez primaoca za lokacije".
-    const biPrimila = izracunajIshodReda({
-      podsjetniciAktivni: true,
+    // `trebaUpozorenje` nosi isti predikat kao `brojAdresaKandidata` (automatika ignorisana):
+    // precedencija razloga iz izracunajIshodReda mora nadjačati upozorenje — dok globalni
+    // prekidač ili firmin flag već kažu „ne prima", rupa po lokaciji je šum, ne novi razlog.
+    const nepokrivene = trebaUpozorenje({
       saljiGlobalno,
       saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
       brojAdresa: adrese.length,
-    }).prima
-    const lokacijePoKlijentu = lokacijaAdreseByKlijent.get(k.id) ?? new Map<string, Set<string>>()
-    const adresePoLokaciji = new Map<string, number>()
-    for (const [lokacijaId, set] of lokacijePoKlijentu) {
-      adresePoLokaciji.set(lokacijaId, set.size)
-    }
-    const nepokrivene = biPrimila
+    })
       ? nepokriveneLokacije({
           lokacije: lokacijeByKlijent.get(k.id) ?? [],
-          brojAdresaFirme: firmaAdreseByKlijent.get(k.id)?.size ?? 0,
-          adresePoLokaciji,
+          brojAdresaFirme: grupa?.firma.size ?? 0,
+          adresePoLokaciji: new Map(
+            [...(grupa?.poLokaciji ?? new Map<string, Set<string>>())].map(([id, set]) => [id, set.size]),
+          ),
         })
       : []
     return {
@@ -186,6 +172,16 @@ export async function KoStaPrimaTab() {
       description={t("opis")}
       icon={<Send className="h-[18px] w-[18px]" />}
     >
+      {podaciNepotpuni && (
+        <div
+          data-testid="ksp-nepotpuni-banner"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
+        >
+          <AlertTriangle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
+          <span>{t("nepotpuniPodaciBanner")}</span>
+        </div>
+      )}
+
       {!automatikaAktivna && (
         <div
           data-testid="ksp-automatika-off-banner"

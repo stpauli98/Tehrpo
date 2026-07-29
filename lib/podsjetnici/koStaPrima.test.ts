@@ -7,6 +7,9 @@ import {
   izracunajStatusRadnika,
   stalniPrimaoci,
   nepokriveneLokacije,
+  grupisiAdrese,
+  trebaUpozorenje,
+  jeOdsjeceno,
   type LokacijaRef,
 } from "./koStaPrima"
 
@@ -184,5 +187,110 @@ describe("nepokriveneLokacije", () => {
         adresePoLokaciji: new Map([["nepostojeca", 5]]),
       }),
     ).toEqual([lokA])
+  })
+})
+
+describe("grupisiAdrese", () => {
+  it("kontakt bez lokacija_id ide u firma-adrese, sa lokacija_id u poLokaciji", () => {
+    const rez = grupisiAdrese({
+      kontakti: [
+        { klijent_id: "k1", email: "firma@x.ba", podsjetnik_primalac: true, lokacija_id: null },
+        { klijent_id: "k1", email: "lokacija@x.ba", podsjetnik_primalac: true, lokacija_id: "loc1" },
+      ],
+      klijenti: [],
+    })
+    const g = rez.get("k1")
+    expect(g?.firma).toEqual(new Set(["firma@x.ba"]))
+    expect(g?.poLokaciji.get("loc1")).toEqual(new Set(["lokacija@x.ba"]))
+    expect(g?.sve).toEqual(new Set(["firma@x.ba", "lokacija@x.ba"]))
+  })
+
+  it("ad-hoc adrese (klijenti.podsjetnik_emails) idu u firma-adrese, NIKAD u poLokaciji", () => {
+    const rez = grupisiAdrese({
+      kontakti: [],
+      klijenti: [{ id: "k1", podsjetnik_emails: ["adhoc@x.ba"] }],
+    })
+    const g = rez.get("k1")
+    expect(g?.firma).toEqual(new Set(["adhoc@x.ba"]))
+    expect(g?.poLokaciji.size).toBe(0)
+    expect(g?.sve).toEqual(new Set(["adhoc@x.ba"]))
+  })
+
+  it("preskače kontakt bez podsjetnik_primalac (nije flagovan kao primalac)", () => {
+    const rez = grupisiAdrese({
+      kontakti: [{ klijent_id: "k1", email: "x@x.ba", podsjetnik_primalac: false, lokacija_id: null }],
+      klijenti: [],
+    })
+    expect(rez.get("k1")).toBeUndefined()
+  })
+
+  it("preskače nevalidne adrese (EMAIL_RE) i kod kontakata i kod ad-hoc", () => {
+    const rez = grupisiAdrese({
+      kontakti: [{ klijent_id: "k1", email: "nije-mejl", podsjetnik_primalac: true, lokacija_id: null }],
+      klijenti: [{ id: "k1", podsjetnik_emails: ["takodje-nije-mejl"] }],
+    })
+    expect(rez.get("k1")?.sve.size).toBe(0)
+    expect(rez.get("k1")?.firma.size).toBe(0)
+  })
+
+  it("prazan string kao lokacija_id se tretira kao lokacijski (?? null, ne truthy) — usklađeno s engine-om", () => {
+    const rez = grupisiAdrese({
+      kontakti: [{ klijent_id: "k1", email: "x@x.ba", podsjetnik_primalac: true, lokacija_id: "" }],
+      klijenti: [],
+    })
+    const g = rez.get("k1")
+    // "" nije null, pa NE smije završiti u `firma` (truthy provjera bi je pogrešno stavila tamo).
+    expect(g?.firma.size).toBe(0)
+    expect(g?.poLokaciji.get("")).toEqual(new Set(["x@x.ba"]))
+  })
+
+  it("dedup + normalizacija (trim/lowercase) kroz Set, uskladeno s engine-om", () => {
+    const rez = grupisiAdrese({
+      kontakti: [
+        { klijent_id: "k1", email: "  Ana@Firma.ba ", podsjetnik_primalac: true, lokacija_id: null },
+        { klijent_id: "k1", email: "ana@firma.ba", podsjetnik_primalac: true, lokacija_id: null },
+      ],
+      klijenti: [],
+    })
+    expect(rez.get("k1")?.firma).toEqual(new Set(["ana@firma.ba"]))
+  })
+})
+
+describe("trebaUpozorenje", () => {
+  const ok = { saljiGlobalno: true, saljiFirmi: true, brojAdresa: 1 }
+
+  it("sva tri uslova ispunjena → true", () => {
+    expect(trebaUpozorenje(ok)).toBe(true)
+  })
+
+  it("brojAdresa <= 0 → false, bez obzira na ostalo", () => {
+    expect(trebaUpozorenje({ ...ok, brojAdresa: 0 })).toBe(false)
+  })
+
+  it("saljiGlobalno false → false", () => {
+    expect(trebaUpozorenje({ ...ok, saljiGlobalno: false })).toBe(false)
+  })
+
+  it("saljiFirmi false → false", () => {
+    expect(trebaUpozorenje({ ...ok, saljiFirmi: false })).toBe(false)
+  })
+})
+
+describe("jeOdsjeceno", () => {
+  it("count je null ili undefined → nije odsječeno", () => {
+    expect(jeOdsjeceno(null, 5)).toBe(false)
+    expect(jeOdsjeceno(undefined, 5)).toBe(false)
+  })
+
+  it("count jednak vraćenom → nije odsječeno", () => {
+    expect(jeOdsjeceno(5, 5)).toBe(false)
+  })
+
+  it("count veći od vraćenog → odsječeno", () => {
+    expect(jeOdsjeceno(6, 5)).toBe(true)
+  })
+
+  it("count manji od vraćenog (ne bi trebalo da se desi) → nije odsječeno", () => {
+    expect(jeOdsjeceno(4, 5)).toBe(false)
   })
 })

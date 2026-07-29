@@ -1041,7 +1041,8 @@
       "sazetakAutomatikaOff": "{prima} of {ukupno} clients would receive — automatic sending is off",
       "uvijekPrimaju": "Always receive (regardless of client settings): {adrese}",
       "uvijekPrimajuPrazno": "Always receive: no admin currently receives reminders and REMINDER_TO is not set.",
-      "nepokriveneLokacije": "No recipients for locations: {lokacije}"
+      "nepokriveneLokacije": "No recipients for locations: {lokacije}",
+      "nepotpuniPodaciBanner": "The client or location list was truncated (too many rows) — the table and coverage warnings may be incomplete."
     },
     "reminderForm": {
       "naDan": "on the day",

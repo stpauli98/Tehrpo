@@ -1041,7 +1041,8 @@
       "sazetakAutomatikaOff": "{prima} od {ukupno} firmi bi primilo — automatsko slanje je isključeno",
       "uvijekPrimaju": "Uvijek primaju (bez obzira na postavke firme): {adrese}",
       "uvijekPrimajuPrazno": "Uvijek primaju: nijedan admin trenutno ne prima podsjetnike i REMINDER_TO nije postavljen.",
-      "nepokriveneLokacije": "Bez primaoca za lokacije: {lokacije}"
+      "nepokriveneLokacije": "Bez primaoca za lokacije: {lokacije}",
+      "nepotpuniPodaciBanner": "Spisak firmi ili lokacija je odsječen (previše redova) — tabela i upozorenja o pokrivenosti možda nisu potpuni."
     },
     "reminderForm": {
       "naDan": "na dan",

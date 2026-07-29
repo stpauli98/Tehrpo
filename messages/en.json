@@ -923,6 +923,7 @@
       "sveFirme": "all companies",
       "sveFirmeTitle": "Administrator sees all companies",
       "nemaDodijeljenih": "none assigned",
+      "primaDeaktiviran": "A deactivated user receives no reminders, regardless of this setting.",
       "prazno": "No users for \"{upit}\"."
     },
     "korisnikAkcije": {
@@ -974,7 +975,7 @@
     },
     "podsjetniciKontrole": {
       "naslov": "Automatic sending",
-      "opis": "Daily reminder sending (06:00 UTC). Turning it off stops only the schedule — manual runs always work.",
+      "opis": "Turns off automatic daily sending (both daily runs, pre-due and post-due reminders alike). “Run now” works even while it is off. It does not turn off “Notice about scheduling after the deadline” — that has its own switch below.",
       "pokreni": "Run now",
       "potvrda": "Send reminders to all recipients now?",
       "saljem": "Sending…",
@@ -998,11 +999,18 @@
     },
     "koStaPrima": {
       "naslov": "Who receives what",
-      "opis": "Overview: for each client, which workers and which client addresses get the reminder.",
+      "opis": "For each client: which workers and which client addresses get the reminder. Sending to the client is edited here, recipients on the client's page.",
       "firma": "Client",
       "radnici": "Assigned workers",
+      "radniciNema": "none assigned",
+      "radniciOptOut": "assigned, but they do not receive reminders",
+      "saljiFirmi": "Send to client",
+      "saljiFirmiAria": "Send reminders to {firma}",
+      "saljiFirmiIskljuceno": "First enable “Send reminders to clients as well” — while it is off, this does nothing.",
       "firmaPrima": "Client receives?",
       "adrese": "Client addresses",
+      "uredi": "Edit recipients on the client's page",
+      "ukljuciGlobalno": "Enable sending to clients",
       "sazetak": "{prima} of {ukupno} clients receive reminders",
       "prazno": "No clients to show.",
       "da": "Yes",
@@ -1010,7 +1018,12 @@
       "globalnoIskljucenoBanner": "The global switch “{prekidac}” is off — no client currently receives reminders, regardless of individual settings. Enable it in the settings above.",
       "razlogGlobalno": "global switch off",
       "razlogFirma": "client disabled",
-      "razlogNemaAdrese": "no address"
+      "razlogNemaAdrese": "no address",
+      "razlogAutomatika": "automatic sending is off",
+      "automatikaIskljucenaBanner": "“Automatic sending” is off — nothing goes out on schedule, to no client and no worker. The individual settings below are kept and still apply to “Run now”.",
+      "sazetakAutomatikaOff": "{prima} of {ukupno} clients would receive — automatic sending is off",
+      "uvijekPrimaju": "Always receive (regardless of client settings): {adrese}",
+      "uvijekPrimajuPrazno": "Always receive: no admin currently receives reminders and REMINDER_TO is not set."
     },
     "reminderForm": {
       "naDan": "on the day",

@@ -25,6 +25,9 @@ export async function updateKlijentSaljiPodsjetnik(
     .eq("id", klijentId)
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijentId}`)
+  // Isti flag se uređuje i iz Postavke → „Ko šta prima" (SaljiFirmiToggle); bez ovoga
+  // tabela tamo ostane stale nakon toggle-a.
+  revalidatePath("/postavke")
   return { ok: true }
 }
 

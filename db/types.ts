@@ -421,6 +421,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_kontakt_lokacija_ista_firma"
+            columns: ["lokacija_id", "klijent_id"]
+            isOneToOne: false
+            referencedRelation: "lokacije"
+            referencedColumns: ["id", "klijent_id"]
+          },
+          {
             foreignKeyName: "kontakt_osobe_klijent_id_fkey"
             columns: ["klijent_id"]
             isOneToOne: false
@@ -1193,7 +1200,7 @@ export type Database = {
           dana_prije: number
           klijent_id: string
           klijent_naziv: string
-          lokacija_id: string | null
+          lokacija_id: string
           lokacija_naziv: string
           rok_dospijeca: string
           termin_id: string
@@ -1263,7 +1270,7 @@ export type Database = {
           datum_zakazan: string
           klijent_id: string
           klijent_naziv: string
-          lokacija_id: string | null
+          lokacija_id: string
           lokacija_naziv: string
           rok_dospijeca: string
           termin_id: string

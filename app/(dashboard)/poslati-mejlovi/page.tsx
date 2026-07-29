@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server"
+import { Info } from "lucide-react"
 import { dohvatiPoslateMejlove } from "@/lib/queries/poslati-mejlovi"
 import { PoslatiMejloviTabela } from "@/components/domain/PoslatiMejloviTabela"
 import { PoslatiMejloviFilteri } from "@/components/domain/PoslatiMejloviFilteri"
@@ -8,6 +9,7 @@ import { href } from "@/i18n/routes"
 import { dodajDan, utcGranicaSarajevskogDana } from "@/lib/date"
 import { jeIsoDatum } from "@/lib/poslati-mejlovi"
 import { Constants, type Database } from "@/db/types"
+import { DEMO_MODE } from "@/lib/demo"
 
 type MejlTip = Database["public"]["Enums"]["mejl_tip"]
 type MejlStatus = Database["public"]["Enums"]["mejl_status"]
@@ -82,6 +84,18 @@ export default async function PoslatiMejloviPage({
         <h1 className="text-xl font-semibold">{t("naslov")}</h1>
         <p className="text-sm text-muted-foreground">{t("opis")}</p>
       </div>
+      {/* Bez ovoga korisnik DEMO-a redove tumači kao stvarna slanja — a ranije je
+          vidio i sirovu Resend grešku koja liči na interni kvar softvera. */}
+      {DEMO_MODE && (
+        <div
+          data-testid="demo-traka"
+          role="status"
+          className="flex items-start gap-2 rounded-xl bg-brand-light px-4 py-3 text-sm text-foreground ring-1 ring-brand/20"
+        >
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
+          <p>{t("demoTraka")}</p>
+        </div>
+      )}
       <PoslatiMejloviFilteri
         tip={tip}
         status={status}

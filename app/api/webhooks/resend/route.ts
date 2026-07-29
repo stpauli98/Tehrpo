@@ -1,6 +1,7 @@
 import { Resend } from "resend"
 import { env } from "@/lib/env"
 import { NextResponse } from "next/server"
+// integracija-dozvoli: admin-klijent — webhook ruta nije app request-path
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { mapirajDostavu } from "@/lib/email/webhookDostava"
 
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
 
   const status = mapirajDostavu(event.type)
   if (status && event.data?.email_id) {
+    // integracija-dozvoli: admin-klijent — webhook ruta nije app request-path
     const supabase = createAdminSupabaseClient() // service-role: ruta NIJE app request-path
     const { error } = await supabase.rpc("azuriraj_mejl_dostavu", {
       p_resend_id: event.data.email_id,

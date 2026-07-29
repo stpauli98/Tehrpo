@@ -27,15 +27,25 @@ export async function downloadDokument(path: string): Promise<Buffer> {
   return Buffer.from(await data.arrayBuffer())
 }
 
-/** Kratkotrajni potpisani URL; downloadName forsira preuzimanje sa tim imenom. */
+/**
+ * Kratkotrajni potpisani URL; `downloadName` forsira preuzimanje sa tim imenom,
+ * a bez njega preglednik prikaže fajl (PDF/slika) umjesto da ga snimi.
+ *
+ * `expiresIn` je podesiv jer se rokovi razlikuju po namjeni: preuzimanje traje
+ * sekundu (60s je i previše), a pregled ostaje otvoren u kartici dok korisnik čita.
+ */
 export async function signedUrl(
   path: string,
-  opts?: { downloadName?: string },
+  opts?: { downloadName?: string; expiresIn?: number },
 ): Promise<string> {
   const supabase = createAdminSupabaseClient()
   const { data, error } = await supabase.storage
     .from(DOKUMENTI_BUCKET)
-    .createSignedUrl(path, 60, opts?.downloadName ? { download: opts.downloadName } : undefined)
+    .createSignedUrl(
+      path,
+      opts?.expiresIn ?? 60,
+      opts?.downloadName ? { download: opts.downloadName } : undefined,
+    )
   if (error || !data) throw new Error(`Signed URL nije uspio: ${error?.message ?? "nema URL-a"}`)
   return data.signedUrl
 }

@@ -3,13 +3,12 @@
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Check } from "lucide-react"
+import { ArrowLeft, Check } from "lucide-react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +25,7 @@ import {
 } from "@/app/(dashboard)/termini/actions"
 import type { TerminRow } from "@/components/domain/TerminiTable"
 import { DokumentiSekcija } from "@/components/domain/DokumentiSekcija"
+import { DokumentPregled } from "@/components/domain/DokumentPregled"
 import type { Database } from "@/db/types"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -63,6 +63,8 @@ export function TerminSheet({
   const [izvrDatum, setIzvrDatum] = useState(todayIso())
   const [otkazArmed, setOtkazArmed] = useState(false)
   const [zakazanInput, setZakazanInput] = useState(termin.datum_zakazan ?? "")
+  // Kad je postavljen, kartica prikazuje sadržaj dokumenta umjesto detalja termina.
+  const [pregled, setPregled] = useState<{ id: string; naziv: string } | null>(null)
   // Mixed component (read detalji + write akcije) — NE sakrivati čitanje, gejtovati samo
   // write-kontrole (v. docs/superpowers/specs/2026-07-10-pregled-readonly-design.md).
   const mozeUrediti = useMozeUrediti()
@@ -112,25 +114,52 @@ export function TerminSheet({
   return (
     <Dialog open onOpenChange={(o) => { if (!o) close() }}>
       <DialogContent
-        // Tri reda: zaglavlje i podnožje su fiksni, skroluje SAMO srednji dio — tako
-        // kartica uvijek stane u prozor (bez skrola cijelog dijaloga lijevo/desno/gore/dolje).
-        // Visinu ograničava `max-h` iz `DialogContent` (100dvh − 2rem).
-        className="max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden"
+        // Dva reda: zaglavlje je fiksno, skroluje SAMO tijelo — tako kartica uvijek
+        // stane u prozor (bez skrola cijelog dijaloga lijevo/desno/gore/dolje).
+        // Visinu ograničava `max-h` iz `DialogContent` (100dvh − 2rem). Zatvara se
+        // preko X-a u uglu (fiksan, van skrolabilnog dijela) ili tasterom Escape.
+        className="max-w-2xl grid-rows-[auto_minmax(0,1fr)] overflow-hidden"
         data-testid="termin-sheet"
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span>{termin.klijent_naziv ?? t("naslovFallback")}</span>
-            <StatusBadge status={termin.status_izvedeni} stvarniStatus={termin.status} datumZakazan={termin.datum_zakazan} />
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            {termin.vrsta_naziv ?? "—"}
-            {termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
-          </p>
-          <p className="text-xs text-muted-foreground">{t("rok", { datum: formatDatum(termin.rok_dospijeca) })}</p>
-        </DialogHeader>
+        {pregled ? (
+          /* Pregled dokumenta zauzima karticu umjesto da otvara dialog preko dialoga
+             (isti razlog kao dvostepeno brisanje u `DokumentiSekcija`). */
+          <DialogHeader>
+            <DialogTitle className="flex min-w-0 items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setPregled(null)}
+                aria-label={tc("nazad")}
+                data-testid="pregled-nazad"
+                className="shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+              </Button>
+              <span className="truncate">{pregled.naziv}</span>
+            </DialogTitle>
+          </DialogHeader>
+        ) : (
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>{termin.klijent_naziv ?? t("naslovFallback")}</span>
+              <StatusBadge status={termin.status_izvedeni} stvarniStatus={termin.status} datumZakazan={termin.datum_zakazan} />
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {termin.vrsta_naziv ?? "—"}
+              {termin.lokacija_naziv ? ` · ${termin.lokacija_naziv}` : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("rok", { datum: formatDatum(termin.rok_dospijeca) })}</p>
+          </DialogHeader>
+        )}
 
-        {/* Jedini skrolabilni dio kartice (zaglavlje/podnožje ostaju fiksni). */}
+        {pregled ? (
+          <div className="overflow-y-auto" data-testid="termin-sheet-pregled">
+            <DokumentPregled key={pregled.id} dokumentId={pregled.id} />
+          </div>
+        ) : (
+        /* Jedini skrolabilni dio kartice (zaglavlje ostaje fiksno). */
         <div className="space-y-6 overflow-y-auto">
           {/* Edit forma — key ovisi o SVIM vrijednostima koje pune defaultValue (ne samo id),
               pa se uncontrolled Input-i remountuju i kad se isti termin osvježi (npr. nakon
@@ -305,7 +334,12 @@ export function TerminSheet({
           )}
 
           {/* Dokumenti — upload + AI zapisnik */}
-          <DokumentiSekcija terminId={termin.id ?? ""} dokumenti={dokumenti} izvrsen={termin.status === "izvrseno"} />
+          <DokumentiSekcija
+            terminId={termin.id ?? ""}
+            dokumenti={dokumenti}
+            izvrsen={termin.status === "izvrseno"}
+            onPregled={setPregled}
+          />
 
           {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
           <section data-testid="sheet-istorija">
@@ -330,12 +364,7 @@ export function TerminSheet({
             )}
           </section>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={close} data-testid="sheet-close">
-            {tc("zatvori")}
-          </Button>
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )

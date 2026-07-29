@@ -7,6 +7,7 @@ import {
   DOSTAVA_KEY,
   DOSTAVA_VARIJANTA,
   jeGreska,
+  jeDemo,
   type MejlRed,
 } from "@/lib/poslati-mejlovi"
 import { OznaciPregledanimButton } from "@/components/domain/OznaciPregledanimButton"
@@ -64,13 +65,27 @@ export async function PoslatiMejloviTabela({
               <td className="px-3 py-2">{r.subject}</td>
               <td className="px-3 py-2">{r.klijent_naziv ?? "—"}</td>
               <td className="px-3 py-2">
-                {t(`status.${STATUS_KEY[r.status]}` as never)}
+                {/* Demo red dobija bedž, ne običan tekst — da se na prvi pogled razlikuje
+                    od stvarno poslatog mejla i kad je traka iznad odskrolana. */}
+                {jeDemo(r) ? (
+                  <Badge variant="secondary" data-testid="mejl-demo-bedz">
+                    {t("status.demo")}
+                  </Badge>
+                ) : (
+                  t(`status.${STATUS_KEY[r.status]}` as never)
+                )}
                 {r.greska && <span className="block text-xs text-destructive">{r.greska}</span>}
               </td>
               <td className="px-3 py-2">
-                <Badge variant={DOSTAVA_VARIJANTA[r.delivery_status]}>
-                  {t(`dostava.${DOSTAVA_KEY[r.delivery_status]}` as never)}
-                </Badge>
+                {/* Za demo red status dostave nema smisla: „Nepoznato" bi nagovijestilo
+                    da mejl još može stići, a nikad nije ni poslat. */}
+                {jeDemo(r) ? (
+                  <span className="text-muted-foreground" data-testid="mejl-dostava-nema">—</span>
+                ) : (
+                  <Badge variant={DOSTAVA_VARIJANTA[r.delivery_status]}>
+                    {t(`dostava.${DOSTAVA_KEY[r.delivery_status]}` as never)}
+                  </Badge>
+                )}
               </td>
               <td className="px-3 py-2">
                 {jeGreska(r) && (

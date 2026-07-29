@@ -5,6 +5,7 @@
     "otkazi": "Abbrechen",
     "obrisi": "Löschen",
     "zatvori": "Schließen",
+    "nazad": "Zurück",
     "pretraga": "Suche",
     "prikaziJosLista": {
       "prikaziManje": "Weniger anzeigen",
@@ -51,7 +52,9 @@
     "topBar": {
       "odjava": "Abmelden",
       "korisnickiMeni": "Kontomenü",
-      "prijavljenKao": "Angemeldet als"
+      "prijavljenKao": "Angemeldet als",
+      "demoBedz": "DEMO",
+      "demoBedzOpis": "Demo-Version — es werden keine E-Mails versendet"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — demnächst"
@@ -838,6 +841,10 @@
     "uploadDugme": "Hochladen",
     "prazno": "Keine Dokumente für diesen Termin.",
     "preuzmi": "Herunterladen",
+    "pregledaj": "Vorschau",
+    "pregledUcitavanje": "Vorschau wird geladen…",
+    "pregledNijeDostupan": "Dieser Dateityp kann in der App nicht angezeigt werden.",
+    "pregledGreska": "Vorschau fehlgeschlagen. Versuchen Sie es erneut oder laden Sie die Datei herunter.",
     "obrisiDokument": "Dokument löschen",
     "aiOznaka": "KI",
     "uploadUspjeh": "Dokument hinzugefügt",
@@ -1254,6 +1261,7 @@
   "poslatiMejlovi": {
     "naslov": "Gesendete Mails",
     "opis": "Protokoll automatischer und manueller E-Mails mit Zustellstatus.",
+    "demoTraka": "Dies ist eine Demo — es werden keine E-Mails versendet. Unten sehen Sie, wie sie im echten Betrieb aussehen würden.",
     "prazno": "Es wurden noch keine E-Mails gesendet.",
     "kolone": {
       "vrijeme": "Zeit",
@@ -1276,7 +1284,8 @@
     },
     "status": {
       "poslato": "Gesendet",
-      "greskaSlanja": "Versand fehlgeschlagen"
+      "greskaSlanja": "Versand fehlgeschlagen",
+      "demo": "Demo (nicht gesendet)"
     },
     "dostava": {
       "nepoznato": "Unbekannt",

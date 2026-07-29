@@ -24,7 +24,8 @@
     "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts",
     "rls:check": "tsx scripts/check-rls-coverage.ts",
     "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts",
-    "gc:dokumenti": "tsx --env-file=.env.local scripts/gc-orphan-dokumenti.ts"
+    "gc:dokumenti": "tsx --env-file=.env.local scripts/gc-orphan-dokumenti.ts",
+    "provjeri:integraciju": "tsx scripts/provjeri-integraciju.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

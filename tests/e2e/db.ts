@@ -101,6 +101,15 @@ export async function zakaziTermin(id: string, datumZakazan: string): Promise<vo
   if (error) throw new Error(`zakaziTermin(${id}): ${error.message}`)
 }
 
+/** Označi termin izvršenim (status + datum) — zapisnik/AI je dostupan samo za izvršene. */
+export async function izvrsiTermin(id: string, datumIzvrsenja: string): Promise<void> {
+  const { error } = await db
+    .from("termini")
+    .update({ status: "izvrseno", datum_izvrsenja: datumIzvrsenja })
+    .eq("id", id)
+  if (error) throw new Error(`izvrsiTermin(${id}): ${error.message}`)
+}
+
 /** Obriši termin po id-u (čišćenje nakon testa). */
 export async function deleteTermin(id: string): Promise<void> {
   if (id) await db.from("termini").delete().eq("id", id)

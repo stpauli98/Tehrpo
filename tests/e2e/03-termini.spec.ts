@@ -234,7 +234,7 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
     await page.goto("/termini")
     await page.getByTestId("termin-detalji").first().click()
     await expect(page.getByTestId("termin-sheet")).toBeVisible()
-    await page.getByTestId("sheet-close").click()
+    await page.getByTestId("dialog-close").click()
     await page.waitForURL((u) => !u.search.includes("selected="))
     await expect(page.getByTestId("termin-sheet")).toBeHidden()
   })

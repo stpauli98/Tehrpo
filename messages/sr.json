@@ -5,6 +5,7 @@
     "otkazi": "Otkaži",
     "obrisi": "Obriši",
     "zatvori": "Zatvori",
+    "nazad": "Nazad",
     "pretraga": "Pretraga",
     "prikaziJosLista": {
       "prikaziManje": "Prikaži manje",
@@ -51,7 +52,9 @@
     "topBar": {
       "odjava": "Odjava",
       "korisnickiMeni": "Korisnički meni",
-      "prijavljenKao": "Prijavljen kao"
+      "prijavljenKao": "Prijavljen kao",
+      "demoBedz": "DEMO",
+      "demoBedzOpis": "Demo verzija — mejlovi se ne šalju"
     },
     "comingSoon": {
       "naslovUskoro": "{naslov} — uskoro"
@@ -838,6 +841,10 @@
     "uploadDugme": "Upload",
     "prazno": "Nema dokumenata za ovaj termin.",
     "preuzmi": "Preuzmi",
+    "pregledaj": "Pregledaj",
+    "pregledUcitavanje": "Učitavanje pregleda…",
+    "pregledNijeDostupan": "Ovaj tip fajla se ne može prikazati u aplikaciji.",
+    "pregledGreska": "Pregled dokumenta nije uspio. Pokušajte ponovo ili preuzmite fajl.",
     "obrisiDokument": "Obriši dokument",
     "aiOznaka": "AI",
     "uploadUspjeh": "Dokument dodat",
@@ -1254,6 +1261,7 @@
   "poslatiMejlovi": {
     "naslov": "Poslati mejlovi",
     "opis": "Dnevnik automatskih i ručnih mejlova sa statusom dostave.",
+    "demoTraka": "Ovo je demo verzija — mejlovi se ne šalju nikome. Ispod je prikaz kako bi izgledali u stvarnom radu.",
     "prazno": "Još nema poslatih mejlova.",
     "kolone": {
       "vrijeme": "Vrijeme",
@@ -1276,7 +1284,8 @@
     },
     "status": {
       "poslato": "Poslato",
-      "greskaSlanja": "Greška slanja"
+      "greskaSlanja": "Greška slanja",
+      "demo": "Demo (nije poslato)"
     },
     "dostava": {
       "nepoznato": "Nepoznato",

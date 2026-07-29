@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -7,6 +8,7 @@ import Link from "next/link"
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Skeleton } from "@/components/ui/skeleton"
 import { MonthCalendar, type DayTermin } from "@/components/domain/MonthCalendar"
+import { NoviTerminDialog, type Opt } from "@/components/domain/NoviTerminDialog"
 import { PlanNav } from "@/components/domain/PlanNav"
 import { TerminSheet } from "@/components/domain/TerminSheet"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -15,7 +17,8 @@ import { todayIso, formatDatum } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
 import { PlanLegenda } from "@/components/domain/PlanLegenda"
 import type { TerminRow } from "@/components/domain/TerminiTable"
-import { getTerminiKalendar, getTerminDetail, porukaGreske } from "@/lib/queries/plan-aktivnosti"
+import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { getTerminiKalendar, getTerminDetail, getTerminiFormPodaci, porukaGreske } from "@/lib/queries/plan-aktivnosti"
 import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
@@ -40,6 +43,24 @@ export function KalendarView({
   const mjesec = Math.min(12, Math.max(1, mjesecRaw))
   const selectedId = searchParams.get("selected")
   const selectedDan = searchParams.get("dan")
+
+  const mozeUrediti = useMozeUrediti()
+  // "+" na danu → kontrolisani NoviTerminDialog sa rokom = taj dan (yoink 2026-07-29)
+  const [noviZaDan, setNoviZaDan] = useState<string | null>(null)
+
+  // Skupovi za formu — mali i stabilni, prefetch čim je uloga uređivačka da "+"
+  // otvara dijalog bez čekanja; pregled uloga ne troši upit (enabled).
+  const { data: formPodaci } = useQuery({
+    queryKey: ["termini-form-podaci"],
+    queryFn: getTerminiFormPodaci,
+    staleTime: 60_000,
+    enabled: mozeUrediti,
+  })
+
+  const formLokacijeByFirma: Record<string, Opt[]> = {}
+  for (const l of formPodaci?.lokacije ?? []) {
+    ;(formLokacijeByFirma[l.klijent_id] ??= []).push({ id: l.id, naziv: l.naziv })
+  }
 
   const danas = {
     godina: Number(today.slice(0, 4)),
@@ -151,6 +172,7 @@ export function KalendarView({
           today={today}
           selectedDan={selectedDan}
           currentSearch={currentSearch}
+          onDodajTermin={mozeUrediti && formPodaci ? setNoviZaDan : undefined}
         />
         {selectedDan && (
           <aside data-testid="plan-sidebar" className="h-fit rounded-xl bg-card p-4 ring-1 ring-foreground/10">
@@ -200,6 +222,20 @@ export function KalendarView({
           poruka={porukaGreske(detailError)}
           onRetry={() => void refetchDetail()}
           testId="termin-detail-greska"
+        />
+      )}
+      {/* key={noviZaDan} remount-uje dijalog po danu → svjež state sa novim defaultRok */}
+      {noviZaDan && formPodaci && (
+        <NoviTerminDialog
+          key={noviZaDan}
+          open
+          onOpenChange={(o) => { if (!o) setNoviZaDan(null) }}
+          defaultRok={noviZaDan}
+          klijenti={formPodaci.klijenti}
+          vrste={formPodaci.vrste}
+          lokacijeByFirma={formLokacijeByFirma}
+          zaduzeniPrijedloziByFirma={zaduzeniPrijedloziByFirma}
+          sviRadnici={sviRadnici}
         />
       )}
       {selectedTermin && (

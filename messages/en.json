@@ -705,7 +705,8 @@
     },
     "monthCalendar": {
       "danAriaLabel": "Day {broj}",
-      "jos": "{count} more"
+      "jos": "{count} more",
+      "dodajTermin": "Add appointment for {datum}"
     },
     "kalendar": {
       "nemaTerminaZaDan": "No appointments for this day.",

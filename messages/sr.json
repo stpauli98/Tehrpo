@@ -705,7 +705,8 @@
     },
     "monthCalendar": {
       "danAriaLabel": "Dan {broj}",
-      "jos": "još {count}"
+      "jos": "još {count}",
+      "dodajTermin": "Dodaj termin za {datum}"
     },
     "kalendar": {
       "nemaTerminaZaDan": "Nema termina za ovaj dan.",

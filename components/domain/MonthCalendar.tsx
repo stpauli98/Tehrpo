@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { CalDay } from "@/lib/calendar"
 import { STATUS_DOT_CLASS, type DerivedStatus } from "@/lib/termini"
@@ -41,12 +42,15 @@ export function MonthCalendar({
   today,
   selectedDan,
   currentSearch,
+  onDodajTermin,
 }: {
   grid: CalDay[]
   terminiByDan: Map<string, DayTermin[]>
   today: string
   selectedDan: string | null
   currentSearch: string
+  /** Kad je zadat (uloga smije uređivati), ćelija dana dobija hover "+" za novi termin. */
+  onDodajTermin?: (dan: string) => void
 }) {
   const t = useTranslations("plan.monthCalendar")
   const dayHref = (date: string) => {
@@ -88,7 +92,7 @@ export function MonthCalendar({
             <div
               key={c.date}
               className={cn(
-                "relative min-h-[84px] border-t border-l border-border transition",
+                "group/dan relative min-h-[84px] border-t border-l border-border transition",
                 !c.inMonth && "bg-muted/50 text-muted-foreground/50",
                 isSelected
                   ? "ring-2 ring-inset ring-brand bg-brand-light/30"
@@ -116,6 +120,22 @@ export function MonthCalendar({
                   >
                     {c.day}
                   </span>
+                  {onDodajTermin && (
+                    <button
+                      type="button"
+                      data-testid="cell-dodaj-termin"
+                      data-date={c.date}
+                      aria-label={t("dodajTermin", { datum: c.date })}
+                      onClick={() => onDodajTermin(c.date)}
+                      className={cn(
+                        "pointer-events-auto grid size-5 place-items-center rounded-md text-muted-foreground transition-opacity",
+                        "opacity-0 group-hover/dan:opacity-100 focus-visible:opacity-100 hover:bg-brand hover:text-white",
+                        FOCUS_RING,
+                      )}
+                    >
+                      <Plus className="size-3.5" aria-hidden />
+                    </button>
+                  )}
                 </div>
                 <div className="mt-1 space-y-0.5">
                   {termini.slice(0, 3).map((termin) => (

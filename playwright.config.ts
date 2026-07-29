@@ -1,5 +1,11 @@
 import { defineConfig, devices } from "@playwright/test"
 
+// Port je podesiv preko env-a: paralelni git worktree-ovi bi inače tiho dijelili
+// isti port 3000, a `reuseExistingServer` bi ovaj Playwright prolaz zakačio na tuđi
+// (drugi granin) `next dev` i testirao pogrešnu granu bez ikakve greške. Podrazumijevano
+// ostaje 3000 (nepromijenjeno ponašanje) ako niko ne postavi E2E_PORT.
+const E2E_PORT = process.env.E2E_PORT ?? "3000"
+
 export default defineConfig({
   testDir: "./tests/e2e",
   // Odbija pokretanje ako cilj nije DEMO. Vidi tests/e2e/global-setup.ts —
@@ -14,7 +20,7 @@ export default defineConfig({
   // da latencijom-osjetljive provjere (toBeHidden/toContainText) ne flake-uju, naročito webkit.
   expect: { timeout: 15_000 },
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${E2E_PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -37,8 +43,8 @@ export default defineConfig({
     // u putanji projekta ("Ai Forward"). Reprodukovano live (panic log) i pod
     // paralelnim Playwright workerima. Webpack to korektno hendla. Ne vraćaj na
     // Turbopack dok je putanja s razmakom (ili premjesti projekat u putanju bez razmaka).
-    command: "next dev -p 3000 --webpack",
-    url: "http://localhost:3000",
+    command: `next dev -p ${E2E_PORT} --webpack`,
+    url: `http://localhost:${E2E_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: { ZAPISNIK_DRY_RUN: "1", CHAT_DRY_RUN: "1" },

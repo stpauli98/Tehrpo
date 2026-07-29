@@ -746,6 +746,8 @@
     "filteri": {
       "akcija": "Action type",
       "svi": "All",
+      "korisnik": "User",
+      "sviKorisnici": "All users",
       "od": "From",
       "do": "To",
       "pretraga": "Search",
@@ -807,7 +809,11 @@
       "kontakt_osobe": "Contact persons",
       "ugovori": "Contracts"
     },
-    "ukupno": "Total: {count}"
+    "ucitajJos": "Load more",
+    "ucitavanje": "Loading…",
+    "greskaPorcije": "Could not load the next batch.",
+    "krajListe": "That's everything.",
+    "prikazanoRedova": "Rows shown: {count}"
   },
   "zapisnici": {
     "naslov": "Records",

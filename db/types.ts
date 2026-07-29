@@ -41,8 +41,10 @@ export type Database = {
           entitet: string | null
           entitet_id: string | null
           id: number
+          klijent_ref: string | null
           korisnik_id: string | null
           novo: Json | null
+          pretraga_tekst: string | null
           staro: Json | null
           vrijeme: string
         }
@@ -52,8 +54,10 @@ export type Database = {
           entitet?: string | null
           entitet_id?: string | null
           id?: never
+          klijent_ref?: string | null
           korisnik_id?: string | null
           novo?: Json | null
+          pretraga_tekst?: string | null
           staro?: Json | null
           vrijeme?: string
         }
@@ -63,8 +67,10 @@ export type Database = {
           entitet?: string | null
           entitet_id?: string | null
           id?: never
+          klijent_ref?: string | null
           korisnik_id?: string | null
           novo?: Json | null
+          pretraga_tekst?: string | null
           staro?: Json | null
           vrijeme?: string
         }
@@ -991,32 +997,6 @@ export type Database = {
       }
     }
     Views: {
-      aktivnost_view: {
-        Row: {
-          akcija: string | null
-          cilj_ime: string | null
-          cilj_klijent: string | null
-          detalji: Json | null
-          entitet: string | null
-          entitet_id: string | null
-          id: number | null
-          korisnik_email: string | null
-          korisnik_id: string | null
-          korisnik_ime: string | null
-          novo: Json | null
-          staro: Json | null
-          vrijeme: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_log_korisnik_id_fkey"
-            columns: ["korisnik_id"]
-            isOneToOne: false
-            referencedRelation: "korisnici"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       klijenti_view: {
         Row: {
           broj_aktivnih: number | null
@@ -1185,7 +1165,7 @@ export type Database = {
           ime: string
         }[]
       }
-      get_aktivnost: {
+      get_aktivnost_strana: {
         Args: {
           p_akcija?: string
           p_do?: string
@@ -1193,8 +1173,9 @@ export type Database = {
           p_korisnik?: string
           p_limit?: number
           p_od?: string
-          p_offset?: number
           p_pretraga?: string
+          p_prije_id?: number
+          p_prije_vrijeme?: string
         }
         Returns: {
           akcija: string
@@ -1209,7 +1190,6 @@ export type Database = {
           korisnik_ime: string
           novo: Json
           staro: Json
-          ukupno: number
           vrijeme: string
         }[]
       }

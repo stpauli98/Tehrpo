@@ -1040,7 +1040,9 @@
       "automatikaIskljucenaBanner": "„Automatischer Versand“ ist aus — planmäßig geht nichts hinaus, an keine Firma und keinen Mitarbeiter. Die Einzeleinstellungen unten bleiben erhalten und gelten für „Jetzt ausführen“.",
       "sazetakAutomatikaOff": "{prima} von {ukupno} Firmen würden erhalten — automatischer Versand ist aus",
       "uvijekPrimaju": "Erhalten immer (unabhängig von den Firmeneinstellungen): {adrese}",
-      "uvijekPrimajuPrazno": "Erhalten immer: derzeit erhält kein Administrator Erinnerungen und REMINDER_TO ist nicht gesetzt."
+      "uvijekPrimajuPrazno": "Erhalten immer: derzeit erhält kein Administrator Erinnerungen und REMINDER_TO ist nicht gesetzt.",
+      "nepokriveneLokacije": "Keine Empfänger für Standorte: {lokacije}",
+      "nepotpuniPodaciBanner": "Die Liste der Firmen, Standorte oder Kontakte wurde abgeschnitten (zu viele Zeilen) — die Tabelle und die Abdeckungshinweise sind möglicherweise unvollständig."
     },
     "reminderForm": {
       "naDan": "am Tag",

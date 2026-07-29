@@ -185,7 +185,11 @@ export function Sidebar({ mejlGreske = 0 }: { mejlGreske?: number }) {
       style={{ width }}
       onTransitionEnd={() => setAnimating(false)}
       className={cn(
-        "relative my-3 ml-3 shrink-0",
+        // z-20: nav mora imati SVOJ stacking context, inače njegov absolute
+        // tooltip (z-50) i dalje završi ISPOD <main> sadržaja — <main> je kasniji
+        // sibling u istom (roditeljskom) stacking contextu pa ga po default
+        // DOM redosljedu crta iznad, bez obzira na z-index unutar nav-a.
+        "relative z-20 my-3 ml-3 shrink-0",
         animating && "transition-[width] duration-300 ease-out motion-reduce:transition-none",
       )}
     >

@@ -923,6 +923,7 @@
       "sveFirme": "alle Firmen",
       "sveFirmeTitle": "Administrator sieht alle Firmen",
       "nemaDodijeljenih": "keine zugewiesen",
+      "primaDeaktiviran": "Ein deaktivierter Benutzer erhält keine Erinnerungen, unabhängig von dieser Einstellung.",
       "prazno": "Keine Benutzer für „{upit}“."
     },
     "korisnikAkcije": {
@@ -974,7 +975,7 @@
     },
     "podsjetniciKontrole": {
       "naslov": "Automatischer Versand",
-      "opis": "Täglicher Erinnerungsversand (06:00 UTC). Das Ausschalten stoppt nur den Zeitplan — manuelle Ausführung funktioniert immer.",
+      "opis": "Schaltet den automatischen täglichen Versand ab (beide Tagesläufe, Erinnerungen vor und nach dem Termin). „Jetzt ausführen“ funktioniert auch im ausgeschalteten Zustand. Es schaltet „Hinweis zur Terminierung nach Fristablauf“ nicht ab — dieser hat seinen eigenen Schalter darunter.",
       "pokreni": "Jetzt ausführen",
       "potvrda": "Erinnerungen jetzt an alle Empfänger senden?",
       "saljem": "Wird gesendet…",
@@ -998,11 +999,18 @@
     },
     "koStaPrima": {
       "naslov": "Wer erhält was",
-      "opis": "Übersicht: für jede Firma welche Mitarbeiter und welche Firmenadressen die Erinnerung erhalten.",
+      "opis": "Für jede Firma: welche Mitarbeiter und welche Firmenadressen die Erinnerung erhalten. Der Versand an die Firma wird hier geändert, die Empfänger auf der Firmenseite.",
       "firma": "Firma",
       "radnici": "Zugewiesene Mitarbeiter",
+      "radniciNema": "keine zugewiesen",
+      "radniciOptOut": "zugewiesen, erhalten aber keine Erinnerungen",
+      "saljiFirmi": "An Firma senden",
+      "saljiFirmiAria": "Erinnerungen an {firma} senden",
+      "saljiFirmiIskljuceno": "Aktiviere zuerst „Erinnerungen auch an Firmen senden“ — solange er aus ist, wirkt dies nicht.",
       "firmaPrima": "Firma erhält?",
       "adrese": "Firmenadressen",
+      "uredi": "Empfänger auf der Firmenseite bearbeiten",
+      "ukljuciGlobalno": "Versand an Firmen aktivieren",
       "sazetak": "{prima} von {ukupno} Firmen erhalten Erinnerungen",
       "prazno": "Keine Firmen anzuzeigen.",
       "da": "Ja",
@@ -1010,7 +1018,12 @@
       "globalnoIskljucenoBanner": "Der globale Schalter „{prekidac}“ ist deaktiviert — derzeit erhält keine Firma Erinnerungen, unabhängig von den Einzeleinstellungen. Oben in den Einstellungen aktivieren.",
       "razlogGlobalno": "globaler Schalter aus",
       "razlogFirma": "Firma deaktiviert",
-      "razlogNemaAdrese": "keine Adresse"
+      "razlogNemaAdrese": "keine Adresse",
+      "razlogAutomatika": "automatischer Versand ist aus",
+      "automatikaIskljucenaBanner": "„Automatischer Versand“ ist aus — planmäßig geht nichts hinaus, an keine Firma und keinen Mitarbeiter. Die Einzeleinstellungen unten bleiben erhalten und gelten für „Jetzt ausführen“.",
+      "sazetakAutomatikaOff": "{prima} von {ukupno} Firmen würden erhalten — automatischer Versand ist aus",
+      "uvijekPrimaju": "Erhalten immer (unabhängig von den Firmeneinstellungen): {adrese}",
+      "uvijekPrimajuPrazno": "Erhalten immer: derzeit erhält kein Administrator Erinnerungen und REMINDER_TO ist nicht gesetzt."
     },
     "reminderForm": {
       "naDan": "am Tag",

@@ -68,6 +68,11 @@ export async function KoStaPrimaTab() {
       // Koje firme imaju bar jedan termin bez lokacije — treba i njemu { count: "exact" } +
       // .range() (isti tretman kao klijenti/kontakt_osobe/lokacije): tiho odsijecanje ovdje
       // bi dalo lažno negativno (firma bi izgledala pokriveno iako joj fali baš ta adresa).
+      // NAPOMENA (van obima ove izmjene, namjerno neriješeno): ovaj upit povlači do 5000 redova
+      // `termini` samo da bi se izračunao skup različitih `klijent_id`-jeva — konvencija repoa
+      // (vidi CLAUDE.md „Read-model convention") je agregacija kroz view ili stabilan RPC
+      // (npr. distinct klijent_id gdje lokacija_id is null), ne fetch pa distinct u aplikaciji.
+      // Zaseban posao.
       supabase
         .from("termini")
         .select("klijent_id", { count: "exact" })

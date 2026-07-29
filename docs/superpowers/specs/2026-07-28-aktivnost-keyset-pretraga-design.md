@@ -213,7 +213,7 @@ njihova promjena resetuje listu na prvu porciju (kursor `null`).
 
 Dvije migracije, obje backward-compatible u smislu da ne diraju upis u `audit_log`:
 
-### 4.1 `20260728120000_audit_pretraga_kolone.sql`
+### 4.1 `20260728120100_audit_pretraga_kolone.sql`
 
 - `create extension if not exists pg_trgm;` (već postoji na DEMO i PROD — idempotentno)
 - `alter table audit_log add column pretraga_tekst text generated always as (…) stored;`
@@ -247,7 +247,7 @@ regenerisanja `db/types.ts`.
 
 | Fajl | Izmjena |
 |---|---|
-| `supabase/migrations/20260728120000_audit_pretraga_kolone.sql` | nov |
+| `supabase/migrations/20260728120100_audit_pretraga_kolone.sql` | nov |
 | `supabase/migrations/20260728121000_get_aktivnost_strana.sql` | nov |
 | `lib/queries/aktivnost.ts` | `dohvatiAktivnost` → `dohvatiAktivnostStranu`; `AktivnostFilter` gubi `offset`, dobija `kursor`; `AktivnostRed` gubi `ukupno`; rezultat dobija `imaJos: boolean` |
 | `app/api/aktivnost/route.ts` | nov — GET za „Učitaj još", isti filteri iz query stringa |

@@ -30,7 +30,7 @@
 
 | Fajl | Odgovornost |
 |---|---|
-| `supabase/migrations/20260728120000_audit_pretraga_kolone.sql` | *nov* — generisane kolone `pretraga_tekst` i `klijent_ref` + tri indeksa |
+| `supabase/migrations/20260728120100_audit_pretraga_kolone.sql` | *nov* — generisane kolone `pretraga_tekst` i `klijent_ref` + tri indeksa |
 | `supabase/migrations/20260728121000_get_aktivnost_strana.sql` | *nov* — nova RPC, brisanje stare RPC i `aktivnost_view` |
 | `scripts/provjeri-migraciju.ts` | *nov* — pusti navedene migracije u transakciji na DEMO, izmjeri, pa `rollback`; dokazuje ispravnost bez trajne izmjene |
 | `lib/aktivnost/kursor.ts` | *nov* — čiste funkcije za kursor (gradnja + parsiranje). Bez ijednog importa iz `lib/supabase` |
@@ -53,7 +53,7 @@
 ## Task 1: Migracija 1 — generisane kolone i indeksi
 
 **Files:**
-- Create: `supabase/migrations/20260728120000_audit_pretraga_kolone.sql`
+- Create: `supabase/migrations/20260728120100_audit_pretraga_kolone.sql`
 - Create: `scripts/provjeri-migraciju.ts`
 
 **Interfaces:**
@@ -118,7 +118,7 @@ Expected: `PAD: Navedi bar jednu .sql migraciju`, izlazni kod 1.
 
 - [ ] **Step 3: Napiši migraciju**
 
-Create `supabase/migrations/20260728120000_audit_pretraga_kolone.sql`:
+Create `supabase/migrations/20260728120100_audit_pretraga_kolone.sql`:
 
 ```sql
 -- Aktivnost je pucala na statement_timeout (9,5 s > 8 s). Uz keyset paginaciju
@@ -180,16 +180,16 @@ Run:
 ```bash
 cd .claude/worktrees/aktivnost-perf
 pnpm exec tsx --env-file=.env.development.local scripts/provjeri-migraciju.ts \
-  supabase/migrations/20260728120000_audit_pretraga_kolone.sql
+  supabase/migrations/20260728120100_audit_pretraga_kolone.sql
 ```
-Expected: `OK  supabase/migrations/20260728120000_audit_pretraga_kolone.sql  (<vrijeme> ms)` pa `Sve migracije prošle. Radim rollback — baza je netaknuta.` Ako se pojavi `operator class "extensions.gin_trgm_ops" does not exist`, opclass šema je pogrešna — ispravi na `public.gin_trgm_ops`.
+Expected: `OK  supabase/migrations/20260728120100_audit_pretraga_kolone.sql  (<vrijeme> ms)` pa `Sve migracije prošle. Radim rollback — baza je netaknuta.` Ako se pojavi `operator class "extensions.gin_trgm_ops" does not exist`, opclass šema je pogrešna — ispravi na `public.gin_trgm_ops`.
 
 Zabilježi prijavljeno trajanje — to je procjena ACCESS EXCLUSIVE locka za PROD.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/20260728120000_audit_pretraga_kolone.sql scripts/provjeri-migraciju.ts
+git add supabase/migrations/20260728120100_audit_pretraga_kolone.sql scripts/provjeri-migraciju.ts
 git commit -m "feat(db): pretraga_tekst i klijent_ref kolone + trigram indeks nad audit_log"
 ```
 
@@ -329,7 +329,7 @@ Run:
 ```bash
 cd .claude/worktrees/aktivnost-perf
 pnpm exec tsx --env-file=.env.development.local scripts/provjeri-migraciju.ts \
-  supabase/migrations/20260728120000_audit_pretraga_kolone.sql \
+  supabase/migrations/20260728120100_audit_pretraga_kolone.sql \
   supabase/migrations/20260728121000_get_aktivnost_strana.sql
 ```
 Expected: obje linije `OK`, pa `Sve migracije prošle. Radim rollback — baza je netaknuta.`
@@ -347,7 +347,7 @@ import { Client } from "pg"
 
 const DEMO_REF = "mtwwotmwrasozmcgqwhc"
 const MIGRACIJE = [
-  "supabase/migrations/20260728120000_audit_pretraga_kolone.sql",
+  "supabase/migrations/20260728120100_audit_pretraga_kolone.sql",
   "supabase/migrations/20260728121000_get_aktivnost_strana.sql",
 ]
 
@@ -475,7 +475,7 @@ git commit -m "feat(db): get_aktivnost_strana — keyset porcija, indeksirana pr
 
 ```bash
 cd "/Users/nmil/Desktop/Ai Forward/TEHPRO-Dokumenit/tehpro-mvp/.claude/worktrees/aktivnost-perf"
-pnpm db:apply-cloud --demo supabase/migrations/20260728120000_audit_pretraga_kolone.sql
+pnpm db:apply-cloud --demo supabase/migrations/20260728120100_audit_pretraga_kolone.sql
 pnpm db:apply-cloud --demo supabase/migrations/20260728121000_get_aktivnost_strana.sql
 ```
 
@@ -1384,7 +1384,7 @@ git commit -m "test(aktivnost): keyset listanje, pretraga, filter po korisniku, 
 
 1. Migracije `…120000` i `…121000` na PROD (expand pola — dodaju novo, ništa ne brišu):
    ```bash
-   POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260728120000_audit_pretraga_kolone.sql
+   POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260728120100_audit_pretraga_kolone.sql
    POTVRDI_PROD=da pnpm db:apply-cloud --prod supabase/migrations/20260728121000_get_aktivnost_strana.sql
    ```
 2. Tek onda merge u `main` (merge = deploy na tri Vercel projekta odjednom) — sačekati da je nova verzija aplikacije zaista live.

@@ -6,7 +6,7 @@ import { Client } from "pg"
 
 const DEMO_REF = "mtwwotmwrasozmcgqwhc"
 const MIGRACIJE = [
-  "supabase/migrations/20260728120000_audit_pretraga_kolone.sql",
+  "supabase/migrations/20260728120100_audit_pretraga_kolone.sql",
   "supabase/migrations/20260728121000_get_aktivnost_strana.sql",
 ]
 

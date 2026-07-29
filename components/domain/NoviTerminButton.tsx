@@ -39,13 +39,14 @@ export function NoviTerminButton({
   klijenti,
   vrste,
   lokacijeByFirma,
-  zaduzeniPrijedlozi,
+  zaduzeniPrijedloziByFirma,
 }: {
   klijenti: Opt[]
   vrste: Opt[]
   lokacijeByFirma: Record<string, Opt[]>
-  /** S8.6: imena aktivnih korisnika iz `get_aktivni_korisnici()` (prijedlozi, ne ograničenje). */
-  zaduzeniPrijedlozi: string[]
+  /** Imena korisnika koji imaju pristup toj firmi (prijedlozi, ne ograničenje) — vidi
+   * docs/superpowers/specs/2026-07-29-zaduzeni-po-firmi-design.md. */
+  zaduzeniPrijedloziByFirma: Record<string, string[]>
 }) {
   const router = useRouter()
   const invalidirajPlan = useInvalidatePlanQueries()
@@ -68,6 +69,10 @@ export function NoviTerminButton({
   useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
 
   const lokacije = klijentId ? lokacijeByFirma[klijentId] ?? [] : []
+
+  // Prazno dok firma nije izabrana — najjasnije ponašanje (potvrđeno u dizajnu), nema
+  // fallback-a na globalnu listu.
+  const zaduzeniPrijedlozi = klijentId ? zaduzeniPrijedloziByFirma[klijentId] ?? [] : []
 
   // S2: `errors` idu isključivo inline (FieldError), `message` isključivo u toast.
   const greske: Greske = {

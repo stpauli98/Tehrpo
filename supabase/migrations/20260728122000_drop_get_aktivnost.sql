@@ -1,0 +1,23 @@
+-- Contract polovina expand/contract para (expand = 20260728121000_get_aktivnost_strana.sql).
+--
+-- KRITIČNO — REDOSLIJED PRIMJENE: ovaj fajl se smije primijeniti na dati
+-- okruženje (DEMO ili PROD) TEK NAKON što je nova verzija aplikacije već
+-- deploy-ovana na to okruženje. Prethodna verzija aplikacije (lib/queries/aktivnost.ts
+-- prije ove izmjene) i dalje zove get_aktivnost preko aktivnost_view — ako se
+-- ovaj drop primijeni prije deploy-a, stara verzija aplikacije se lomi jer
+-- poziva funkciju koja više ne postoji. Dok se ovaj fajl ne primijeni, stara
+-- funkcija/view naprosto sjede neiskorišteni — nikom ne smetaju, ne troše
+-- upitni budžet, samo čekaju čišćenje.
+--
+-- Napomena o DEMO/PROD paritetu (projekat zahtijeva da obje baze uvijek budu
+-- na istoj šemi): DEMO je već imao originalnu, kombinovanu migraciju
+-- primijenjenu prije nego je uočen nalaz o rollback prozoru, pa get_aktivnost
+-- i aktivnost_view na DEMO-u VEĆ ne postoje. Na DEMO-u je ovaj fajl zato
+-- no-op — `if exists` čuva ponovno pokretanje bezopasnim. Krajnje stanje
+-- obje baze (DEMO i PROD) nakon primjene ovog fajla je identično, što i jeste
+-- poenta expand/contract-a i DEMO/PROD lockstep pravila ovog projekta.
+--
+-- Funkcija ide prije view-a jer zavisi od njega (tijelo joj čita
+-- `from aktivnost_view`).
+drop function if exists get_aktivnost(timestamptz, timestamptz, uuid, text, text, text, int, int);
+drop view if exists aktivnost_view;

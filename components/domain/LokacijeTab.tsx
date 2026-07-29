@@ -12,15 +12,19 @@ type LokacijaRow = Database["public"]["Tables"]["lokacije"]["Row"]
 export async function LokacijeTab({
   klijentId,
   lokacije,
+  kontakti = [],
 }: {
   klijentId: string
   lokacije: LokacijaRow[]
+  /** Kontakti firme — forma lokacije nudi vezivanje postojećeg umjesto ponovnog kucanja. */
+  kontakti?: { id: string; ime: string; lokacija_id: string | null }[]
 }) {
   const t = await getTranslations("klijenti.lokacije")
+  const vezani = (lokacijaId: string) => kontakti.filter((k) => k.lokacija_id === lokacijaId)
   return (
     <div data-testid="tab-lokacije-content" className="space-y-4">
       <div className="flex justify-end">
-        <LokacijaSheet klijentId={klijentId} />
+        <LokacijaSheet klijentId={klijentId} kontakti={kontakti} />
       </div>
 
       {lokacije.length === 0 ? (
@@ -72,13 +76,26 @@ export async function LokacijeTab({
                         {l.kontakt_osoba}
                         <Tooltip>{t("kontaktLinkTitle")}</Tooltip>
                       </Link>
-                    ) : (
+                    ) : vezani(l.id).length === 0 ? (
                       <span className="text-muted-foreground">—</span>
-                    )}
+                    ) : null}
+                    {/* Kontakti vezani preko kontakt_osobe.lokacija_id — oni STVARNO
+                        primaju podsjetnike za ovu lokaciju. Slobodno polje iznad je
+                        zatečeni podatak koji ništa ne pokreće. */}
+                    {vezani(l.id).map((k) => (
+                      <span
+                        key={k.id}
+                        className="mt-1 flex items-center gap-1 text-foreground"
+                        data-testid={`lokacija-vezani-kontakt-${l.id}`}
+                      >
+                        <User className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
+                        {k.ime}
+                      </span>
+                    ))}
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex gap-2">
-                      <LokacijaSheet klijentId={klijentId} lokacija={l} />
+                      <LokacijaSheet klijentId={klijentId} lokacija={l} kontakti={kontakti} />
                       <ObrisiLokacijuButton lokacijaId={l.id} />
                     </div>
                   </td>

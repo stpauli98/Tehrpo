@@ -45,12 +45,20 @@ export type KontaktPrimalacRow = {
   klijent_id: string
   email: string | null
   podsjetnik_primalac: boolean
+  /** NULL/izostavljeno = kontakt firme (prima za sve lokacije). */
+  lokacija_id?: string | null
 }
 
 export type RecipientIndex = {
   adminEmails: string[]
   assignedByKlijent: Map<string, string[]>
-  klijentEmailsByKlijent: Map<string, string[]>
+  /**
+   * Mejlovi flagovanih kontakata (Krug 2), grupisani po firmi PA po lokaciji.
+   * Ključ `null` = kontakt firme — prima za sve lokacije. Ad-hoc adrese firme
+   * (`klijenti.podsjetnik_emails`) idu pod isti `null` ključ jer su po definiciji
+   * firmi-široke, pa ih `firmaRecipientsZa` ne mora posebno tretirati.
+   */
+  klijentEmailsByLokacija: Map<string, Map<string | null, string[]>>
 }
 
 /** Indeks primalaca: admini + dodijeljeni (interni) + firmine adrese (Krug 2, iz flagovanih kontakata). */
@@ -78,7 +86,14 @@ export function buildRecipientIndex(
   }
   // Krug 2: firmine adrese = mejlovi flagovanih kontakata, samo kad je globalni prekidač
   // uključen I firma per-firma uključena. firmaRecipientsForKlijent kasnije lowercase-uje/dedupira.
-  const klijentEmailsByKlijent = new Map<string, string[]>()
+  const klijentEmailsByLokacija = new Map<string, Map<string | null, string[]>>()
+  const dodajFirmin = (klijentId: string, lokacijaId: string | null, email: string) => {
+    const poLok = klijentEmailsByLokacija.get(klijentId) ?? new Map<string | null, string[]>()
+    const arr = poLok.get(lokacijaId) ?? []
+    arr.push(email)
+    poLok.set(lokacijaId, arr)
+    klijentEmailsByLokacija.set(klijentId, poLok)
+  }
   if (saljiKlijentima) {
     const firmaUkljucena = new Set<string>()
     for (const k of klijenti) {
@@ -88,9 +103,7 @@ export function buildRecipientIndex(
       if (!ko.podsjetnik_primalac || !firmaUkljucena.has(ko.klijent_id)) continue
       const email = (ko.email ?? "").trim()
       if (!EMAIL_RE.test(email)) continue
-      const arr = klijentEmailsByKlijent.get(ko.klijent_id) ?? []
-      arr.push(email)
-      klijentEmailsByKlijent.set(ko.klijent_id, arr)
+      dodajFirmin(ko.klijent_id, ko.lokacija_id ?? null, email)
     }
     // Ad-hoc „čiste" adrese firme (nisu kontakti). firmaRecipientsForKlijent kasnije
     // lowercase-uje/dedupira, pa preklapanje s mejlom flagovanog kontakta nije problem.
@@ -99,13 +112,11 @@ export function buildRecipientIndex(
       for (const raw of k.podsjetnik_emails ?? []) {
         const email = (raw ?? "").trim()
         if (!EMAIL_RE.test(email)) continue
-        const arr = klijentEmailsByKlijent.get(k.id) ?? []
-        arr.push(email)
-        klijentEmailsByKlijent.set(k.id, arr)
+        dodajFirmin(k.id, null, email)
       }
     }
   }
-  return { adminEmails, assignedByKlijent, klijentEmailsByKlijent }
+  return { adminEmails, assignedByKlijent, klijentEmailsByLokacija }
 }
 
 /** Interni primaoci za jednu firmu: dodijeljeni ∪ admini ∪ REMINDER_TO base. BEZ firminih adresa. */
@@ -114,12 +125,31 @@ export function recipientsForKlijent(index: RecipientIndex, klijentId: string, b
   return assembleRecipients({ base, adminEmails: [...assigned, ...index.adminEmails] })
 }
 
-/** Firmine (Krug 2) adrese za jednu firmu — prazno ako global/per-firma isključen ili nema adresa. */
-export function firmaRecipientsForKlijent(index: RecipientIndex, klijentId: string): string[] {
-  const firma = index.klijentEmailsByKlijent.get(klijentId) ?? []
+/**
+ * Firmine (Krug 2) adrese za JEDAN termin — po lokaciji tog termina.
+ *
+ * Lokacijski kontakti se DODAJU firminim, ne zamjenjuju ih: „kontakt firme" znači
+ * „prati sve" (npr. menadžer ZNR u centrali), pa ne smije tiho ispasti iz obavještenja
+ * čim lokacija dobije svog koordinatora. Kod ZNR rokova propušten rok se ne primijeti
+ * dok ne bude kasno.
+ *
+ * `lokacijaId === null` (termin bez lokacije) → samo kontakti firme; vezani kontakt
+ * ne može znati tiče li ga se.
+ *
+ * Lokacija bez ijednog vezanog kontakta nije poseban slučaj — prirodno ostanu firmini.
+ */
+export function firmaRecipientsZa(
+  index: RecipientIndex,
+  klijentId: string,
+  lokacijaId: string | null,
+): string[] {
+  const poLok = index.klijentEmailsByLokacija.get(klijentId)
+  if (!poLok) return []
+  const firmini = poLok.get(null) ?? []
+  const vezani = lokacijaId ? (poLok.get(lokacijaId) ?? []) : []
   const seen = new Set<string>()
   const out: string[] = []
-  for (const raw of firma) {
+  for (const raw of [...vezani, ...firmini]) {
     const e = raw.trim().toLowerCase()
     if (!EMAIL_RE.test(e) || seen.has(e)) continue
     seen.add(e)
@@ -171,7 +201,7 @@ export async function loadRecipientIndex(
   if (klErr) throw new Error(`Greška pri čitanju klijenata (Krug 2): ${klErr.message}`)
   const { data: kontaktiPrimaoci, error: kontErr } = await supabase
     .from("kontakt_osobe")
-    .select("klijent_id, email, podsjetnik_primalac")
+    .select("klijent_id, email, podsjetnik_primalac, lokacija_id")
   if (kontErr) throw new Error(`Greška pri čitanju kontakata (Krug 2): ${kontErr.message}`)
 
   const index = buildRecipientIndex(

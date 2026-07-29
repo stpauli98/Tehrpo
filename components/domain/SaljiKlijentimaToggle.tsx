@@ -50,6 +50,21 @@ export function SaljiKlijentimaToggle({ salji }: { salji: boolean }) {
     setVerzija((v) => v + 1)
   }
 
+  // Isti prekidač se sad može promijeniti i IZVAN ove komponente — dugme „Uključi slanje
+  // firmama" u banneru sekcije „Ko šta prima" (UkljuciSlanjeFirmamaButton). Taj put dođe
+  // kao NOVI `salji` prop kroz revalidaciju, bez ovdašnjeg round-trip-a, pa bez ove
+  // sinhronizacije checkbox ostane na vrijednosti iz prvog mounta i pokazuje staro stanje.
+  // Koristi se postojeći mehanizam komponente (bump "verzija" = svjež Checkbox sa novim
+  // defaultChecked), NE remount cijele komponente preko `key` — remount gubi
+  // `useActionState` u letu i ostavlja checkbox nečekiranim (empirijski, spec 23).
+  const [prevSalji, setPrevSalji] = useState(salji)
+  if (salji !== prevSalji) {
+    setPrevSalji(salji)
+    setTrenutno(salji)
+    setNamjeraChecked(salji)
+    setVerzija((v) => v + 1)
+  }
+
   return (
     <div className="space-y-2">
       <form ref={formRef} action={action} className="flex items-start gap-3">

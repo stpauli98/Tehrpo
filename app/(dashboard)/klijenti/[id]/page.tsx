@@ -70,7 +70,9 @@ export default async function KlijentDetailPage({
   const trebaEnrichment = tab === "id-karta" || tab === "profil" // termini + profil stavke
   const trebaOpcije = tab === "termini" || tab === "profil" // vrste + admini za DodajProvjeruButton
   const trebaUgovore = tab === "id-karta"
-  const trebaKontakte = tab === "id-karta" || tab === "kontakti"
+  // Tab „lokacije" takođe treba kontakte: forma nudi vezivanje postojećeg, a tabela
+  // prikazuje ko stvarno prima podsjetnike za tu lokaciju.
+  const trebaKontakte = tab === "id-karta" || tab === "kontakti" || tab === "lokacije"
   const trebaDokumente = tab === "dokumenti"
 
   const supabase = await createServerSupabaseClient()
@@ -286,6 +288,7 @@ export default async function KlijentDetailPage({
           {tab === "id-karta" && (
             <IdKartaTab
               klijentId={id}
+              lokacije={lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))}
               osnovni={{
                 adresa: klijentPolja?.adresa ?? null,
                 telefon: klijentPolja?.telefon ?? null,
@@ -366,6 +369,7 @@ export default async function KlijentDetailPage({
                 <KontaktiKlijentList
                   klijentId={id}
                   kontakti={kontakti}
+                  lokacije={lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))}
                   searchable
                   info={t("kontaktiTab.infoPuniSpisak")}
                 />
@@ -474,7 +478,13 @@ export default async function KlijentDetailPage({
             </div>
           )}
 
-          {tab === "lokacije" && <LokacijeTab klijentId={id} lokacije={lokacije} />}
+          {tab === "lokacije" && (
+            <LokacijeTab
+              klijentId={id}
+              lokacije={lokacije}
+              kontakti={kontakti.map((k) => ({ id: k.id, ime: k.ime, lokacija_id: k.lokacija_id }))}
+            />
+          )}
 
           {tab === "podsjetnici" && <KlijentPodsjetniciTab klijentId={id} />}
 

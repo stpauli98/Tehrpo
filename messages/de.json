@@ -1042,7 +1042,7 @@
       "uvijekPrimaju": "Erhalten immer (unabhängig von den Firmeneinstellungen): {adrese}",
       "uvijekPrimajuPrazno": "Erhalten immer: derzeit erhält kein Administrator Erinnerungen und REMINDER_TO ist nicht gesetzt.",
       "nepokriveneLokacije": "Keine Empfänger für Standorte: {lokacije}",
-      "nepotpuniPodaciBanner": "Die Liste der Firmen oder Standorte wurde abgeschnitten (zu viele Zeilen) — die Tabelle und die Abdeckungshinweise sind möglicherweise unvollständig."
+      "nepotpuniPodaciBanner": "Die Liste der Firmen, Standorte oder Kontakte wurde abgeschnitten (zu viele Zeilen) — die Tabelle und die Abdeckungshinweise sind möglicherweise unvollständig."
     },
     "reminderForm": {
       "naDan": "am Tag",

@@ -233,7 +233,11 @@ describe("grupisiAdrese", () => {
     expect(rez.get("k1")?.firma.size).toBe(0)
   })
 
-  it("prazan string kao lokacija_id se tretira kao lokacijski (?? null, ne truthy) — usklađeno s engine-om", () => {
+  it("prazan string kao lokacija_id se tretira kao lokacijski (?? null, ne truthy) — usklađeno sa BUILD stranom engine-a", () => {
+    // Napomena (vidi komentar uz grupisiAdrese): READ strana engine-a (firmaRecipientsZa,
+    // recipients.ts:149) truthy-testira TERMINOV lokacijaId, ne kontaktov, pa kontakt sa
+    // lokacija_id === "" ionako nikad ne dobije mejl — praktično nedostižno (uuid FK), ne
+    // mijenjamo ponašanje zbog toga. Ovaj test provjerava samo BUILD stranu (bucket ključ).
     const rez = grupisiAdrese({
       kontakti: [{ klijent_id: "k1", email: "x@x.ba", podsjetnik_primalac: true, lokacija_id: "" }],
       klijenti: [],
@@ -242,6 +246,19 @@ describe("grupisiAdrese", () => {
     // "" nije null, pa NE smije završiti u `firma` (truthy provjera bi je pogrešno stavila tamo).
     expect(g?.firma.size).toBe(0)
     expect(g?.poLokaciji.get("")).toEqual(new Set(["x@x.ba"]))
+  })
+
+  it("adresa sa razmacima i bez dvojnika ipak završi u skupu (dokazuje da .trim() stvarno radi)", () => {
+    // Prethodni test (dedup ispod) koristi DVA unosa koji se poslije trim/lowercase
+    // poklapaju — bez .trim() bi nevalidan email jednostavno ispao (EMAIL_RE ne prolazi
+    // razmake), a preživjeli bi normalizovani unos, pa bi test i dalje prošao a da .trim()
+    // ne radi. Ovdje je SAMO jedan unos, sa razmacima, bez dvojnika — mora završiti u
+    // skupu kao trimovan string, inače EMAIL_RE odbije razmake i skup ostane prazan.
+    const rez = grupisiAdrese({
+      kontakti: [{ klijent_id: "k1", email: "  jedina@firma.ba  ", podsjetnik_primalac: true, lokacija_id: null }],
+      klijenti: [],
+    })
+    expect(rez.get("k1")?.firma).toEqual(new Set(["jedina@firma.ba"]))
   })
 
   it("dedup + normalizacija (trim/lowercase) kroz Set, uskladeno s engine-om", () => {

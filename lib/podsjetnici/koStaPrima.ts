@@ -114,8 +114,12 @@ export type AdreseFirme = {
  * ne može ponoviti a da test ne padne:
  *  - `.trim().toLowerCase()` + `EMAIL_RE` (isto kao `recipients.ts` Krug 2)
  *  - dedup kroz `Set`
- *  - `lokacija_id ?? null`, NIKAD truthy provjera (prazan string bi se inače razišao
- *    od engine-a koji koristi `?? null` na `recipients.ts:106`)
+ *  - `lokacija_id ?? null`, NIKAD truthy provjera — usklađeno sa BUILD stranom engine-a
+ *    (`buildRecipientIndex`/`dodajFirmin` na `recipients.ts:106`, isto `?? null`). Napomena:
+ *    READ strana (`firmaRecipientsZa`, `recipients.ts:149`) truthy-testira TERMINOV
+ *    `lokacijaId` parametar (ne kontaktov), pa kontakt sa `lokacija_id === ""` engine ionako
+ *    nikad ne isporuči — praktično nedostižno jer je `lokacije.id` uuid FK, nikad prazan
+ *    string, pa razlika ne mijenja stvarno ponašanje, samo je ovdje da tvrdnja ne overclaimuje
  *  - kontakt bez `podsjetnik_primalac` se ne broji
  *  - ad-hoc adrese (`klijenti.podsjetnik_emails`) pokrivaju cijelu firmu, nikad lokaciju
  */

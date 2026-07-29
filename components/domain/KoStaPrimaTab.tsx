@@ -42,6 +42,11 @@ export async function KoStaPrimaTab() {
   const RASPON_GORNJA_GRANICA = 4999
   const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes, lokacijeRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
+    // NAPOMENA (van obima ove izmjene, namjerno neriješeno): `korisnici` i `korisnik_klijent`
+    // nemaju isti { count: "exact" } + .range() tretman. Preko ~1000 dodjela bi PostgREST
+    // tiho odsjekao `korisnik_klijent`, kolona „Radnici" bi pogrešno prikazala „nema
+    // dodijeljenih"/optOut, i BEZ ikakvog banera (podaciNepotpuni ovo ne provjerava). Ista
+    // klasa kvara kao kontakt_osobe/klijenti/lokacije — zaseban posao.
     supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
     supabase
       .from("klijenti")

@@ -31,6 +31,9 @@ describe("buildZapisnikDocx", () => {
     const { value: html } = await mammoth.convertToHtml({ buffer: buf })
     expect(html).toContain("ZAPISNIK")
     expect(html).toContain("Provjera izvršena")
+    // polje "Datum izvršenja" po standardu prikaza (dd.MM.yyyy), ne interni ISO
+    expect(html).toContain("22.06.2026")
+    expect(html).not.toContain("2026-06-22")
   })
 
   it("na engleskom: naslov i labele su prevedeni, sadržaj (nalaz/zaključak) je netaknut", async () => {

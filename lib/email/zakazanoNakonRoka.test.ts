@@ -7,13 +7,13 @@ describe("zakazanoNakonRoka email", () => {
     expect(s).toContain("Obilazak")
     expect(s).toContain("CARMEUSE")
   })
-  it("html prikazuje rok i zakazani datum (sr format)", () => {
+  it("html prikazuje rok i zakazani datum (format dd.MM.yyyy)", () => {
     const html = zakazanoNakonRokaHtml({
       klijent: "CARMEUSE", vrsta: "Obilazak",
       rok: "2026-07-13", zakazan: "2026-07-15", lokacija: "Doboj",
     })
-    expect(html).toContain("13.07.2026.")
-    expect(html).toContain("15.07.2026.")
+    expect(html).toContain("13.07.2026")
+    expect(html).toContain("15.07.2026")
     expect(html).toContain("CARMEUSE")
     expect(html).toContain("Doboj")
   })

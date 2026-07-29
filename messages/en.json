@@ -1015,7 +1015,7 @@
     "vrijemeSlanja": {
       "naslov": "Send time",
       "opis": "Reminders are sent once a day, at one of two slots.",
-      "zona": "local time (Vienna)",
+      "zona": "local time (Belgrade)",
       "ujutro": "Morning (around 10–11)",
       "poslijepodne": "Afternoon (around 14–15)"
     },

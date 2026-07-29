@@ -6,6 +6,7 @@ import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { buildZapisnikDocx } from "@/lib/zapisnik/template"
 import { snimiZapisnikDokument } from "@/lib/zapisnik/snimi"
+import { todayIso } from "@/lib/date"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
@@ -40,7 +41,8 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
   if (termErr) return { ok: false, message: t("greskaCitanja") }
   if (!term || !term.klijent_id) return { ok: false, message: t("terminNePostoji") }
 
-  const datum = (term.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
+  // datum_izvrsenja je `date` kolona (zidni datum); fallback "danas" po APP_TIME_ZONE (todayIso), ne UTC
+  const datum = term.datum_izvrsenja ?? todayIso()
   const docx = await buildZapisnikDocx({
     klijent: term.klijent_naziv ?? "—",
     lokacija: term.lokacija_naziv ?? null,

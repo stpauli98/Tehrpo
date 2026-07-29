@@ -40,8 +40,9 @@ const PROZOR_DANA = 14
  * Dry run ne uzima claim i ne dira ledger — inače bi test-pokretanje zaključalo
  * primaocu digest za taj dan.
  *
- * Datum je uvijek LOKALNI BEČKI: isti izvor i za ključ u ledgeru i za odluku o
- * kadenci. Da se razilaze, u kasnim satima bi ključ i odluka gledali različite dane.
+ * Datum je uvijek LOKALNI BEOGRADSKI (Europe/Belgrade): isti izvor i za ključ u
+ * ledgeru i za odluku o kadenci. Da se razilaze, u kasnim satima bi ključ i
+ * odluka gledali različite dane.
  */
 export async function runDigest(
   supabase: SupabaseClient<Database>,

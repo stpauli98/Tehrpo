@@ -368,7 +368,7 @@ export async function updatePodsjetniciAktivni(
   return { ok: true }
 }
 
-// ─── Vrijeme slanja (lokalni sat Europe/Vienna) ─────────────────────────────
+// ─── Vrijeme slanja (lokalni sat Europe/Belgrade) ───────────────────────────
 
 export async function updateVrijemeSlanja(
   _prev: ActionResult,

@@ -26,6 +26,7 @@
  */
 
 import path from "node:path"
+import { todayIso } from "../lib/date"
 import { createAdminSupabaseClient } from "../lib/supabase/admin"
 import { parseTehproExcel } from "../lib/excel/parser"
 
@@ -170,7 +171,7 @@ async function main() {
 
   const terminiRows: TerminRow[] = []
   const terminiSkippedFK: string[] = []
-  const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const todayStr = todayIso() // "YYYY-MM-DD", zidni datum u APP_TIME_ZONE (Europe/Belgrade)
 
   for (const t of parsed.termini) {
     const klijentId = firmaMap.get(t.firma_naziv)

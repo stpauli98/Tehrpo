@@ -1,9 +1,11 @@
-import { getTranslations } from "next-intl/server"
+"use client"
+
+import { useTranslations } from "next-intl"
 import type { AktivnostRed } from "@/lib/queries/aktivnost"
 import { formatDatum, formatDatumVrijeme } from "@/lib/date"
 import { delokalizujSegment } from "@/i18n/routes"
 
-type T = Awaited<ReturnType<typeof getTranslations<"aktivnost">>>
+type T = ReturnType<typeof useTranslations<"aktivnost">>
 
 function prettify(k: string): string {
   const s = k.replace(/_/g, " ")
@@ -66,8 +68,8 @@ function ciljLabel(r: AktivnostRed, t: T): string {
   return naziv ? `${ent} · ${naziv}` : ent
 }
 
-export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
-  const t = await getTranslations("aktivnost")
+export function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
+  const t = useTranslations("aktivnost")
   if (redovi.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("prazno")}</p>
   }
@@ -87,7 +89,11 @@ export async function AktivnostTabela({ redovi }: { redovi: AktivnostRed[] }) {
         </thead>
         <tbody>
           {redovi.map((r) => (
-            <tr key={r.id} className="border-t border-border">
+            // data-red-id je test-hook: React `key` ne dopire do DOM-a, a textContent
+            // reda NIJE pouzdan identitet — dva različita audit zapisa (npr. isti
+            // korisnik otvori isti ekran dvaput u istom minutu) mogu se prikazati
+            // identično jer vrijeme ide samo do minute.
+            <tr key={r.id} data-red-id={r.id} className="border-t border-border">
               <td className="px-3 py-2 whitespace-nowrap">
                 {formatDatumVrijeme(r.vrijeme)}
               </td>

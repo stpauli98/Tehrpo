@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select"
 import { FieldError } from "@/components/domain/FieldError"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { createKontakt, updateKontakt, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
@@ -19,7 +22,16 @@ import { useMozeUrediti } from "@/providers/korisnik-provider"
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
 const initial: ActionResult = { ok: true }
 
-export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontakt?: KontaktRow }) {
+export function KontaktSheet({
+  klijentId,
+  kontakt,
+  lokacije = [],
+}: {
+  klijentId: string
+  kontakt?: KontaktRow
+  /** Lokacije te firme — prazan spisak sakriva polje (firma bez lokacija nema šta birati). */
+  lokacije?: { id: string; naziv: string }[]
+}) {
   const t = useTranslations("klijenti.kontaktSheet")
   const tc = useTranslations("common")
   const router = useRouter()
@@ -38,6 +50,12 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
     ["telefon", t("poljeTelefon"), false, "text"],
     ["email", t("poljeEmail"), false, "email"],
   ]
+
+  // base-ui SelectValue prikazuje label iz mape kad je select zatvoren.
+  const lokacijaItems: Record<string, string> = {
+    "": t("lokacijaSve"),
+    ...Object.fromEntries(lokacije.map((l) => [l.id, l.naziv])),
+  }
 
   useEffect(() => {
     if (submitted.current && !pending && state.ok) { submitted.current = false; setOpen(false); router.refresh() }
@@ -78,6 +96,31 @@ export function KontaktSheet({ klijentId, kontakt }: { klijentId: string; kontak
               <FieldError id={`kontakt-${name}-err`} errors={errors?.[name]} />
             </label>
           ))}
+          {/* Lokacija: prazna vrijednost = kontakt firme (prima za SVE lokacije).
+              Polje se ne prikazuje firmi bez lokacija — nema šta birati. */}
+          {lokacije.length > 0 && (
+            <div className="space-y-1">
+              <label className="block text-sm">
+                <span className="text-muted-foreground">{t("poljeLokacija")}</span>
+                <Select
+                  name="lokacija_id"
+                  defaultValue={kontakt?.lokacija_id ?? ""}
+                  items={lokacijaItems}
+                >
+                  <SelectTrigger className="w-full" data-testid="kontakt-lokacija">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">{t("lokacijaSve")}</SelectItem>
+                    {lokacije.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.naziv}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <p className="text-xs text-muted-foreground">{t("lokacijaPomoc")}</p>
+            </div>
+          )}
           {state.ok === false && state.message && (
             <p className="text-sm text-destructive" role="alert">{state.message}</p>
           )}

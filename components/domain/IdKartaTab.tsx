@@ -21,6 +21,7 @@ export async function IdKartaTab({
   ugovori,
   kontakti,
   usluge,
+  lokacije,
 }: {
   klijentId: string
   osnovni: {
@@ -31,6 +32,7 @@ export async function IdKartaTab({
   ugovori: UgovorRow[]
   kontakti: KontaktRow[]
   usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string | null }[]
+  lokacije: { id: string; naziv: string }[]
 }) {
   const t = await getTranslations("klijenti.idKarta")
   const redovi: [string, string | null][] = [
@@ -79,6 +81,7 @@ export async function IdKartaTab({
         <KontaktiKlijentList
           klijentId={klijentId}
           kontakti={kontakti}
+          lokacije={lokacije}
           previewLimit={4}
           seeAllHref={href(`/klijenti/${klijentId}?tab=kontakti`)}
           info={t("kontaktiInfo")}

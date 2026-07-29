@@ -160,11 +160,63 @@ const lokacijaFields = {
   kontakt_osoba: optionalText(200),
   kontakt_email: optionalEmail(200),
   kontakt_telefon: optionalText(60),
+  // Izbor kontakta za lokaciju (v. LokacijaSheet). Nezavisan od gornjih slobodnih
+  // polja — ona ostaju dok se podaci ne presele u kontakt_osobe.
+  kontakt_izbor: z.enum(["bez", "postojeci", "novi"]).optional(),
+  kontakt_id: z.union([z.string().uuid(), z.literal("")]).optional(),
+  kontakt_ime: optionalText(200),
+  kontakt_novi_email: optionalEmail(200),
+  kontakt_novi_telefon: optionalText(60),
+  kontakt_prima: z.literal("1").optional(),
 }
 
 const createLokacijaSchema = z.object({ klijent_id: z.string().uuid(), ...lokacijaFields })
 const updateLokacijaSchema = z.object({ id: z.string().uuid(), ...lokacijaFields })
 const deleteLokacijaSchema = z.object({ id: z.string().uuid() })
+
+/**
+ * Veže kontakt za lokaciju poslije uspješnog upisa lokacije.
+ *
+ * Namjerno NE ruši rezultat lokacije: lokacija je već kreirana i to je vidljivo.
+ * Vraća poruku o grešci da korisnik zna da veza nije napravljena, umjesto da tiho
+ * ostane lokacija bez kontakta koji je mislio da je dodao.
+ */
+async function veziKontaktZaLokaciju(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  args: {
+    klijentId: string
+    lokacijaId: string
+    izbor?: "bez" | "postojeci" | "novi"
+    kontaktId?: string
+    ime?: string
+    email?: string
+    telefon?: string
+    prima: boolean
+  },
+): Promise<string | null> {
+  if (!args.izbor || args.izbor === "bez") return null
+
+  if (args.izbor === "postojeci") {
+    if (!args.kontaktId) return null
+    const { error } = await supabase
+      .from("kontakt_osobe")
+      .update({ lokacija_id: args.lokacijaId, podsjetnik_primalac: args.prima })
+      .eq("id", args.kontaktId)
+      .eq("klijent_id", args.klijentId)
+    return error ? friendlyDbError(error) : null
+  }
+
+  if (!args.ime) return null
+  const { error } = await supabase.from("kontakt_osobe").insert({
+    klijent_id: args.klijentId,
+    ime: args.ime,
+    email: args.email ?? null,
+    telefon: args.telefon ?? null,
+    lokacija_id: args.lokacijaId,
+    podsjetnik_primalac: args.prima,
+  })
+  return error ? friendlyDbError(error) : null
+}
 
 export async function createLokacija(
   _prev: ActionResult,
@@ -183,7 +235,7 @@ export async function createLokacija(
   if ((postojece ?? []).some((l) => normalizujNaziv(l.naziv) === normalizujNaziv(f.naziv))) {
     return { ok: false, errors: { naziv: [t("lokacijaPostoji")] } }
   }
-  const { error } = await supabase.from("lokacije").insert({
+  const { data: nova, error } = await supabase.from("lokacije").insert({
     klijent_id,
     naziv: f.naziv,
     grad: f.grad ?? null,
@@ -192,8 +244,23 @@ export async function createLokacija(
     kontakt_osoba: f.kontakt_osoba ?? null,
     kontakt_email: f.kontakt_email ?? null,
     kontakt_telefon: f.kontakt_telefon ?? null,
-  })
+  }).select("id").single()
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  const vezaGreska = await veziKontaktZaLokaciju(supabase, {
+    klijentId: klijent_id,
+    lokacijaId: nova.id,
+    izbor: f.kontakt_izbor,
+    kontaktId: f.kontakt_id || undefined,
+    ime: f.kontakt_ime,
+    email: f.kontakt_novi_email,
+    telefon: f.kontakt_novi_telefon,
+    prima: f.kontakt_prima === "1",
+  })
+  if (vezaGreska) {
+    revalidatePath("/klijenti", "layout")
+    return { ok: false, message: vezaGreska }
+  }
   // 'layout' revalidira i /klijenti listu (broj_lokacija count) i /klijenti/[id] detalje
   revalidatePath("/klijenti", "layout")
   return { ok: true }
@@ -214,12 +281,25 @@ export async function updateLokacija(
   if (formData.has("kontakt_osoba")) patch.kontakt_osoba = f.kontakt_osoba ?? null
   if (formData.has("kontakt_email")) patch.kontakt_email = f.kontakt_email ?? null
   if (formData.has("kontakt_telefon")) patch.kontakt_telefon = f.kontakt_telefon ?? null
-  if (Object.keys(patch).length === 0) return { ok: true }
+  // Prazan patch nije razlog za izlaz ako korisnik mijenja SAMO vezu kontakta.
+  if (Object.keys(patch).length === 0 && (!f.kontakt_izbor || f.kontakt_izbor === "bez")) return { ok: true }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("lokacije").update(patch).eq("id", id)
+  const { data: red, error } = await supabase
+    .from("lokacije").update(patch).eq("id", id).select("klijent_id").single()
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  const vezaGreska = await veziKontaktZaLokaciju(supabase, {
+    klijentId: red.klijent_id,
+    lokacijaId: id,
+    izbor: f.kontakt_izbor,
+    kontaktId: f.kontakt_id || undefined,
+    ime: f.kontakt_ime,
+    email: f.kontakt_novi_email,
+    telefon: f.kontakt_novi_telefon,
+    prima: f.kontakt_prima === "1",
+  })
   revalidatePath("/klijenti", "layout")
-  return { ok: true }
+  return vezaGreska ? { ok: false, message: vezaGreska } : { ok: true }
 }
 
 export async function deleteLokacija(
@@ -404,6 +484,9 @@ const kontaktFields = {
   funkcija: optionalText(120),
   telefon: optionalText(60),
   email: optionalEmail(200),
+  // Prazan string iz selecta = „Sve lokacije — kontakt firme" → upisuje se NULL.
+  // Bazna brava (fk na lokacije(id, klijent_id)) hvata pokušaj vezivanja za tuđu lokaciju.
+  lokacija_id: z.union([z.string().uuid(), z.literal("")]).optional(),
 }
 const createKontaktSchema = z.object({ klijent_id: z.string().uuid(), ...kontaktFields })
 const updateKontaktSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid(), ...kontaktFields })
@@ -422,6 +505,7 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   }
   const { error } = await supabase.from("kontakt_osobe").insert({
     klijent_id, ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
+    lokacija_id: f.lokacija_id || null,
   })
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
@@ -435,6 +519,7 @@ export async function updateKontakt(_prev: ActionResult, formData: FormData): Pr
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("kontakt_osobe").update({
     ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
+    lokacija_id: f.lokacija_id || null,
   }).eq("id", id).eq("klijent_id", klijent_id)
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)

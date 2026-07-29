@@ -15,6 +15,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn, FOCUS_RING } from "@/lib/utils"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { currentYear, monthName, todayIso } from "@/lib/date"
 import { validRaspon } from "@/lib/plan-izvoz/period"
 import { imeIzContentDisposition } from "@/lib/plan-izvoz/naziv-fajla"
@@ -136,10 +137,17 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" size="icon-lg" aria-label={t("preuzmi")} data-testid="izvoz-trigger" />
+          <Button
+            variant="outline"
+            size="icon-lg"
+            aria-label={t("preuzmi")}
+            className="group/tt relative"
+            data-testid="izvoz-trigger"
+          />
         }
       >
         <Download className="h-[18px] w-[18px]" aria-hidden />
+        <Tooltip>{t("preuzmiOpis")}</Tooltip>
       </DialogTrigger>
 
       <DialogContent className="max-w-md" data-testid="izvoz-modal">

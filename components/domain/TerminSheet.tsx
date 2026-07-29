@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { ArrowLeft, Check } from "lucide-react"
+import { ArrowLeft, Check, History, ListChecks, Pencil } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -177,30 +177,55 @@ export function TerminSheet({
           <form
             key={`${termin.id}|${termin.status}|${termin.datum_zakazan ?? ""}|${termin.datum_izvrsenja ?? ""}|${termin.zaduzeni ?? ""}|${termin.napomena ?? ""}`}
             action={updateAction}
-            className="space-y-3"
+            className="space-y-3 border-l-2 border-l-muted-foreground/30 pl-3"
             data-testid="termin-edit-form"
           >
             <input type="hidden" name="id" value={termin.id ?? ""} />
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("detaljiNaslov")}</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm">
-                  <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
-                  <Input
-                    type="date"
-                    name="datum_zakazan"
-                    defaultValue={termin.datum_zakazan ?? ""}
-                    disabled={!mozeUrediti}
-                    aria-describedby={updateGreske.datum_zakazan ? "greska-edit-datum-zakazan" : undefined}
-                    onChange={(e) => setZakazanInput(e.target.value)}
-                    data-testid="edit-datum-zakazan"
-                  />
-                </label>
-                <FieldError id="greska-edit-datum-zakazan" errors={updateGreske.datum_zakazan} />
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <Pencil className="h-3.5 w-3.5" aria-hidden />
+              {t("detaljiNaslov")}
+            </p>
+            <div className="space-y-4">
+              {/* Datumi — grupisani zajedno: zakazan uvijek, izvršenja samo ako je termin
+                  izvršen. Kad je samo jedan prisutan, razvuče se preko cijelog reda umjesto
+                  da ostavi prazninu pored sebe. */}
+              <div className={termin.status === "izvrseno" ? "grid grid-cols-2 gap-3" : ""}>
+                <div>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">{t("poljeDatumZakazan")}</span>
+                    <Input
+                      type="date"
+                      name="datum_zakazan"
+                      defaultValue={termin.datum_zakazan ?? ""}
+                      disabled={!mozeUrediti}
+                      aria-describedby={updateGreske.datum_zakazan ? "greska-edit-datum-zakazan" : undefined}
+                      onChange={(e) => setZakazanInput(e.target.value)}
+                      data-testid="edit-datum-zakazan"
+                    />
+                  </label>
+                  <FieldError id="greska-edit-datum-zakazan" errors={updateGreske.datum_zakazan} />
+                </div>
+                {termin.status === "izvrseno" && (
+                  <div>
+                    <label className="block text-sm">
+                      <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>
+                      <Input
+                        type="date"
+                        name="datum_izvrsenja"
+                        defaultValue={termin.datum_izvrsenja ?? ""}
+                        max={todayIso()}
+                        disabled={!mozeUrediti}
+                        aria-describedby={updateGreske.datum_izvrsenja ? "greska-edit-datum-izvrsenja" : undefined}
+                        data-testid="edit-datum-izvrsenja"
+                      />
+                    </label>
+                    <FieldError id="greska-edit-datum-izvrsenja" errors={updateGreske.datum_izvrsenja} />
+                  </div>
+                )}
               </div>
               {jeZakazanoPoslijeRoka(termin.rok_dospijeca, zakazanInput) && (
                 <p
-                  className="col-span-full text-xs text-warning"
+                  className="text-xs text-warning"
                   role="status"
                   data-testid="zakazano-poslije-roka"
                 >
@@ -209,23 +234,6 @@ export function TerminSheet({
                     rok: formatDatum(termin.rok_dospijeca),
                   })}
                 </p>
-              )}
-              {termin.status === "izvrseno" && (
-                <div>
-                  <label className="block text-sm">
-                    <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>
-                    <Input
-                      type="date"
-                      name="datum_izvrsenja"
-                      defaultValue={termin.datum_izvrsenja ?? ""}
-                      max={todayIso()}
-                      disabled={!mozeUrediti}
-                      aria-describedby={updateGreske.datum_izvrsenja ? "greska-edit-datum-izvrsenja" : undefined}
-                      data-testid="edit-datum-izvrsenja"
-                    />
-                  </label>
-                  <FieldError id="greska-edit-datum-izvrsenja" errors={updateGreske.datum_izvrsenja} />
-                </div>
               )}
               <div>
                 <label className="block text-sm">
@@ -241,7 +249,7 @@ export function TerminSheet({
                 </label>
                 <FieldError id="greska-edit-zaduzeni" errors={updateGreske.zaduzeni} />
               </div>
-              <div className="col-span-full">
+              <div>
                 <label className="block text-sm">
                   <span className="text-muted-foreground">{t("poljeNapomena")}</span>
                   <Input
@@ -265,74 +273,86 @@ export function TerminSheet({
           {/* Akcije — Označi izvršeno + Otkaži, jedno pored drugog. Čisto write (nema
               nezavisnog read sadržaja), pa se cijela sekcija gejtuje za pregled. */}
           {mozeUrediti && termin.status !== "izvrseno" && (
-            <section className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("akcijeNaslov")}</p>
-              <div className="grid grid-cols-2 items-start gap-3">
+            <section className="space-y-2 border-l-2 border-l-warning/60 pl-3">
+              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <ListChecks className="h-3.5 w-3.5" aria-hidden />
+                {t("akcijeNaslov")}
+              </p>
+              {/* Jedna kartica, jasna hijerarhija: primarna akcija (Označi izvršeno)
+                  gore, istaknuta; destruktivna/rijetka akcija (Otkaži) ispod,
+                  odvojena linijom i vizuelno stišana — dvije zasebne <form>
+                  (različite server akcije), ali JEDAN vizuelni kontejner. */}
+              <div className="rounded-lg border border-border">
                 <form
                   action={markAction}
-                  className="space-y-2 rounded-lg border border-border p-3"
+                  className="flex flex-wrap items-end gap-3 p-3"
                   data-testid="mark-done-form"
                 >
-                  <p className="text-sm font-medium">{t("oznaciKaoIzvrseno")}</p>
                   <input type="hidden" name="id" value={termin.id ?? ""} />
-                  <Input
-                    type="date"
-                    name="datum_izvrsenja"
-                    value={izvrDatum}
-                    max={todayIso()}
-                    aria-label={t("poljeDatumIzvrsenja")}
-                    aria-describedby={markGreske.datum_izvrsenja ? "greska-mark-datum" : undefined}
-                    onChange={(e) => setIzvrDatum(e.target.value)}
-                    data-testid="mark-datum"
-                  />
-                  <FieldError id="greska-mark-datum" errors={markGreske.datum_izvrsenja} />
+                  <div className="min-w-[9rem] flex-1">
+                    <label className="block text-sm">
+                      <span className="text-muted-foreground">{t("poljeDatumIzvrsenja")}</span>
+                      <Input
+                        type="date"
+                        name="datum_izvrsenja"
+                        value={izvrDatum}
+                        max={todayIso()}
+                        aria-describedby={markGreske.datum_izvrsenja ? "greska-mark-datum" : undefined}
+                        onChange={(e) => setIzvrDatum(e.target.value)}
+                        data-testid="mark-datum"
+                      />
+                    </label>
+                    <FieldError id="greska-mark-datum" errors={markGreske.datum_izvrsenja} />
+                  </div>
                   <Button
                     type="submit"
                     variant="default"
                     disabled={markPending}
-                    className="w-full"
                     data-testid="mark-done-submit"
                   >
                     {markPending ? t("oznacavam") : t("oznaciIzvrseno")}
                   </Button>
-                  <p className="text-xs text-muted-foreground">
-                    {t("autoCiklus")}
-                  </p>
                 </form>
+                <p className="px-3 pb-3 text-xs text-muted-foreground">
+                  {t("autoCiklus")}
+                </p>
 
                 {/* Otkaži termin — dvostepena potvrda (arm → potvrdi/odustani). */}
                 {termin.status !== "otkazano" && (
                   <form
                     action={otkazAction}
-                    className="space-y-2 rounded-lg border border-border p-3"
+                    className="flex items-center justify-center gap-3 border-t border-border px-3 py-2"
                     data-testid="otkazi-form"
                   >
-                    <p className="text-sm font-medium">{t("otkaziTermin")}</p>
                     <input type="hidden" name="id" value={termin.id ?? ""} />
                     {!otkazArmed ? (
                       <Button
                         type="button"
-                        variant="destructive"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setOtkazArmed(true)}
-                        className="w-full"
+                        className="text-destructive hover:bg-transparent hover:text-destructive/80 dark:hover:bg-transparent"
                         data-testid="otkazi-arm"
                       >
                         {t("otkaziTermin")}
                       </Button>
                     ) : (
-                      <div className="space-y-2">
-                        <Button
-                          type="submit"
-                          variant="destructive"
-                          disabled={otkazPending}
-                          className="w-full"
-                          data-testid="otkazi-submit"
-                        >
-                          {otkazPending ? t("otkazujem") : t("potvrdiOtkazivanje")}
-                        </Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={() => setOtkazArmed(false)}>
-                          {t("odustani")}
-                        </Button>
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <span className="text-sm text-muted-foreground">{t("otkaziTermin")}?</span>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => setOtkazArmed(false)}>
+                            {t("odustani")}
+                          </Button>
+                          <Button
+                            type="submit"
+                            variant="destructive"
+                            size="sm"
+                            disabled={otkazPending}
+                            data-testid="otkazi-submit"
+                          >
+                            {otkazPending ? t("otkazujem") : t("potvrdiOtkazivanje")}
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </form>
@@ -350,8 +370,11 @@ export function TerminSheet({
           />
 
           {/* Istorija — prethodni izvršeni ciklusi (isti klijent + vrsta) */}
-          <section data-testid="sheet-istorija">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("istorijaNaslov")}</p>
+          <section data-testid="sheet-istorija" className="border-l-2 border-l-success/50 pl-3">
+            <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+              <History className="h-3.5 w-3.5" aria-hidden />
+              {t("istorijaNaslov")}
+            </p>
             {istorija.length === 0 ? (
               <p className="mt-1 text-sm text-muted-foreground">{t("istorijaPrazno")}</p>
             ) : (

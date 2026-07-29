@@ -650,6 +650,7 @@
     "naslov": "Aktivitätsplan",
     "izvoz": {
       "preuzmi": "Herunterladen",
+      "preuzmiOpis": "Aktivitätsplan als PDF oder Excel exportieren",
       "naslovModala": "Bericht herunterladen",
       "format": "Format",
       "formatPdf": "PDF",
@@ -679,8 +680,11 @@
     },
     "viewSwitcher": {
       "kalendar": "Kalender",
+      "kalendarOpis": "Termine nach Tagen des Monats anzeigen",
       "lista": "Liste",
-      "matrica": "Matrix"
+      "listaOpis": "Termine als filterbare Liste anzeigen",
+      "matrica": "Matrix",
+      "matricaOpis": "Termine in einer Matrix Kunde × Art anzeigen"
     },
     "nav": {
       "prethodniMjesec": "Vorheriger Monat",

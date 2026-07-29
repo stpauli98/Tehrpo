@@ -17,6 +17,12 @@ import {
   type TableRow,
   type PolicyRow,
 } from "../lib/rlsCoverage"
+import {
+  definerSearchPathViolations,
+  DEFINER_FUNCTIONS_SQL,
+  DEFINER_SEARCH_PATH_ALLOWLIST,
+  type FunctionRow,
+} from "../lib/definerSearchPath"
 
 async function main() {
   const url = process.env.RLS_CHECK_URL
@@ -31,16 +37,40 @@ async function main() {
     const policies = (await client.query(RLS_POLICIES_SQL)).rows as PolicyRow[]
     const violations = rlsCoverageViolations(tables, policies)
     console.log(`Provjereno public tabela: ${tables.length} | allowlist (namjerno bez politike): ${RLS_INTENTIONAL_POLICYLESS.join(", ") || "-"}`)
+    // NB: nema ranog `return` — obje provjere moraju odraditi svoj ispis i
+    // svaka svoj exitCode, inače čista RLS pokrivenost sakrije pad search_path-a.
     if (violations.length === 0) {
       console.log("✅ RLS pokrivenost OK — sve public tabele imaju RLS + politiku (ili su na allowlist-u).")
-      return
+    } else {
+      console.error(`❌ ${violations.length} RLS prekršaj(a):`)
+      for (const v of violations) {
+        const opis = v.kind === "rls_disabled" ? "RLS ISKLJUČEN" : "RLS uključen ali BEZ politike (tiho 0 redova)"
+        console.error(`   • ${v.table}: ${opis}`)
+      }
+      process.exitCode = 1
     }
-    console.error(`❌ ${violations.length} RLS prekršaj(a):`)
-    for (const v of violations) {
-      const opis = v.kind === "rls_disabled" ? "RLS ISKLJUČEN" : "RLS uključen ali BEZ politike (tiho 0 redova)"
-      console.error(`   • ${v.table}: ${opis}`)
+
+    // Druga provjera: definer funkcije bez pg_temp u search_path-u. Bez ovoga je
+    // cijela RLS konstrukcija probojna — polise zovu `je_admin()`, a ona se može
+    // preusmjeriti podmetanjem `pg_temp.korisnici`. V. lib/definerSearchPath.ts.
+    const functions = (await client.query(DEFINER_FUNCTIONS_SQL)).rows as FunctionRow[]
+    const spViolations = definerSearchPathViolations(functions)
+    console.log(
+      `\nProvjereno security definer funkcija: ${functions.length} | allowlist: ${DEFINER_SEARCH_PATH_ALLOWLIST.join(", ") || "-"}`,
+    )
+    if (spViolations.length === 0) {
+      console.log("✅ search_path OK — svaka definer funkcija eksplicitno navodi pg_temp.")
+    } else {
+      console.error(`❌ ${spViolations.length} definer funkcija probojna preko pg_temp:`)
+      for (const v of spViolations) {
+        const opis =
+          v.kind === "nema_search_path"
+            ? "nema search_path uopšte"
+            : "search_path bez pg_temp (pg_temp se onda pretražuje PRVI)"
+        console.error(`   • ${v.fn}: ${opis}`)
+      }
+      process.exitCode = 1
     }
-    process.exitCode = 1
   } finally {
     await client.end()
   }

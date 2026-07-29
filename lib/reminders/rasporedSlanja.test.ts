@@ -5,9 +5,9 @@ import {
 } from "./rasporedSlanja"
 
 // Cron iz vercel.json: "0 9 * * *" i "0 13 * * *" (UTC).
-// Po Beču: 10:00 i 14:00 zimi (CET, UTC+1), 11:00 i 15:00 ljeti (CEST, UTC+2).
-const JUTARNJI_CRON_BEC = [10, 11]
-const POPODNEVNI_CRON_BEC = [14, 15]
+// Po Europe/Belgrade: 10:00 i 14:00 zimi (CET, UTC+1), 11:00 i 15:00 ljeti (CEST, UTC+2).
+const JUTARNJI_CRON_BG = [10, 11]
+const POPODNEVNI_CRON_BG = [14, 15]
 
 // Gate u cron ruti je `sat >= vrijeme_slanja_sat`.
 const prolazi = (cronSat: number, postavka: number) => cronSat >= postavka
@@ -48,31 +48,31 @@ describe("preslikavanje termin ↔ sat", () => {
 // Ako neko promijeni cron raspored a zaboravi konstante, ovdje puca.
 describe("veza sa cron rasporedom", () => {
   it("SAT_UJUTRO prolazi gate na jutarnjem runu u obje sezone", () => {
-    for (const cron of JUTARNJI_CRON_BEC) expect(prolazi(cron, SAT_UJUTRO)).toBe(true)
+    for (const cron of JUTARNJI_CRON_BG) expect(prolazi(cron, SAT_UJUTRO)).toBe(true)
   })
 
   it("SAT_POSLIJEPODNE NE prolazi jutarnji run ni u jednoj sezoni", () => {
-    for (const cron of JUTARNJI_CRON_BEC) expect(prolazi(cron, SAT_POSLIJEPODNE)).toBe(false)
+    for (const cron of JUTARNJI_CRON_BG) expect(prolazi(cron, SAT_POSLIJEPODNE)).toBe(false)
   })
 
   it("SAT_POSLIJEPODNE prolazi popodnevni run u obje sezone", () => {
-    for (const cron of POPODNEVNI_CRON_BEC) expect(prolazi(cron, SAT_POSLIJEPODNE)).toBe(true)
+    for (const cron of POPODNEVNI_CRON_BG) expect(prolazi(cron, SAT_POSLIJEPODNE)).toBe(true)
   })
 
   it("NAJKASNIJI_DOSTIZAN_SAT je najraniji popodnevni cron sat", () => {
-    expect(NAJKASNIJI_DOSTIZAN_SAT).toBe(Math.min(...POPODNEVNI_CRON_BEC))
+    expect(NAJKASNIJI_DOSTIZAN_SAT).toBe(Math.min(...POPODNEVNI_CRON_BG))
   })
 
   it("svaka vrijednost do NAJKASNIJI_DOSTIZAN_SAT je dostižna u obje sezone", () => {
     for (let s = 0; s <= NAJKASNIJI_DOSTIZAN_SAT; s++) {
-      const dostizna = [...JUTARNJI_CRON_BEC, ...POPODNEVNI_CRON_BEC].some((c) => prolazi(c, s))
+      const dostizna = [...JUTARNJI_CRON_BG, ...POPODNEVNI_CRON_BG].some((c) => prolazi(c, s))
       expect(dostizna, `sat ${s} mora biti dostižan`).toBe(true)
     }
   })
 
   it("prva vrijednost iznad praga nije dostižna zimi", () => {
     const s = NAJKASNIJI_DOSTIZAN_SAT + 1
-    expect(prolazi(JUTARNJI_CRON_BEC[0]!, s)).toBe(false)
-    expect(prolazi(POPODNEVNI_CRON_BEC[0]!, s)).toBe(false)
+    expect(prolazi(JUTARNJI_CRON_BG[0]!, s)).toBe(false)
+    expect(prolazi(POPODNEVNI_CRON_BG[0]!, s)).toBe(false)
   })
 })

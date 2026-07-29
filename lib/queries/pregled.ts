@@ -10,7 +10,7 @@
  */
 
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js"
-import { todayIso } from "@/lib/date"
+import { dodajDana, todayIso } from "@/lib/date"
 
 export type HitnoKasniItem = {
   id: string
@@ -27,12 +27,6 @@ const SELECT_HITNO =
 
 /** Statusi koji ne pripadaju ni jednoj „traži se akcija" metrici, u PostgREST `in` sintaksi. */
 const ZAVRSENI_STATUSI = '("izvrseno","otkazano")'
-
-function isoPlusDays(days: number): string {
-  const d = new Date(todayIso())
-  d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
-}
 
 /**
  * PostgREST `or` izraz za listu „Hitno / kasni": već zakašnjeli termini ILI oni
@@ -55,11 +49,12 @@ export async function getPredstojeciCount(
   supabase: SupabaseClient,
   dana = 30,
 ): Promise<{ count: number | null; error: PostgrestError | null }> {
+  const danas = todayIso()
   const { count, error } = await supabase
     .from("termini_view")
     .select("id", { count: "exact", head: true })
-    .gte("rok_dospijeca", todayIso())
-    .lte("rok_dospijeca", isoPlusDays(dana))
+    .gte("rok_dospijeca", danas)
+    .lte("rok_dospijeca", dodajDana(danas, dana))
     .not("status_izvedeni", "in", ZAVRSENI_STATUSI)
   return { count, error }
 }
@@ -72,7 +67,7 @@ export async function getHitnoKasni(
   const { data, error } = await supabase
     .from("termini_view")
     .select(SELECT_HITNO)
-    .or(hitnoKasniOrFilter(isoPlusDays(30)))
+    .or(hitnoKasniOrFilter(dodajDana(todayIso(), 30)))
     .order("rok_dospijeca", { ascending: true })
     .limit(limit)
   return { data: data as HitnoKasniItem[] | null, error }

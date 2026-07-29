@@ -3,6 +3,7 @@ import { createTranslator } from "next-intl"
 import type { ZapisnikInput } from "./content"
 import { APP_NAME } from "../brand"
 import { APP_LOCALE, type Locale } from "../locale"
+import { formatDatum } from "../date"
 import { getMessages } from "@/i18n/messages"
 
 export type ZapisnikData = ZapisnikInput & { nalaz: string; zakljucak: string }
@@ -36,7 +37,8 @@ export async function buildZapisnikDocx(data: ZapisnikData, locale: Locale = APP
           polje(t("poljeKlijent"), data.klijent),
           polje(t("poljeLokacija"), data.lokacija ?? "—"),
           polje(t("poljeVrstaProvjere"), data.vrstaProvjere),
-          polje(t("poljeDatumIzvrsenja"), data.datum),
+          // data.datum je interno ISO ("YYYY-MM-DD"); u dokumentu standard prikaza dd.MM.yyyy
+          polje(t("poljeDatumIzvrsenja"), formatDatum(data.datum)),
           polje(t("poljeZaduzeni"), data.zaduzeni ?? "—"),
           new Paragraph({ text: "" }),
           new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: t("nalaz"), bold: true })] }),

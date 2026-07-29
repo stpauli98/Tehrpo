@@ -87,6 +87,12 @@ All authenticated UI lives under the `app/(dashboard)/` route group. `app/(dashb
 ### Domain logic & integrations (`lib/`)
 Pure domain logic is in `lib/*.ts`, stateless and unit-tested via co-located `*.test.ts` (`date`, `termini` status/badge maps, `calendar`, `matrix`, `hitno`, `dedup`, `obilasci`, `plan-view`…). Dates are TZ-safe ISO strings compared lexicographically.
 
+**Time standard (single source: `lib/date.ts`).** The app has exactly ONE timezone and ONE display format — no exceptions in UI, emails, exports, AI prompts, or SQL:
+- Zone: `APP_TIME_ZONE = "Europe/Belgrade"` (CET/CEST). Every "today"/"now"/day-boundary/instant→wall-time conversion goes through `lib/date.ts` helpers (`todayIso`, `currentYear`, `formatDatumVrijeme`, `formatDatumInstant`, `utcGranicaDana`, `tekuciNarednomMjesecuRange`). Never `new Date().getFullYear()`, `toISOString().slice(0,10)`-as-today, or a hardcoded zone — the server (Vercel) runs in UTC.
+- Display: dates `dd.MM.yyyy` (`formatDatum`, no trailing dot), datetimes `dd.MM.yyyy HH:mm` 24h (`formatDatumVrijeme`) — identical for all locales; only month *names* stay localized (`monthName`).
+- Internal representation stays ISO (`YYYY-MM-DD`, ISO timestamps, lexicographic comparison); `timestamptz` values shown to users must convert via `formatDatumInstant`/`formatDatumVrijeme` (never `slice(0,10)` = UTC date).
+- SQL "today" is `(now() at time zone 'Europe/Belgrade')::date` — `current_date` is the UTC day on Supabase and is wrong between 00:00–02:00 local (see migration `20260730120000_vremenska_zona_belgrade.sql`).
+
 External integrations live in `lib/{excel,zapisnik,claude,reminders,email}/` and **all follow a dry-run/mock-first pattern** so the app runs offline and tests never touch the network:
 - **AI chat** (`lib/claude/`) — agentic tool-use loop (`runChat`, up to `MAX_KORACI=5`), tools query the views, emits a `proposal` event; the model never saves (user confirms in UI). `chatDryRun()` returns canned events from `mock.ts` when `CHAT_DRY_RUN=1` or `ANTHROPIC_API_KEY` is missing. Entry: `app/api/chat/route.ts` (streams NDJSON).
 - **AI zapisnik** (`lib/zapisnik/`) — generate text (LLM/mock) → `buildZapisnikDocx` (`docx` lib → Buffer) → upload to storage. `ZAPISNIK_DRY_RUN=1` (or no key) → deterministic content; also degrades to deterministic content if the model returns non-JSON.

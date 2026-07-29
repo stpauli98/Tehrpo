@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl"
 import { Search, Eye } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
-import { formatDatum } from "@/lib/date"
+import { formatDatumInstant } from "@/lib/date"
 import { ObrisiDokumentButton } from "./ObrisiDokumentButton"
 import { PreuzmiDokumentButton } from "./PreuzmiDokumentButton"
 import { href } from "@/i18n/routes"
@@ -75,7 +75,8 @@ export function ZapisniciTabela({ dokumenti, ukupno }: { dokumenti: Zapisnik[]; 
               <tr key={d.id} data-testid="zapisnici-red" className="border-t border-border">
                 <td className="px-3 py-2">{d.klijent_naziv ?? "—"}</td>
                 <td className="px-3 py-2 text-muted-foreground">{d.vrsta_naziv ?? "—"}</td>
-                <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
+                {/* uploaded_at je timestamptz (instant) — zidni datum po APP_TIME_ZONE, ne UTC datum-dio */}
+                <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatumInstant(d.uploaded_at)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-3">
                     <Link href={href(`/zapisnici?preview=${d.id}`)} className={IKONA_INLINE_KLASA} data-testid="zapisnici-preview" aria-label={t("pregled")}>

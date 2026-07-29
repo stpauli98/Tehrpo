@@ -209,9 +209,9 @@ describe("runPostDue", () => {
       send: async (a) => { args = a; return { id: "re_4", dryRun: false } },
       delayMs: 0,
     })
-    // rok_dospijeca=2026-07-13, datum_zakazan=2026-07-15 — mejl mora prikazati OBA (sr format DD.MM.YYYY.)
-    expect(args!.html).toContain("13.07.2026.")
-    expect(args!.html).toContain("15.07.2026.")
+    // rok_dospijeca=2026-07-13, datum_zakazan=2026-07-15 — mejl mora prikazati OBA (format dd.MM.yyyy)
+    expect(args!.html).toContain("13.07.2026")
+    expect(args!.html).toContain("15.07.2026")
   })
 
   it("claim_post_due koji vrati grešku: ništa se ne šalje, greška se prijavljuje", async () => {

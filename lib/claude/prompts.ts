@@ -1,5 +1,6 @@
 import { APP_NAME } from "@/lib/brand"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
+import { formatDatum } from "@/lib/date"
 
 // Jezička fraza u osnovnoj rečenici prompta — dio prompta (model instrukcija), ne UI kopija,
 // pa ostaje ovdje umjesto u katalogu (isti pristup kao PROMPT_JEZIK_INSTRUKCIJA u lib/zapisnik/content.ts).
@@ -21,9 +22,22 @@ const JEZIK_INSTRUKCIJA: Record<Locale, string> = {
 // NE u SISTEM_PROMPT const — const mora ostati byte-identičan (vidi prompts.test.ts).
 const DANAS_FRAZA: Record<Locale, string> = { sr: "Danas je", en: "Today is", de: "Heute ist" }
 
-/** Napomena o današnjem datumu koja se dodaje na kraj sistem prompta u runtime-u. */
+// Pravilo prikaza datuma (standard aplikacije: dd.MM.yyyy / dd.MM.yyyy HH:mm, vidi lib/date.ts).
+// Alati vraćaju i primaju ISO (YYYY-MM-DD), pa modelu treba OBOJE: formatiran "danas" u
+// napomeni + eksplicitno pravilo kako datume prikazuje korisniku, a kako ih šalje alatima.
+const DATUM_FORMAT_INSTRUKCIJA: Record<Locale, string> = {
+  sr: "Sve datume korisniku prikazuj u formatu dd.MM.yyyy (npr. 30.07.2026), a datum i vrijeme kao dd.MM.yyyy HH:mm; u pozivima alata datume šalji u ISO formatu (YYYY-MM-DD).",
+  en: "Show all dates to the user in the dd.MM.yyyy format (e.g. 30.07.2026), and date and time as dd.MM.yyyy HH:mm; in tool calls, send dates in ISO format (YYYY-MM-DD).",
+  de: "Zeige dem Benutzer alle Daten im Format dd.MM.yyyy (z. B. 30.07.2026) und Datum mit Uhrzeit als dd.MM.yyyy HH:mm; in Werkzeugaufrufen sende Daten im ISO-Format (YYYY-MM-DD).",
+}
+
+/**
+ * Napomena o današnjem datumu + pravilo prikaza datuma, dodaje se na kraj sistem
+ * prompta u runtime-u. `danas` je ISO "YYYY-MM-DD" (todayIso, APP_TIME_ZONE) —
+ * modelu se prikazuje formatiran po standardu (dd.MM.yyyy).
+ */
 export function datumNapomena(danas: string, locale: Locale = APP_LOCALE): string {
-  return `\n\n${DANAS_FRAZA[locale]} ${danas}.`
+  return `\n\n${DANAS_FRAZA[locale]} ${formatDatum(danas)}. ${DATUM_FORMAT_INSTRUKCIJA[locale]}`
 }
 
 export const SISTEM_PROMPT = `Ti si asistent firme ${APP_NAME} (Bosna i Hercegovina) — pomažeš timu koji prati periodične preglede, ispitivanja, obuke i provjere iz zaštite na radu, zaštite od požara i zaštite životne sredine.

@@ -43,20 +43,22 @@ export function TerminSheet({
   istorija,
   dokumenti,
   closeHref,
-  zaduzeniPrijedlozi,
+  zaduzeniPrijedloziByFirma,
 }: {
   termin: TerminRow
   istorija: TerminRow[]
   dokumenti: Database["public"]["Tables"]["dokumenti"]["Row"][]
   closeHref: string
-  /** S8.6: imena aktivnih korisnika iz `get_aktivni_korisnici()` (prijedlozi, ne ograničenje). */
-  zaduzeniPrijedlozi: string[]
+  /** Imena korisnika koji imaju pristup toj firmi (prijedlozi, ne ograničenje) — vidi
+   * docs/superpowers/specs/2026-07-29-zaduzeni-po-firmi-design.md. */
+  zaduzeniPrijedloziByFirma: Record<string, string[]>
 }) {
   const router = useRouter()
   const invalidirajPlan = useInvalidatePlanQueries()
   const t = useTranslations("termini.sheet")
   const tc = useTranslations("common")
   const tz = useTranslations("termini.zakazanoUpozorenje")
+  const zaduzeniPrijedlozi = termin.klijent_id ? (zaduzeniPrijedloziByFirma[termin.klijent_id] ?? []) : []
   const [updateState, updateAction, updatePending] = useActionState(updateTermin, initial)
   const [markState, markAction, markPending] = useActionState(markIzvrseno, initial)
   const [otkazState, otkazAction, otkazPending] = useActionState(otkaziTermin, initial)

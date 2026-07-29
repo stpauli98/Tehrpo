@@ -20,8 +20,15 @@ jobs:
 
     env:
       # DEMO vrijednosti. PROD ključevi ne smiju postojati u ovom workflow-u.
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEMO_SUPABASE_ANON_KEY }}
+      #
+      # Fallback nije kozmetika: Dependabot PR-ovi ne dobijaju Actions secrets (GitHub
+      # ih drži u zasebnom Dependabot skupu), pa `secrets.DEMO_*` tamo dođe prazan.
+      # `lib/env.ts` je zod-validiran i baca na import, a od Next 16.2.11 „collecting
+      # page data" evaluira rute pri build-u — bez ovoga svaki Dependabot PR pada na
+      # `pnpm build` (vidi PR #70). Placeholder je dovoljan jer gate nikad ne zove
+      # Supabase: gradi, ne izvršava upite.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEMO_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
       ZAPISNIK_DRY_RUN: "1"
       CHAT_DRY_RUN: "1"
 

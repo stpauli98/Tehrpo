@@ -61,3 +61,24 @@ export function stalniPrimaoci(
   const { adminEmails } = buildRecipientIndex(korisnici, [])
   return assembleRecipients({ base: parseEmailList(reminderToRaw), adminEmails })
 }
+
+export type LokacijaRef = { id: string; naziv: string }
+
+export type UlazPokrivenosti = {
+  /** Sve lokacije firme. */
+  lokacije: LokacijaRef[]
+  /** Broj validnih adresa koje pokrivaju CIJELU firmu (kontakti bez lokacija_id + ad-hoc). */
+  brojAdresaFirme: number
+  /** lokacija_id → broj validnih adresa vezanih baš za tu lokaciju. */
+  adresePoLokaciji: ReadonlyMap<string, number>
+}
+
+/**
+ * Lokacije kojima podsjetnik ne bi stigao nikome: red ostaje po firmi
+ * (`izracunajIshodReda`), ovo je dodatno upozorenje kad pokrivenost firme kao cjeline
+ * krije rupu na nivou pojedine lokacije. Vraća lokacije istim redom kao u ulazu.
+ */
+export function nepokriveneLokacije(u: UlazPokrivenosti): LokacijaRef[] {
+  if (u.brojAdresaFirme > 0) return []
+  return u.lokacije.filter((l) => (u.adresePoLokaciji.get(l.id) ?? 0) <= 0)
+}

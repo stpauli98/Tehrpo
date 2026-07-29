@@ -1040,7 +1040,8 @@
       "automatikaIskljucenaBanner": "„Automatsko slanje“ je isključeno — po rasporedu se ne šalje ništa, nijednoj firmi ni radniku. Pojedinačne postavke ispod se čuvaju i važe za „Pokreni sada“.",
       "sazetakAutomatikaOff": "{prima} od {ukupno} firmi bi primilo — automatsko slanje je isključeno",
       "uvijekPrimaju": "Uvijek primaju (bez obzira na postavke firme): {adrese}",
-      "uvijekPrimajuPrazno": "Uvijek primaju: nijedan admin trenutno ne prima podsjetnike i REMINDER_TO nije postavljen."
+      "uvijekPrimajuPrazno": "Uvijek primaju: nijedan admin trenutno ne prima podsjetnike i REMINDER_TO nije postavljen.",
+      "nepokriveneLokacije": "Bez primaoca za lokacije: {lokacije}"
     },
     "reminderForm": {
       "naDan": "na dan",

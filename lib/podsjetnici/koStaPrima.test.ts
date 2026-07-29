@@ -2,7 +2,13 @@ import { describe, it, expect } from "vitest"
 import sr from "@/messages/sr.json"
 import en from "@/messages/en.json"
 import de from "@/messages/de.json"
-import { izracunajIshodReda, izracunajStatusRadnika, stalniPrimaoci } from "./koStaPrima"
+import {
+  izracunajIshodReda,
+  izracunajStatusRadnika,
+  stalniPrimaoci,
+  nepokriveneLokacije,
+  type LokacijaRef,
+} from "./koStaPrima"
 
 describe("izracunajIshodReda", () => {
   const ok = { podsjetniciAktivni: true, saljiGlobalno: true, saljiFirmi: true, brojAdresa: 1 }
@@ -100,5 +106,77 @@ describe("stalniPrimaoci", () => {
 
   it("preskače nevalidne adrese i prazan REMINDER_TO", () => {
     expect(stalniPrimaoci([{ ...admin, email: "nije-mejl" }], undefined)).toEqual([])
+  })
+})
+
+describe("nepokriveneLokacije", () => {
+  const lokA: LokacijaRef = { id: "a", naziv: "Lokacija A" }
+  const lokB: LokacijaRef = { id: "b", naziv: "Lokacija B" }
+  const lokC: LokacijaRef = { id: "c", naziv: "Lokacija C" }
+
+  it("firma bez lokacija → prazan rezultat", () => {
+    expect(
+      nepokriveneLokacije({ lokacije: [], brojAdresaFirme: 0, adresePoLokaciji: new Map() }),
+    ).toEqual([])
+  })
+
+  it("brojAdresaFirme > 0 → prazan rezultat bez obzira na adresePoLokaciji", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA, lokB],
+        brojAdresaFirme: 1,
+        adresePoLokaciji: new Map(),
+      }),
+    ).toEqual([])
+  })
+
+  it("brojAdresaFirme === 0, lokacija ima svoj kontakt → pokrivena", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map([["a", 1]]),
+      }),
+    ).toEqual([])
+  })
+
+  it("brojAdresaFirme === 0, lokacija nema kontakt → nepokrivena", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map(),
+      }),
+    ).toEqual([lokA])
+  })
+
+  it("miješan slučaj: tri lokacije, samo jedna ima kontakt → druge dvije u rezultatu, tim redom", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA, lokB, lokC],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map([["b", 2]]),
+      }),
+    ).toEqual([lokA, lokC])
+  })
+
+  it("adresePoLokaciji sa vrijednošću 0 za lokaciju → tretira se kao nepokrivena", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map([["a", 0]]),
+      }),
+    ).toEqual([lokA])
+  })
+
+  it("unos u adresePoLokaciji za lokacija_id koji ne postoji u lokacije → ignoriše se, ne pada", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map([["nepostojeca", 5]]),
+      }),
+    ).toEqual([lokA])
   })
 })

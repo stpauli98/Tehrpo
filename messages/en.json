@@ -1040,7 +1040,8 @@
       "automatikaIskljucenaBanner": "“Automatic sending” is off — nothing goes out on schedule, to no client and no worker. The individual settings below are kept and still apply to “Run now”.",
       "sazetakAutomatikaOff": "{prima} of {ukupno} clients would receive — automatic sending is off",
       "uvijekPrimaju": "Always receive (regardless of client settings): {adrese}",
-      "uvijekPrimajuPrazno": "Always receive: no admin currently receives reminders and REMINDER_TO is not set."
+      "uvijekPrimajuPrazno": "Always receive: no admin currently receives reminders and REMINDER_TO is not set.",
+      "nepokriveneLokacije": "No recipient for locations: {lokacije}"
     },
     "reminderForm": {
       "naDan": "on the day",

@@ -8,7 +8,9 @@ import {
   izracunajIshodReda,
   izracunajStatusRadnika,
   stalniPrimaoci,
+  nepokriveneLokacije,
   type RazlogNePrima,
+  type LokacijaRef,
 } from "@/lib/podsjetnici/koStaPrima"
 import { env } from "@/lib/env"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
@@ -30,12 +32,13 @@ export async function KoStaPrimaTab() {
   const t = await getTranslations("postavke.koStaPrima")
   const tSalji = await getTranslations("postavke.saljiKlijentima")
   const supabase = await createServerSupabaseClient()
-  const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes] = await Promise.all([
+  const [postRes, korisniciRes, klijentiRes, dodjeleRes, kontaktiRes, lokacijeRes] = await Promise.all([
     supabase.from("postavke").select("salji_klijentima, podsjetnici_aktivni").eq("id", 1).maybeSingle(),
     supabase.from("korisnici").select("id, ime, email, uloga, aktivan, prima_podsjetnike").order("ime"),
     supabase.from("klijenti").select("id, naziv, salji_podsjetnik_klijentu, podsjetnik_emails").order("naziv"),
     supabase.from("korisnik_klijent").select("korisnik_id, klijent_id"),
-    supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac"),
+    supabase.from("kontakt_osobe").select("klijent_id, email, podsjetnik_primalac, lokacija_id"),
+    supabase.from("lokacije").select("id, naziv, klijent_id").order("naziv"),
   ])
   const saljiGlobalno = postRes.data?.salji_klijentima ?? false
   // Fallback „nema reda/kolone = uključeno" je isti onaj kojim se vodi cron ruta.
@@ -53,6 +56,10 @@ export async function KoStaPrimaTab() {
   )
   // klijent_id → validne adrese flagovanih kontakata (lowercase + dedup, uskladeno s engine slanjem)
   const adreseByKlijent = new Map<string, Set<string>>()
+  // klijent_id → adrese koje pokrivaju CIJELU firmu (kontakt bez lokacija_id + ad-hoc).
+  const firmaAdreseByKlijent = new Map<string, Set<string>>()
+  // klijent_id → lokacija_id → adrese vezane baš za tu lokaciju.
+  const lokacijaAdreseByKlijent = new Map<string, Map<string, Set<string>>>()
   for (const ko of kontaktiRes.data ?? []) {
     if (!ko.podsjetnik_primalac) continue
     const email = (ko.email ?? "").trim().toLowerCase()
@@ -60,16 +67,38 @@ export async function KoStaPrimaTab() {
     const set = adreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
     set.add(email)
     adreseByKlijent.set(ko.klijent_id, set)
+    if (ko.lokacija_id) {
+      const poLok = lokacijaAdreseByKlijent.get(ko.klijent_id) ?? new Map<string, Set<string>>()
+      const lokSet = poLok.get(ko.lokacija_id) ?? new Set<string>()
+      lokSet.add(email)
+      poLok.set(ko.lokacija_id, lokSet)
+      lokacijaAdreseByKlijent.set(ko.klijent_id, poLok)
+    } else {
+      const firmaSet = firmaAdreseByKlijent.get(ko.klijent_id) ?? new Set<string>()
+      firmaSet.add(email)
+      firmaAdreseByKlijent.set(ko.klijent_id, firmaSet)
+    }
   }
-  // Ad-hoc „čiste" adrese (nisu kontakti) — u isti Set (dedup s kontakt-adresama je automatski).
+  // Ad-hoc „čiste" adrese (nisu kontakti) — pokrivaju cijelu firmu; u oba Seta
+  // (dedup s kontakt-adresama je automatski).
   for (const k of klijentiRes.data ?? []) {
     const set = adreseByKlijent.get(k.id) ?? new Set<string>()
+    const firmaSet = firmaAdreseByKlijent.get(k.id) ?? new Set<string>()
     for (const raw of k.podsjetnik_emails ?? []) {
       const email = (raw ?? "").trim().toLowerCase()
       if (!EMAIL_RE.test(email)) continue
       set.add(email)
+      firmaSet.add(email)
     }
     if (set.size > 0) adreseByKlijent.set(k.id, set)
+    if (firmaSet.size > 0) firmaAdreseByKlijent.set(k.id, firmaSet)
+  }
+  // klijent_id → lokacije te firme (za upozorenje o nepokrivenim lokacijama).
+  const lokacijeByKlijent = new Map<string, LokacijaRef[]>()
+  for (const lok of lokacijeRes.data ?? []) {
+    const arr = lokacijeByKlijent.get(lok.klijent_id) ?? []
+    arr.push({ id: lok.id, naziv: lok.naziv })
+    lokacijeByKlijent.set(lok.klijent_id, arr)
   }
   const imeZa = (id: string) => korisnici.find((k) => k.id === id)?.ime ?? "—"
   const primaZa = (id: string) => {
@@ -91,6 +120,16 @@ export async function KoStaPrimaTab() {
       saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
       brojAdresa: adrese.length,
     })
+    const lokacijePoKlijentu = lokacijaAdreseByKlijent.get(k.id) ?? new Map<string, Set<string>>()
+    const adresePoLokaciji = new Map<string, number>()
+    for (const [lokacijaId, set] of lokacijePoKlijentu) {
+      adresePoLokaciji.set(lokacijaId, set.size)
+    }
+    const nepokrivene = nepokriveneLokacije({
+      lokacije: lokacijeByKlijent.get(k.id) ?? [],
+      brojAdresaFirme: firmaAdreseByKlijent.get(k.id)?.size ?? 0,
+      adresePoLokaciji,
+    })
     return {
       id: k.id,
       naziv: k.naziv,
@@ -99,6 +138,7 @@ export async function KoStaPrimaTab() {
       adrese,
       firmaPrima,
       razlog,
+      nepokrivene,
       // Sirovi flag — ulazi u toggle. Razlikuje se od `firmaPrima` (izvedeno).
       salji: k.salji_podsjetnik_klijentu ?? false,
     }
@@ -178,7 +218,22 @@ export async function KoStaPrimaTab() {
                 className="transition-colors hover:bg-muted/40"
                 data-testid={`ksp-red-${r.id}`}
               >
-                <td className="px-4 py-2.5 font-medium">{r.naziv}</td>
+                <td className="px-4 py-2.5 font-medium">
+                  {r.naziv}
+                  {r.nepokrivene.length > 0 && (
+                    <div
+                      data-testid={`ksp-nepokrivene-${r.id}`}
+                      className="mt-0.5 flex items-center gap-1 text-xs font-normal text-warning"
+                    >
+                      <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
+                      <span>
+                        {t("nepokriveneLokacije", {
+                          lokacije: r.nepokrivene.map((l) => l.naziv).join(", "),
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-2.5">
                   {r.statusRadnika === "ima" ? (
                     r.radnici.join(", ")

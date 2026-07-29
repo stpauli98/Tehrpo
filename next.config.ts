@@ -27,10 +27,19 @@ function rule(from: string, to: string): { source: string; destination: string }
 }
 
 const nextConfig: NextConfig = {
+  // Dozvoljava HMR/dev-resource zahtjeve preko lokalnog preview proxy-ja
+  // (browser mu pristupa sa "127.0.0.1", drugačiji host od next dev servera).
+  allowedDevOrigins: ["127.0.0.1"],
   experimental: {
     // Default je 1 MB; dokumenti/fotografije lako pređu. Klijent dodatno ograničava na 10 MB.
     serverActions: {
       bodySizeLimit: "12mb",
+      // Dopušta CSRF-provjeru Server Actions kad se dev server pristupa kroz
+      // lokalni preview proxy (drugi origin/port od next dev servera). Next.js
+      // poredi origin domenu SA PORTOM (npr. "127.0.0.1:59915"); wildcard "*"
+      // ovdje ne pokriva port, samo pod-domene, pa je potreban tačan unos —
+      // ažurirati port ako se preview proxy restartuje na drugom portu.
+      allowedOrigins: ["localhost:3000", "127.0.0.1:59915", "127.0.0.1:63834", "127.0.0.1:65213", "127.0.0.1:53507"],
     },
   },
   async rewrites() {

@@ -125,8 +125,13 @@ describe("nepokriveneLokacije", () => {
 
   it("firma bez lokacija → prazan rezultat", () => {
     expect(
-      nepokriveneLokacije({ lokacije: [], brojAdresaFirme: 0, adresePoLokaciji: new Map() }),
-    ).toEqual([])
+      nepokriveneLokacije({
+        lokacije: [],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: false,
+      }),
+    ).toEqual({ lokacije: [], terminiBezLokacije: false })
   })
 
   it("brojAdresaFirme > 0 → prazan rezultat bez obzira na adresePoLokaciji", () => {
@@ -135,8 +140,9 @@ describe("nepokriveneLokacije", () => {
         lokacije: [lokA, lokB],
         brojAdresaFirme: 1,
         adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: false,
       }),
-    ).toEqual([])
+    ).toEqual({ lokacije: [], terminiBezLokacije: false })
   })
 
   it("brojAdresaFirme === 0, lokacija ima svoj kontakt → pokrivena", () => {
@@ -145,8 +151,9 @@ describe("nepokriveneLokacije", () => {
         lokacije: [lokA],
         brojAdresaFirme: 0,
         adresePoLokaciji: new Map([["a", 1]]),
+        imaTerminaBezLokacije: false,
       }),
-    ).toEqual([])
+    ).toEqual({ lokacije: [], terminiBezLokacije: false })
   })
 
   it("brojAdresaFirme === 0, lokacija nema kontakt → nepokrivena", () => {
@@ -155,8 +162,9 @@ describe("nepokriveneLokacije", () => {
         lokacije: [lokA],
         brojAdresaFirme: 0,
         adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: false,
       }),
-    ).toEqual([lokA])
+    ).toEqual({ lokacije: [lokA], terminiBezLokacije: false })
   })
 
   it("miješan slučaj: tri lokacije, samo jedna ima kontakt → druge dvije u rezultatu, tim redom", () => {
@@ -165,8 +173,9 @@ describe("nepokriveneLokacije", () => {
         lokacije: [lokA, lokB, lokC],
         brojAdresaFirme: 0,
         adresePoLokaciji: new Map([["b", 2]]),
+        imaTerminaBezLokacije: false,
       }),
-    ).toEqual([lokA, lokC])
+    ).toEqual({ lokacije: [lokA, lokC], terminiBezLokacije: false })
   })
 
   it("adresePoLokaciji sa vrijednošću 0 za lokaciju → tretira se kao nepokrivena", () => {
@@ -175,8 +184,9 @@ describe("nepokriveneLokacije", () => {
         lokacije: [lokA],
         brojAdresaFirme: 0,
         adresePoLokaciji: new Map([["a", 0]]),
+        imaTerminaBezLokacije: false,
       }),
-    ).toEqual([lokA])
+    ).toEqual({ lokacije: [lokA], terminiBezLokacije: false })
   })
 
   it("unos u adresePoLokaciji za lokacija_id koji ne postoji u lokacije → ignoriše se, ne pada", () => {
@@ -185,8 +195,63 @@ describe("nepokriveneLokacije", () => {
         lokacije: [lokA],
         brojAdresaFirme: 0,
         adresePoLokaciji: new Map([["nepostojeca", 5]]),
+        imaTerminaBezLokacije: false,
       }),
-    ).toEqual([lokA])
+    ).toEqual({ lokacije: [lokA], terminiBezLokacije: false })
+  })
+
+  // ---- terminiBezLokacije ------------------------------------------------------------
+
+  it("imaTerminaBezLokacije: false → terminiBezLokacije uvijek false, bez obzira na brojAdresaFirme", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: false,
+      }).terminiBezLokacije,
+    ).toBe(false)
+    expect(
+      nepokriveneLokacije({
+        lokacije: [],
+        brojAdresaFirme: 5,
+        adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: false,
+      }).terminiBezLokacije,
+    ).toBe(false)
+  })
+
+  it("imaTerminaBezLokacije: true, brojAdresaFirme: 0 → terminiBezLokacije true", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: true,
+      }).terminiBezLokacije,
+    ).toBe(true)
+  })
+
+  it("imaTerminaBezLokacije: true, brojAdresaFirme: 1 → terminiBezLokacije false (firma-adresa pokriva termine bez lokacije)", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [],
+        brojAdresaFirme: 1,
+        adresePoLokaciji: new Map(),
+        imaTerminaBezLokacije: true,
+      }).terminiBezLokacije,
+    ).toBe(false)
+  })
+
+  it("kombinacija: nepokrivene lokacije I termini bez lokacije istovremeno", () => {
+    expect(
+      nepokriveneLokacije({
+        lokacije: [lokA, lokB],
+        brojAdresaFirme: 0,
+        adresePoLokaciji: new Map([["a", 1]]),
+        imaTerminaBezLokacije: true,
+      }),
+    ).toEqual({ lokacije: [lokB], terminiBezLokacije: true })
   })
 })
 

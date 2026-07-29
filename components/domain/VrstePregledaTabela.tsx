@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Check, Loader2, Minus } from "lucide-react"
@@ -104,15 +104,7 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
   const serverVal = vrsta.interval?.toString() ?? ""
   const [val, setVal] = useState(serverVal)
   const [pending, startSave] = useTransition()
-  const [saved, setSaved] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-
-  // Potvrda "spremljeno" se sakrije nakon 2s.
-  useEffect(() => {
-    if (!saved) return
-    const t = setTimeout(() => setSaved(false), 2000)
-    return () => clearTimeout(t)
-  }, [saved])
 
   function commit() {
     const trimmed = val.trim()
@@ -127,13 +119,11 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
     }
     setErr(null)
     startSave(async () => {
-      const res = await postaviVrstaInterval(vrsta.id, parsed)
-      if (res.ok) {
-        setSaved(true)
-        router.refresh()
-      } else {
-        setErr(res.message ?? t("intervalGreskaFallback"))
-      }
+      toastRezultat(await postaviVrstaInterval(vrsta.id, parsed), {
+        uspjeh: t("intervalSpremljeno"),
+        greska: t("intervalGreskaFallback"),
+      })
+      router.refresh()
     })
   }
 
@@ -163,12 +153,6 @@ function IntervalCell({ vrsta }: { vrsta: Vrsta }) {
             className="h-[18px] w-[18px] shrink-0 animate-spin motion-reduce:animate-none text-muted-foreground"
             aria-hidden
           />
-        )}
-        {!pending && saved && (
-          <span className="inline-flex items-center gap-1 text-success">
-            <Check className="h-[18px] w-[18px] shrink-0" aria-hidden />
-            {t("intervalSpremljeno")}
-          </span>
         )}
         {!pending && err && <span className="text-destructive">{err}</span>}
       </span>

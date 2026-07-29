@@ -9,10 +9,10 @@ export async function TipOdnosaBadge({ tip }: { tip: "ugovor" | "ponuda" | null 
     <span
       data-testid="tip-odnosa-badge"
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset",
         isUgovor
-          ? "bg-primary text-primary-foreground"
-          : "bg-muted text-muted-foreground"
+          ? "bg-brand/10 text-brand-dark ring-brand/25 dark:bg-brand/20 dark:text-brand-light dark:ring-brand/40"
+          : "bg-muted text-muted-foreground ring-border"
       )}
     >
       {isUgovor ? t("ugovor") : t("ponuda")}

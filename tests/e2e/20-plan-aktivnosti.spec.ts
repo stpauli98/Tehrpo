@@ -86,3 +86,19 @@ test.describe("Plan aktivnosti — izvoz modal", () => {
     await expect(page.getByTestId("izvoz-preuzmi")).toBeDisabled()
   })
 })
+
+test.describe("Kalendar — dodavanje termina sa dana", () => {
+  test("hover na dan → '+' otvara Novi termin sa prefilovanim rokom", async ({ page }) => {
+    await page.goto("/plan-aktivnosti?view=kalendar&godina=2026&mjesec=7")
+    const cell = page.locator('[data-testid="plan-day-cell"][data-date="2026-07-15"]')
+    await expect(cell).toBeVisible()
+    // dugme je u istoj ćeliji (sibling content sloja) — hover po ćeliji ga otkriva
+    await cell.hover()
+    const plus = page.locator('[data-testid="cell-dodaj-termin"][data-date="2026-07-15"]')
+    await plus.click()
+    await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+    await expect(page.getByTestId("novi-rok")).toHaveValue("2026-07-15")
+    await page.getByTestId("novi-cancel").click()
+    await expect(page.getByTestId("novi-termin-sheet")).not.toBeVisible()
+  })
+})

@@ -27,7 +27,10 @@
     "greskaNeocekivana": "Došlo je do neočekivane greške.",
     "greskaUcitavanja": "Greška pri učitavanju podataka.",
     "samoAdministrator": "Samo administrator.",
-    "pokusajPonovo": "Pokušaj ponovo"
+    "pokusajPonovo": "Pokušaj ponovo",
+    "zaduzeniTi": "(ti)",
+    "zaduzeniPrikaziListu": "Prikaži prijedloge",
+    "zaduzeniSlobodanUnos": "Nema podudaranja — ostaje uneseno ime"
   },
   "shell": {
     "nav": {
@@ -552,7 +555,9 @@
       "ariaMjesec": "Mjesec",
       "ariaNacin": "Način izvršenja",
       "ariaGodina": "Godina",
-      "ariaPretraga": "Pretraga firmi"
+      "ariaPretraga": "Pretraga firmi",
+      "ponisti": "Poništi filtere",
+      "ariaStatus": "Status"
     },
     "sheet": {
       "naslovFallback": "Termin",
@@ -600,7 +605,9 @@
       "poljeZaduzeni": "Zaduženi",
       "placeholderZaduzeni": "npr. Marija K.",
       "kreiram": "Kreiram…",
-      "kreirajTermin": "Kreiraj termin"
+      "kreirajTermin": "Kreiraj termin",
+      "zaduzeniHintAdmin": "Možete zadužiti bilo kog radnika — firma mu se automatski dodjeljuje.",
+      "zaduzeniHintRadnik": "Možete zadužiti sebe ili kolegu koji već ima pristup ovoj firmi."
     },
     "actions": {
       "datumNeispravan": "Neispravan datum",
@@ -611,7 +618,8 @@
       "rokObavezan": "Rok je obavezan",
       "lokacijaNePripada": "Lokacija ne pripada izabranom klijentu.",
       "terminVecPostoji": "Termin za istu firmu, vrstu i rok već postoji.",
-      "datumObavezan": "Datum je obavezan"
+      "datumObavezan": "Datum je obavezan",
+      "zaduzeniNemaPristup": "Ova osoba nema pristup izabranoj firmi. Pristup firmama dodjeljuje admin u Postavke → Korisnici."
     }
   },
   "status": {
@@ -697,7 +705,8 @@
     },
     "monthCalendar": {
       "danAriaLabel": "Dan {broj}",
-      "jos": "još {count}"
+      "jos": "još {count}",
+      "dodajTermin": "Dodaj termin za {datum}"
     },
     "kalendar": {
       "nemaTerminaZaDan": "Nema termina za ovaj dan.",

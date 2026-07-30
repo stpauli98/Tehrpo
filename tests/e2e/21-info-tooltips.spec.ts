@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test"
 import { insertKlijent, deleteKlijentByNaziv } from "./db"
 
 test.describe("Info tooltipovi — tab traka", () => {
-  test("hover na ⓘ taba Profil prikazuje objašnjenje; klik na tab i dalje radi", async ({ page }) => {
+  test("hover na ⓘ taba Usluge prikazuje objašnjenje; klik na tab i dalje radi", async ({ page }) => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     try {
@@ -14,7 +14,8 @@ test.describe("Info tooltipovi — tab traka", () => {
       await ikona.hover()
       // Isti tekst postoji dva puta unutar taba (sr-only opis za AT + vizuelni tooltip),
       // pa vizuelni tooltip ciljamo scope-ovanjem na ⓘ ikonu (sr-only span joj je sibling).
-      await expect(ikona.getByText("Definicija ponavljajućih provjera")).toBeVisible()
+      // Tekst je iz main-a: terminologija "provjera" → "usluga".
+      await expect(ikona.getByText("Definicija ponavljajućih usluga")).toBeVisible()
 
       // a11y invarijanta: tab je opisan preko aria-describedby → sr-only span sa istim tekstom
       await expect(page.getByTestId("tab-profil")).toHaveAttribute(
@@ -23,7 +24,7 @@ test.describe("Info tooltipovi — tab traka", () => {
       )
       const srOpis = page.locator("#info-tab-desc-profil")
       await expect(srOpis).toHaveClass(/sr-only/)
-      await expect(srOpis).toContainText("Definicija ponavljajućih provjera")
+      await expect(srOpis).toContainText("Definicija ponavljajućih usluga")
 
       // ⓘ ne smije pokvariti prebacivanje tabova ni accessible name taba
       // (^Termini: name mora POČINJATI vidljivom labelom; substring "Termini" bi se

@@ -1,5 +1,58 @@
 import { describe, it, expect } from "vitest"
-import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent, firmaRecipientsZa } from "./recipients"
+import { parseEmailList, assembleRecipients, buildRecipientIndex, recipientsForKlijent, firmaRecipientsZa, jeDostavljiva } from "./recipients"
+
+describe("jeDostavljiva", () => {
+  // PROD 30.07.2026: korisnik „Test Admin" <admin@tehpro.local> je bio aktivan i
+  // prima_podsjetnike=true, pa je ulazio u svaki interni podsjetnik. `.local` je
+  // rezervisan TLD (RFC 6762) bez MX zapisa → tvrd bounce. Resend šalje JEDAN
+  // bounce event za cijeli send (jedan email_id, više primalaca), pa je cijeli red
+  // u „Poslatim mejlovima" postajao „Odbijeno" iako su ostali primaoci mejl primili.
+  it("odbija rezervisane, nerutabilne domene", () => {
+    expect(jeDostavljiva("admin@tehpro.local")).toBe(false)
+    expect(jeDostavljiva("neko@masina.localhost")).toBe(false)
+    expect(jeDostavljiva("neko@nesto.invalid")).toBe(false)
+    expect(jeDostavljiva("neko@ruter.home.arpa")).toBe(false)
+    expect(jeDostavljiva("root@localhost")).toBe(false)
+  })
+  it("velika slova i razmaci ne zaobilaze provjeru", () => {
+    expect(jeDostavljiva("  Admin@TEHPRO.LOCAL ")).toBe(false)
+  })
+  it("poddomen koji samo liči na rezervisani TLD prolazi", () => {
+    expect(jeDostavljiva("neko@local.ba")).toBe(true)
+    expect(jeDostavljiva("neko@tehpro.localhost.ba")).toBe(true)
+  })
+  it("obične adrese prolaze", () => {
+    expect(jeDostavljiva("nmil32@icloud.com")).toBe(true)
+    expect(jeDostavljiva("pregled@nextpixel.dev")).toBe(true)
+  })
+  it("nevalidan oblik i dalje pada", () => {
+    expect(jeDostavljiva("bez-monkeya")).toBe(false)
+    expect(jeDostavljiva("")).toBe(false)
+  })
+})
+
+describe("guard nerutabilnih domena u sastavljanju primalaca", () => {
+  it("assembleRecipients izbacuje .local adresu, ostale zadržava", () => {
+    const out = assembleRecipients({
+      base: [],
+      adminEmails: ["nmil32@icloud.com", "admin@tehpro.local", "pregled@nextpixel.dev"],
+    })
+    expect(out).toEqual(["nmil32@icloud.com", "pregled@nextpixel.dev"])
+  })
+  it("firmin kanal ne šalje na nerutabilnu adresu kontakta", () => {
+    const idx = buildRecipientIndex(
+      [],
+      [],
+      [{ id: "F1", salji_podsjetnik_klijentu: true }],
+      [
+        { klijent_id: "F1", email: "kontakt@firma.ba", podsjetnik_primalac: true },
+        { klijent_id: "F1", email: "sef@firma.local", podsjetnik_primalac: true },
+      ],
+      true,
+    )
+    expect(firmaRecipientsZa(idx, "F1", null)).toEqual(["kontakt@firma.ba"])
+  })
+})
 
 describe("parseEmailList", () => {
   it("razdvaja po zarezu i trim-uje", () => {

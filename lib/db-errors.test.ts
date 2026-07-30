@@ -13,6 +13,11 @@ describe("friendlyDbError", () => {
     expect(msg).toMatch(/budućnosti/i)
     expect(msg).not.toMatch(/check constraint/)
   })
+  it("nalaz_obavezan → specifična poruka o zatvaranju bez nalaza", () => {
+    const msg = friendlyDbError({ code: "23514", message: "nalaz_obavezan" })
+    expect(msg).toMatch(/nalaza/i)
+    expect(msg).not.toMatch(/nalaz_obavezan/)
+  })
   it("nepoznat kod → generička poruka (ne curi raw)", () => {
     const msg = friendlyDbError({ code: "XX999", message: "permission denied for table korisnici" })
     expect(msg).not.toMatch(/permission denied/)

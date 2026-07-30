@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { FieldError } from "@/components/domain/FieldError"
 import { ZaduzeniPolje } from "@/components/domain/ZaduzeniPolje"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { createTermin, type ActionResult } from "@/app/(dashboard)/termini/actions"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { useMozeUrediti } from "@/providers/korisnik-provider"
@@ -67,6 +68,8 @@ export function NoviTerminDialog({
   const [lokacijaId, setLokacijaId] = useState("")
   const [rok, setRok] = useState(defaultRok ?? "")
   const [zakazan, setZakazan] = useState("")
+  // Podrazumijevano jednokratno: ad-hoc termin ne smije tiho postati trajna obaveza.
+  const [ponavljanje, setPonavljanje] = useState("jednom")
   // S2: predvidive greške se hvataju prije round-tripa. base-ui Select nema native
   // `required`, pa obavezna polja provjeravamo ovdje; server (Zod) ostaje izvor istine.
   const [lokalneGreske, setLokalneGreske] = useState<Greske>({})
@@ -108,6 +111,7 @@ export function NoviTerminDialog({
       setLokacijaId("")
       setRok(defaultRok ?? "")
       setZakazan("")
+      setPonavljanje("jednom")
       setLokalneGreske({})
       // Novi termin pripada i lista/matrica/kalendar prikazima; keševi su perzistentni
       // preko view-switch-a (staleTime 60s) pa ih invalidira dijeljeni hook.
@@ -141,6 +145,7 @@ export function NoviTerminDialog({
             fd.set("klijent_id", klijentId)
             fd.set("vrsta_provjere_id", vrstaId)
             if (lokacijaId) fd.set("lokacija_id", lokacijaId)
+            if (ponavljanje === "ponavlja") fd.set("ponavlja_se", "on")
             submitted.current = true
             action(fd)
           }}
@@ -225,6 +230,27 @@ export function NoviTerminDialog({
             </Select>
           </label>
           <FieldError id="greska-novi-vrsta" errors={greske.vrsta_provjere_id} />
+
+          <fieldset className="space-y-2 rounded-lg border border-border p-3">
+            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {t("ponavljanjeNaslov")}
+            </legend>
+            <RadioGroup
+              value={ponavljanje}
+              onValueChange={(v) => setPonavljanje(String(v ?? "jednom"))}
+              data-testid="novi-termin-ponavljanje"
+            >
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="jednom" /> {t("ponavljanjeJednom")}
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="ponavlja" /> {t("ponavljanjePonavlja")}
+              </label>
+            </RadioGroup>
+            {ponavljanje === "ponavlja" && (
+              <p className="text-xs text-muted-foreground">{t("ponavljanjePomoc")}</p>
+            )}
+          </fieldset>
 
           <label className="block text-sm">
             <span className="text-muted-foreground">{t("poljeRok")}</span>

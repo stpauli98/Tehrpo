@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest"
-import { hitnoKasniOrFilter } from "./pregled"
+import { hitnoKasniOrFilter, SELECT_HITNO } from "./pregled"
+
+describe("SELECT_HITNO", () => {
+  it("nosi datum_zakazan — bez njega red ne može pokazati da je termin prezakazan", () => {
+    // Kolona koju komponenta traži, a upit ne izabere, stiže kao undefined i tiho se
+    // izgubi u prikazu: red bi opet govorio samo o roku.
+    expect(SELECT_HITNO.split(",").map((s) => s.trim())).toContain("datum_zakazan")
+  })
+})
 
 describe("hitnoKasniOrFilter", () => {
   const granica = "2026-08-25"

@@ -12,7 +12,7 @@ import { KontaktSheet } from "@/components/domain/KontaktSheet"
 import { PotvrdiBrisanjeDialog } from "@/components/domain/PotvrdiBrisanjeDialog"
 import { toastRezultat } from "@/components/akcija-toast"
 import { deleteKontakt } from "@/app/(dashboard)/klijenti/actions"
-import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useDozvole } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
 
 type KontaktRow = Database["public"]["Tables"]["kontakt_osobe"]["Row"]
@@ -38,7 +38,8 @@ export function KontaktiKlijentList({
   const t = useTranslations("klijenti.kontaktiFirme")
   const tc = useTranslations("common")
   const router = useRouter()
-  const mozeUrediti = useMozeUrediti()
+  // kontakt_del prati prekidač za klijente; KontaktSheet (dodaj/izmijeni) se sam gate-uje.
+  const { smije_brisati_klijente: mozeBrisati } = useDozvole()
   const [q, setQ] = useState("")
 
   // Per-red brisanje (S3/O3) — pending i greška žive u dijalogu tog kontakta,
@@ -92,7 +93,12 @@ export function KontaktiKlijentList({
       ) : (
         <ul className="space-y-2">
           {vidljivi.map((k) => (
-            <li key={k.id} data-testid="kontakt-red" className="rounded-xl border border-border p-3 text-sm transition-colors motion-reduce:transition-none hover:border-border hover:bg-muted/60">
+            <li
+              key={k.id}
+              id={`kontakt-${k.id}`}
+              data-testid="kontakt-red"
+              className="scroll-mt-24 rounded-xl border border-border p-3 text-sm transition-colors motion-reduce:transition-none hover:border-border hover:bg-muted/60"
+            >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {k.ime}
@@ -108,7 +114,7 @@ export function KontaktiKlijentList({
                 </span>
                 <span className="flex items-center gap-2">
                   <KontaktSheet klijentId={klijentId} kontakt={k} lokacije={lokacije} />
-                  {mozeUrediti && (
+                  {mozeBrisati && (
                     <PotvrdiBrisanjeDialog
                       trigger={
                         <Button variant="ghost" size="icon-sm" aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-kontakt-${k.id}`}>

@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { DodjelaKlijenata } from "./DodjelaKlijenata"
 import { PrimaPodsjetnikeToggle } from "./PrimaPodsjetnikeToggle"
+import { DozvoleKorisnika } from "./DozvoleKorisnika"
 import { UlogaSelect } from "./UlogaSelect"
 import { KorisnikAkcije } from "./KorisnikAkcije"
+import type { Dozvole } from "@/lib/auth/dozvole"
 
 type Uloga = "admin" | "operater" | "pregled"
 
-type Korisnik = {
+type Korisnik = Dozvole & {
   id: string
   ime: string
   email: string
@@ -72,6 +74,7 @@ export function KorisniciTabela({
               <th scope="col" className="px-4 py-2 font-medium">{t("kolone.uloga")}</th>
               <th scope="col" className="px-4 py-2 text-center font-medium">{t("kolone.podsjetnici")}</th>
               <th scope="col" className="px-4 py-2 font-medium">{t("kolone.firme")}</th>
+              <th scope="col" className="px-4 py-2 font-medium">{t("kolone.dozvole")}</th>
               <th scope="col" className="w-12 px-4 py-2" aria-label={t("kolone.akcije")} />
             </tr>
           </thead>
@@ -132,6 +135,18 @@ export function KorisniciTabela({
                       <span className="ml-2 text-xs text-warning">{t("nemaDodijeljenih")}</span>
                     )}
                   </td>
+                  <td className="px-4 py-2.5">
+                    <DozvoleKorisnika
+                      korisnikId={k.id}
+                      uloga={k.uloga}
+                      dozvole={{
+                        smije_brisati_svoje: k.smije_brisati_svoje,
+                        smije_brisati_tudje: k.smije_brisati_tudje,
+                        smije_brisati_klijente: k.smije_brisati_klijente,
+                        smije_zatvoriti_bez_nalaza: k.smije_zatvoriti_bez_nalaza,
+                      }}
+                    />
+                  </td>
                   <td className="px-4 py-2.5 text-right">
                     <KorisnikAkcije korisnikId={k.id} email={k.email} aktivan={k.aktivan} jeJa={jeJa} />
                   </td>
@@ -140,7 +155,7 @@ export function KorisniciTabela({
             })}
             {vidljivi.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
                   {t("prazno", { upit: q })}
                 </td>
               </tr>

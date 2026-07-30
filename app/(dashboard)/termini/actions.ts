@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { createTranslator } from "next-intl"
+import { revalidatePath } from "next/cache"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { jeAdmin } from "@/lib/auth/roles"
@@ -216,6 +217,7 @@ const createSchema = z.object({
   rok_dospijeca: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, t("rokObavezan")),
   datum_zakazan: optionalDate,
   zaduzeni: z.string().max(200).optional().or(z.literal("").transform(() => undefined)),
+  ponavlja_se: z.literal("on").optional(),
 })
 
 export async function createTermin(
@@ -260,6 +262,23 @@ export async function createTermin(
     return { ok: false, message: t("terminVecPostoji") }
   }
 
+  // Yoink 2026-07-30, stavka 11: ponavljajući unos dobija i profil-stavku, inače
+  // termin ostaje siroče — ne vidi se u ID karti ni u Uslugama, i po izvršenju
+  // nema intervala iz kojeg bi se izračunao sljedeći rok. Oba uslova (lokacija,
+  // vrsta sa intervalom) se provjeravaju PRIJE bilo kakvog upisa — korisnik ne
+  // smije ostati sa upisanim terminom i greškom.
+  const jePonavljajuci = parsed.data.ponavlja_se === "on"
+  if (jePonavljajuci) {
+    if (!lokacija_id) return { ok: false, message: t("ponavljanjeTraziLokaciju") }
+
+    const { data: vrsta } = await supabase
+      .from("vrste_provjera").select("podrazumevani_interval_mjeseci")
+      .eq("id", vrsta_provjere_id).maybeSingle()
+    if (!vrsta?.podrazumevani_interval_mjeseci) {
+      return { ok: false, message: t("ponavljanjeVrstaBezIntervala") }
+    }
+  }
+
   const { data: novi, error } = await supabase.from("termini").insert({
     klijent_id,
     vrsta_provjere_id,
@@ -272,6 +291,22 @@ export async function createTermin(
 
   if (error) return { ok: false, message: friendlyDbError(error) }
 
+  // Termin je upisan i vidljiv — profil-stavka je odavde best-effort i NE smije
+  // poništiti (ni "obrisati") već sačuvan termin. 23505 znači da stavka već
+  // postoji (uq_klijent_provjere) — to je uspjeh, ne greška.
+  if (jePonavljajuci && lokacija_id) {
+    const { error: kpErr } = await supabase.from("klijent_provjere").insert({
+      klijent_id,
+      vrsta_provjere_id,
+      lokacija_id,
+      interval_mjeseci: null, // null = prati podrazumijevani interval vrste
+      zadnji_datum: null,
+    })
+    if (kpErr && kpErr.code !== "23505") {
+      return { ok: false, message: friendlyDbError(kpErr) }
+    }
+  }
+
   // Admin: zaduženom radniku auto-dodijeli firmu (pristup) — tek nakon uspješnog upisa
   await dodijeliFirmuZaduzenom(supabase, klijent_id, zaduzeni)
 
@@ -282,6 +317,8 @@ export async function createTermin(
       console.warn(`[zakazano-nakon-roka] obavijest nije poslana (termin ${novi.id}): ${obav.message ?? "nepoznata greška"}`)
     }
   }
+
+  revalidatePath(`/klijenti/${klijent_id}`)
 
   return { ok: true }
 }

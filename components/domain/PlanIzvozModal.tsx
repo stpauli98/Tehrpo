@@ -20,6 +20,7 @@ import { currentYear, monthName, todayIso } from "@/lib/date"
 import { validRaspon } from "@/lib/plan-izvoz/period"
 import { imeIzContentDisposition } from "@/lib/plan-izvoz/naziv-fajla"
 import { porukaIzOdgovora } from "@/lib/queries/plan-aktivnosti"
+import { useSmijePreuzeti } from "@/providers/korisnik-provider"
 
 type PeriodMod = "om" | "god" | "mj" | "raspon" | "svi"
 const FILTER_KEYS = ["status", "q", "klijent_id", "lokacija", "vrsta_id", "nacin"] as const
@@ -39,6 +40,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
   const [opseg, setOpseg] = useState<"sve" | "filtrirano">("sve")
   const [broj, setBroj] = useState<number | "loading" | null>(null)
   const [preuzimanje, setPreuzimanje] = useState(false)
+  const smijePreuzeti = useSmijePreuzeti()
 
   const rasponNevazeci = periodMod === "raspon" && !validRaspon(od, doDatum)
 
@@ -82,6 +84,10 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
     return () => { ctrl.abort(); clearTimeout(timer) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, periodMod, godina, mjesec, od, doDatum, opseg, filterKljuc, rasponNevazeci])
+
+  // `pregled` ne smije izvoziti — cijela komponenta je izvozni okidač (nakon svih
+  // hook poziva, Rules of Hooks); okolna traka (npr. PlanViewSwitcher) ostaje.
+  if (!smijePreuzeti) return null
 
   /**
    * S13: izvoz ide kroz `fetch` + blob, nikad `window.location.assign` — ruta na

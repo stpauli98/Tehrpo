@@ -1,8 +1,7 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { AlertTriangle } from "lucide-react"
-import { formatDatum } from "@/lib/date"
-import { rokRelativnaOznaka } from "@/lib/hitno"
+import { rokDatumOznaka, rokRelativnaOznaka } from "@/lib/hitno"
 import type { HitnoKasniItem } from "@/lib/queries/pregled"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { href } from "@/i18n/routes"
@@ -54,13 +53,15 @@ export async function HitnoKasniList({
                     </span>
                   </span>
                   {/* Pun datum je vidljiv tekst, ne `title` — tooltip ne postoji za
-                      tastaturu ni za čitače ekrana (S12). */}
+                      tastaturu ni za čitače ekrana (S12). Kad je termin prezakazan,
+                      vide se OBA datuma: „kasni N" mjeri rok, a zakazani datum objašnjava
+                      zašto red i dalje stoji crven iako je izlazak dogovoren. */}
                   <span className="shrink-0 text-right">
                     <span className={cn("block text-sm font-medium", TONE[oznaka.tone])}>
                       {oznaka.text}
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                      {formatDatum(item.rok_dospijeca)}
+                      {rokDatumOznaka(item.rok_dospijeca, item.datum_zakazan)}
                     </span>
                   </span>
                 </Link>

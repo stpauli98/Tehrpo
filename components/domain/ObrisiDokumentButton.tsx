@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { toastRezultat } from "@/components/akcija-toast"
 import { deleteDokumentAction } from "@/app/(dashboard)/dokumenti/actions"
-import { useUloga } from "@/providers/korisnik-provider"
-import { jeAdmin } from "@/lib/auth/roles"
+import { useDozvole } from "@/providers/korisnik-provider"
 import { PotvrdiBrisanjeDialog } from "./PotvrdiBrisanjeDialog"
 
 export function ObrisiDokumentButton({
@@ -23,9 +22,11 @@ export function ObrisiDokumentButton({
   const t = useTranslations("dokumenti")
   const tc = useTranslations("common")
   const router = useRouter()
-  const uloga = useUloga()
-  // Brisanje dokumenata je admin-only (server akcija to i nameće) — ne-adminima ne nudi dugme.
-  if (!uloga || !jeAdmin(uloga)) return null
+  // Dokument je "zapis" → prekidači svoje/tuđe (dokumenti_del). Ovdje se ne zna čiji je
+  // red, pa je dugme vidljivo ako korisnik smije brisati bar jednu vrstu; konačnu riječ
+  // ima RLS, a akcija vraća poruku ako odbije.
+  const { smije_brisati_svoje, smije_brisati_tudje } = useDozvole()
+  if (!smije_brisati_svoje && !smije_brisati_tudje) return null
   const resolvedLabel = label ?? t("obrisiDokument")
 
   // Pending i inline grešku nosi sam dialog; toast ide odavde (obrazac ObrisiKlijentButton).

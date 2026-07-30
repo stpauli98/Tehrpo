@@ -33,4 +33,23 @@ test.describe("Yoink batch 2026-07-30", () => {
     await page.getByTestId("ugovor-vazenje-custom").fill("18")
     await expect(page.getByTestId("ugovor-vazenje-custom")).toHaveValue("18")
   })
+
+  test("novi kontakt moze kreirati novu lokaciju", async ({ page }) => {
+    const sufiks = String(Date.now()).slice(-6)
+    await page.goto("/klijenti")
+    await page.getByTestId("klijent-card").first().click()
+    await page.getByTestId("tab-kontakti").click()
+    await page.getByTestId("novi-kontakt-btn").click()
+
+    await page.getByTestId("kontakt-ime").fill(`E2E Kontakt ${sufiks}`)
+    await page.getByTestId("kontakt-lokacija-izbor").getByRole("radio", { name: /Nova/ }).click()
+    await page.getByTestId("kontakt-nova-lokacija-naziv").fill(`E2E Lokacija ${sufiks}`)
+    await page.getByTestId("kontakt-nova-lokacija-grad").fill("Banja Luka")
+    await page.getByTestId("kontakt-nova-lokacija-adresa").fill("Testna 1")
+    await page.getByTestId("kontakt-submit").click()
+
+    // Lokacija se pojavljuje u tabu Lokacije
+    await page.getByTestId("tab-lokacije").click()
+    await expect(page.getByTestId("lokacije-table")).toContainText(`E2E Lokacija ${sufiks}`)
+  })
 })

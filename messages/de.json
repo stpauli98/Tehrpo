@@ -188,7 +188,8 @@
       "podsjetnikEmailPostoji": "Die Adresse wurde bereits hinzugefügt.",
       "podsjetnikEmailKontakt": "Die Adresse ist bereits als Kontakt Empfänger.",
       "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
-      "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung."
+      "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung.",
+      "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich."
     },
     "detalj": {
       "nazad": "Kunden",
@@ -380,6 +381,12 @@
       "poljeLokacija": "Standort",
       "lokacijaSve": "Alle Standorte — Firmenkontakt",
       "lokacijaPomoc": "Ein Firmenkontakt erhält Erinnerungen für alle Standorte. An einen Standort gebunden — nur für diesen.",
+      "lokacijaIzborPostojeca": "Bestehender Standort",
+      "lokacijaIzborNova": "Neuer Standort",
+      "novaLokacijaNaziv": "Standortname",
+      "novaLokacijaGrad": "Stadt",
+      "novaLokacijaAdresa": "Adresse",
+      "novaLokacijaPomoc": "Der neue Standort wird sofort im Tab Standorte angelegt und der Kontakt damit verknüpft.",
       "poljeTelefon": "Telefon",
       "poljeEmail": "E-Mail",
       "submitPending": "Wird gespeichert…",

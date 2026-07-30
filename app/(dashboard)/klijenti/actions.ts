@@ -500,6 +500,12 @@ const kontaktFields = {
   // Prazan string iz selecta = „Sve lokacije — kontakt firme" → upisuje se NULL.
   // Bazna brava (fk na lokacije(id, klijent_id)) hvata pokušaj vezivanja za tuđu lokaciju.
   lokacija_id: z.union([z.string().uuid(), z.literal("")]).optional(),
+  // Yoink 2026-07-30, stavka 7: kontakt forma može odmah kreirati novu lokaciju
+  // umjesto da korisnik prvo ide u tab Lokacije.
+  lokacija_izbor: z.enum(["postojeca", "nova"]).optional(),
+  nova_lokacija_naziv: optionalText(200),
+  nova_lokacija_grad: optionalText(120),
+  nova_lokacija_adresa: optionalText(300),
 }
 const createKontaktSchema = z.object({ klijent_id: z.string().uuid(), ...kontaktFields })
 const updateKontaktSchema = z.object({ id: z.string().uuid(), klijent_id: z.string().uuid(), ...kontaktFields })
@@ -516,12 +522,43 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   if ((postojeci ?? []).some((k) => normalizujNaziv(k.ime) === normalizujNaziv(f.ime))) {
     return { ok: false, errors: { ime: [t("kontaktPostoji")] } }
   }
+
+  // Yoink 2026-07-30, stavka 7: kontakt može povući novu lokaciju sa sobom.
+  // Ista dedup provjera kao createLokacija — bez nje se ista lokacija unese
+  // dvaput samo zbog razmaka ili veličine slova.
+  let lokacijaId = f.lokacija_id || null
+  if (f.lokacija_izbor === "nova") {
+    const naziv = (f.nova_lokacija_naziv ?? "").trim()
+    if (!naziv) return { ok: false, errors: { nova_lokacija_naziv: [t("lokacijaNazivObavezan")] } }
+
+    const { data: postojeceLokacije, error: dupLokErr } = await supabase
+      .from("lokacije").select("id, naziv").eq("klijent_id", klijent_id)
+    if (dupLokErr) return { ok: false, message: friendlyDbError(dupLokErr) }
+
+    const vec = (postojeceLokacije ?? []).find((l) => normalizujNaziv(l.naziv) === normalizujNaziv(naziv))
+    if (vec) {
+      // Lokacija sa tim nazivom već postoji → veži se na nju umjesto duplikata.
+      lokacijaId = vec.id
+    } else {
+      const { data: nova, error: lokErr } = await supabase.from("lokacije").insert({
+        klijent_id,
+        naziv,
+        grad: f.nova_lokacija_grad ?? null,
+        adresa: f.nova_lokacija_adresa ?? null,
+      }).select("id").single()
+      if (lokErr) return { ok: false, message: friendlyDbError(lokErr) }
+      lokacijaId = nova.id
+    }
+  }
+
   const { error } = await supabase.from("kontakt_osobe").insert({
     klijent_id, ime: f.ime, funkcija: f.funkcija ?? null, telefon: f.telefon ?? null, email: f.email ?? null,
-    lokacija_id: f.lokacija_id || null,
+    lokacija_id: lokacijaId,
   })
   if (error) return { ok: false, message: friendlyDbError(error) }
-  revalidatePath(`/klijenti/${klijent_id}`)
+  // 'layout' revalidira i /klijenti listu (broj_lokacija count, kad se kreira
+  // nova lokacija zajedno sa kontaktom) i /klijenti/[id] detalje.
+  revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
 

@@ -188,7 +188,8 @@
       "podsjetnikEmailPostoji": "Adresa je već dodata.",
       "podsjetnikEmailKontakt": "Adresa je već primalac kao kontakt.",
       "podsjetnikEmailNijeDodat": "Nije moguće dodati adresu.",
-      "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli."
+      "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli.",
+      "lokacijaNazivObavezan": "Naziv nove lokacije je obavezan."
     },
     "detalj": {
       "nazad": "Klijenti",
@@ -380,6 +381,12 @@
       "poljeLokacija": "Lokacija",
       "lokacijaSve": "Sve lokacije — kontakt firme",
       "lokacijaPomoc": "Kontakt firme prima podsjetnike za sve lokacije. Vezan za lokaciju — samo za tu.",
+      "lokacijaIzborPostojeca": "Postojeća lokacija",
+      "lokacijaIzborNova": "Nova lokacija",
+      "novaLokacijaNaziv": "Naziv lokacije",
+      "novaLokacijaGrad": "Grad",
+      "novaLokacijaAdresa": "Adresa",
+      "novaLokacijaPomoc": "Nova lokacija se odmah upisuje u tab Lokacije i kontakt se veže za nju.",
       "poljeTelefon": "Telefon",
       "poljeEmail": "Email",
       "submitPending": "Spremam…",

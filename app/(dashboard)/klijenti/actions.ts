@@ -41,9 +41,34 @@ const klijentObavezniFields = {
   email: requiredText(200, t("emailObavezan")).pipe(z.string().email(t("emailNeispravan"))),
 }
 
+// Premješteno iznad createKlijentSchema (yoink stavka 4, 2026-07-30): oba schema-a
+// sada koriste UUID_OR_EMPTY, pa deklaracija ispod createKlijentSchema baca TDZ grešku.
+const UUID_OR_EMPTY = z
+  .string()
+  .optional()
+  .transform((v) => (!v || v === "none" ? undefined : v))
+  .refine(
+    (v) => v === undefined || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
+    t("korisnikNeispravan"),
+  )
+
 const createKlijentSchema = z.object({
   ...klijentObavezniFields,
   napomena: optionalText(2000),
+  // Polja koja su do 2026-07-30 postojala samo u edit formi (yoink stavka 4).
+  pib: optionalText(40),
+  maticni_broj: optionalText(40),
+  sifra_djelatnosti: optionalText(40),
+  zaduzeni_tehpro_id: UUID_OR_EMPTY,
+  tip_odnosa: z
+    .union([z.enum(["ugovor", "ponuda"]), z.literal("none"), z.literal(""), z.null()])
+    .transform((v) => (v === "none" || v === "" ? null : v))
+    .optional(),
+  // Prva lokacija — opciona, ali preporučena: klijent bez lokacije ne može
+  // dobiti nijednu uslugu (createProfilProvjere odbija stavku bez lokacije).
+  lokacija_naziv: optionalText(200),
+  lokacija_grad: optionalText(120),
+  lokacija_adresa: optionalText(300),
 })
 
 export async function createKlijent(
@@ -54,14 +79,20 @@ export async function createKlijent(
   if (!parsed.success) {
     return { ok: false, errors: parsed.error.flatten().fieldErrors }
   }
+  const f = parsed.data
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("klijenti").insert({
-    naziv: parsed.data.naziv,
-    adresa: parsed.data.adresa,
-    telefon: parsed.data.telefon,
-    email: parsed.data.email,
-    napomena: parsed.data.napomena ?? null,
-  })
+  const { data: novi, error } = await supabase.from("klijenti").insert({
+    naziv: f.naziv,
+    adresa: f.adresa,
+    telefon: f.telefon,
+    email: f.email,
+    napomena: f.napomena ?? null,
+    pib: f.pib ?? null,
+    maticni_broj: f.maticni_broj ?? null,
+    sifra_djelatnosti: f.sifra_djelatnosti ?? null,
+    zaduzeni_tehpro_id: f.zaduzeni_tehpro_id ?? null,
+    tip_odnosa: f.tip_odnosa ?? null,
+  }).select("id").single()
   if (error) {
     // UNIQUE constraint na naziv → prijateljska poruka
     const msg = /duplicate|unique/i.test(error.message)
@@ -69,20 +100,28 @@ export async function createKlijent(
       : friendlyDbError(error)
     return { ok: false, message: msg }
   }
-  revalidatePath("/klijenti")
+
+  // Prva lokacija je best-effort: klijent je već kreiran i to je vidljivo, pa
+  // pad ovog upisa vraća poruku umjesto da poništi cijelo kreiranje.
+  const lokNaziv = (f.lokacija_naziv ?? "").trim()
+  if (lokNaziv) {
+    const { error: lokErr } = await supabase.from("lokacije").insert({
+      klijent_id: novi.id,
+      naziv: lokNaziv,
+      grad: f.lokacija_grad ?? null,
+      adresa: f.lokacija_adresa ?? null,
+    })
+    if (lokErr) {
+      revalidatePath("/klijenti", "layout")
+      return { ok: false, message: friendlyDbError(lokErr) }
+    }
+  }
+
+  revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
 
 // ─── Klijent update + delete ───────────────────────────────────────────────
-
-const UUID_OR_EMPTY = z
-  .string()
-  .optional()
-  .transform((v) => (!v || v === "none" ? undefined : v))
-  .refine(
-    (v) => v === undefined || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
-    t("korisnikNeispravan"),
-  )
 
 const updateKlijentSchema = z.object({
   id: z.string().uuid(),

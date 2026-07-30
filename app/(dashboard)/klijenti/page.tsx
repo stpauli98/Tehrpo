@@ -34,10 +34,17 @@ export default async function KlijentiPage({
   }
   query = query.range(from, to)
 
+  // Jedan fan-out (S16) — RLS na `korisnici` je self-select pa direktan from()
+  // operateru vrati samo njega; SECURITY DEFINER RPC daje sve aktivne (S8.6).
+  const [{ data, count, error }, { data: korisniciRaw }] = await Promise.all([
+    query,
+    supabase.rpc("get_aktivni_korisnici"),
+  ])
+  const korisnici = (korisniciRaw ?? []).map((k) => ({ id: k.id, ime: k.ime }))
+
   // S1: bez provjere `error` pad upita se renderuje kao lažno „Nema klijenata".
   // PGRST103 = tražena `.range()` stranica je van opsega (npr. ?page=99) — to
   // nije pad upita nego prazna stranica.
-  const { data, count, error } = await query
   const greskaUpita = error != null && error.code !== "PGRST103"
   const rows = (data ?? []) as KlijentRow[]
   const total = count ?? 0
@@ -60,7 +67,7 @@ export default async function KlijentiPage({
         <h1 className="text-2xl font-semibold">{t("naslov")}</h1>
         <div className="flex items-center gap-3">
           <KlijentiSearch />
-          <NoviKlijentButton />
+          <NoviKlijentButton korisnici={korisnici} />
         </div>
       </div>
 

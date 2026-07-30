@@ -67,11 +67,13 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
     })
   })
 
-  it("eksplicitno zadan kreirao_id se ne prepisuje", async () => {
+  // 20260730154000: INSERT pin. Non-admin je više ne smije eksplicitno pripisati red nekom
+  // drugom — kreirao_id se tiho prisiljava na auth.uid(). Ostaje samo za admina.
+  it("admin zadrži eksplicitno zadan kreirao_id (re-atribucija)", async () => {
     await withTx(async () => {
       const autor = await createUser("operater", "ITEST Autor")
-      const drugi = await createUser("operater", "ITEST Drugi")
-      await kaoKorisnik(drugi)
+      const admin = await createUser("admin", "ITEST Admin")
+      await kaoKorisnik(admin)
       const naziv = `ITEST firma ${crypto.randomUUID()}`
       // RETURNING se evaluira pod SELECT politikom prije nego što tg_klijent_auto_dodjela
       // kreira korisnik_klijent red (ima_pristup_klijentu bi vratio false). Umjesto toga:
@@ -79,6 +81,34 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
       await db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, autor])
       await db.query("reset role")
       const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
+      expect(r.rows[0].kreirao_id).toBe(autor)
+    })
+  })
+
+  it("operater sa eksplicitno tuđim kreirao_id na INSERT-u biva pripisan sebi", async () => {
+    await withTx(async () => {
+      const drugi = await createUser("operater", "ITEST Drugi")
+      const ja = await createUser("operater", "ITEST Ja")
+      await kaoKorisnik(ja)
+      const naziv = `ITEST firma ${crypto.randomUUID()}`
+      // Prije 20260730154000: kreirao_id bi ostao "drugi" — lažno pripisivanje reda kolegi.
+      // Poslije: tiho pinovano na auth.uid() (ja), bez obzira šta je poslano.
+      await db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, drugi])
+      await db.query("reset role")
+      const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
+      expect(r.rows[0].kreirao_id).toBe(ja)
+      expect(r.rows[0].kreirao_id).not.toBe(drugi)
+    })
+  })
+
+  it("service-role insert sa eksplicitno zadanim kreirao_id zadržava tu vrijednost", async () => {
+    await withTx(async () => {
+      const autor = await createUser("operater", "ITEST Autor SR")
+      // Bez kaoKorisnik(): ostajemo na default (service) roli, auth.uid() je null.
+      const r = await db.query(
+        "insert into klijenti (naziv, kreirao_id) values ($1,$2) returning kreirao_id",
+        [`ITEST firma ${crypto.randomUUID()}`, autor],
+      )
       expect(r.rows[0].kreirao_id).toBe(autor)
     })
   })

@@ -35,23 +35,23 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
     return id
   }
 
-  async function kaoKorisnik(uid: string): Promise<void> {
+  // Izvrši fn kao autentifikovan korisnik (RLS vrijedi); vrati na superuser poslije.
+  async function asUser<T>(uid: string, fn: () => Promise<T>): Promise<T> {
     await db.query("select set_config('request.jwt.claims', $1, true)", [
       JSON.stringify({ sub: uid, role: "authenticated" }),
     ])
     await db.query("set local role authenticated")
+    try { return await fn() } finally { await db.query("reset role") }
   }
 
   it("upisuje auth.uid() u kreirao_id pri insertu klijenta", async () => {
     await withTx(async () => {
       const uid = await createUser("operater", "ITEST Operater")
-      await kaoKorisnik(uid)
       const naziv = `ITEST firma ${crypto.randomUUID()}`
       // RETURNING se evaluira pod SELECT politikom prije nego što tg_klijent_auto_dodjela
       // kreira korisnik_klijent red (ima_pristup_klijentu bi vratio false). Umjesto toga:
       // insert kao authenticated, reset role, pa select nakon AFTER triggera.
-      await db.query("insert into klijenti (naziv) values ($1)", [naziv])
-      await db.query("reset role")
+      await asUser(uid, () => db.query("insert into klijenti (naziv) values ($1)", [naziv]))
       const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
       expect(r.rows[0].kreirao_id).toBe(uid)
     })
@@ -73,13 +73,11 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
     await withTx(async () => {
       const autor = await createUser("operater", "ITEST Autor")
       const admin = await createUser("admin", "ITEST Admin")
-      await kaoKorisnik(admin)
       const naziv = `ITEST firma ${crypto.randomUUID()}`
       // RETURNING se evaluira pod SELECT politikom prije nego što tg_klijent_auto_dodjela
       // kreira korisnik_klijent red (ima_pristup_klijentu bi vratio false). Umjesto toga:
       // insert kao authenticated, reset role, pa select nakon AFTER triggera.
-      await db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, autor])
-      await db.query("reset role")
+      await asUser(admin, () => db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, autor]))
       const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
       expect(r.rows[0].kreirao_id).toBe(autor)
     })
@@ -89,12 +87,10 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
     await withTx(async () => {
       const drugi = await createUser("operater", "ITEST Drugi")
       const ja = await createUser("operater", "ITEST Ja")
-      await kaoKorisnik(ja)
       const naziv = `ITEST firma ${crypto.randomUUID()}`
       // Prije 20260730154000: kreirao_id bi ostao "drugi" — lažno pripisivanje reda kolegi.
       // Poslije: tiho pinovano na auth.uid() (ja), bez obzira šta je poslano.
-      await db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, drugi])
-      await db.query("reset role")
+      await asUser(ja, () => db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, drugi]))
       const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
       expect(r.rows[0].kreirao_id).toBe(ja)
       expect(r.rows[0].kreirao_id).not.toBe(drugi)
@@ -104,7 +100,7 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
   it("service-role insert sa eksplicitno zadanim kreirao_id zadržava tu vrijednost", async () => {
     await withTx(async () => {
       const autor = await createUser("operater", "ITEST Autor SR")
-      // Bez kaoKorisnik(): ostajemo na default (service) roli, auth.uid() je null.
+      // Bez asUser(): ostajemo na default (service) roli, auth.uid() je null.
       const r = await db.query(
         "insert into klijenti (naziv, kreirao_id) values ($1,$2) returning kreirao_id",
         [`ITEST firma ${crypto.randomUUID()}`, autor],

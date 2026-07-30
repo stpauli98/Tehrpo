@@ -13,8 +13,7 @@ import { toDerivedStatus } from "@/lib/termini"
 import { APP_NAME } from "@/lib/brand"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
-import { getTrenutniKorisnik } from "@/lib/auth/current-user"
-import { smijePreuzeti } from "@/lib/auth/roles"
+import { smijeTrenutniPreuzeti } from "@/lib/auth/zahtijevaj-preuzimanje"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -60,8 +59,7 @@ export async function GET(req: NextRequest) {
   }
 
   // `pregled` je čisto čitanje na ekranu — bez izvoza plana (potvrđeno 30.07.2026.).
-  const ja = await getTrenutniKorisnik()
-  if (!ja || !smijePreuzeti(ja.uloga)) {
+  if (!(await smijeTrenutniPreuzeti())) {
     return NextResponse.json({ error: tCommon("izvozNijeDozvoljen") }, { status: 403 })
   }
 

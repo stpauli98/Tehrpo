@@ -25,6 +25,16 @@ const PREGLED_LOZINKA = "E2eUlogePregled2026!"
 // jer je označen `server-only` (rizično van Next server konteksta).
 const DOKUMENTI_BUCKET = "tehpro-dokumenti"
 
+// Strukturno validan minimalni jednostranični PDF (a ne samo string sa "%PDF-1.4" prefiksom)
+// — da eventualni budući test koji ga stvarno renderuje ne padne misteriozno.
+const MINIMALNI_PDF = Buffer.from(
+  "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+    "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 99 9]>>endobj\n" +
+    "trailer<</Root 1 0 R>>\n%%EOF\n",
+  "utf8",
+)
+
 test.use({ storageState: { cookies: [], origins: [] } })
 
 // `test.describe.serial` + per-project sufiks na svim jedinstvenim identifikatorima:
@@ -72,7 +82,7 @@ test.describe.serial("Uloge i ovlaštenja", () => {
     dokumentStoragePath = `termini/${terminId}/e2e-uloge-nalaz-${sufiks}.pdf`
     const { error: uploadErr } = await db.storage
       .from(DOKUMENTI_BUCKET)
-      .upload(dokumentStoragePath, Buffer.from("%PDF-1.4 e2e uloge-ovlastenja placeholder"), {
+      .upload(dokumentStoragePath, MINIMALNI_PDF, {
         contentType: "application/pdf",
         upsert: true,
       })

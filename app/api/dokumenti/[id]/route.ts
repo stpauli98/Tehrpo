@@ -4,8 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { signedUrl } from "@/lib/supabase/storage"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
-import { getTrenutniKorisnik } from "@/lib/auth/current-user"
-import { smijePreuzeti } from "@/lib/auth/roles"
+import { smijeTrenutniPreuzeti } from "@/lib/auth/zahtijevaj-preuzimanje"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
 
@@ -25,8 +24,7 @@ export async function GET(
   const { id } = await params
 
   // `pregled` je čisto čitanje na ekranu — bez iznošenja fajlova (potvrđeno 30.07.2026.).
-  const ja = await getTrenutniKorisnik()
-  if (!ja || !smijePreuzeti(ja.uloga)) {
+  if (!(await smijeTrenutniPreuzeti())) {
     return NextResponse.json({ error: t("preuzimanjeNijeDozvoljeno") }, { status: 403 })
   }
 

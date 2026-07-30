@@ -30,7 +30,7 @@ export function KontaktSheet({
 }: {
   klijentId: string
   kontakt?: KontaktRow
-  /** Lokacije te firme — prazan spisak sakriva polje (firma bez lokacija nema šta birati). */
+  /** Lokacije te firme — prazan spisak nudi „kontakt firme" ili kreiranje nove. */
   lokacije?: { id: string; naziv: string }[]
 }) {
   const t = useTranslations("klijenti.kontaktSheet")
@@ -39,8 +39,12 @@ export function KontaktSheet({
   const mozeUrediti = useMozeUrediti()
   const isEdit = !!kontakt
   const [open, setOpen] = useState(false)
-  // Firma bez ijedne lokacije nema šta birati → forma odmah nudi kreiranje nove.
-  const [lokacijaIzbor, setLokacijaIzbor] = useState(lokacije.length > 0 ? "postojeca" : "nova")
+  // Podrazumijevano je UVIJEK „kontakt firme" (lokacija_id = null), kao i prije
+  // uvođenja ovog fieldset-a. Kad firma IMA lokacije, tu ulogu nosi prazna
+  // vrijednost u Select-u unutar grane „postojeca"; kad ih NEMA, Select se ne
+  // renderuje pa mora postojati zaseban radio „firma" — bez njega je kontakt
+  // firme nedostupan i korisnik je prisiljen izmisliti lokaciju.
+  const [lokacijaIzbor, setLokacijaIzbor] = useState(lokacije.length > 0 ? "postojeca" : "firma")
   const [state, action, pending] = useActionState(isEdit ? updateKontakt : createKontakt, initial)
   const submitted = useRef(false)
   useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
@@ -136,9 +140,13 @@ export function KontaktSheet({
                 onValueChange={(v) => setLokacijaIzbor(String(v))}
                 data-testid="kontakt-lokacija-izbor"
               >
-                {lokacije.length > 0 && (
+                {lokacije.length > 0 ? (
                   <label className="flex items-center gap-2 text-sm">
                     <RadioGroupItem value="postojeca" /> {t("lokacijaIzborPostojeca")}
+                  </label>
+                ) : (
+                  <label className="flex items-center gap-2 text-sm">
+                    <RadioGroupItem value="firma" data-testid="kontakt-lokacija-firma" /> {t("lokacijaSve")}
                   </label>
                 )}
                 <label className="flex items-center gap-2 text-sm">

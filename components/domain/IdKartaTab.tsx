@@ -31,7 +31,7 @@ export async function IdKartaTab({
   zaduzeniIme: string | null
   ugovori: UgovorRow[]
   kontakti: KontaktRow[]
-  usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string | null }[]
+  usluge: { vrsta_naziv: string; lokacija_naziv: string | null; sljedeci_rok: string | null; jednokratna?: boolean }[]
   lokacije: { id: string; naziv: string }[]
 }) {
   const t = await getTranslations("klijenti.idKarta")
@@ -110,6 +110,15 @@ export async function IdKartaTab({
               <li key={i} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
                 <span className="text-foreground">
                   {u.vrsta_naziv}
+                  {u.jednokratna && (
+                    <span
+                      className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground"
+                      title={t("usluge.jednokratnaInfo")}
+                      data-testid="idkarta-usluga-jednokratna"
+                    >
+                      {t("usluge.jednokratna")}
+                    </span>
+                  )}
                   {u.lokacija_naziv && <span className="text-muted-foreground"> · {u.lokacija_naziv}</span>}
                 </span>
                 <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs tabular-nums text-muted-foreground">

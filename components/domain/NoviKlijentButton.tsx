@@ -172,7 +172,7 @@ export function NoviKlijentButton({ korisnici = [] }: { korisnici?: { id: string
             </legend>
             <label className="block text-sm">
               <span className="text-muted-foreground">{t("lokacijaNaziv")}</span>
-              <Input name="lokacija_naziv" data-testid="novi-klijent-lokacija-naziv" />
+              <Input name="lokacija_naziv" data-testid="novi-klijent-lokacija-naziv" aria-describedby={opisano("lokacija_naziv")} />
               <FieldError id="novi-klijent-lokacija_naziv-err" errors={errors?.lokacija_naziv} />
             </label>
             <div className="grid grid-cols-2 gap-2">

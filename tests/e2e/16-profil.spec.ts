@@ -20,7 +20,7 @@ test.describe("Faza Profil — tab", () => {
       await page.goto(`/klijenti/${kid}?tab=profil`)
       await expect(page.getByTestId("tab-profil-content")).toBeVisible()
       await expect(page.getByTestId("dodaj-provjeru-btn")).toBeVisible()
-      await expect(page.getByText("Nema provjera u profilu")).toBeVisible()
+      await expect(page.getByText("Nema definisanih usluga. Dodajte uslugu da generišete termine.")).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)
@@ -85,7 +85,7 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       await page.getByRole("option", { name: "E2E Lokacija", exact: true }).click()
       await page.getByTestId("profil-zadnji-datum").fill("2026-02-01")
       await page.getByTestId("profil-submit").click()
-      await expect(page.getByText("Ova provjera već postoji u profilu.")).toBeVisible()
+      await expect(page.getByTestId("dodaj-provjeru-form").getByText("Ova usluga već postoji.")).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)
@@ -123,7 +123,7 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
     }
   })
 
-  test("brisanje stavke ne briše generisani termin", async ({ page }) => {
+  test("brisanje stavke ne briše generisani termin — ostaje vidljiv kao jednokratna usluga bez brisanja", async ({ page }) => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     await insertLokacija(kid)
@@ -141,13 +141,20 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       await page.getByTestId("profil-zadnji-datum").fill("2026-03-01")
       await page.getByTestId("profil-submit").click()
       await expect(page.getByTestId("profil-row")).toHaveCount(1)
-      // obriši stavku
+      // obriši stavku (klijent_provjere red) — termin ostaje netaknut
       await page.getByTestId("obrisi-profil-btn").click()
       await page.getByTestId("obrisi-profil-potvrdi").click()
-      await expect(page.getByTestId("profil-row")).toHaveCount(0)
-      // termin i dalje postoji
+      // (a) generisani termin i dalje postoji
       await page.goto(`/termini?klijent_id=${kid}&mjesec=svi`)
       await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
+      // (b) Usluge tab ga sada prikazuje kao izvedenu, jednokratnu stavku (ne nulu)
+      await page.goto(`/klijenti/${kid}?tab=profil`)
+      await expect(page.getByTestId("tab-profil-content")).toBeVisible()
+      await page.waitForLoadState("networkidle")
+      await expect(page.getByTestId("profil-row")).toHaveCount(1)
+      await expect(page.getByTestId("usluga-jednokratna")).toBeVisible()
+      // (c) izvedeni red nema klijent_provjere zapis pa nema ni dugme za brisanje
+      await expect(page.getByTestId("obrisi-profil-btn")).toHaveCount(0)
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)

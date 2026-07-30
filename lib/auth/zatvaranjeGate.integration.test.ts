@@ -108,4 +108,77 @@ describe.skipIf(!URL)("zatvaranje aktivnosti bez nalaza (integracija, lokalni DB
       await expect(zatvori(terminId)).resolves.toBeUndefined()
     })
   })
+
+  // ── INSERT put (20260730153000) ────────────────────────────────────────────
+  // Kapija je bila samo `before update`, pa je operater mogao INSERT-ovati termin odmah
+  // u 'izvrseno' i tako je zaobići. Nije dohvatljivo kroz UI (createTermin izvodi status),
+  // ali PostgREST jeste — a dizajn tvrdi da je Postgres autoritet.
+  describe("INSERT odmah u 'izvrseno'", () => {
+    /** Firma dodijeljena korisniku, bez termina — vraća (klijentId, vrstaId). */
+    async function firmaBezTermina(uid: string): Promise<{ klijentId: string; vrstaId: string }> {
+      const k = await db.query("insert into klijenti (naziv) values ($1) returning id", [
+        `ITEST firma ${crypto.randomUUID()}`,
+      ])
+      const klijentId = k.rows[0].id as string
+      await db.query("insert into korisnik_klijent (korisnik_id, klijent_id) values ($1,$2)", [uid, klijentId])
+      return { klijentId, vrstaId: await novaVrsta() }
+    }
+
+    async function ubaciIzvrseno(klijentId: string, vrstaId: string): Promise<void> {
+      await db.query(
+        `insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca, status, datum_izvrsenja)
+         values ($1,$2,current_date,'izvrseno',current_date)`,
+        [klijentId, vrstaId],
+      )
+    }
+
+    it("operater bez dozvole ne može ubaciti već zatvoren termin bez nalaza", async () => {
+      await withTx(async () => {
+        const uid = await createUser("operater")
+        const { klijentId, vrstaId } = await firmaBezTermina(uid)
+        await kaoKorisnik(uid)
+        await expect(ubaciIzvrseno(klijentId, vrstaId)).rejects.toThrow(/nalaz_obavezan/)
+      })
+    })
+
+    it("operater sa smije_zatvoriti_bez_nalaza smije ubaciti zatvoren termin", async () => {
+      await withTx(async () => {
+        const uid = await createUser("operater", true)
+        const { klijentId, vrstaId } = await firmaBezTermina(uid)
+        await kaoKorisnik(uid)
+        await expect(ubaciIzvrseno(klijentId, vrstaId)).resolves.toBeUndefined()
+      })
+    })
+
+    it("admin smije ubaciti zatvoren termin", async () => {
+      await withTx(async () => {
+        const uid = await createUser("admin")
+        const { klijentId, vrstaId } = await firmaBezTermina(uid)
+        await kaoKorisnik(uid)
+        await expect(ubaciIzvrseno(klijentId, vrstaId)).resolves.toBeUndefined()
+      })
+    })
+
+    it("INSERT u podrazumijevani status i dalje prolazi bez nalaza", async () => {
+      await withTx(async () => {
+        const uid = await createUser("operater")
+        const { klijentId, vrstaId } = await firmaBezTermina(uid)
+        await kaoKorisnik(uid)
+        await expect(
+          db.query(
+            "insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca) values ($1,$2,current_date)",
+            [klijentId, vrstaId],
+          ),
+        ).resolves.toBeTruthy()
+      })
+    })
+
+    it("service-role INSERT u 'izvrseno' (cron/seed) nije zahvaćen", async () => {
+      await withTx(async () => {
+        const uid = await createUser("operater")
+        const { klijentId, vrstaId } = await firmaBezTermina(uid)
+        await expect(ubaciIzvrseno(klijentId, vrstaId)).resolves.toBeUndefined()
+      })
+    })
+  })
 })

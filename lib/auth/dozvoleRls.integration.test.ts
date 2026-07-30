@@ -88,6 +88,24 @@ describe.skipIf(!URL)("dozvole brisanja (integracija, lokalni DB)", () => {
     return r.rowCount ?? 0
   }
 
+  /** Dokument na terminu, sa zadanim autorom (null = bez vlasnika). */
+  async function noviDokument(
+    klijentId: string,
+    terminId: string,
+    autor: string | null,
+  ): Promise<string> {
+    const r = await db.query(
+      "insert into dokumenti (klijent_id, termin_id, naziv, storage_path, kreirao_id) values ($1,$2,$3,$4,$5) returning id",
+      [klijentId, terminId, "nalaz.pdf", `termini/${terminId}/${crypto.randomUUID()}.pdf`, autor],
+    )
+    return r.rows[0].id as string
+  }
+
+  async function obrisiDokument(id: string): Promise<number> {
+    const r = await db.query("delete from dokumenti where id = $1", [id])
+    return r.rowCount ?? 0
+  }
+
   it("operater bez ijednog prekidača ne briše ni svoj termin", async () => {
     await withTx(async () => {
       const uid = await createUser("operater")
@@ -172,6 +190,180 @@ describe.skipIf(!URL)("dozvole brisanja (integracija, lokalni DB)", () => {
       await kaoKorisnik(sa)
       r = await db.query("delete from klijenti where id = $1", [klijentId])
       expect(r.rowCount ?? 0).toBe(1)
+    })
+  })
+
+  // ── Vlasništvo je pinovano na UPDATE-u (20260730153000) ────────────────────
+  // Bez pina je operater sa samo `smije_brisati_svoje` mogao prepisati kreirao_id na sebe
+  // i tako obrisati tuđi red. `*_upd` politike i dalje puštaju update — pin je u trigeru.
+  describe("kreirao_id se ne može preuzeti UPDATE-om", () => {
+    it("operater ne preuzima vlasništvo tuđeg termina i ne može ga obrisati", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater", { svoje: true })
+        const drugi = await createUser("operater")
+        const { klijentId, terminId } = await firmaSaTerminom(drugi)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+
+        // A) tuđi termin je nedodirljiv
+        expect(await obrisiTermin(terminId)).toBe(0)
+
+        // B) update prolazi (tiho pinovanje, bez greške) ali vlasništvo ostaje tuđe
+        await db.query("update termini set kreirao_id = $1 where id = $2", [ja, terminId])
+        await kaoServisni()
+        const v = await db.query("select kreirao_id from termini where id = $1", [terminId])
+        expect(v.rows[0].kreirao_id).toBe(drugi)
+
+        // C) i dalje ne može obrisati
+        await kaoKorisnik(ja)
+        expect(await obrisiTermin(terminId)).toBe(0)
+      })
+    })
+
+    it("pin ne ruši update ostalih kolona niti puni PATCH sa istim kreirao_id", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater", { svoje: true })
+        const { klijentId, terminId } = await firmaSaTerminom(ja)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+        const r = await db.query(
+          "update termini set napomena = 'x', kreirao_id = $1 where id = $2",
+          [ja, terminId],
+        )
+        expect(r.rowCount).toBe(1)
+        await kaoServisni()
+        const v = await db.query("select kreirao_id, napomena from termini where id = $1", [terminId])
+        expect(v.rows[0].kreirao_id).toBe(ja)
+        expect(v.rows[0].napomena).toBe("x")
+      })
+    })
+
+    it("admin smije prenijeti vlasništvo", async () => {
+      await withTx(async () => {
+        const admin = await createUser("admin")
+        const drugi = await createUser("operater")
+        const { terminId } = await firmaSaTerminom(drugi)
+        await kaoKorisnik(admin)
+        await db.query("update termini set kreirao_id = $1 where id = $2", [admin, terminId])
+        await kaoServisni()
+        const v = await db.query("select kreirao_id from termini where id = $1", [terminId])
+        expect(v.rows[0].kreirao_id).toBe(admin)
+      })
+    })
+
+    it("pin važi i na klijenti/lokacije/ugovori/dokumenti, ne samo termini", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater", { svoje: true })
+        const drugi = await createUser("operater")
+        const { klijentId, terminId } = await firmaSaTerminom(drugi)
+        await db.query("update klijenti set kreirao_id = $1 where id = $2", [drugi, klijentId])
+        const lok = await db.query(
+          "insert into lokacije (klijent_id, naziv, kreirao_id) values ($1,$2,$3) returning id",
+          [klijentId, `ITEST lok ${crypto.randomUUID()}`, drugi],
+        )
+        const ug = await db.query(
+          "insert into ugovori (klijent_id, kreirao_id) values ($1,$2) returning id",
+          [klijentId, drugi],
+        )
+        const dokId = await noviDokument(klijentId, terminId, drugi)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+
+        for (const [tabela, id] of [
+          ["klijenti", klijentId],
+          ["lokacije", lok.rows[0].id],
+          ["ugovori", ug.rows[0].id],
+          ["dokumenti", dokId],
+        ] as const) {
+          await db.query(`update ${tabela} set kreirao_id = $1 where id = $2`, [ja, id])
+        }
+
+        await kaoServisni()
+        for (const [tabela, id] of [
+          ["klijenti", klijentId],
+          ["lokacije", lok.rows[0].id],
+          ["ugovori", ug.rows[0].id],
+          ["dokumenti", dokId],
+        ] as const) {
+          const v = await db.query(`select kreirao_id from ${tabela} where id = $1`, [id])
+          expect({ tabela, vlasnik: v.rows[0].kreirao_id }).toEqual({ tabela, vlasnik: drugi })
+        }
+      })
+    })
+  })
+
+  // ── dokumenti DELETE ───────────────────────────────────────────────────────
+  // 20260730151000 je `dokumenti_del` proširio sa je_admin() na smije_brisati_zapis(kreirao_id)
+  // (naručilac je 30.07.2026. ukinuo staro "dokumente briše ISKLJUČIVO administrator").
+  describe("brisanje dokumenata prati iste prekidače kao termini", () => {
+    it("admin briše tuđi dokument i bez dodjele", async () => {
+      await withTx(async () => {
+        const drugi = await createUser("operater")
+        const admin = await createUser("admin")
+        const { klijentId, terminId } = await firmaSaTerminom(drugi)
+        const dokId = await noviDokument(klijentId, terminId, drugi)
+        await kaoKorisnik(admin)
+        expect(await obrisiDokument(dokId)).toBe(1)
+      })
+    })
+
+    it("operater bez ijednog prekidača ne briše ni svoj dokument", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater")
+        const { klijentId, terminId } = await firmaSaTerminom(ja)
+        const dokId = await noviDokument(klijentId, terminId, ja)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+        expect(await obrisiDokument(dokId)).toBe(0)
+      })
+    })
+
+    it("smije_brisati_svoje briše vlastiti dokument, ali ne tuđi", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater", { svoje: true })
+        const drugi = await createUser("operater")
+        const { klijentId, terminId } = await firmaSaTerminom(ja)
+        const moj = await noviDokument(klijentId, terminId, ja)
+        const tudji = await noviDokument(klijentId, terminId, drugi)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+        expect(await obrisiDokument(moj)).toBe(1)
+        expect(await obrisiDokument(tudji)).toBe(0)
+      })
+    })
+
+    it("smije_brisati_tudje briše tuđi dokument na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater", { tudje: true })
+        const drugi = await createUser("operater")
+        const { klijentId, terminId } = await firmaSaTerminom(drugi)
+        const dokId = await noviDokument(klijentId, terminId, drugi)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+        expect(await obrisiDokument(dokId)).toBe(1)
+      })
+    })
+
+    it("dozvola ne probija dodjelu ni za dokumente", async () => {
+      await withTx(async () => {
+        const ja = await createUser("operater", { svoje: true, tudje: true })
+        const { klijentId, terminId } = await firmaSaTerminom(ja)
+        const dokId = await noviDokument(klijentId, terminId, ja)
+        // NEMA dodjele
+        await kaoKorisnik(ja)
+        expect(await obrisiDokument(dokId)).toBe(0)
+      })
+    })
+
+    it("pregled ne briše dokument ni sa svim prekidačima upaljenim", async () => {
+      await withTx(async () => {
+        const ja = await createUser("pregled", { svoje: true, tudje: true, klijenti: true })
+        const { klijentId, terminId } = await firmaSaTerminom(ja)
+        const dokId = await noviDokument(klijentId, terminId, ja)
+        await dodijeli(ja, klijentId)
+        await kaoKorisnik(ja)
+        expect(await obrisiDokument(dokId)).toBe(0)
+      })
     })
   })
 })

@@ -39,6 +39,11 @@ test.describe("Faza 6 — Cron endpoint", () => {
   })
 
   test("dryRun + ispravan secret → 200; ne dira ledger i zato je ponovljiv", async ({ request }) => {
+    // Legitimno spor: test radi DVA puna cron prolaza, a svaki zove RPC-e nad cloud
+    // DEMO bazom i prolazi kroz cijeli recipient pipeline. U default 30s budžetu je
+    // drugi POST znao završiti kao "Request context disposed" (timeout, ne greška
+    // aplikacije). test.slow() trostruči budžet umjesto da se timeout krpi po pozivu.
+    test.slow()
     const secret = cronSecret()
     const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }
 

@@ -3,6 +3,7 @@ import {
   firstActiveVrstaId, setVrstaInterval, getVrstaInterval,
   insertTermin, deleteTerminiByKlijent, insertKlijent, deleteKlijentByNaziv,
 } from "./db"
+import { idiNa } from "./fixtures"
 
 // Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
 // mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
@@ -191,7 +192,8 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
       // re-renderuje i "Označi izvršeno" forma nestaje (termin.status === "izvrseno").
       // Bez ovoga test čita stat PRIJE commita — RLS/proxy latencija je tu trku razotkrila.
       await expect(page.getByTestId("mark-done-form")).toHaveCount(0)
-      await page.goto("/termini?mjesec=svi")
+      // idiNa: revalidate refresh nakon akcije može prekinuti goto (v. fixtures.ts)
+      await idiNa(page, "/termini?mjesec=svi")
       const after = await readTotal(page)
       expect(after).toBe(before + 1)
     } finally {
@@ -265,7 +267,8 @@ test.describe("Faza 3 — Novi termin", () => {
       await page.getByTestId("novi-rok").fill("2029-03-15")
       await page.getByTestId("novi-submit").click()
       await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
-      await page.goto("/termini?mjesec=svi")
+      // idiNa: revalidate refresh nakon akcije može prekinuti goto (v. fixtures.ts)
+      await idiNa(page, "/termini?mjesec=svi")
       const after = await readTotal(page)
       expect(after).toBe(before + 1)
     } finally {

@@ -6,6 +6,7 @@ import {
   deleteTerminiByKlijent,
   deleteKlijentByNaziv,
 } from "./db"
+import { idiNa } from "./fixtures"
 
 /** Godina roka: zadnji datum u januaru + interval mjeseci (mirror lib/date addMjeseci). */
 function godinaRoka(godina: number, mjesecIdx: number, intervalMjeseci: number): number {
@@ -71,10 +72,12 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       const ocekivanaGodina = godinaRoka(2026, 0, vrsta.interval)
       await expect(page.getByTestId("profil-row")).toContainText(String(ocekivanaGodina))
       // termin generisan → vidljiv na /termini filtriran po klijentu
-      await page.goto(`/termini?klijent_id=${kid}&mjesec=svi`)
+      // idiNa: dodavanje profil-stavke revalidira rutu, pa refresh navigacija na
+      // ?tab=profil prekine ovaj goto (pad na webkitu) — v. helper u fixtures.ts.
+      await idiNa(page, `/termini?klijent_id=${kid}&mjesec=svi`)
       await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
       // duplikat profila odbijen (ista vrsta + ista lokacija)
-      await page.goto(`/klijenti/${kid}?tab=profil`)
+      await idiNa(page, `/klijenti/${kid}?tab=profil`)
       await expect(page.getByTestId("tab-profil-content")).toBeVisible()
       await page.waitForLoadState("networkidle")
       await page.getByTestId("dodaj-provjeru-btn").click()
@@ -156,7 +159,8 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       await page.getByTestId("obrisi-profil-potvrdi").click()
       await expect(page.getByTestId("profil-row")).toHaveCount(0)
       // termin i dalje postoji
-      await page.goto(`/termini?klijent_id=${kid}&mjesec=svi`)
+      // idiNa: revalidate refresh nakon brisanja može prekinuti goto (v. fixtures.ts)
+      await idiNa(page, `/termini?klijent_id=${kid}&mjesec=svi`)
       await expect(page.getByTestId("termin-detalji").first()).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)

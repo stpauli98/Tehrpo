@@ -27,6 +27,7 @@
     "greska": "Something went wrong",
     "greskaNeocekivana": "An unexpected error occurred.",
     "greskaUcitavanja": "Failed to load data.",
+    "izvozNijeDozvoljen": "Your role is not allowed to export data.",
     "samoAdministrator": "Administrator only.",
     "pokusajPonovo": "Try again",
     "zaduzeniTi": "(you)",
@@ -182,6 +183,7 @@
       "terminProvjeraOsvjezi": "The check was saved, but the appointment check failed — refresh the page.",
       "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
       "nedostajeId": "Missing id.",
+      "brisanjeNijeDozvoljeno": "Your permissions do not allow deleting this record.",
       "imeObavezno": "Name is required",
       "lokacijaPostoji": "A location with that name already exists for this client.",
       "kontaktPostoji": "A contact person with that name already exists for this client.",
@@ -890,7 +892,6 @@
     "uploadNijeUspio": "Upload failed.",
     "zapisnikSamoIzvrsen": "The record can only be generated for a completed appointment.",
     "generisanjeNijeUspjelo": "Generation failed.",
-    "samoAdminBrise": "Only an administrator can delete documents.",
     "dokumentNePostoji": "Document does not exist.",
     "dokumentNePostojiIliNemaPristupa": "Document does not exist or you don't have access.",
     "klijentObavezan": "Client is required",
@@ -920,6 +921,7 @@
     "dropzoneUkloni": "Remove selected file",
     "neispravniPodaci": "Invalid data — refresh the page and try again.",
     "preuzimanjeNijeUspjelo": "Download failed. Please try again.",
+    "preuzimanjeNijeDozvoljeno": "Your role is not allowed to download documents.",
     "potvrdaBrisanjaNaslov": "Delete document?",
     "potvrdaBrisanjaOpis": "The document and its file are permanently deleted. This cannot be undone.",
     "tipovi": {
@@ -979,6 +981,7 @@
         "uloga": "Role",
         "podsjetnici": "Reminders",
         "firme": "Companies",
+        "dozvole": "Permissions",
         "akcije": "Actions"
       },
       "ti": "(you)",
@@ -1035,6 +1038,15 @@
       "aria": "Receives email reminders",
       "sacuvano": "Saved.",
       "greska": "Error."
+    },
+    "dozvole": {
+      "dozvoleSamoOperater": "Administrators may do everything and viewers nothing — these switches apply to operators.",
+      "smijeBrisatiSvoje": "Delete own entries",
+      "smijeBrisatiTudje": "Delete other people's entries on assigned firms",
+      "smijeBrisatiKlijente": "Delete client, contract, location, contacts and service links",
+      "smijeZatvoritiBezNalaza": "Close an activity without a report",
+      "dozvolaSacuvana": "Permission saved.",
+      "dozvolaGreska": "Saving the permission failed."
     },
     "podsjetniciKontrole": {
       "naslov": "Automatic sending",
@@ -1136,7 +1148,10 @@
       "saljiKlijentimaGreska": "Failed to change sending to clients.",
       "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice.",
       "resetEmailGreska": "Failed to send the password reset email.",
-      "resetRateLimit": "Too many password reset requests. Try again in a few minutes."
+      "resetRateLimit": "Too many password reset requests. Try again in a few minutes.",
+      "nepoznataDozvola": "Unknown permission.",
+      "korisnikNePostoji": "The user does not exist.",
+      "dozvoleSamoOperater": "Permission switches apply to operators only."
     },
     "novaVrsta": {
       "dugme": "New type",
@@ -1432,6 +1447,7 @@
   },
   "dbErrors": {
     "chkTerminiDatumi": "Invalid date: the completion date cannot be in the future, and the interval must be between 1 and 120 months.",
+    "nalazObavezan": "The activity cannot be closed without an attached report. Attach a document or ask an administrator for permission.",
     "duplikat": "A record with these values already exists.",
     "uUpotrebi": "The record is linked to other data and is in use.",
     "nevazeciPodaci": "Invalid data — please check your input.",

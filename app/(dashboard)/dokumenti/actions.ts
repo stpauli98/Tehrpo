@@ -15,8 +15,9 @@ import {
   validirajFajl,
   MAX_MB,
 } from "@/lib/dokumenti"
-import { getTrenutniKorisnik } from "@/lib/auth/current-user"
-import { jeAdmin } from "@/lib/auth/roles"
+// getTrenutniKorisnik/jeAdmin namjerno NISU importovani: brisanje dokumenta više ne traži
+// admina (naručilac obrnuo pravilo 30.07.2026.) — odlučuje RLS `dokumenti_del` + provjera
+// broja obrisanih redova nize u deleteDokumentAction.
 import { todayIso } from "@/lib/date"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
@@ -182,13 +183,10 @@ export async function deleteDokumentAction(
   }
   const { dokument_id } = parsed.data
 
-  // Poslovno pravilo: dokumente briše ISKLJUČIVO administrator. Provjera mora biti
-  // ovdje (ne samo u RLS-u) jer removeDokument ide service-role klijentom koji RLS zaobilazi.
-  const korisnik = await getTrenutniKorisnik()
-  if (!korisnik || !jeAdmin(korisnik.uloga)) {
-    return { ok: false, message: t("samoAdminBrise") }
-  }
-
+  // Naručilac je 30.07.2026. ukinuo staro "dokumente briše ISKLJUČIVO administrator" —
+  // dokumenti_del (20260730151000) sada gleda smije_brisati_zapis(kreirao_id). Autoritet je
+  // provjera broja obrisanih redova ispod: RLS odlučuje, a fajl se dira tek poslije nje,
+  // pa service-role removeDokument ne može uništiti fajl reda koji korisnik ne smije brisati.
   const supabase = await createServerSupabaseClient()
   const { data: dok } = await supabase
     .from("dokumenti")

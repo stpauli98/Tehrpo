@@ -11,7 +11,7 @@ import { PotvrdiBrisanjeDialog } from "@/components/domain/PotvrdiBrisanjeDialog
 import { toastRezultat } from "@/components/akcija-toast"
 import { deleteUgovor } from "@/app/(dashboard)/klijenti/actions"
 import { formatDatum } from "@/lib/date"
-import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useDozvole } from "@/providers/korisnik-provider"
 import type { Database } from "@/db/types"
 
 type UgovorRow = Database["public"]["Tables"]["ugovori"]["Row"]
@@ -20,7 +20,8 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
   const t = useTranslations("klijenti.ugovori")
   const tc = useTranslations("common")
   const router = useRouter()
-  const mozeUrediti = useMozeUrediti()
+  // Samo kanta ovisi o prekidaču; UgovorSheet (dodavanje/izmjena) se sam gate-uje na ulozi.
+  const { smije_brisati_klijente: mozeBrisati } = useDozvole()
 
   // Per-red brisanje (S3/O3): svaki red ima vlastitu instancu dijaloga, pa pending
   // jednog reda ne blokira dugmad ostalih redova (raniji zajednički useActionState
@@ -64,7 +65,7 @@ export function UgovoriTab({ klijentId, ugovori, info }: { klijentId: string; ug
                 </span>
                 <span className="flex items-center gap-2">
                   <UgovorSheet klijentId={klijentId} ugovor={u} />
-                  {mozeUrediti && (
+                  {mozeBrisati && (
                     <PotvrdiBrisanjeDialog
                       trigger={
                         <Button variant="ghost" size="icon-sm" aria-label={t("obrisiAriaLabel")} data-testid={`obrisi-ugovor-${u.id}`}>

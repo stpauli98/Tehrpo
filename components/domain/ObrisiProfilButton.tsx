@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteProfilProvjere, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
-import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useDozvole } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -19,7 +19,8 @@ export function ObrisiProfilButton({ id }: { id: string }) {
   const t = useTranslations("klijenti.obrisiProfil")
   const tc = useTranslations("common")
   const router = useRouter()
-  const mozeUrediti = useMozeUrediti()
+  // klijent_provjere prati isti prekidač kao klijent/ugovor/lokacija (kp_del politika).
+  const { smije_brisati_klijente } = useDozvole()
   const [state, action, pending] = useActionState(deleteProfilProvjere, initial)
   const submitted = useRef(false)
   useAkcijaToast(state, { uspjeh: tc("obrisano"), greska: tc("greska") })
@@ -30,7 +31,7 @@ export function ObrisiProfilButton({ id }: { id: string }) {
     }
   }, [state, pending, router])
 
-  if (!mozeUrediti) return null
+  if (!smije_brisati_klijente) return null
 
   return (
     <Dialog>

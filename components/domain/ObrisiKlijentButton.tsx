@@ -17,7 +17,7 @@ import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { deleteKlijent } from "@/app/(dashboard)/klijenti/actions"
 import { useState } from "react"
 import { href } from "@/i18n/routes"
-import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useDozvole } from "@/providers/korisnik-provider"
 import { toastRezultat } from "@/components/akcija-toast"
 
 export function ObrisiKlijentButton({
@@ -32,8 +32,10 @@ export function ObrisiKlijentButton({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const mozeUrediti = useMozeUrediti()
-  if (!mozeUrediti) return null
+  // Brisanje klijenta zavisi od prekidača, ne od "smije uređivati" — inače operater
+  // vidi dugme za akciju koju će RLS odbiti.
+  const { smije_brisati_klijente } = useDozvole()
+  if (!smije_brisati_klijente) return null
 
   // Klijent sa terminima se NE može obrisati (FK RESTRICT) — disable + objašnjenje.
   // Disabled dugme nije fokusabilno, pa objašnjenje nosi fokusabilan wrapper sa

@@ -20,8 +20,8 @@ import {
   deleteDokumentAction,
   type ActionResult,
 } from "@/app/(dashboard)/dokumenti/actions"
-import { useUloga } from "@/providers/korisnik-provider"
-import { jeAdmin, mozeUrediti } from "@/lib/auth/roles"
+import { useUloga, useDozvole } from "@/providers/korisnik-provider"
+import { mozeUrediti } from "@/lib/auth/roles"
 import { DOKUMENT_TIPOVI } from "@/lib/dokumenti"
 import type { Database } from "@/db/types"
 
@@ -45,8 +45,10 @@ export function DokumentiSekcija({
   const router = useRouter()
   const queryClient = useQueryClient()
   const uloga = useUloga()
-  // Brisanje dokumenata je admin-only (server akcija to i nameće).
-  const mozeBrisati = uloga !== null && jeAdmin(uloga)
+  // Dokument je "zapis" → prekidači svoje/tuđe (dokumenti_del, prošireno 20260730151000).
+  // Vlasništvo reda se ovdje ne zna, pa RLS ostaje konačna riječ.
+  const { smije_brisati_svoje, smije_brisati_tudje } = useDozvole()
+  const mozeBrisati = smije_brisati_svoje || smije_brisati_tudje
   // Upload/generisanje zapisnika su operater+admin (pregled je read-only).
   const mozeUredjivati = uloga !== null && mozeUrediti(uloga)
   const [uploadState, uploadAction, uploadPending] = useActionState(uploadDokumentAction, initial)

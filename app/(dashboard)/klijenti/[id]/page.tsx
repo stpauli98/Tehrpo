@@ -61,7 +61,7 @@ export default async function KlijentDetailPage({
   const tPag = await getTranslations("common.pagination")
   const { id } = await params
   const sp = await searchParams
-  const tab = typeof sp.tab === "string" && VALID_TABS.includes(sp.tab) ? sp.tab : "termini"
+  const tab = typeof sp.tab === "string" && VALID_TABS.includes(sp.tab) ? sp.tab : "id-karta"
   const highlight = typeof sp.highlight === "string" ? sp.highlight : null
   const dokStrana = strana(sp.dstr)
   const termStrana = strana(sp.tstr)

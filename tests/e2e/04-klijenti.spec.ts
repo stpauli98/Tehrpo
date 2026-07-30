@@ -77,9 +77,17 @@ test.describe("Faza 4 — Klijenti lista", () => {
 })
 
 test.describe("Faza 4 — Klijent detalji i tabovi", () => {
-  test("otvara detalje i prikazuje termini tab sa podacima", async ({ page }) => {
+  test("otvara detalje i podrazumijevano prikazuje ID kartu", async ({ page }) => {
     await otvoriKlijent(page, fx.naziv)
     await expect(page.getByTestId("klijent-naziv")).toContainText(fx.naziv)
+    // Default tab je ID karta (yoink 2026-07-30, stavka 1)
+    await expect(page.getByTestId("tab-id-karta-content")).toBeVisible()
+    await expect(page.getByTestId("tab-termini-content")).toHaveCount(0)
+  })
+
+  test("termini tab se otvara klikom i ima podatke", async ({ page }) => {
+    await otvoriKlijent(page, fx.naziv)
+    await page.getByTestId("tab-termini").click()
     await expect(page.getByTestId("tab-termini-content")).toBeVisible()
     // fikstura ima termine → tabela ima redove (ne empty state)
     await expect(page.getByTestId("tab-termini-content").getByRole("row").first()).toBeVisible()
@@ -201,7 +209,9 @@ test.describe("Faza badge — tip odnosa", () => {
     try {
       await kreirajKlijent(page, naziv)
       await otvoriKlijent(page, naziv)
-      await page.getByRole("button", { name: "Uredi" }).click()
+      // testid umjesto role name "Uredi": default tab je sad ID karta, čiji info-ikona
+      // tooltip ima aria-label koji sadrži riječ "Uredi" pa bi role selector bio dvosmislen.
+      await page.getByTestId("uredi-klijent-btn").click()
       await page.getByTestId("klijent-tip-odnosa").click()
       await page.getByRole("option", { name: "Po ugovoru" }).click()
       await page.getByRole("button", { name: /Spremi/ }).click()

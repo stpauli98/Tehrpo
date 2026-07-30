@@ -22,7 +22,7 @@ export function KlijentTabs({ activeTab, klijentId }: { activeTab: string; klije
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(v) => router.push(href(`/klijenti/${klijentId}?tab=${v ?? "termini"}`))}
+      onValueChange={(v) => router.push(href(`/klijenti/${klijentId}?tab=${v ?? "id-karta"}`))}
     >
       <TabsList variant="line">
         {TABS.map((tab, i) => (

@@ -208,6 +208,10 @@ export function LokacijaSheet({
 
             {kontaktIzbor !== "bez" && (
               <div className="space-y-1">
+                {/* Onemogućen checkbox ne šalje NIKAKVU vrijednost — bez ovog skrivenog
+                    polja server ne bi mogao razlikovati "korisnik je namjerno isključio"
+                    od "kontrola je zaključana" i bi tiho pregazio postojeći true na false. */}
+                {slanjeUgaseno && <input type="hidden" name="kontakt_prima_zakljucan" value="1" />}
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"

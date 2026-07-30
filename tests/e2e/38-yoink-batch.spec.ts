@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { getPostavkeV2, setPostavkeV2 } from "./db"
+import { db, getPostavkeV2, setPostavkeV2, insertKlijent, insertLokacija, insertKontakt, deleteKlijentByNaziv } from "./db"
 
 test.describe("Yoink batch 2026-07-30", () => {
   test("tab se zove Usluge, ne Profil", async ({ page }) => {
@@ -103,6 +103,59 @@ test.describe("Yoink batch 2026-07-30", () => {
       await expect(page.getByTestId("lokacija-kontakt-prima-ugaseno")).toContainText("Postavkama")
     } finally {
       await setPostavkeV2({ salji_klijentima: prije.salji_klijentima })
+    }
+  })
+
+  test("uredjivanje lokacije uz zakljucan checkbox ne gasi vec upisan podsjetnik_primalac", async ({ page }) => {
+    // Regresija iz code review-a: disabled input ne šalje vrijednost, pa je
+    // `kontakt_prima` uvijek odsutan kad je slanje ugašeno. Bez hidden
+    // "zakljucan" signala server ne zna da razlikuje "korisnik je isključio"
+    // od "kontrola je zaključana" i tiho gasi tuđi već upisan true na false.
+    // Test sam gradi presudak (kontakt sa podsjetnik_primalac=true dok je
+    // slanje ON), pa tek onda gasi slanje i uređuje lokaciju preko iste
+    // "Postojeći kontakt" grane koju review opisuje.
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E Zakljucan ${sufiks}`
+    const prije = await getPostavkeV2()
+
+    const klijentId = await insertKlijent(naziv)
+    // Per-firma prekidač (klijenti.salji_podsjetnik_klijentu) je default false
+    // (migracija 20260708120000) — uključujemo ga eksplicitno da "slanje ON"
+    // zaista znači oba prekidača uključena, ne samo globalni.
+    const { error: kErr } = await db.from("klijenti").update({ salji_podsjetnik_klijentu: true }).eq("id", klijentId)
+    if (kErr) throw new Error(`setup salji_podsjetnik_klijentu: ${kErr.message}`)
+    const lokacijaId = await insertLokacija(klijentId, `E2E Lokacija Zakljucan ${sufiks}`)
+    const kontaktId = await insertKontakt(klijentId, `E2E Kontakt Zakljucan ${sufiks}`)
+    const { error: koErr } = await db
+      .from("kontakt_osobe")
+      .update({ lokacija_id: lokacijaId, podsjetnik_primalac: true })
+      .eq("id", kontaktId)
+    if (koErr) throw new Error(`setup podsjetnik_primalac: ${koErr.message}`)
+
+    await setPostavkeV2({ salji_klijentima: false })
+    try {
+      await page.goto(`/klijenti/${klijentId}?tab=lokacije`)
+      await page.getByTestId(`uredi-lokaciju-${lokacijaId}`).click()
+      await page.getByTestId("lokacija-kontakt-izbor").getByRole("radio", { name: /Postoje/ }).click()
+
+      // Isti asert kao u prethodnom testu — potvrđuje da je kontrola zaista zaključana
+      // za ovaj kontakt, ne samo za "Novi kontakt" granu.
+      await expect(page.getByTestId("lokacija-kontakt-prima")).toBeDisabled()
+      await expect(page.getByTestId("lokacija-kontakt-prima-ugaseno")).toContainText("Postavkama")
+
+      await page.getByTestId("lokacija-submit").click()
+      await expect(page.getByTestId("lokacija-sheet")).toBeHidden()
+
+      const { data, error } = await db
+        .from("kontakt_osobe")
+        .select("podsjetnik_primalac")
+        .eq("id", kontaktId)
+        .single()
+      if (error) throw new Error(`assert podsjetnik_primalac: ${error.message}`)
+      expect(data?.podsjetnik_primalac).toBe(true)
+    } finally {
+      await setPostavkeV2({ salji_klijentima: prije.salji_klijentima })
+      await deleteKlijentByNaziv(naziv)
     }
   })
 })

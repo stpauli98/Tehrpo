@@ -204,6 +204,9 @@ const lokacijaFields = {
   kontakt_novi_email: optionalEmail(200),
   kontakt_novi_telefon: optionalText(60),
   kontakt_prima: z.literal("1").optional(),
+  // Kad je checkbox iznad onemogućen (slanje ugašeno), disabled input ne šalje
+  // vrijednost pa server ne može razlikovati "isključeno" od "zaključano" bez ovoga.
+  kontakt_prima_zakljucan: z.literal("1").optional(),
 }
 
 const createLokacijaSchema = z.object({ klijent_id: z.string().uuid(), ...lokacijaFields })
@@ -228,15 +231,25 @@ async function veziKontaktZaLokaciju(
     email?: string
     telefon?: string
     prima: boolean
+    /**
+     * Checkbox je bio onemogućen (slanje ugašeno) — disabled input ne šalje vrijednost,
+     * pa `prima` je uvijek false ovdje i NE smije se uzeti kao "korisnik je isključio".
+     * Za postojeći kontakt: ne diramo stored `podsjetnik_primalac` (ne gasi tuđi izbor
+     * tiho preko onemogućene kontrole). Za novog kontakta nema šta da se čuva, pa upisujemo
+     * false — novi kontakt se ne smije tiho pretvoriti u primaoca dok je slanje ugašeno.
+     */
+    zakljucan: boolean
   },
 ): Promise<string | null> {
   if (!args.izbor || args.izbor === "bez") return null
 
   if (args.izbor === "postojeci") {
     if (!args.kontaktId) return null
+    const patch: { lokacija_id: string; podsjetnik_primalac?: boolean } = { lokacija_id: args.lokacijaId }
+    if (!args.zakljucan) patch.podsjetnik_primalac = args.prima
     const { error } = await supabase
       .from("kontakt_osobe")
-      .update({ lokacija_id: args.lokacijaId, podsjetnik_primalac: args.prima })
+      .update(patch)
       .eq("id", args.kontaktId)
       .eq("klijent_id", args.klijentId)
     return error ? friendlyDbError(error) : null
@@ -289,6 +302,7 @@ export async function createLokacija(
     email: f.kontakt_novi_email,
     telefon: f.kontakt_novi_telefon,
     prima: f.kontakt_prima === "1",
+    zakljucan: f.kontakt_prima_zakljucan === "1",
   })
   if (vezaGreska) {
     revalidatePath("/klijenti", "layout")
@@ -327,6 +341,7 @@ export async function updateLokacija(
     email: f.kontakt_novi_email,
     telefon: f.kontakt_novi_telefon,
     prima: f.kontakt_prima === "1",
+    zakljucan: f.kontakt_prima_zakljucan === "1",
   })
   revalidatePath("/klijenti", "layout")
   return vezaGreska ? { ok: false, message: vezaGreska } : { ok: true }

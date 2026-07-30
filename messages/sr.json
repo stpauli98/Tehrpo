@@ -611,7 +611,8 @@
       "rokObavezan": "Rok je obavezan",
       "lokacijaNePripada": "Lokacija ne pripada izabranom klijentu.",
       "terminVecPostoji": "Termin za istu firmu, vrstu i rok već postoji.",
-      "datumObavezan": "Datum je obavezan"
+      "datumObavezan": "Datum je obavezan",
+      "nalazObavezan": "Aktivnost se ne može zatvoriti bez priloženog nalaza. Priložite dokument ili tražite dozvolu od administratora."
     }
   },
   "status": {

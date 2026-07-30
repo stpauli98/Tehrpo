@@ -611,7 +611,8 @@
       "rokObavezan": "Due date is required",
       "lokacijaNePripada": "The location does not belong to the selected client.",
       "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
-      "datumObavezan": "Date is required"
+      "datumObavezan": "Date is required",
+      "nalazObavezan": "The activity cannot be closed without an attached report. Attach a document or ask an administrator for permission."
     }
   },
   "status": {

@@ -222,7 +222,13 @@ export async function markIzvrseno(
     .update({ datum_izvrsenja, status: "izvrseno" })
     .eq("id", id)
 
-  if (error) return { ok: false, message: friendlyDbError(error) }
+  if (error) {
+    // tg_zatvaranje_trazi_nalaz (20260730152000) diže 23514 sa porukom `nalaz_obavezan`.
+    if (error.message.includes("nalaz_obavezan")) {
+      return { ok: false, message: t("nalazObavezan") }
+    }
+    return { ok: false, message: friendlyDbError(error) }
+  }
 
   return { ok: true }
 }

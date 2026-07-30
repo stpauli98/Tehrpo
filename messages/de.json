@@ -611,7 +611,8 @@
       "rokObavezan": "Frist ist erforderlich",
       "lokacijaNePripada": "Der Standort gehört nicht zum ausgewählten Kunden.",
       "terminVecPostoji": "Ein Termin für diese Firma, Art und Frist existiert bereits.",
-      "datumObavezan": "Datum ist erforderlich"
+      "datumObavezan": "Datum ist erforderlich",
+      "nalazObavezan": "Die Aktivität kann ohne beigefügten Bericht nicht abgeschlossen werden. Fügen Sie ein Dokument bei oder bitten Sie einen Administrator um die Berechtigung."
     }
   },
   "status": {

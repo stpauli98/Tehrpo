@@ -1,6 +1,9 @@
 /**
  * Čišćenje e2e test-artefakata iz cloud baze.
- * - briše junk klijente (E2E Test Klijent / Kontakt Klijent / Brisivi Klijent / E2E-TMP) — cascade lokacije
+ * - briše junk klijente (E2E Test Klijent / Kontakt Klijent / Brisivi Klijent /
+ *   E2E-TMP / E2E Firma / E2E Kontakt / E2E Lokacija / E2E BezLok / …) — cascade lokacije
+ * - briše sirotane E2E kontakte i lokacije zakačene na PRAVE klijente
+ * - briše throwaway vrste provjera (E2E Vrsta …)
  * - resetuje napomenu koja je test-vrijednost (E2E napomena ...)
  *
  * CILJ JE DEMO. E2E prolaz piše isključivo u DEMO (v. tests/e2e/global-setup.ts
@@ -16,7 +19,14 @@
 import { createAdminSupabaseClient } from "../lib/supabase/admin"
 import { zahtijevajCilj } from "../lib/supabase/refs"
 
-const JUNK_KLIJENT = /^(E2E Test Klijent|Kontakt Klijent|Brisivi Klijent|E2E-TMP) /
+// Prefiksi koje e2e specovi zaista koriste za throwaway firme. `finally` blokovi
+// su prva odbrana; ovo hvata ostatke kad prolaz bude ubijen (timeout/crash).
+// `E2E Firma …` je poseban rizik: /klijenti je sortiran po nazivu, pa nakupljene
+// prazne firme istisnu prave iz prvih kartica koje neki specovi skeniraju.
+const JUNK_KLIJENT =
+  /^(E2E Test Klijent|Kontakt Klijent|Brisivi Klijent|E2E-TMP|E2E Firma|E2E Kontakt|E2E Lokacija|E2E BezLok|E2E Ponavlja|E2E Jednokratno|E2E Bez Intervala|E2E Zakljucan|E2E IDKARTA) /
+// Throwaway vrste provjera (spec pravi vlastitu umjesto da mutira pravu).
+const JUNK_VRSTA = /^E2E Vrsta /
 const JUNK_NAPOMENA = /^E2E napomena /
 const JUNK_MEJL = /^\[E2E\] /
 
@@ -101,6 +111,44 @@ async function main() {
     const { error } = await sb.from("mejl_log").delete().in("id", slice)
     if (error) throw new Error(`delete mejl_log: ${error.message}`)
   }
+
+  // 6) test-kontakti i test-lokacije PRIKAČENI NA PRAVE klijente. Junk klijenti su
+  // već obrisani (cascade nosi njihove kontakte/lokacije), pa ovdje ostaju samo
+  // redovi koje je neki spec zakačio na stvarnu demo firmu i nije počistio.
+  // Lokacija može biti vezana terminima/uslugama (FK restrict) — takav red se
+  // preskače uz upozorenje umjesto da obori skriptu.
+  const { data: ko, error: koErr } = await sb.from("kontakt_osobe").select("id, ime")
+  if (koErr) throw new Error(`select kontakt_osobe: ${koErr.message}`)
+  const koIds = (ko ?? []).filter((k) => /^E2E Kontakt /.test(k.ime as string)).map((k) => k.id)
+  for (let i = 0; i < koIds.length; i += BATCH) {
+    const slice = koIds.slice(i, i + BATCH)
+    const { error } = await sb.from("kontakt_osobe").delete().in("id", slice)
+    if (error) throw new Error(`delete kontakt_osobe: ${error.message}`)
+  }
+
+  const { data: lok, error: lokErr } = await sb.from("lokacije").select("id, naziv")
+  if (lokErr) throw new Error(`select lokacije: ${lokErr.message}`)
+  const lokIds = (lok ?? []).filter((l) => /^E2E Lokacija /.test(l.naziv as string)).map((l) => l.id)
+  let lokObrisano = 0
+  for (let i = 0; i < lokIds.length; i += BATCH) {
+    const slice = lokIds.slice(i, i + BATCH)
+    const { data: del, error } = await sb.from("lokacije").delete().in("id", slice).select("id")
+    if (error) console.warn(`⚠️  lokacije: dio redova je vezan (FK) — preskačem (${error.message})`)
+    else lokObrisano += del?.length ?? 0
+  }
+
+  // 7) throwaway vrste provjera (spec pravi vlastitu umjesto da mutira pravu)
+  const { data: vp, error: vpErr } = await sb.from("vrste_provjera").select("id, naziv")
+  if (vpErr) throw new Error(`select vrste_provjera: ${vpErr.message}`)
+  const vpIds = (vp ?? []).filter((v) => JUNK_VRSTA.test(v.naziv as string)).map((v) => v.id)
+  let vpObrisano = 0
+  for (let i = 0; i < vpIds.length; i += BATCH) {
+    const slice = vpIds.slice(i, i + BATCH)
+    const { data: del, error } = await sb.from("vrste_provjera").delete().in("id", slice).select("id")
+    if (error) console.warn(`⚠️  vrste_provjera: dio redova je vezan (FK) — preskačem (${error.message})`)
+    else vpObrisano += del?.length ?? 0
+  }
+  console.log(`✔ Sirotani: obrisano ${koIds.length} kontakata, ${lokObrisano} lokacija, ${vpObrisano} vrsta (E2E prefiksi).`)
 
   const { count } = await sb.from("klijenti").select("id", { count: "exact", head: true })
   console.log(`✅ Klijenti: obrisano ${junkIds.length} junk, resetovano ${napIds.length} napomena (preostalo ${count}). Termini: obrisano ${farIds.length} junk (rok>=2030), resetovano ${tnIds.length} napomena. Mejl log: obrisano ${mejlIds.length} junk ("[E2E] " subject).`)

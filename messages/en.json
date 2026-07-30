@@ -193,7 +193,8 @@
       "podsjetnikEmailKontakt": "The address is already a recipient as a contact.",
       "podsjetnikEmailNijeDodat": "The address could not be added.",
       "nepostojeciKorisnik": "Non-existent user in the assignment.",
-      "lokacijaNazivObavezan": "The new location name is required."
+      "lokacijaNazivObavezan": "The new location name is required.",
+      "klijentBezLokacije": "The client was created, but the first location was not: {poruka} Add it in the Locations tab."
     },
     "detalj": {
       "nazad": "Clients",
@@ -341,7 +342,9 @@
         "info": "A summary of the checks from the Services tab with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
         "prazno": "No services defined. Add them via the Services tab.",
         "sljedeci": "next: {datum}",
-        "imenica": "services"
+        "imenica": "services",
+        "jednokratna": "one-off",
+        "jednokratnaInfo": "Manually entered appointment with no periodicity — no next due date is generated after completion."
       }
     },
     "ugovorSheet": {
@@ -488,7 +491,9 @@
         "zadnjiPut": "Last time",
         "sljedeciRok": "Next due date"
       },
-      "prviPut": "— (first time)"
+      "prviPut": "— (first time)",
+      "jednokratna": "one-off",
+      "jednokratnaInfo": "Manually entered appointment with no periodicity — no next due date is generated after completion."
     },
     "obrisiProfil": {
       "tooltip": "Remove service",

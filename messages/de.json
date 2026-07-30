@@ -193,7 +193,8 @@
       "podsjetnikEmailKontakt": "Die Adresse ist bereits als Kontakt Empfänger.",
       "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
       "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung.",
-      "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich."
+      "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich.",
+      "klijentBezLokacije": "Der Kunde wurde erstellt, der erste Standort jedoch nicht: {poruka} Fügen Sie ihn im Tab Standorte hinzu."
     },
     "detalj": {
       "nazad": "Kunden",
@@ -341,7 +342,9 @@
         "info": "Eine Zusammenfassung der Prüfungen aus dem Tab Leistungen mit der jeweils nächsten Frist — ein schneller Überblick darüber, was vereinbart ist und was als Nächstes ansteht.",
         "prazno": "Keine Leistungen definiert. Fügen Sie sie über den Tab Leistungen hinzu.",
         "sljedeci": "nächste: {datum}",
-        "imenica": "Leistungen"
+        "imenica": "Leistungen",
+        "jednokratna": "einmalig",
+        "jednokratnaInfo": "Manuell erfasster Termin ohne Periodizität — nach Erledigung wird keine nächste Frist erzeugt."
       }
     },
     "ugovorSheet": {
@@ -488,7 +491,9 @@
         "zadnjiPut": "Letztes Mal",
         "sljedeciRok": "Nächste Fälligkeit"
       },
-      "prviPut": "— (erstes Mal)"
+      "prviPut": "— (erstes Mal)",
+      "jednokratna": "einmalig",
+      "jednokratnaInfo": "Manuell erfasster Termin ohne Periodizität — nach Erledigung wird keine nächste Frist erzeugt."
     },
     "obrisiProfil": {
       "tooltip": "Leistung entfernen",

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { ChevronLeft } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { spojiJednokratne } from "@/lib/termini-jednokratni"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
 import { LokacijeTab } from "@/components/domain/LokacijeTab"
@@ -214,6 +215,8 @@ export default async function KlijentDetailPage({
     const zadnji = zadnjeIzvrsenje ?? (p.zadnji_datum as string | null)
     return {
       id: p.id as string,
+      vrsta_provjere_id: p.vrsta_provjere_id as string,
+      lokacija_id: (p.lokacija_id as string | null) ?? null,
       vrsta_naziv: (p.vrsta_provjere as { naziv: string } | null)?.naziv ?? "—",
       lokacija_naziv: (p.lokacija as { naziv: string } | null)?.naziv ?? null,
       interval_mjeseci: interval,
@@ -222,6 +225,22 @@ export default async function KlijentDetailPage({
       termin_status: aktivni?.status_izvedeni ?? null,
     }
   })
+  // Termini bez profil-stavke (npr. uneseni kroz plan aktivnosti) inače ne bi
+  // bili vidljivi nigdje osim u tabu Termini — v. lib/termini-jednokratni.ts.
+  const stavkeUsluga = spojiJednokratne(
+    profilStavke,
+    termini.map((t) => ({
+      id: t.id ?? "",
+      vrsta_provjere_id: t.vrsta_provjere_id ?? null,
+      lokacija_id: t.lokacija_id ?? null,
+      vrsta_naziv: t.vrsta_naziv ?? null,
+      lokacija_naziv: t.lokacija_naziv ?? null,
+      rok_dospijeca: t.rok_dospijeca ?? null,
+      status: t.status ?? null,
+      status_izvedeni: t.status_izvedeni ?? null,
+      datum_izvrsenja: t.datum_izvrsenja ?? null,
+    })),
+  )
   const vrsteOpcije = (vrsteRes.data ?? []).map((v) => ({ id: v.id as string, naziv: v.naziv as string, interval: v.podrazumevani_interval_mjeseci as number | null }))
   const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
   const korisnici = (korisniciRes.data ?? []).map((k) => ({ id: k.id, ime: k.ime }))
@@ -311,7 +330,7 @@ export default async function KlijentDetailPage({
               zaduzeniIme={zaduzeniIme}
               ugovori={ugovori}
               kontakti={kontakti}
-              usluge={profilStavke.map((p) => ({ vrsta_naziv: p.vrsta_naziv, lokacija_naziv: p.lokacija_naziv, sljedeci_rok: p.sljedeci_rok }))}
+              usluge={stavkeUsluga.map((p) => ({ vrsta_naziv: p.vrsta_naziv, lokacija_naziv: p.lokacija_naziv, sljedeci_rok: p.sljedeci_rok, jednokratna: p.jednokratna }))}
             />
           )}
 
@@ -458,7 +477,7 @@ export default async function KlijentDetailPage({
           {tab === "podsjetnici" && <KlijentPodsjetniciTab klijentId={id} />}
 
           {tab === "profil" && (
-            <ProfilTab klijentId={id} stavke={profilStavke} vrste={vrsteOpcije} lokacije={lokacijeOpcije} admini={admini} />
+            <ProfilTab klijentId={id} stavke={stavkeUsluga} vrste={vrsteOpcije} lokacije={lokacijeOpcije} admini={admini} />
           )}
         </>
       )}

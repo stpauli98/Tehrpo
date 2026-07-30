@@ -117,8 +117,22 @@ export function UgovorSheet({ klijentId, ugovor }: { klijentId: string; ugovor?:
                 defaultValue={ugovor?.datum_isteka ?? ""}
                 disabled={naNeodredjeno}
                 data-testid="ugovor-istek"
-                aria-describedby={opisano("datum_isteka")}
+                aria-describedby={
+                  [naNeodredjeno ? "ugovor-istek-neodredjeno" : null, opisano("datum_isteka")]
+                    .filter(Boolean).join(" ") || undefined
+                }
               />
+              {/* Onemogućeno polje bez objašnjenja izgleda kao kvar — isti obrazac
+                  kao zaključan checkbox podsjetnika u LokacijaSheet. */}
+              {naNeodredjeno && (
+                <p
+                  id="ugovor-istek-neodredjeno"
+                  className="text-xs text-muted-foreground"
+                  data-testid="ugovor-istek-neodredjeno"
+                >
+                  {t("istekNeodredjeno")}
+                </p>
+              )}
               <FieldError id={errId("datum_isteka")} errors={errors?.datum_isteka} />
             </label>
             <div className="space-y-1 text-sm">

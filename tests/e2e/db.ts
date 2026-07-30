@@ -171,6 +171,42 @@ export async function deleteTerminiByKlijent(klijentId: string): Promise<void> {
   if (error) throw new Error(`deleteTerminiByKlijent(${klijentId}): ${error.message}`)
 }
 
+/**
+ * Throwaway vrsta provjere — koristi se umjesto mutiranja PRAVE vrste.
+ * Nuliranje `podrazumevani_interval_mjeseci` na stvarnoj vrsti je instance-wide:
+ * ako prolaz pukne prije `finally`, ta vrsta trajno ostane bez intervala i tiho
+ * onemogući „Dodaj uslugu"/ponavljajući termin za nju.
+ */
+export async function insertVrsta(naziv: string, interval: number | null = null): Promise<{ id: string; naziv: string }> {
+  const { data, error } = await db
+    .from("vrste_provjera")
+    .insert({ naziv, aktivna: true, podrazumevani_interval_mjeseci: interval })
+    .select("id, naziv")
+    .single()
+  if (error) throw new Error(`insertVrsta(${naziv}): ${error.message}`)
+  return { id: data.id as string, naziv: data.naziv as string }
+}
+
+/** Obriši throwaway vrstu provjere (čišćenje nakon testa). */
+export async function deleteVrsta(id: string): Promise<void> {
+  if (!id) return
+  const { error } = await db.from("vrste_provjera").delete().eq("id", id)
+  if (error) throw new Error(`deleteVrsta(${id}): ${error.message}`)
+}
+
+/** Obriši sve ugovore klijenta (klijenti delete ne kaskadira po svim FK-ovima jednako). */
+export async function deleteUgovoriByKlijent(klijentId: string): Promise<void> {
+  const { error } = await db.from("ugovori").delete().eq("klijent_id", klijentId)
+  if (error) throw new Error(`deleteUgovoriByKlijent(${klijentId}): ${error.message}`)
+}
+
+/** Obriši klijenta po id-u (za klijente kreirane kroz UI kojima znamo samo naziv/id). */
+export async function deleteKlijentById(id: string): Promise<void> {
+  if (!id) return
+  const { error } = await db.from("klijenti").delete().eq("id", id)
+  if (error) throw new Error(`deleteKlijentById(${id}): ${error.message}`)
+}
+
 export async function getVrstaInterval(vrstaId: string): Promise<number | null> {
   const { data } = await db
     .from("vrste_provjera")

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 
-// Kad se dođe sa ?highlight=<lokacijaId> (klik na kontakt u Lokacijama),
+// Kad se dođe sa ?highlight=<kontaktId> (klik na kontakt u Lokacijama),
 // scroll-uj do te kontakt kartice u tabu Kontakti i kratko je "osvijetli".
 export function KontaktHighlighter({ targetId }: { targetId: string | null }) {
   useEffect(() => {

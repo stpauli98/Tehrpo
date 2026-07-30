@@ -101,6 +101,12 @@ export async function createKlijent(
     return { ok: false, errors: parsed.error.flatten().fieldErrors }
   }
   const f = parsed.data
+  // M10: grad/adresa bez naziva su se tiho gubili (upis lokacije je gejtovan
+  // nazivom). Provjera ide PRIJE upisa klijenta da forma ne ostavi pola stanja.
+  const lokNaziv = (f.lokacija_naziv ?? "").trim()
+  if (!lokNaziv && (f.lokacija_grad || f.lokacija_adresa)) {
+    return { ok: false, errors: { lokacija_naziv: [t("lokacijaNazivObavezan")] } }
+  }
   const supabase = await createServerSupabaseClient()
   const { data: novi, error } = await supabase.from("klijenti").insert({
     naziv: f.naziv,
@@ -122,9 +128,11 @@ export async function createKlijent(
     return { ok: false, message: msg }
   }
 
-  // Prva lokacija je best-effort: klijent je već kreiran i to je vidljivo, pa
-  // pad ovog upisa vraća poruku umjesto da poništi cijelo kreiranje.
-  const lokNaziv = (f.lokacija_naziv ?? "").trim()
+  // Prva lokacija: ako upis padne, klijent se POVLAČI (rollback). Bez toga je
+  // ishod lažan — dijalog ostaje otvoren (NoviKlijentButton zatvara samo na
+  // state.ok), pa bi ponovni submit udario u UNIQUE(naziv) i korisnik bi dobio
+  // „klijent sa tim nazivom već postoji" za klijenta kojeg je sam upravo
+  // napravio. Sa rollbackom je poruka tačna, a ponovni submit prolazi.
   if (lokNaziv) {
     const { error: lokErr } = await supabase.from("lokacije").insert({
       klijent_id: novi.id,
@@ -133,7 +141,15 @@ export async function createKlijent(
       adresa: f.lokacija_adresa ?? null,
     })
     if (lokErr) {
+      // .select() je bitan: pod RLS-om delete bez prava vraća uspjeh sa 0 redova,
+      // pa broj obrisanih redova (ne odsustvo greške) dokazuje da je rollback prošao.
+      const { data: povuceni, error: rbErr } = await supabase
+        .from("klijenti").delete().eq("id", novi.id).select("id")
       revalidatePath("/klijenti", "layout")
+      if (rbErr || (povuceni?.length ?? 0) !== 1) {
+        // Rollback nije prošao → klijent POSTOJI. Reci to umjesto da poruka laže.
+        return { ok: false, message: t("klijentBezLokacije", { poruka: friendlyDbError(lokErr) }) }
+      }
       return { ok: false, message: friendlyDbError(lokErr) }
     }
   }
@@ -614,7 +630,10 @@ const kontaktFields = {
   lokacija_id: z.union([z.string().uuid(), z.literal("")]).optional(),
   // Yoink 2026-07-30, stavka 7: kontakt forma može odmah kreirati novu lokaciju
   // umjesto da korisnik prvo ide u tab Lokacije.
-  lokacija_izbor: z.enum(["postojeca", "nova"]).optional(),
+  // "firma" = izričit izbor „Sve lokacije — kontakt firme" (lokacija_id = null).
+  // Postoji zbog firme BEZ ijedne lokacije: tamo se Select ne renderuje, pa bez
+  // ove grane kontakt firme ne bi bio unosiv (regresija C1, 2026-07-30).
+  lokacija_izbor: z.enum(["postojeca", "nova", "firma"]).optional(),
   nova_lokacija_naziv: optionalText(200),
   nova_lokacija_grad: optionalText(120),
   nova_lokacija_adresa: optionalText(300),
@@ -638,7 +657,9 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   // Yoink 2026-07-30, stavka 7: kontakt može povući novu lokaciju sa sobom.
   // Ista dedup provjera kao createLokacija — bez nje se ista lokacija unese
   // dvaput samo zbog razmaka ili veličine slova.
-  let lokacijaId = f.lokacija_id || null
+  // „firma" je izričit izbor kontakta firme — zanemari eventualni zaostali
+  // lokacija_id iz formData da izbor ne bi tiho ostao vezan za lokaciju.
+  let lokacijaId = f.lokacija_izbor === "firma" ? null : f.lokacija_id || null
   if (f.lokacija_izbor === "nova") {
     const naziv = (f.nova_lokacija_naziv ?? "").trim()
     if (!naziv) return { ok: false, errors: { nova_lokacija_naziv: [t("lokacijaNazivObavezan")] } }

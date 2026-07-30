@@ -93,10 +93,11 @@ export default async function KlijentDetailPage({
     ugovoriRes,
     kontaktiRes,
     dokumentiRes,
+    postavkeRes,
   ] = await Promise.all([
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
-    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id").eq("id", id).maybeSingle(),
+    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id, salji_podsjetnik_klijentu").eq("id", id).maybeSingle(),
     // RLS na `korisnici` je self-select → direktan from() bi operateru vratio samo
     // njega samog; SECURITY DEFINER RPC daje sve aktivne (S8.6).
     supabase.rpc("get_aktivni_korisnici"),
@@ -132,6 +133,10 @@ export default async function KlijentDetailPage({
       ? supabase.from("dokumenti").select("*", { count: "exact" }).eq("klijent_id", id)
           .order("uploaded_at", { ascending: false })
           .range((dokStrana - 1) * DOKUMENTI_PER_PAGE, dokStrana * DOKUMENTI_PER_PAGE - 1)
+      : prazno,
+    // Samo tab „lokacije" treba globalni prekidač slanja (za slanjeUgaseno ispod).
+    tab === "lokacije"
+      ? supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle()
       : prazno,
   ])
 
@@ -169,6 +174,7 @@ export default async function KlijentDetailPage({
     trebaUgovore ? ugovoriRes.error : null,
     trebaKontakte ? kontaktiRes.error : null,
     trebaDokumente ? dokumentiRes.error : null,
+    tab === "lokacije" ? postavkeRes.error : null,
   ].some(jeGreskaUpita)
 
   const termini = (terminiRes.data ?? []) as TerminViewRow[]
@@ -182,6 +188,12 @@ export default async function KlijentDetailPage({
   const ugovori = ugovoriRes.data ?? []
   const kontakti = kontaktiRes.data ?? []
   const klijentPolja = klijentTabelaRes.data
+
+  // Checkbox „prima podsjetnike" ima efekta samo ako su OBA prekidača uključena:
+  // globalni (postavke) i per-firma. Inače ga prikazujemo neaktivnog sa objašnjenjem.
+  const slanjeUgaseno =
+    !(postavkeRes.data as { salji_klijentima?: boolean } | null)?.salji_klijentima ||
+    !klijentPolja?.salji_podsjetnik_klijentu
 
   // Profil se obogaćuje STVARNIM terminima iz baze (već dohvaćeni, sortirani po roku ASC):
   // "Sljedeći rok" = rok aktivnog termina (planirano/zakazano/kasni), "Zadnji put" = zadnje
@@ -438,6 +450,7 @@ export default async function KlijentDetailPage({
               klijentId={id}
               lokacije={lokacije}
               kontakti={kontakti.map((k) => ({ id: k.id, ime: k.ime, lokacija_id: k.lokacija_id }))}
+              slanjeUgaseno={slanjeUgaseno}
             />
           )}
 

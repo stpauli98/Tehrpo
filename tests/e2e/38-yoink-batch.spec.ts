@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { getPostavkeV2, setPostavkeV2 } from "./db"
 
 test.describe("Yoink batch 2026-07-30", () => {
   test("tab se zove Usluge, ne Profil", async ({ page }) => {
@@ -81,5 +82,27 @@ test.describe("Yoink batch 2026-07-30", () => {
     // Prva lokacija postoji
     await page.getByTestId("tab-lokacije").click()
     await expect(page.getByTestId("lokacije-table")).toContainText("Centrala")
+  })
+
+  test("checkbox podsjetnika je neaktivan uz objasnjenje kad je slanje ugaseno", async ({ page }) => {
+    // Test sam postavlja preduslov umjesto da se oslanja na zatečeno stanje baze —
+    // inače bi prolazio i kad funkcija uopšte nije implementirana.
+    // Suite ionako ide sa --workers=1 jer specovi dijele globalni postavke id=1.
+    // Pročitaj-pa-vrati: bez restore-a bi ovaj spec tiho mijenjao ponašanje
+    // svih kasnijih specova (dijeljeni singleton red postavke id=1).
+    const prije = await getPostavkeV2()
+    await setPostavkeV2({ salji_klijentima: false })
+    try {
+      await page.goto("/klijenti")
+      await page.getByTestId("klijent-card").first().click()
+      await page.getByTestId("tab-lokacije").click()
+      await page.getByTestId("nova-lokacija-btn").click()
+      await page.getByTestId("lokacija-kontakt-izbor").getByRole("radio", { name: /Novi/ }).click()
+
+      await expect(page.getByTestId("lokacija-kontakt-prima")).toBeDisabled()
+      await expect(page.getByTestId("lokacija-kontakt-prima-ugaseno")).toContainText("Postavkama")
+    } finally {
+      await setPostavkeV2({ salji_klijentima: prije.salji_klijentima })
+    }
   })
 })

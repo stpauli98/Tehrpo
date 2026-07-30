@@ -434,6 +434,7 @@
       "kontaktNovi": "Neuer Kontakt",
       "kontaktIme": "Vor- und Nachname",
       "kontaktPrima": "Erhält Erinnerungen für diesen Standort",
+      "kontaktPrimaUgaseno": "Der Versand von Erinnerungen an Kunden ist in den Einstellungen deaktiviert — bis ein Administrator ihn aktiviert, erhält dieser Kontakt keine E-Mails.",
       "kontaktPomoc": "Ein gebundener Kontakt erhält Erinnerungen nur für diesen Standort. Firmenkontakte erhalten sie ohnehin.",
       "submitPending": "Wird gespeichert…",
       "submitEdit": "Änderungen speichern",

@@ -434,6 +434,7 @@
       "kontaktNovi": "New contact",
       "kontaktIme": "Full name",
       "kontaktPrima": "Receives reminders for this location",
+      "kontaktPrimaUgaseno": "Sending reminders to clients is turned off in Settings — until an administrator enables it, this contact will receive no emails.",
       "kontaktPomoc": "A bound contact receives reminders only for this location. Company contacts get them regardless.",
       "submitPending": "Saving…",
       "submitEdit": "Save changes",

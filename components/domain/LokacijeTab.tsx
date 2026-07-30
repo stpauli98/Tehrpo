@@ -13,18 +13,21 @@ export async function LokacijeTab({
   klijentId,
   lokacije,
   kontakti = [],
+  slanjeUgaseno = false,
 }: {
   klijentId: string
   lokacije: LokacijaRow[]
   /** Kontakti firme — forma lokacije nudi vezivanje postojećeg umjesto ponovnog kucanja. */
   kontakti?: { id: string; ime: string; lokacija_id: string | null }[]
+  /** Oba prekidača (globalni + per-firma) nisu uključena → checkbox podsjetnika je bez efekta. */
+  slanjeUgaseno?: boolean
 }) {
   const t = await getTranslations("klijenti.lokacije")
   const vezani = (lokacijaId: string) => kontakti.filter((k) => k.lokacija_id === lokacijaId)
   return (
     <div data-testid="tab-lokacije-content" className="space-y-4">
       <div className="flex justify-end">
-        <LokacijaSheet klijentId={klijentId} kontakti={kontakti} />
+        <LokacijaSheet klijentId={klijentId} kontakti={kontakti} slanjeUgaseno={slanjeUgaseno} />
       </div>
 
       {lokacije.length === 0 ? (
@@ -85,7 +88,7 @@ export async function LokacijeTab({
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex gap-2">
-                      <LokacijaSheet klijentId={klijentId} lokacija={l} kontakti={kontakti} />
+                      <LokacijaSheet klijentId={klijentId} lokacija={l} kontakti={kontakti} slanjeUgaseno={slanjeUgaseno} />
                       <ObrisiLokacijuButton lokacijaId={l.id} />
                     </div>
                   </td>

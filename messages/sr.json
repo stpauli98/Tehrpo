@@ -434,6 +434,7 @@
       "kontaktNovi": "Novi kontakt",
       "kontaktIme": "Ime i prezime",
       "kontaktPrima": "Prima podsjetnike za ovu lokaciju",
+      "kontaktPrimaUgaseno": "Slanje podsjetnika klijentima je ugašeno u Postavkama — dok ga administrator ne uključi, ovaj kontakt neće dobijati mejlove.",
       "kontaktPomoc": "Vezan kontakt prima podsjetnike samo za ovu lokaciju. Kontakti firme ih dobijaju svakako.",
       "submitPending": "Spremam…",
       "submitEdit": "Spremi izmjene",

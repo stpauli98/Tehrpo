@@ -9,12 +9,18 @@ export const runtime = "nodejs"
 
 const BUCKET = "tehpro-dokumenti"
 
-/** Rekurzivno pokupi sve putanje objekata u bucketu (folderi nemaju `id`, fajlovi ga imaju). */
+// Upload prvo piše fajl pa onda red u `dokumenti`. Fajl uhvaćen u tom procjepu izgleda
+// osirotjelo. 24h je isti prag koji već koristi lib/dokumenti-gc.ts.
+const GRACE_MS = 24 * 60 * 60 * 1000
+
+type StorageStavka = { path: string; kreiran: string } // kreiran = created_at objekta, ISO
+
+/** Rekurzivno pokupi sve objekte u bucketu (folderi nemaju `id`, fajlovi ga imaju), sa datumom kreiranja. */
 async function sveObjekte(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   prefiks = "",
-): Promise<string[]> {
-  const out: string[] = []
+): Promise<StorageStavka[]> {
+  const out: StorageStavka[] = []
   let offset = 0
   for (;;) {
     // eslint-disable-next-line no-await-in-loop -- paginacija po offsetu; broj stranica je mali (bucket nije velik)
@@ -23,9 +29,12 @@ async function sveObjekte(
     if (!data.length) break
     for (const it of data) {
       const put = prefiks ? `${prefiks}/${it.name}` : it.name
-      // eslint-disable-next-line no-await-in-loop -- rekurzija po folderima; dubina je mala (termini/<id>/, klijenti/<id>/)
-      if (it.id === null) out.push(...(await sveObjekte(supabase, put)))
-      else out.push(put)
+      if (it.id === null) {
+        // eslint-disable-next-line no-await-in-loop -- rekurzija po folderima; dubina je mala (termini/<id>/, klijenti/<id>/)
+        out.push(...(await sveObjekte(supabase, put)))
+      } else {
+        out.push({ path: put, kreiran: it.created_at ?? new Date().toISOString() })
+      }
     }
     if (data.length < 100) break
     offset += 100
@@ -72,12 +81,35 @@ async function handle(req: Request) {
     const { putanje, error } = await svePutanjeUBazi(supabase)
     if (error) return NextResponse.json({ ok: false, error }, { status: 500 })
 
-    const zaBrisanje = osirotjeliObjekti(objekti, putanje)
+    // Sumnjivo stanje: bucket pun a nijedan red u bazi. Realno znači pogrešan projekat,
+    // pogrešan ključ ili polomljen upit — nikad „sve je zaista smeće". Ne brišemo ništa.
+    if (putanje.length === 0 && objekti.length > 0) {
+      return NextResponse.json(
+        { ok: false, error: "dokumenti je prazan a bucket nije — prekid" },
+        { status: 500 },
+      )
+    }
+
+    // Grace period PRIJE poređenja: svjež objekat se ne dira ni ako trenutno izgleda osirotjelo
+    // (upload je mogao upisati fajl ali još nije stigao da upiše red).
+    const sada = Date.now()
+    const zreliPuta = objekti
+      .filter((o) => sada - Date.parse(o.kreiran) >= GRACE_MS)
+      .map((o) => o.path)
+
+    const zaBrisanje = osirotjeliObjekti(zreliPuta, putanje)
     if (!zaBrisanje.length) return NextResponse.json({ ok: true, obrisano: 0 })
 
-    const { error: greska } = await supabase.storage.from(BUCKET).remove(zaBrisanje)
-    if (greska) return NextResponse.json({ ok: false, error: greska.message }, { status: 500 })
-    return NextResponse.json({ ok: true, obrisano: zaBrisanje.length })
+    // Brisanje u grupama od 100, kao postojeći scripts/gc-orphan-dokumenti.ts.
+    let obrisano = 0
+    for (let i = 0; i < zaBrisanje.length; i += 100) {
+      const grupa = zaBrisanje.slice(i, i + 100)
+      // eslint-disable-next-line no-await-in-loop -- sekvencijalne grupe; broj grupa je mali
+      const { error: greska } = await supabase.storage.from(BUCKET).remove(grupa)
+      if (greska) return NextResponse.json({ ok: false, error: greska.message }, { status: 500 })
+      obrisano += grupa.length
+    }
+    return NextResponse.json({ ok: true, obrisano })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }

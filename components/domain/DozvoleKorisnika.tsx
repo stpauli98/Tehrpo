@@ -25,6 +25,8 @@ function JedanPrekidac({
   razlog?: string
 }) {
   const t = useTranslations("postavke.dozvole")
+  // `pocetno` se čita samo pri mountu; resync na promjenu uloge radi `key` u roditelju
+  // (React-ov obrazac "reset state with a key" — bez setState u efektu).
   const [checked, setChecked] = useState(pocetno)
   const [pending, start] = useTransition()
   const ime = t(labela)
@@ -72,7 +74,10 @@ export function DozvoleKorisnika({
     <div className="flex flex-col gap-1">
       {STAVKE.map((s) => (
         <JedanPrekidac
-          key={s.kljuc}
+          // Uloga u ključu: promjena uloge mijenja IZVEDENU vrijednost (admin sve, pregled
+          // ništa), pa prekidač mora da se remounta i pročita novo `pocetno` — inače ostaje
+          // na vrijednostima prethodne uloge iako ga docstring opisuje kao izvedenog.
+          key={`${uloga}-${s.kljuc}`}
           korisnikId={korisnikId}
           kljuc={s.kljuc}
           labela={s.labela}

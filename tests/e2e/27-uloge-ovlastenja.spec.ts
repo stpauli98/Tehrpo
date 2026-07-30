@@ -114,20 +114,9 @@ test.describe.serial("Uloge i ovlaštenja", () => {
     await deleteKorisnikByEmail(PREGLED_EMAIL).catch(() => {})
   })
 
-  test("operaterov centralni plan prikazuje samo dodijeljene firme", async ({ page, context }) => {
-    await injectSessionFor(context, OP_EMAIL, OP_LOZINKA)
-    // Default view (bez ?view=) je "kalendar", koji filtrira striktno na TEKUĆI mjesec
-    // (godina/mjesec iz URL-a, default = danas) — termin zakazan za 2026-08-15 ne bi se
-    // vidio u kalendaru za tekući mjesec ako se test pokrene prije avgusta. "lista" view
-    // default filtrira na tekući+naredni mjesec (parsePlanFilteri: mjesec || "tn"), što
-    // pouzdano pokriva naš rok bez obzira na tačan dan pokretanja.
-    await page.goto("/plan-aktivnosti?view=lista")
-    // Prvo potvrdi da je STRANICA STVARNO UČITALA PODATKE (ne prazan/pao ekran) —
-    // ako ovo ne prođe, odsustvo FIRMA_TUDJA ispod ne bi dokazivalo scoping nego pad učitavanja.
-    await expect(page.getByText(FIRMA_MOJA).first()).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByText(FIRMA_TUDJA)).toHaveCount(0)
-  })
-
+  // Redoslijed je namjeran: u `serial` describe-u pad jednog testa PRESKAČE sve iza njega.
+  // Tri API provjere (brze, bez rendera) idu prve da ih UI hiccup u testu punog plana —
+  // koji učitava cijelu stranicu i čeka do 30 s — ne može oboriti zajedno sa sobom.
   test("pregled ne smije izvesti plan (403)", async ({ context }) => {
     await injectSessionFor(context, PREGLED_EMAIL, PREGLED_LOZINKA)
     const res = await context.request.get("/api/plan-aktivnosti/izvoz?format=xlsx&opseg=sve&period=tekuci")
@@ -146,5 +135,19 @@ test.describe.serial("Uloge i ovlaštenja", () => {
     await injectSessionFor(context, OP_EMAIL, OP_LOZINKA)
     const res = await context.request.get(`/api/dokumenti/${dokumentId}`)
     expect(res.status()).toBe(200)
+  })
+
+  test("operaterov centralni plan prikazuje samo dodijeljene firme", async ({ page, context }) => {
+    await injectSessionFor(context, OP_EMAIL, OP_LOZINKA)
+    // Default view (bez ?view=) je "kalendar", koji filtrira striktno na TEKUĆI mjesec
+    // (godina/mjesec iz URL-a, default = danas) — termin zakazan za 2026-08-15 ne bi se
+    // vidio u kalendaru za tekući mjesec ako se test pokrene prije avgusta. "lista" view
+    // default filtrira na tekući+naredni mjesec (parsePlanFilteri: mjesec || "tn"), što
+    // pouzdano pokriva naš rok bez obzira na tačan dan pokretanja.
+    await page.goto("/plan-aktivnosti?view=lista")
+    // Prvo potvrdi da je STRANICA STVARNO UČITALA PODATKE (ne prazan/pao ekran) —
+    // ako ovo ne prođe, odsustvo FIRMA_TUDJA ispod ne bi dokazivalo scoping nego pad učitavanja.
+    await expect(page.getByText(FIRMA_MOJA).first()).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(FIRMA_TUDJA)).toHaveCount(0)
   })
 })

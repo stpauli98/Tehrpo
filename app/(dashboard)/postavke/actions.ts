@@ -516,6 +516,16 @@ export async function postaviDozvolu(
   await zahtijevajAdmina()
   if (!DOZVOLE_KLJUCEVI.includes(kljuc)) return { ok: false, message: t("nepoznataDozvola") }
   const supabase = await createServerSupabaseClient()
+  // Prekidači važe samo za operatera (admin ima sve, pregled ništa — ni jedno ne čita
+  // kolone). Upis na admin/pregled red je danas bezopasan, ali vrijednost preživi kasniju
+  // promjenu uloge u operatera i tiho proradi, pa se odbija odmah.
+  const { data: meta } = await supabase
+    .from("korisnici")
+    .select("uloga")
+    .eq("id", korisnikId)
+    .maybeSingle()
+  if (!meta) return { ok: false, message: t("korisnikNePostoji") }
+  if (meta.uloga !== "operater") return { ok: false, message: t("dozvoleSamoOperater") }
   // Eksplicitno tipizovan patch: computed-key literal direktno u .update({ [kljuc]: ... })
   // gubi vezu sa uskim tipom kolone pa ga Supabase generisani Update tip odbija.
   const patch: Partial<Record<(typeof DOZVOLE_KLJUCEVI)[number], boolean>> = { [kljuc]: vrijednost }

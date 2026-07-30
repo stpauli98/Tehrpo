@@ -3,6 +3,9 @@ import { Client } from "pg"
 
 const URL = process.env.TEST_DATABASE_URL
 
+/** SQL izraz za zidni "danas" u Europe/Belgrade (APP_TIME_ZONE) — parnjak `todayIso()` iz lib/date.ts. */
+const DANAS_SQL = "(now() at time zone 'Europe/Belgrade')::date"
+
 describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni DB)", () => {
   let db: Client
   beforeAll(async () => {
@@ -31,8 +34,8 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
   ) {
     const r = await db.query(
       `insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca, datum_zakazan, status)
-       values ($1, $2, current_date + $3::int,
-               case when $4::int is null then null else current_date + $4::int end,
+       values ($1, $2, ${DANAS_SQL} + $3::int,
+               case when $4::int is null then null else ${DANAS_SQL} + $4::int end,
                'planirano')
        returning id`,
       [ids.klijent, ids.vrsta, rokOffset, zakazanOffset],
@@ -41,9 +44,9 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
   }
 
   type Row = { termin_id: string; ciklus_rok: string; dana_do_ciklusa: number }
-  async function istekli(terminId: string, danas = "current_date"): Promise<Row[]> {
-    const r = danas === "current_date"
-      ? await db.query("select * from get_istekli_termini(current_date) where termin_id = $1", [terminId])
+  async function istekli(terminId: string, danas = DANAS_SQL): Promise<Row[]> {
+    const r = danas === DANAS_SQL
+      ? await db.query(`select * from get_istekli_termini(${DANAS_SQL}) where termin_id = $1`, [terminId])
       : await db.query("select * from get_istekli_termini($2::date) where termin_id = $1", [terminId, danas])
     return r.rows as Row[]
   }
@@ -53,9 +56,9 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
     return (r.rows[0]?.id as string | null) ?? null
   }
 
-  /** Bečki "danas" pomjeren za offsetDana, kao ISO datum — izračunato u bazi da izbjegnemo TZ zamke u Node-u. */
+  /** Beogradski "danas" (Europe/Belgrade) pomjeren za offsetDana, kao ISO datum — izračunato u bazi da izbjegnemo TZ zamke u Node-u. */
   async function pomjerenDanas(offsetDana: number): Promise<string> {
-    const r = await db.query("select to_char(current_date + $1::int, 'YYYY-MM-DD') as d", [offsetDana])
+    const r = await db.query(`select to_char(${DANAS_SQL} + $1::int, 'YYYY-MM-DD') as d`, [offsetDana])
     return r.rows[0]!.d as string
   }
 
@@ -94,7 +97,7 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
       const t = await addTermin(ids, -9)
       await db.query(
         `insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, poslat_at)
-         values ($1, current_date - 9, 'interni', 'poslato', now())`,
+         values ($1, ${DANAS_SQL} - 9, 'interni', 'poslato', now())`,
         [t],
       )
       expect(await istekli(t)).toHaveLength(0)
@@ -106,7 +109,7 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
       const t = await addTermin(ids, -9)
       await db.query(
         `insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, razlog)
-         values ($1, current_date - 9, 'firma', 'preskoceno', 'nema_primalaca')`,
+         values ($1, ${DANAS_SQL} - 9, 'firma', 'preskoceno', 'nema_primalaca')`,
         [t],
       )
       expect(await istekli(t)).toHaveLength(1)
@@ -118,24 +121,24 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
       const t = await addTermin(ids, -9)
       await db.query(
         `insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, poslat_at)
-         values ($1, current_date - 9, 'interni', 'poslato', now() - interval '1 day')`,
+         values ($1, ${DANAS_SQL} - 9, 'interni', 'poslato', now() - interval '1 day')`,
         [t],
       )
       expect(await istekli(t)).toHaveLength(1)
     })
   })
 
-  it("p_danas ≠ current_date: obavijest poslata danas ostaje bez efekta kad se preda juče", async () => {
+  it("p_danas ≠ beogradski danas: obavijest poslata danas ostaje bez efekta kad se preda juče", async () => {
     await withSeed(async (ids) => {
       const t = await addTermin(ids, -9)
       await db.query(
         `insert into post_due_obavijesti (termin_id, ciklus_rok, kanal, stanje, poslat_at)
-         values ($1, current_date - 9, 'interni', 'poslato', now())`,
+         values ($1, ${DANAS_SQL} - 9, 'interni', 'poslato', now())`,
         [t],
       )
       const juce = await pomjerenDanas(-1)
-      // Suppression gleda predani dan (juce), ne UTC "danas" — obavijest poslata danas
-      // ga ne pogađa, pa termin ostaje u listi.
+      // Suppression gleda predani dan (juce), ne stvarni beogradski "danas" — obavijest
+      // poslata danas ga ne pogađa, pa termin ostaje u listi.
       expect(await istekli(t, juce)).toHaveLength(1)
     })
   })
@@ -150,13 +153,13 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
     })
   })
 
-  it("dana_do_ciklusa se računa u odnosu na predani p_danas, ne na current_date", async () => {
+  it("dana_do_ciklusa se računa u odnosu na predani p_danas, ne na stvarni danas", async () => {
     await withSeed(async (ids) => {
       const t = await addTermin(ids, -30)
       const petDanaRanije = await pomjerenDanas(-5)
       const rows = await istekli(t, petDanaRanije)
       expect(rows).toHaveLength(1)
-      // ciklus (danas-30) - p_danas (danas-5) = -25, a ne -30 (što current_date bi dao).
+      // ciklus (danas-30) - p_danas (danas-5) = -25, a ne -30 (što bi dao stvarni danas).
       expect(rows[0]!.dana_do_ciklusa).toBe(-25)
     })
   })
@@ -167,7 +170,7 @@ describe.skipIf(!URL)("get_istekli_termini + claim_digest (integracija, lokalni 
       const najkasni = await addTermin(ids, -30)
       const srednje = await addTermin(ids, -10)
       const r = await db.query(
-        "select termin_id, dana_do_ciklusa from get_istekli_termini(current_date) where termin_id = any($1::uuid[])",
+        `select termin_id, dana_do_ciklusa from get_istekli_termini(${DANAS_SQL}) where termin_id = any($1::uuid[])`,
         [[blago, najkasni, srednje]],
       )
       expect(r.rows.map((row) => row.termin_id as string)).toEqual([najkasni, srednje, blago])

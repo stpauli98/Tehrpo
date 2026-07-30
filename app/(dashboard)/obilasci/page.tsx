@@ -12,7 +12,7 @@ import {
   parsirajObilasciParams,
   type ObilazakItem,
 } from "@/lib/obilasci"
-import { dohvatiGradove } from "@/lib/queries/gradovi"
+import { dohvatiGradoveLokacija } from "@/lib/queries/gradovi"
 import { dohvatiGodineTermina } from "@/lib/queries/godine"
 import { periodRange, formatDatum } from "@/lib/date"
 import { href } from "@/i18n/routes"
@@ -52,9 +52,10 @@ export default async function ObilasciPage({
   else if (grad && grad !== "svi") q = q.eq("lokacija_grad", grad)
 
   const [gradovi, godine, terminiRes] = await Promise.all([
-    // `dohvatiGradove` BACA na grešku (S1 ugovor helpera) — hvatamo je ovdje da bi se
-    // razlikovala od praznog kataloga i prikazala kao greška, a ne kao „nema termina".
-    dohvatiGradove().catch(() => null),
+    // `dohvatiGradoveLokacija` BACA na grešku (S1 ugovor helpera) — hvatamo je ovdje da
+    // bi se razlikovala od „nijedna lokacija nema grad" i prikazala kao greška.
+    // Izvor su STVARNE lokacije klijenata (yoink 2026-07-29), ne katalog `gradovi`.
+    dohvatiGradoveLokacija().catch(() => null),
     // `dohvatiGodineTermina` interno pada na fallback (tekuća ± 1) i nikad ne baca,
     // pa nije dio error-grane.
     dohvatiGodineTermina(),

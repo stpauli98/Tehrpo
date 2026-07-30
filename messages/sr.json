@@ -19,7 +19,8 @@
     "rok": {
       "kasni": "kasni {count, plural, =1 {# dan} other {# dana}}",
       "danas": "danas",
-      "za": "za {count, plural, =1 {# dan} other {# dana}}"
+      "za": "za {count, plural, =1 {# dan} other {# dana}}",
+      "rokIZakazano": "rok {rok} · zakazano {zakazano}"
     },
     "sacuvano": "Sačuvano",
     "obrisano": "Obrisano",
@@ -28,7 +29,10 @@
     "greskaUcitavanja": "Greška pri učitavanju podataka.",
     "izvozNijeDozvoljen": "Vaša uloga nema pravo izvoza podataka.",
     "samoAdministrator": "Samo administrator.",
-    "pokusajPonovo": "Pokušaj ponovo"
+    "pokusajPonovo": "Pokušaj ponovo",
+    "zaduzeniTi": "(ti)",
+    "zaduzeniPrikaziListu": "Prikaži prijedloge",
+    "zaduzeniSlobodanUnos": "Nema podudaranja — ostaje uneseno ime"
   },
   "shell": {
     "nav": {
@@ -167,6 +171,7 @@
       "brojOpseg": "Broj mora biti {min}–{max}",
       "datumNeispravan": "Neispravan datum",
       "datumIstekaNakonPotpisivanja": "Datum isteka mora biti nakon datuma potpisivanja.",
+      "ugovorIstekNeodredjeno": "Datum isteka se ne unosi za ugovor na neodređeno.",
       "neispravanZahtjev": "Neispravan zahtjev.",
       "vrstaObavezna": "Vrsta je obavezna.",
       "lokacijaObavezna": "Lokacija je obavezna.",
@@ -174,7 +179,7 @@
       "prviRokObavezan": "Prvi rok je obavezan.",
       "lokacijaNePripada": "Lokacija ne pripada klijentu.",
       "vrstaNemaInterval": "Vrsta nema podrazumijevani interval — postavite ga u Postavkama.",
-      "provjeraVecPostoji": "Ova provjera već postoji u profilu.",
+      "provjeraVecPostoji": "Ova usluga već postoji.",
       "terminProvjeraOsvjezi": "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu.",
       "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
       "nedostajeId": "Nedostaje id.",
@@ -186,7 +191,8 @@
       "podsjetnikEmailPostoji": "Adresa je već dodata.",
       "podsjetnikEmailKontakt": "Adresa je već primalac kao kontakt.",
       "podsjetnikEmailNijeDodat": "Nije moguće dodati adresu.",
-      "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli."
+      "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli.",
+      "lokacijaNazivObavezan": "Naziv nove lokacije je obavezan."
     },
     "detalj": {
       "nazad": "Klijenti",
@@ -201,10 +207,7 @@
         }
       },
       "kontaktiTab": {
-        "infoPuniSpisak": "Puni spisak kontakata firme sa pretragom po imenu i funkciji.",
-        "naslovLokacije": "Kontakti lokacija",
-        "infoLokacije": "Kontakt osobe pojedinačnih lokacija, izvedene iz podataka lokacije. Uređuju se u tabu Lokacije.",
-        "urediULokacijama": "Uredi u Lokacijama"
+        "infoPuniSpisak": "Puni spisak kontakata firme sa pretragom po imenu i funkciji."
       },
       "dokumentiTab": {
         "prazno": "Nema dokumenata za ovog klijenta.",
@@ -256,7 +259,7 @@
       },
       "termini": {
         "label": "Termini",
-        "info": "Svi konkretni rokovi za ovog klijenta — prošli i budući. Svaki red je jedan termin sa datumom roka, statusom (planirano, zakazano, kasni, izvršeno) i zaduženom osobom. Termini se generišu iz provjera definisanih u Profilu."
+        "info": "Svi konkretni rokovi za ovog klijenta — prošli i budući. Svaki red je jedan termin sa datumom roka, statusom (planirano, zakazano, kasni, izvršeno) i zaduženom osobom. Termini se generišu iz usluga definisanih u tabu Usluge."
       },
       "lokacije": {
         "label": "Lokacije",
@@ -275,8 +278,8 @@
         "info": "Slanje podsjetnika ovoj firmi (uključi + adrese) i dodjela radnika koji rade na firmi."
       },
       "profil": {
-        "label": "Profil",
-        "info": "Definicija ponavljajućih provjera za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
+        "label": "Usluge",
+        "info": "Definicija ponavljajućih usluga za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
       }
     },
     "pretraga": {
@@ -292,6 +295,19 @@
       "poljeTelefon": "Telefon *",
       "poljeEmail": "Email *",
       "poljeNapomena": "Napomena",
+      "poljePib": "PIB",
+      "poljeMaticniBroj": "Matični broj",
+      "poljeSifraDjelatnosti": "Šifra djelatnosti",
+      "poljeZaduzeni": "Zadužena osoba ({appName})",
+      "poljeTipOdnosa": "Tip odnosa",
+      "nijePostavljeno": "Nije postavljeno",
+      "tipUgovor": "Ugovor",
+      "tipPonuda": "Ponuda",
+      "lokacijaNaslov": "Prva lokacija",
+      "lokacijaNaziv": "Naziv lokacije",
+      "lokacijaGrad": "Grad",
+      "lokacijaAdresa": "Adresa",
+      "lokacijaPomoc": "Usluge se uvijek vezuju za lokaciju — bez nje klijentu ne možeš dodati nijednu.",
       "submitPending": "Kreiram…",
       "submit": "Kreiraj klijenta",
       "uspjeh": "Klijent kreiran"
@@ -321,8 +337,8 @@
       "kontaktiInfo": "Skraćeni pregled kontakata firme (prvih nekoliko). Puni spisak i pretraga su u tabu Kontakti.",
       "usluge": {
         "naslov": "Ugovorene usluge",
-        "info": "Sažetak provjera iz Profila sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red.",
-        "prazno": "Nema definisanih usluga. Dodajte ih kroz tab Profil.",
+        "info": "Sažetak usluga iz taba Usluge sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red.",
+        "prazno": "Nema definisanih usluga. Dodajte ih kroz tab Usluge.",
         "sljedeci": "sljedeći: {datum}",
         "imenica": "usluga"
       }
@@ -339,7 +355,14 @@
       "poljeObilasci": "Obilazaka / mjesec",
       "poljeAutoObnavljanje": "Automatsko obnavljanje",
       "poljeAktivan": "Aktivan ugovor (deaktivira ostale)",
+      "poljeNaNeodredjeno": "Ugovor na neodređeno",
       "poljeNapomena": "Napomena",
+      "vazenjeNeodredjeno": "Na neodređeno",
+      "vazenjeCustom": "Drugo (upiši broj mjeseci)",
+      "vazenjeOdaberi": "Odaberi trajanje",
+      "vazenjePreset": "{count} mj.",
+      "vazenjeGreskaOpseg": "Broj mjeseci mora biti cijeli broj između 1 i 600.",
+      "istekNeodredjeno": "Datum isteka se ne unosi za ugovor na neodređeno.",
       "submitPending": "Spremam…",
       "submitEdit": "Spremi izmjene",
       "submitNovi": "Kreiraj ugovor"
@@ -351,6 +374,7 @@
       "bezBroja": "Bez broja",
       "aktivan": "aktivan",
       "neaktivan": "neaktivan",
+      "naNeodredjeno": "na neodređeno",
       "obrisiAriaLabel": "Obriši ugovor",
       "obilazMjesecno": " · {count} obilaz./mj.",
       "vazenjeMjeseci": " · važenje {count} mj.",
@@ -373,6 +397,12 @@
       "poljeLokacija": "Lokacija",
       "lokacijaSve": "Sve lokacije — kontakt firme",
       "lokacijaPomoc": "Kontakt firme prima podsjetnike za sve lokacije. Vezan za lokaciju — samo za tu.",
+      "lokacijaIzborPostojeca": "Postojeća lokacija",
+      "lokacijaIzborNova": "Nova lokacija",
+      "novaLokacijaNaziv": "Naziv lokacije",
+      "novaLokacijaGrad": "Grad",
+      "novaLokacijaAdresa": "Adresa",
+      "novaLokacijaPomoc": "Nova lokacija se odmah upisuje u tab Lokacije i kontakt se veže za nju.",
       "poljeTelefon": "Telefon",
       "poljeEmail": "Email",
       "submitPending": "Spremam…",
@@ -399,7 +429,6 @@
       "poljeGrad": "Grad",
       "poljeRegija": "Regija",
       "poljeAdresa": "Adresa",
-      "poljeKontaktOsoba": "Kontakt osoba",
       "poljeEmail": "Email",
       "poljeTelefon": "Telefon",
       "kontaktNaslov": "Kontakt za ovu lokaciju",
@@ -408,6 +437,7 @@
       "kontaktNovi": "Novi kontakt",
       "kontaktIme": "Ime i prezime",
       "kontaktPrima": "Prima podsjetnike za ovu lokaciju",
+      "kontaktPrimaUgaseno": "Slanje podsjetnika klijentima je ugašeno u Postavkama — dok ga administrator ne uključi, ovaj kontakt neće dobijati mejlove.",
       "kontaktPomoc": "Vezan kontakt prima podsjetnike samo za ovu lokaciju. Kontakti firme ih dobijaju svakako.",
       "submitPending": "Spremam…",
       "submitEdit": "Spremi izmjene",
@@ -449,7 +479,7 @@
       "uspjeh": "Dokument dodat"
     },
     "profil": {
-      "prazno": "Nema provjera u profilu. Dodajte provjeru da generišete termine.",
+      "prazno": "Nema definisanih usluga. Dodajte uslugu da generišete termine.",
       "kolone": {
         "vrsta": "Vrsta",
         "lokacija": "Lokacija",
@@ -460,9 +490,9 @@
       "prviPut": "— (prvi put)"
     },
     "obrisiProfil": {
-      "tooltip": "Ukloni iz profila",
-      "dialogNaslov": "Ukloniti provjeru iz profila?",
-      "dialogOpis": "Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).",
+      "tooltip": "Ukloni uslugu",
+      "dialogNaslov": "Ukloniti uslugu?",
+      "dialogOpis": "Uklanja uslugu sa spiska. Postojeći termini ostaju (vode se kroz Termini).",
       "potvrdi": "Ukloni",
       "confirmPending": "Brišem…"
     },
@@ -496,7 +526,7 @@
     },
     "dodajProvjeru": {
       "dugme": "Dodaj provjeru",
-      "naslov": "Dodaj provjeru u profil",
+      "naslov": "Dodaj uslugu",
       "opis": "Veži uslugu za lokaciju — termin i rok se generišu automatski.",
       "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
       "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
@@ -507,8 +537,8 @@
       "poljeInterval": "Interval (mjeseci) — povučeno iz vrste",
       "bezIntervalaTekst": "Ova vrsta nema podrazumijevani interval — postavite ga u",
       "bezIntervalaLink": "Postavkama",
-      "bezIntervalaKraj": "prije dodavanja u profil.",
-      "bezIntervalaOperater": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi prije dodavanja u profil.",
+      "bezIntervalaKraj": "prije dodavanja usluge.",
+      "bezIntervalaOperater": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi prije dodavanja usluge.",
       "poljeRadjenoRanije": "Da li je provjera već rađena? *",
       "opcijaVecRadeno": "Da — unosim zadnji datum",
       "opcijaPrviPut": "Ne — prvi put (unosim prvi rok)",
@@ -554,7 +584,9 @@
       "ariaMjesec": "Mjesec",
       "ariaNacin": "Način izvršenja",
       "ariaGodina": "Godina",
-      "ariaPretraga": "Pretraga firmi"
+      "ariaPretraga": "Pretraga firmi",
+      "ponisti": "Poništi filtere",
+      "ariaStatus": "Status"
     },
     "sheet": {
       "naslovFallback": "Termin",
@@ -602,7 +634,13 @@
       "poljeZaduzeni": "Zaduženi",
       "placeholderZaduzeni": "npr. Marija K.",
       "kreiram": "Kreiram…",
-      "kreirajTermin": "Kreiraj termin"
+      "kreirajTermin": "Kreiraj termin",
+      "zaduzeniHintAdmin": "Možete zadužiti bilo kog radnika — firma mu se automatski dodjeljuje.",
+      "zaduzeniHintRadnik": "Možete zadužiti sebe ili kolegu koji već ima pristup ovoj firmi.",
+      "ponavljanjeNaslov": "Vrsta unosa",
+      "ponavljanjeJednom": "Jednokratno",
+      "ponavljanjePonavlja": "Ponavlja se",
+      "ponavljanjePomoc": "Ponavljajući termin se upisuje i u tab Usluge, pa se po izvršenju automatski računa sljedeći rok. Zahtijeva lokaciju."
     },
     "actions": {
       "datumNeispravan": "Neispravan datum",
@@ -613,7 +651,10 @@
       "rokObavezan": "Rok je obavezan",
       "lokacijaNePripada": "Lokacija ne pripada izabranom klijentu.",
       "terminVecPostoji": "Termin za istu firmu, vrstu i rok već postoji.",
-      "datumObavezan": "Datum je obavezan"
+      "datumObavezan": "Datum je obavezan",
+      "zaduzeniNemaPristup": "Ova osoba nema pristup izabranoj firmi. Pristup firmama dodjeljuje admin u Postavke → Korisnici.",
+      "ponavljanjeTraziLokaciju": "Ponavljajući termin mora imati lokaciju.",
+      "ponavljanjeVrstaBezIntervala": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi, ili unesi termin kao jednokratni."
     }
   },
   "status": {
@@ -644,6 +685,7 @@
     "naslov": "Plan aktivnosti",
     "izvoz": {
       "preuzmi": "Preuzmi",
+      "preuzmiOpis": "Izvezi plan aktivnosti u PDF ili Excel",
       "naslovModala": "Preuzmi izvještaj",
       "format": "Format",
       "formatPdf": "PDF",
@@ -673,8 +715,11 @@
     },
     "viewSwitcher": {
       "kalendar": "Kalendar",
+      "kalendarOpis": "Prikaz termina po danima mjeseca",
       "lista": "Lista",
-      "matrica": "Matrica"
+      "listaOpis": "Prikaz termina kao lista sa filterima",
+      "matrica": "Matrica",
+      "matricaOpis": "Prikaz termina u matrici klijent × vrsta"
     },
     "nav": {
       "prethodniMjesec": "Prethodni mjesec",
@@ -699,7 +744,8 @@
     },
     "monthCalendar": {
       "danAriaLabel": "Dan {broj}",
-      "jos": "još {count}"
+      "jos": "još {count}",
+      "dodajTermin": "Dodaj termin za {datum}"
     },
     "kalendar": {
       "nemaTerminaZaDan": "Nema termina za ovaj dan.",
@@ -1014,7 +1060,7 @@
     "vrijemeSlanja": {
       "naslov": "Vrijeme slanja",
       "opis": "Podsjetnici se šalju jednom dnevno, na jednom od dva termina.",
-      "zona": "po lokalnom vremenu (Beč)",
+      "zona": "po lokalnom vremenu (Beograd)",
       "ujutro": "Ujutro (oko 10–11h)",
       "poslijepodne": "Poslijepodne (oko 14–15h)"
     },
@@ -1328,7 +1374,9 @@
       "opened": "Otvoreno",
       "deliveryFailed": "Neuspjela dostava",
       "bounced": "Odbijeno",
-      "complained": "Prijava spama"
+      "complained": "Prijava spama",
+      "djelimicno": "{oznaka} ({pogodjenih} od {ukupno})",
+      "djelimicnoAdrese": "Nije stiglo na: {adrese}"
     },
     "filteri": {
       "tip": "Tip",

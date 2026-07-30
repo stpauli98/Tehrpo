@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { generateZapisnik } from "@/lib/zapisnik/generate"
 import { grupisiPoKlijentu } from "./grouping"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
+import { todayIso } from "@/lib/date"
 import type { ProposalData } from "./protokol"
 
 export type ToolName = "searchTermini" | "listFirme" | "predloziZapisnik" | "suggestGrupisanje"
@@ -158,7 +159,8 @@ export async function executeTool(name: string, input: unknown): Promise<ToolRes
     // prijavio korisniku kao „termin ne postoji" (ostala tri alata već razlikuju).
     if (error) return { forModel: `Greška pri čitanju termina: ${error.message}` }
     if (!t) return { forModel: "Termin sa tim ID-em ne postoji." }
-    const datum = (t.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
+    // datum_izvrsenja je `date` kolona (zidni datum); fallback "danas" po APP_TIME_ZONE (todayIso), ne UTC
+    const datum = t.datum_izvrsenja ?? todayIso()
     const c = await generateZapisnik({
       klijent: t.klijent_naziv ?? "—",
       lokacija: t.lokacija_naziv ?? null,

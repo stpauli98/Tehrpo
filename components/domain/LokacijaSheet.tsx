@@ -34,6 +34,7 @@ export function LokacijaSheet({
   klijentId,
   lokacija,
   kontakti = [],
+  slanjeUgaseno = false,
 }: {
   klijentId: string
   lokacija?: LokacijaRow
@@ -42,6 +43,8 @@ export function LokacijaSheet({
    * kontakt pripada najviše jednoj lokaciji, pa bi ostali samo zbunjivali.
    */
   kontakti?: { id: string; ime: string; lokacija_id: string | null }[]
+  /** Oba prekidača (globalni + per-firma) nisu uključena → checkbox podsjetnika je bez efekta. */
+  slanjeUgaseno?: boolean
 }) {
   const t = useTranslations("klijenti.lokacijaSheet")
   const tc = useTranslations("common")
@@ -59,16 +62,13 @@ export function LokacijaSheet({
     slobodniKontakti.map((k) => [k.id, k.ime]),
   )
 
-  // [name, label, obavezno, inputType] — tip polja se grana ovdje da bi browser
-  // uhvatio nevalidan email prije round-tripa (S2).
+  // [name, label, obavezno, inputType]. Kontakt polja su uklonjena 2026-07-30 —
+  // kontakt lokacije živi isključivo u kontakt_osobe (fieldset ispod).
   const FIELDS: readonly [string, string, boolean, "text" | "email" | "tel"][] = [
     ["naziv", t("poljeNaziv"), true, "text"],
     ["grad", t("poljeGrad"), false, "text"],
     ["regija", t("poljeRegija"), false, "text"],
     ["adresa", t("poljeAdresa"), false, "text"],
-    ["kontakt_osoba", t("poljeKontaktOsoba"), false, "text"],
-    ["kontakt_email", t("poljeEmail"), false, "email"],
-    ["kontakt_telefon", t("poljeTelefon"), false, "text"],
   ]
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(
@@ -207,17 +207,36 @@ export function LokacijaSheet({
             )}
 
             {kontaktIzbor !== "bez" && (
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="kontakt_prima"
-                  value="1"
-                  defaultChecked
-                  data-testid="lokacija-kontakt-prima"
-                  className="size-4 rounded border-input"
-                />
-                {t("kontaktPrima")}
-              </label>
+              <div className="space-y-1">
+                {/* Onemogućen checkbox ne šalje NIKAKVU vrijednost — bez ovog skrivenog
+                    polja server ne bi mogao razlikovati "korisnik je namjerno isključio"
+                    od "kontrola je zaključana" i bi tiho pregazio postojeći true na false. */}
+                {slanjeUgaseno && <input type="hidden" name="kontakt_prima_zakljucan" value="1" />}
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="kontakt_prima"
+                    value="1"
+                    defaultChecked={!slanjeUgaseno}
+                    disabled={slanjeUgaseno}
+                    data-testid="lokacija-kontakt-prima"
+                    aria-describedby={slanjeUgaseno ? "lokacija-kontakt-prima-ugaseno" : undefined}
+                    className="size-4 rounded border-input disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <span className={slanjeUgaseno ? "text-muted-foreground" : undefined}>
+                    {t("kontaktPrima")}
+                  </span>
+                </label>
+                {slanjeUgaseno && (
+                  <p
+                    id="lokacija-kontakt-prima-ugaseno"
+                    className="text-xs text-muted-foreground"
+                    data-testid="lokacija-kontakt-prima-ugaseno"
+                  >
+                    {t("kontaktPrimaUgaseno")}
+                  </p>
+                )}
+              </div>
             )}
             <p className="text-xs text-muted-foreground">{t("kontaktPomoc")}</p>
           </fieldset>

@@ -265,7 +265,7 @@ export type Database = {
           id: string
           interval_mjeseci: number | null
           klijent_id: string
-          lokacija_id: string
+          lokacija_id: string | null
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id: string | null
           vrsta_provjere_id: string
@@ -277,7 +277,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id: string
-          lokacija_id: string
+          lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id: string
@@ -289,7 +289,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id?: string
-          lokacija_id?: string
+          lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id?: string
@@ -549,9 +549,6 @@ export type Database = {
           grad: string | null
           id: string
           klijent_id: string
-          kontakt_email: string | null
-          kontakt_osoba: string | null
-          kontakt_telefon: string | null
           kreirao_id: string | null
           naziv: string
           regija: string | null
@@ -562,9 +559,6 @@ export type Database = {
           grad?: string | null
           id?: string
           klijent_id: string
-          kontakt_email?: string | null
-          kontakt_osoba?: string | null
-          kontakt_telefon?: string | null
           kreirao_id?: string | null
           naziv: string
           regija?: string | null
@@ -575,9 +569,6 @@ export type Database = {
           grad?: string | null
           id?: string
           klijent_id?: string
-          kontakt_email?: string | null
-          kontakt_osoba?: string | null
-          kontakt_telefon?: string | null
           kreirao_id?: string | null
           naziv?: string
           regija?: string | null
@@ -611,6 +602,7 @@ export type Database = {
           created_at: string
           delivery_at: string | null
           delivery_status: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni: string[]
           greska: string | null
           id: string
           klijent_id: string | null
@@ -627,6 +619,7 @@ export type Database = {
           created_at?: string
           delivery_at?: string | null
           delivery_status?: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni?: string[]
           greska?: string | null
           id?: string
           klijent_id?: string | null
@@ -643,6 +636,7 @@ export type Database = {
           created_at?: string
           delivery_at?: string | null
           delivery_status?: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni?: string[]
           greska?: string | null
           id?: string
           klijent_id?: string | null
@@ -968,6 +962,7 @@ export type Database = {
           id: string
           klijent_id: string
           kreirao_id: string | null
+          na_neodredjeno: boolean
           napomena: string | null
           vazenje_mjeseci: number | null
           zavodni_broj: string | null
@@ -982,6 +977,7 @@ export type Database = {
           id?: string
           klijent_id: string
           kreirao_id?: string | null
+          na_neodredjeno?: boolean
           napomena?: string | null
           vazenje_mjeseci?: number | null
           zavodni_broj?: string | null
@@ -996,6 +992,7 @@ export type Database = {
           id?: string
           klijent_id?: string
           kreirao_id?: string | null
+          na_neodredjeno?: boolean
           napomena?: string | null
           vazenje_mjeseci?: number | null
           zavodni_broj?: string | null
@@ -1082,6 +1079,7 @@ export type Database = {
           delivery_status:
             | Database["public"]["Enums"]["mejl_dostava_status"]
             | null
+          dostava_pogodjeni: string[] | null
           greska: string | null
           id: string | null
           klijent_id: string | null
@@ -1196,6 +1194,7 @@ export type Database = {
       azuriraj_mejl_dostavu: {
         Args: {
           p_at: string
+          p_pogodjeni?: string[]
           p_resend_id: string
           p_status: Database["public"]["Enums"]["mejl_dostava_status"]
         }
@@ -1309,6 +1308,7 @@ export type Database = {
           created_at: string
           delivery_at: string
           delivery_status: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni: string[]
           greska: string
           id: string
           klijent_id: string
@@ -1329,6 +1329,7 @@ export type Database = {
         Returns: {
           ciklus_rok: string
           dana_do_ciklusa: number
+          dana_do_roka: number
           datum_zakazan: string
           klijent_id: string
           klijent_naziv: string

@@ -13,18 +13,21 @@ export async function LokacijeTab({
   klijentId,
   lokacije,
   kontakti = [],
+  slanjeUgaseno = false,
 }: {
   klijentId: string
   lokacije: LokacijaRow[]
   /** Kontakti firme — forma lokacije nudi vezivanje postojećeg umjesto ponovnog kucanja. */
   kontakti?: { id: string; ime: string; lokacija_id: string | null }[]
+  /** Oba prekidača (globalni + per-firma) nisu uključena → checkbox podsjetnika je bez efekta. */
+  slanjeUgaseno?: boolean
 }) {
   const t = await getTranslations("klijenti.lokacije")
   const vezani = (lokacijaId: string) => kontakti.filter((k) => k.lokacija_id === lokacijaId)
   return (
     <div data-testid="tab-lokacije-content" className="space-y-4">
       <div className="flex justify-end">
-        <LokacijaSheet klijentId={klijentId} kontakti={kontakti} />
+        <LokacijaSheet klijentId={klijentId} kontakti={kontakti} slanjeUgaseno={slanjeUgaseno} />
       </div>
 
       {lokacije.length === 0 ? (
@@ -65,37 +68,27 @@ export async function LokacijeTab({
                     {[l.grad, l.regija].filter(Boolean).join(" · ") || "—"}
                   </td>
                   <td className="px-3 py-2.5">
-                    {l.kontakt_osoba ? (
-                      <Link
-                        href={href(`/klijenti/${klijentId}?tab=kontakti&highlight=${l.id}`)}
-                        scroll={false}
-                        className="group/tt relative inline-flex items-center gap-1 font-medium text-brand transition-colors motion-reduce:transition-none hover:underline"
-                        data-testid={`lokacija-kontakt-link-${l.id}`}
-                      >
-                        <User className="h-[18px] w-[18px] shrink-0" aria-hidden />
-                        {l.kontakt_osoba}
-                        <Tooltip>{t("kontaktLinkTitle")}</Tooltip>
-                      </Link>
-                    ) : vezani(l.id).length === 0 ? (
+                    {vezani(l.id).length === 0 ? (
                       <span className="text-muted-foreground">—</span>
-                    ) : null}
-                    {/* Kontakti vezani preko kontakt_osobe.lokacija_id — oni STVARNO
-                        primaju podsjetnike za ovu lokaciju. Slobodno polje iznad je
-                        zatečeni podatak koji ništa ne pokreće. */}
-                    {vezani(l.id).map((k) => (
-                      <span
-                        key={k.id}
-                        className="mt-1 flex items-center gap-1 text-foreground"
-                        data-testid={`lokacija-vezani-kontakt-${l.id}`}
-                      >
-                        <User className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
-                        {k.ime}
-                      </span>
-                    ))}
+                    ) : (
+                      vezani(l.id).map((k) => (
+                        <Link
+                          key={k.id}
+                          href={href(`/klijenti/${klijentId}?tab=kontakti&highlight=${k.id}`)}
+                          scroll={false}
+                          className="group/tt relative mt-1 flex items-center gap-1 font-medium text-brand transition-colors motion-reduce:transition-none hover:underline"
+                          data-testid={`lokacija-vezani-kontakt-${l.id}`}
+                        >
+                          <User className="h-[18px] w-[18px] shrink-0" aria-hidden />
+                          {k.ime}
+                          <Tooltip>{t("kontaktLinkTitle")}</Tooltip>
+                        </Link>
+                      ))
+                    )}
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex gap-2">
-                      <LokacijaSheet klijentId={klijentId} lokacija={l} kontakti={kontakti} />
+                      <LokacijaSheet klijentId={klijentId} lokacija={l} kontakti={kontakti} slanjeUgaseno={slanjeUgaseno} />
                       <ObrisiLokacijuButton lokacijaId={l.id} />
                     </div>
                   </td>

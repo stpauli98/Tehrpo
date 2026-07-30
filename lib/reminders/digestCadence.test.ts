@@ -17,7 +17,7 @@ describe("jePonedjeljak", () => {
   })
 
   it("ne oslanja se na lokalnu zonu procesa — radi nad ISO datumom", () => {
-    // Bečki datum je već izračunat prije poziva; funkcija ga samo tumači.
+    // Beogradski datum (Europe/Belgrade) je već izračunat prije poziva; funkcija ga samo tumači.
     expect(jePonedjeljak("2026-01-05")).toBe(true) // ponedjeljak, zimi
     expect(jePonedjeljak("2026-01-04")).toBe(false)
   })

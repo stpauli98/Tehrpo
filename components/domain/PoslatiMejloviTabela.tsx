@@ -8,6 +8,7 @@ import {
   DOSTAVA_VARIJANTA,
   jeGreska,
   jeDemo,
+  dostavaObim,
   type MejlRed,
 } from "@/lib/poslati-mejlovi"
 import { OznaciPregledanimButton } from "@/components/domain/OznaciPregledanimButton"
@@ -82,9 +83,38 @@ export async function PoslatiMejloviTabela({
                 {jeDemo(r) ? (
                   <span className="text-muted-foreground" data-testid="mejl-dostava-nema">—</span>
                 ) : (
-                  <Badge variant={DOSTAVA_VARIJANTA[r.delivery_status]}>
-                    {t(`dostava.${DOSTAVA_KEY[r.delivery_status]}` as never)}
-                  </Badge>
+                  (() => {
+                    // Jedan Resend send = jedan red = više primalaca. Kad je neuspjeh
+                    // pogodio samo dio njih, bedž to mora reći — inače red za mejl koji
+                    // je stigao dvojici od tri izgleda kao da nije stigao nikome.
+                    const obim = dostavaObim(r)
+                    const oznaka = t(`dostava.${DOSTAVA_KEY[r.delivery_status]}` as never)
+                    if (obim.vrsta !== "djelimicna") {
+                      return (
+                        <Badge variant={DOSTAVA_VARIJANTA[r.delivery_status]}>{oznaka}</Badge>
+                      )
+                    }
+                    return (
+                      <>
+                        <Badge
+                          variant={DOSTAVA_VARIJANTA[r.delivery_status]}
+                          data-testid="mejl-dostava-djelimicno"
+                        >
+                          {t("dostava.djelimicno", {
+                            oznaka,
+                            pogodjenih: obim.pogodjenih,
+                            ukupno: obim.ukupno,
+                          })}
+                        </Badge>
+                        {/* Adresa je vidljiv tekst, ne `title` — tooltip ne postoji za
+                            tastaturu ni za čitače ekrana (S12). Bez nje se ne zna KOGA
+                            treba ispraviti. */}
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {t("dostava.djelimicnoAdrese", { adrese: obim.pogodjeni.join(", ") })}
+                        </span>
+                      </>
+                    )
+                  })()
                 )}
               </td>
               <td className="px-3 py-2">

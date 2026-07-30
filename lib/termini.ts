@@ -1,7 +1,7 @@
 /** Domain mapiranja za termine statuse + DB upiti. */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { todayIso } from "@/lib/date"
+import { dodajDana, todayIso } from "@/lib/date"
 
 export type HitnoKasniItem = {
   id: string
@@ -13,21 +13,16 @@ export type HitnoKasniItem = {
   status_izvedeni: string
 }
 
-function isoPlusDays(days: number): string {
-  const d = new Date(todayIso())
-  d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
-}
-
 export async function getPredstojeciCount(
   supabase: SupabaseClient,
   dana = 30
 ): Promise<number> {
+  const danas = todayIso()
   const { count } = await supabase
     .from("termini_view")
     .select("id", { count: "exact", head: true })
-    .gte("rok_dospijeca", todayIso())
-    .lte("rok_dospijeca", isoPlusDays(dana))
+    .gte("rok_dospijeca", danas)
+    .lte("rok_dospijeca", dodajDana(danas, dana))
     .neq("status_izvedeni", "izvrseno")
   return count ?? 0
 }
@@ -39,7 +34,7 @@ export async function getHitnoKasni(
   const { data } = await supabase
     .from("termini_view")
     .select("id, klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca, status_izvedeni")
-    .or(`status_izvedeni.eq.kasni,and(rok_dospijeca.lte.${isoPlusDays(30)},status_izvedeni.neq.izvrseno)`)
+    .or(`status_izvedeni.eq.kasni,and(rok_dospijeca.lte.${dodajDana(todayIso(), 30)},status_izvedeni.neq.izvrseno)`)
     .order("rok_dospijeca", { ascending: true })
     .limit(limit)
   return (data ?? []) as HitnoKasniItem[]

@@ -19,7 +19,8 @@
     "rok": {
       "kasni": "{count, plural, =1 {# Tag überfällig} other {# Tage überfällig}}",
       "danas": "heute fällig",
-      "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}"
+      "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}",
+      "rokIZakazano": "Frist {rok} · geplant {zakazano}"
     },
     "sacuvano": "Gespeichert",
     "obrisano": "Gelöscht",
@@ -28,7 +29,10 @@
     "greskaUcitavanja": "Fehler beim Laden der Daten.",
     "izvozNijeDozvoljen": "Ihre Rolle darf keine Daten exportieren.",
     "samoAdministrator": "Nur Administrator.",
-    "pokusajPonovo": "Erneut versuchen"
+    "pokusajPonovo": "Erneut versuchen",
+    "zaduzeniTi": "(Sie)",
+    "zaduzeniPrikaziListu": "Vorschläge anzeigen",
+    "zaduzeniSlobodanUnos": "Keine Treffer — der eingegebene Name bleibt"
   },
   "shell": {
     "nav": {
@@ -167,6 +171,7 @@
       "brojOpseg": "Zahl muss {min}–{max} sein",
       "datumNeispravan": "Ungültiges Datum",
       "datumIstekaNakonPotpisivanja": "Das Ablaufdatum muss nach dem Unterzeichnungsdatum liegen.",
+      "ugovorIstekNeodredjeno": "Bei unbefristeten Verträgen entfällt das Ablaufdatum.",
       "neispravanZahtjev": "Ungültige Anfrage.",
       "vrstaObavezna": "Art ist erforderlich.",
       "lokacijaObavezna": "Standort ist erforderlich.",
@@ -174,7 +179,7 @@
       "prviRokObavezan": "Erste Frist ist erforderlich.",
       "lokacijaNePripada": "Der Standort gehört nicht zum Kunden.",
       "vrstaNemaInterval": "Diese Art hat kein Standardintervall — legen Sie eines in den Einstellungen fest.",
-      "provjeraVecPostoji": "Diese Prüfung existiert bereits im Profil.",
+      "provjeraVecPostoji": "Diese Leistung existiert bereits.",
       "terminProvjeraOsvjezi": "Die Prüfung wurde gespeichert, aber die Terminprüfung ist fehlgeschlagen — Seite aktualisieren.",
       "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
       "nedostajeId": "ID fehlt.",
@@ -186,7 +191,8 @@
       "podsjetnikEmailPostoji": "Die Adresse wurde bereits hinzugefügt.",
       "podsjetnikEmailKontakt": "Die Adresse ist bereits als Kontakt Empfänger.",
       "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
-      "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung."
+      "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung.",
+      "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich."
     },
     "detalj": {
       "nazad": "Kunden",
@@ -201,10 +207,7 @@
         }
       },
       "kontaktiTab": {
-        "infoPuniSpisak": "Vollständige Liste der Unternehmenskontakte, durchsuchbar nach Name und Funktion.",
-        "naslovLokacije": "Standortkontakte",
-        "infoLokacije": "Kontaktpersonen der einzelnen Standorte, abgeleitet aus den Standortdaten. Bearbeitung im Tab Standorte.",
-        "urediULokacijama": "In Standorten bearbeiten"
+        "infoPuniSpisak": "Vollständige Liste der Unternehmenskontakte, durchsuchbar nach Name und Funktion."
       },
       "dokumentiTab": {
         "prazno": "Keine Dokumente für diesen Kunden.",
@@ -256,7 +259,7 @@
       },
       "termini": {
         "label": "Termine",
-        "info": "Alle konkreten Fristen für diesen Kunden — vergangene und zukünftige. Jede Zeile ist ein Termin mit Fälligkeitsdatum, Status (geplant, terminiert, überfällig, durchgeführt) und zuständiger Person. Termine werden aus den im Profil definierten Prüfungen erzeugt."
+        "info": "Alle konkreten Fristen für diesen Kunden — vergangene und zukünftige. Jede Zeile ist ein Termin mit Fälligkeitsdatum, Status (geplant, terminiert, überfällig, durchgeführt) und zuständiger Person. Termine werden aus den im Tab Leistungen definierten Prüfungen erzeugt."
       },
       "lokacije": {
         "label": "Standorte",
@@ -275,7 +278,7 @@
         "info": "Versand von Erinnerungen an diese Firma (Umschalter + Adressen) und Zuweisung der Mitarbeiter, die für die Firma zuständig sind."
       },
       "profil": {
-        "label": "Profil",
+        "label": "Leistungen",
         "info": "Die Definition wiederkehrender Prüfungen für den Kunden: welche Art von Prüfung, an welchem Standort und in welchem Intervall durchgeführt wird. Aus diesen Einträgen werden automatisch Termine erzeugt. „Letztes Mal” ist die letzte tatsächliche Durchführung, „Nächste Frist” ist das Fälligkeitsdatum des aktiven Termins."
       }
     },
@@ -292,6 +295,19 @@
       "poljeTelefon": "Telefon *",
       "poljeEmail": "E-Mail *",
       "poljeNapomena": "Notiz",
+      "poljePib": "USt-IdNr.",
+      "poljeMaticniBroj": "Handelsregisternummer",
+      "poljeSifraDjelatnosti": "Tätigkeitsschlüssel",
+      "poljeZaduzeni": "Zuständige Person ({appName})",
+      "poljeTipOdnosa": "Beziehungstyp",
+      "nijePostavljeno": "Nicht festgelegt",
+      "tipUgovor": "Vertrag",
+      "tipPonuda": "Angebot",
+      "lokacijaNaslov": "Erster Standort",
+      "lokacijaNaziv": "Standortname",
+      "lokacijaGrad": "Stadt",
+      "lokacijaAdresa": "Adresse",
+      "lokacijaPomoc": "Leistungen sind immer einem Standort zugeordnet — ohne Standort ist keine möglich.",
       "submitPending": "Wird erstellt…",
       "submit": "Kunde erstellen",
       "uspjeh": "Kunde erstellt"
@@ -321,8 +337,8 @@
       "kontaktiInfo": "Kurze Vorschau der Unternehmenskontakte (die ersten paar). Die vollständige Liste und Suche befinden sich im Tab Kontakte.",
       "usluge": {
         "naslov": "Vereinbarte Leistungen",
-        "info": "Eine Zusammenfassung der Prüfungen aus dem Profil mit der jeweils nächsten Frist — ein schneller Überblick darüber, was vereinbart ist und was als Nächstes ansteht.",
-        "prazno": "Keine Leistungen definiert. Fügen Sie sie über den Tab Profil hinzu.",
+        "info": "Eine Zusammenfassung der Prüfungen aus dem Tab Leistungen mit der jeweils nächsten Frist — ein schneller Überblick darüber, was vereinbart ist und was als Nächstes ansteht.",
+        "prazno": "Keine Leistungen definiert. Fügen Sie sie über den Tab Leistungen hinzu.",
         "sljedeci": "nächste: {datum}",
         "imenica": "Leistungen"
       }
@@ -339,7 +355,14 @@
       "poljeObilasci": "Begehungen / Monat",
       "poljeAutoObnavljanje": "Automatische Verlängerung",
       "poljeAktivan": "Aktiver Vertrag (deaktiviert andere)",
+      "poljeNaNeodredjeno": "Unbefristeter Vertrag",
       "poljeNapomena": "Notiz",
+      "vazenjeNeodredjeno": "Unbefristet",
+      "vazenjeCustom": "Andere (Monate eingeben)",
+      "vazenjeOdaberi": "Dauer wählen",
+      "vazenjePreset": "{count} Mon.",
+      "vazenjeGreskaOpseg": "Die Monate müssen eine ganze Zahl zwischen 1 und 600 sein.",
+      "istekNeodredjeno": "Bei unbefristeten Verträgen entfällt das Ablaufdatum.",
       "submitPending": "Wird gespeichert…",
       "submitEdit": "Änderungen speichern",
       "submitNovi": "Vertrag erstellen"
@@ -351,6 +374,7 @@
       "bezBroja": "Ohne Nummer",
       "aktivan": "aktiv",
       "neaktivan": "inaktiv",
+      "naNeodredjeno": "unbefristet",
       "obrisiAriaLabel": "Vertrag löschen",
       "obilazMjesecno": " · {count} Begehungen/Mon.",
       "vazenjeMjeseci": " · Laufzeit {count} Mon.",
@@ -373,6 +397,12 @@
       "poljeLokacija": "Standort",
       "lokacijaSve": "Alle Standorte — Firmenkontakt",
       "lokacijaPomoc": "Ein Firmenkontakt erhält Erinnerungen für alle Standorte. An einen Standort gebunden — nur für diesen.",
+      "lokacijaIzborPostojeca": "Bestehender Standort",
+      "lokacijaIzborNova": "Neuer Standort",
+      "novaLokacijaNaziv": "Standortname",
+      "novaLokacijaGrad": "Stadt",
+      "novaLokacijaAdresa": "Adresse",
+      "novaLokacijaPomoc": "Der neue Standort wird sofort im Tab Standorte angelegt und der Kontakt damit verknüpft.",
       "poljeTelefon": "Telefon",
       "poljeEmail": "E-Mail",
       "submitPending": "Wird gespeichert…",
@@ -399,7 +429,6 @@
       "poljeGrad": "Stadt",
       "poljeRegija": "Region",
       "poljeAdresa": "Adresse",
-      "poljeKontaktOsoba": "Kontaktperson",
       "poljeEmail": "E-Mail",
       "poljeTelefon": "Telefon",
       "kontaktNaslov": "Kontakt für diesen Standort",
@@ -408,6 +437,7 @@
       "kontaktNovi": "Neuer Kontakt",
       "kontaktIme": "Vor- und Nachname",
       "kontaktPrima": "Erhält Erinnerungen für diesen Standort",
+      "kontaktPrimaUgaseno": "Der Versand von Erinnerungen an Kunden ist in den Einstellungen deaktiviert — bis ein Administrator ihn aktiviert, erhält dieser Kontakt keine E-Mails.",
       "kontaktPomoc": "Ein gebundener Kontakt erhält Erinnerungen nur für diesen Standort. Firmenkontakte erhalten sie ohnehin.",
       "submitPending": "Wird gespeichert…",
       "submitEdit": "Änderungen speichern",
@@ -449,7 +479,7 @@
       "uspjeh": "Dokument hinzugefügt"
     },
     "profil": {
-      "prazno": "Keine Prüfungen im Profil. Fügen Sie eine Prüfung hinzu, um Termine zu erstellen.",
+      "prazno": "Keine Leistungen definiert. Fügen Sie eine Leistung hinzu, um Termine zu erstellen.",
       "kolone": {
         "vrsta": "Art",
         "lokacija": "Standort",
@@ -460,9 +490,9 @@
       "prviPut": "— (erstes Mal)"
     },
     "obrisiProfil": {
-      "tooltip": "Aus Profil entfernen",
-      "dialogNaslov": "Prüfung aus Profil entfernen?",
-      "dialogOpis": "Entfernt den Eintrag aus dem Profil. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
+      "tooltip": "Leistung entfernen",
+      "dialogNaslov": "Leistung entfernen?",
+      "dialogOpis": "Entfernt die Leistung aus der Liste. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
       "potvrdi": "Entfernen",
       "confirmPending": "Wird gelöscht…"
     },
@@ -496,7 +526,7 @@
     },
     "dodajProvjeru": {
       "dugme": "Prüfung hinzufügen",
-      "naslov": "Prüfung zum Profil hinzufügen",
+      "naslov": "Leistung hinzufügen",
       "opis": "Verknüpfen Sie eine Leistung mit einem Standort — Termin und Frist werden automatisch erstellt.",
       "bezLokacijaTekst": "Der Kunde hat keinen Standort, jede Prüfung muss jedoch mit einem Standort verknüpft sein.",
       "bezLokacijaLink": "Zuerst einen Standort des Kunden anlegen.",
@@ -507,8 +537,8 @@
       "poljeInterval": "Intervall (Monate) — aus der Art übernommen",
       "bezIntervalaTekst": "Diese Art hat kein Standardintervall — legen Sie es in den",
       "bezIntervalaLink": "Einstellungen",
-      "bezIntervalaKraj": "fest, bevor Sie sie zum Profil hinzufügen.",
-      "bezIntervalaOperater": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, bevor Sie sie zum Profil hinzufügen.",
+      "bezIntervalaKraj": "fest, bevor Sie die Leistung hinzufügen.",
+      "bezIntervalaOperater": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, bevor Sie die Leistung hinzufügen.",
       "poljeRadjenoRanije": "Wurde diese Prüfung bereits durchgeführt? *",
       "opcijaVecRadeno": "Ja — ich gebe das letzte Datum ein",
       "opcijaPrviPut": "Nein — zum ersten Mal (ich gebe die erste Frist ein)",
@@ -554,7 +584,9 @@
       "ariaMjesec": "Monat",
       "ariaNacin": "Ausführungsart",
       "ariaGodina": "Jahr",
-      "ariaPretraga": "Firmen suchen"
+      "ariaPretraga": "Firmen suchen",
+      "ponisti": "Filter zurücksetzen",
+      "ariaStatus": "Status"
     },
     "sheet": {
       "naslovFallback": "Termin",
@@ -602,7 +634,13 @@
       "poljeZaduzeni": "Zuständig",
       "placeholderZaduzeni": "z. B. Marija K.",
       "kreiram": "Erstelle…",
-      "kreirajTermin": "Termin erstellen"
+      "kreirajTermin": "Termin erstellen",
+      "zaduzeniHintAdmin": "Sie können jeden Mitarbeiter zuweisen — die Firma wird ihm automatisch freigegeben.",
+      "zaduzeniHintRadnik": "Sie können sich selbst oder eine Kollegin/einen Kollegen zuweisen, die/der bereits Zugriff auf diese Firma hat.",
+      "ponavljanjeNaslov": "Eintragsart",
+      "ponavljanjeJednom": "Einmalig",
+      "ponavljanjePonavlja": "Wiederkehrend",
+      "ponavljanjePomoc": "Ein wiederkehrender Termin wird auch im Tab Leistungen angelegt, sodass die nächste Frist nach Erledigung automatisch berechnet wird. Erfordert einen Standort."
     },
     "actions": {
       "datumNeispravan": "Ungültiges Datum",
@@ -613,7 +651,10 @@
       "rokObavezan": "Frist ist erforderlich",
       "lokacijaNePripada": "Der Standort gehört nicht zum ausgewählten Kunden.",
       "terminVecPostoji": "Ein Termin für diese Firma, Art und Frist existiert bereits.",
-      "datumObavezan": "Datum ist erforderlich"
+      "datumObavezan": "Datum ist erforderlich",
+      "zaduzeniNemaPristup": "Diese Person hat keinen Zugriff auf die ausgewählte Firma. Firmenzugriff wird vom Admin unter Einstellungen → Benutzer zugewiesen.",
+      "ponavljanjeTraziLokaciju": "Ein wiederkehrender Termin muss einen Standort haben.",
+      "ponavljanjeVrstaBezIntervala": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, oder erfassen Sie den Termin als einmalig."
     }
   },
   "status": {
@@ -644,6 +685,7 @@
     "naslov": "Aktivitätsplan",
     "izvoz": {
       "preuzmi": "Herunterladen",
+      "preuzmiOpis": "Aktivitätsplan als PDF oder Excel exportieren",
       "naslovModala": "Bericht herunterladen",
       "format": "Format",
       "formatPdf": "PDF",
@@ -673,8 +715,11 @@
     },
     "viewSwitcher": {
       "kalendar": "Kalender",
+      "kalendarOpis": "Termine nach Tagen des Monats anzeigen",
       "lista": "Liste",
-      "matrica": "Matrix"
+      "listaOpis": "Termine als filterbare Liste anzeigen",
+      "matrica": "Matrix",
+      "matricaOpis": "Termine in einer Matrix Kunde × Art anzeigen"
     },
     "nav": {
       "prethodniMjesec": "Vorheriger Monat",
@@ -699,7 +744,8 @@
     },
     "monthCalendar": {
       "danAriaLabel": "Tag {broj}",
-      "jos": "{count} weitere"
+      "jos": "{count} weitere",
+      "dodajTermin": "Termin hinzufügen für {datum}"
     },
     "kalendar": {
       "nemaTerminaZaDan": "Keine Termine für diesen Tag.",
@@ -1014,7 +1060,7 @@
     "vrijemeSlanja": {
       "naslov": "Sendezeit",
       "opis": "Erinnerungen werden einmal täglich zu einem von zwei Zeitpunkten versendet.",
-      "zona": "Ortszeit (Wien)",
+      "zona": "Ortszeit (Belgrad)",
       "ujutro": "Vormittags (ca. 10–11 Uhr)",
       "poslijepodne": "Nachmittags (ca. 14–15 Uhr)"
     },
@@ -1328,7 +1374,9 @@
       "opened": "Geöffnet",
       "deliveryFailed": "Zustellung fehlgeschlagen",
       "bounced": "Unzustellbar",
-      "complained": "Als Spam gemeldet"
+      "complained": "Als Spam gemeldet",
+      "djelimicno": "{oznaka} ({pogodjenih} von {ukupno})",
+      "djelimicnoAdrese": "Nicht zugestellt an: {adrese}"
     },
     "filteri": {
       "tip": "Typ",

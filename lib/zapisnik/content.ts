@@ -1,5 +1,6 @@
 import { APP_NAME } from "../brand"
 import { APP_LOCALE, type Locale } from "../locale"
+import { formatDatum } from "../date"
 
 export type ZapisnikInput = {
   klijent: string
@@ -20,7 +21,7 @@ const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = 
     const lok = input.lokacija ? `, lokacija ${input.lokacija}` : ""
     return {
       nalaz:
-        `Izvršena je provjera "${input.vrstaProvjere}" za klijenta ${input.klijent}${lok}, dana ${input.datum}. ` +
+        `Izvršena je provjera "${input.vrstaProvjere}" za klijenta ${input.klijent}${lok}, dana ${formatDatum(input.datum)}. ` +
         `Tokom provjere pregledani su relevantni elementi u skladu sa važećim propisima zaštite na radu.`,
       zakljucak:
         `Na osnovu izvršene provjere utvrđeno je da stanje zadovoljava propisane uslove. ` +
@@ -32,7 +33,7 @@ const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = 
     const loc = input.lokacija ? `, location ${input.lokacija}` : ""
     return {
       nalaz:
-        `An inspection "${input.vrstaProvjere}" was carried out for client ${input.klijent}${loc}, on ${input.datum}. ` +
+        `An inspection "${input.vrstaProvjere}" was carried out for client ${input.klijent}${loc}, on ${formatDatum(input.datum)}. ` +
         `During the inspection, the relevant elements were reviewed in accordance with applicable occupational safety regulations.`,
       zakljucak:
         `Based on the inspection performed, it was determined that the condition meets the prescribed requirements. ` +
@@ -44,7 +45,7 @@ const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = 
     const ort = input.lokacija ? `, Standort ${input.lokacija}` : ""
     return {
       nalaz:
-        `Die Prüfung "${input.vrstaProvjere}" wurde für den Kunden ${input.klijent}${ort} am ${input.datum} durchgeführt. ` +
+        `Die Prüfung "${input.vrstaProvjere}" wurde für den Kunden ${input.klijent}${ort} am ${formatDatum(input.datum)} durchgeführt. ` +
         `Im Rahmen der Prüfung wurden die relevanten Elemente gemäß den geltenden Arbeitsschutzvorschriften überprüft.`,
       zakljucak:
         `Auf Grundlage der durchgeführten Prüfung wurde festgestellt, dass der Zustand die vorgeschriebenen Anforderungen erfüllt. ` +
@@ -73,10 +74,13 @@ export function buildPrompt(input: ZapisnikInput, locale: Locale = APP_LOCALE): 
     `Klijent: ${input.klijent}\n` +
     `Lokacija: ${input.lokacija ?? "—"}\n` +
     `Vrsta provjere: ${input.vrstaProvjere}\n` +
-    `Datum izvršenja: ${input.datum}\n` +
+    // Modelu se datum daje već formatiran po standardu prikaza (dd.MM.yyyy, lib/date.ts),
+    // uz eksplicitno pravilo ispod — da generisani tekst ne prepiše ISO oblik.
+    `Datum izvršenja: ${formatDatum(input.datum)}\n` +
     `Zaduženi: ${input.zaduzeni ?? "—"}\n\n` +
     `Vrati ISKLJUČIVO validan JSON oblika {"nalaz": "...", "zakljucak": "..."} ${PROMPT_JEZIK_INSTRUKCIJA[locale]}, ` +
     `bez markdown ograda i bez dodatnog teksta. ` +
-    `"nalaz" = 2-4 rečenice opisa izvršene provjere; "zakljucak" = 1-2 rečenice ocjene i preporuke.`
+    `"nalaz" = 2-4 rečenice opisa izvršene provjere; "zakljucak" = 1-2 rečenice ocjene i preporuke. ` +
+    `Datume u tekstu piši u formatu dd.MM.yyyy (npr. 30.07.2026).`
   )
 }

@@ -1,3 +1,5 @@
+import { APP_TIME_ZONE } from "@/lib/date"
+
 // Da li je automatsko (cron) slanje podsjetnika uključeno za ovu instancu.
 // Nedostajući red/kolona = uključeno: sigurnosna tolerancija za trenutak
 // između deploy-a koda i primjene migracije (spec §Ponašanje).
@@ -8,12 +10,13 @@ export function podsjetniciAktivni(
 }
 
 /**
- * Lokalni sat (0–23) i ISO datum (YYYY-MM-DD) za dati trenutak u datoj zoni.
+ * Lokalni sat (0–23) i ISO datum (YYYY-MM-DD) za dati trenutak u datoj zoni
+ * (podrazumijevano APP_TIME_ZONE, Europe/Belgrade).
  * `now` i `timeZone` se ubacuju (bez Date.now()) → čisto i testabilno.
  */
 export function lokalniSatIDatum(
   now: Date,
-  timeZone = "Europe/Vienna",
+  timeZone = APP_TIME_ZONE,
 ): { sat: number; datum: string } {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -30,13 +33,13 @@ export function lokalniSatIDatum(
 
 /**
  * Treba li automatski (cron) run slati SADA: lokalni sat je dostigao izabrani
- * i danas (po lokalnom datumu) još nije slato.
+ * i danas (po lokalnom datumu u APP_TIME_ZONE) još nije slato.
  */
 export function trebaSlatiSada(
   vrijemeSat: number,
   zadnjeSlanjeDatum: string | null,
   now: Date,
-  timeZone = "Europe/Vienna",
+  timeZone = APP_TIME_ZONE,
 ): boolean {
   const { sat, datum } = lokalniSatIDatum(now, timeZone)
   return sat >= vrijemeSat && zadnjeSlanjeDatum !== datum

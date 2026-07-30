@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test"
 import { insertKlijent, deleteKlijentByNaziv } from "./db"
 
 test.describe("Info tooltipovi — tab traka", () => {
-  test("hover na ⓘ taba Profil prikazuje objašnjenje; klik na tab i dalje radi", async ({ page }) => {
+  test("hover na ⓘ taba Usluge prikazuje objašnjenje; klik na tab i dalje radi", async ({ page }) => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     try {
@@ -12,7 +12,7 @@ test.describe("Info tooltipovi — tab traka", () => {
       const ikona = page.getByTestId("info-tab-profil")
       await expect(ikona).toBeVisible()
       await ikona.hover()
-      await expect(page.getByText("Definicija ponavljajućih provjera")).toBeVisible()
+      await expect(page.getByText("Definicija ponavljajućih usluga")).toBeVisible()
 
       // ⓘ ne smije pokvariti prebacivanje tabova ni accessible name taba
       await page.getByRole("tab", { name: "Termini" }).click()

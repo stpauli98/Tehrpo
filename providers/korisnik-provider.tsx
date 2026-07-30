@@ -6,17 +6,24 @@ import { mozeUrediti, smijePreuzeti } from "@/lib/auth/roles"
 import { efektivneDozvole, PRAZNE_DOZVOLE, type Dozvole } from "@/lib/auth/dozvole"
 
 // null = uloga nepoznata (npr. profil red nedostaje) → tretira se kao najmanja privilegija.
-const KorisnikContext = createContext<{ uloga: Uloga | null; dozvole: Dozvole }>({
+const KorisnikContext = createContext<{
+  uloga: Uloga | null
+  ime: string | null
+  dozvole: Dozvole
+}>({
   uloga: null,
+  ime: null,
   dozvole: PRAZNE_DOZVOLE,
 })
 
 export function KorisnikProvider({
   uloga,
+  ime = null,
   dozvole,
   children,
 }: {
   uloga: Uloga | null
+  ime?: string | null
   /** Sirove kolone sa `korisnici`; ulogu primjenjuje provider. */
   dozvole?: Dozvole
   children: ReactNode
@@ -24,16 +31,22 @@ export function KorisnikProvider({
   const vrijednost = useMemo(
     () => ({
       uloga,
+      ime,
       // Bez uloge nema povlastica — isti princip kao useMozeUrediti/useSmijePreuzeti.
       dozvole: uloga && dozvole ? efektivneDozvole(uloga, dozvole) : PRAZNE_DOZVOLE,
     }),
-    [uloga, dozvole],
+    [uloga, ime, dozvole],
   )
   return <KorisnikContext.Provider value={vrijednost}>{children}</KorisnikContext.Provider>
 }
 
 export function useUloga(): Uloga | null {
   return useContext(KorisnikContext).uloga
+}
+
+/** Ime prijavljenog korisnika (za „(ti)" prijedlog u ZaduzeniPolje); null dok je nepoznato. */
+export function useKorisnikIme(): string | null {
+  return useContext(KorisnikContext).ime
 }
 
 /**

@@ -62,12 +62,23 @@ describe("SISTEM_PROMPT (en/de — parametrizacija po APP_LOCALE)", () => {
 })
 
 describe("datumNapomena (call-time datum, ne dira SISTEM_PROMPT const)", () => {
-  it("sr: 'Danas je <datum>.' sa vodećim praznim redovima", () => {
-    expect(datumNapomena("2026-07-12", "sr")).toBe("\n\nDanas je 2026-07-12.")
+  it("sr: 'Danas je <dd.MM.yyyy>.' sa vodećim praznim redovima + pravilo prikaza datuma", () => {
+    const n = datumNapomena("2026-07-12", "sr")
+    expect(n.startsWith("\n\nDanas je 12.07.2026.")).toBe(true)
+    expect(n).toContain("dd.MM.yyyy")
+    expect(n).toContain("dd.MM.yyyy HH:mm")
+    expect(n).toContain("ISO formatu (YYYY-MM-DD)")
+    expect(n).not.toContain("2026-07-12") // ISO ulaz se modelu prikazuje formatiran
   })
-  it("en/de fraze", () => {
-    expect(datumNapomena("2026-07-12", "en")).toBe("\n\nToday is 2026-07-12.")
-    expect(datumNapomena("2026-07-12", "de")).toBe("\n\nHeute ist 2026-07-12.")
+  it("en/de fraze — formatiran datum i pravilo prikaza", () => {
+    const en = datumNapomena("2026-07-12", "en")
+    expect(en.startsWith("\n\nToday is 12.07.2026.")).toBe(true)
+    expect(en).toContain("dd.MM.yyyy HH:mm")
+    expect(en).toContain("ISO format (YYYY-MM-DD)")
+    const de = datumNapomena("2026-07-12", "de")
+    expect(de.startsWith("\n\nHeute ist 12.07.2026.")).toBe(true)
+    expect(de).toContain("dd.MM.yyyy HH:mm")
+    expect(de).toContain("ISO-Format (YYYY-MM-DD)")
   })
   it("SISTEM_PROMPT const ostaje bez datuma (byte-identičan)", () => {
     expect(SISTEM_PROMPT).not.toContain("Danas je")

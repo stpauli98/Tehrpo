@@ -15,6 +15,10 @@ import {
   validirajFajl,
   MAX_MB,
 } from "@/lib/dokumenti"
+// getTrenutniKorisnik/jeAdmin namjerno NISU importovani: brisanje dokumenta više ne traži
+// admina (naručilac obrnuo pravilo 30.07.2026.) — odlučuje RLS `dokumenti_del` + provjera
+// broja obrisanih redova nize u deleteDokumentAction.
+import { todayIso } from "@/lib/date"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
@@ -131,7 +135,8 @@ export async function generateZapisnikAction(
     return { ok: false, message: t("zapisnikSamoIzvrsen") }
   }
 
-  const datum = (term.datum_izvrsenja ?? new Date().toISOString()).slice(0, 10)
+  // datum_izvrsenja je `date` kolona (zidni datum); fallback "danas" po APP_TIME_ZONE (todayIso), ne UTC
+  const datum = term.datum_izvrsenja ?? todayIso()
   const content = await generateZapisnik({
     klijent: term.klijent_naziv ?? "—",
     lokacija: term.lokacija_naziv ?? null,

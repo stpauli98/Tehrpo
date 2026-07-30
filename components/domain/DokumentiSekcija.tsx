@@ -97,8 +97,11 @@ export function DokumentiSekcija({
   const tipGreske = uploadState.ok === false ? uploadState.errors?.tip : undefined
 
   return (
-    <section data-testid="sheet-dokumenti">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("naslov")}</p>
+    <section data-testid="sheet-dokumenti" className="border-l-2 border-l-brand/50 pl-3">
+      <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+        <FileText className="h-3.5 w-3.5" aria-hidden />
+        {t("naslov")}
+      </p>
 
       <div className="mt-2 space-y-3">
         {izvrsen ? (

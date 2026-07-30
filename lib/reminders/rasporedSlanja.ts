@@ -1,8 +1,9 @@
 /**
  * Veza između cron rasporeda i podešavanja „Vrijeme slanja".
  *
- * Raspored je u vercel.json: "0 9 * * *" i "0 13 * * *" (UTC), dakle po Beču
- * 10:00 i 14:00 zimi (CET), 11:00 i 15:00 ljeti (CEST). Gate u cron ruti je
+ * Raspored je u vercel.json: "0 9 * * *" i "0 13 * * *" (UTC), dakle po
+ * Europe/Belgrade 10:00 i 14:00 zimi (CET), 11:00 i 15:00 ljeti (CEST).
+ * Gate u cron ruti je
  * `sat >= vrijeme_slanja_sat`, pa je najkasnija vrijednost koja radi CIJELE
  * godine jednaka najranijem popodnevnom cron satu — 14.
  *

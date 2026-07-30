@@ -1,8 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { ChevronLeft, MapPin } from "lucide-react"
-import { InfoIkona } from "@/components/ui/info-ikona"
+import { ChevronLeft } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -21,7 +20,7 @@ import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
-import { formatDatum, addMjeseci } from "@/lib/date"
+import { formatDatum, formatDatumInstant, addMjeseci } from "@/lib/date"
 import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
@@ -61,7 +60,7 @@ export default async function KlijentDetailPage({
   const tPag = await getTranslations("common.pagination")
   const { id } = await params
   const sp = await searchParams
-  const tab = typeof sp.tab === "string" && VALID_TABS.includes(sp.tab) ? sp.tab : "termini"
+  const tab = typeof sp.tab === "string" && VALID_TABS.includes(sp.tab) ? sp.tab : "id-karta"
   const highlight = typeof sp.highlight === "string" ? sp.highlight : null
   const dokStrana = strana(sp.dstr)
   const termStrana = strana(sp.tstr)
@@ -94,10 +93,11 @@ export default async function KlijentDetailPage({
     ugovoriRes,
     kontaktiRes,
     dokumentiRes,
+    postavkeRes,
   ] = await Promise.all([
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
-    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id").eq("id", id).maybeSingle(),
+    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id, salji_podsjetnik_klijentu").eq("id", id).maybeSingle(),
     // RLS na `korisnici` je self-select → direktan from() bi operateru vratio samo
     // njega samog; SECURITY DEFINER RPC daje sve aktivne (S8.6).
     supabase.rpc("get_aktivni_korisnici"),
@@ -133,6 +133,10 @@ export default async function KlijentDetailPage({
       ? supabase.from("dokumenti").select("*", { count: "exact" }).eq("klijent_id", id)
           .order("uploaded_at", { ascending: false })
           .range((dokStrana - 1) * DOKUMENTI_PER_PAGE, dokStrana * DOKUMENTI_PER_PAGE - 1)
+      : prazno,
+    // Samo tab „lokacije" treba globalni prekidač slanja (za slanjeUgaseno ispod).
+    tab === "lokacije"
+      ? supabase.from("postavke").select("salji_klijentima").eq("id", 1).maybeSingle()
       : prazno,
   ])
 
@@ -170,6 +174,7 @@ export default async function KlijentDetailPage({
     trebaUgovore ? ugovoriRes.error : null,
     trebaKontakte ? kontaktiRes.error : null,
     trebaDokumente ? dokumentiRes.error : null,
+    tab === "lokacije" ? postavkeRes.error : null,
   ].some(jeGreskaUpita)
 
   const termini = (terminiRes.data ?? []) as TerminViewRow[]
@@ -183,6 +188,12 @@ export default async function KlijentDetailPage({
   const ugovori = ugovoriRes.data ?? []
   const kontakti = kontaktiRes.data ?? []
   const klijentPolja = klijentTabelaRes.data
+
+  // Checkbox „prima podsjetnike" ima efekta samo ako su OBA prekidača uključena:
+  // globalni (postavke) i per-firma. Inače ga prikazujemo neaktivnog sa objašnjenjem.
+  const slanjeUgaseno =
+    !(postavkeRes.data as { salji_klijentima?: boolean } | null)?.salji_klijentima ||
+    !klijentPolja?.salji_podsjetnik_klijentu
 
   // Profil se obogaćuje STVARNIM terminima iz baze (već dohvaćeni, sortirani po roku ASC):
   // "Sljedeći rok" = rok aktivnog termina (planirano/zakazano/kasni), "Zadnji put" = zadnje
@@ -374,50 +385,6 @@ export default async function KlijentDetailPage({
                   info={t("kontaktiTab.infoPuniSpisak")}
                 />
               </section>
-
-              {lokacije.some((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
-                <section className={`${KARTICA} p-5`}>
-                  <div className="mb-3 flex items-center gap-2">
-                    <MapPin className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
-                    <h3 className="text-sm font-semibold text-foreground">{t("kontaktiTab.naslovLokacije")}</h3>
-                    <InfoIkona
-                      tekst={t("kontaktiTab.infoLokacije")}
-                      testId="info-sekcija-kontakti-lokacija"
-                    />
-                  </div>
-                  <ul className="space-y-2">
-                    {lokacije.map(
-                      (l) =>
-                        (l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
-                          <li
-                            key={l.id}
-                            id={`kontakt-${l.id}`}
-                            data-testid="kontakt-lokacija-card"
-                            className="scroll-mt-24 rounded-xl border border-border p-3 text-sm"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-medium">
-                                {l.kontakt_osoba ?? "—"}
-                                <span className="font-normal text-muted-foreground"> · {l.naziv}</span>
-                              </span>
-                              <Link
-                                href={href(`/klijenti/${id}?tab=lokacije`)}
-                                className="shrink-0 text-xs text-brand hover:underline"
-                              >
-                                {t("kontaktiTab.urediULokacijama")}
-                              </Link>
-                            </div>
-                            {(l.kontakt_telefon || l.kontakt_email) && (
-                              <div className="mt-1 text-muted-foreground">
-                                {[l.kontakt_telefon, l.kontakt_email].filter(Boolean).join(" · ")}
-                              </div>
-                            )}
-                          </li>
-                        )
-                    )}
-                  </ul>
-                </section>
-              )}
             </div>
           )}
 
@@ -450,7 +417,8 @@ export default async function KlijentDetailPage({
                           <td className="px-3 py-2">{d.naziv}</td>
                           <td className="px-3 py-2 text-muted-foreground">{d.tip}</td>
                           <td className="px-3 py-2 text-muted-foreground">{d.generated_by_ai ? t("dokumentiTab.izvorAi") : t("dokumentiTab.izvorUpload")}</td>
-                          <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
+                          {/* uploaded_at je timestamptz (instant) — zidni datum po APP_TIME_ZONE, ne UTC datum-dio */}
+                          <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatumInstant(d.uploaded_at)}</td>
                           <td className="px-3 py-2">
                             <span className="flex items-center justify-end gap-1">
                               <PreuzmiDokumentButton dokumentId={d.id} label={t("dokumentiTab.preuzmi")} testId="klijent-dokument-download" />
@@ -483,6 +451,7 @@ export default async function KlijentDetailPage({
               klijentId={id}
               lokacije={lokacije}
               kontakti={kontakti.map((k) => ({ id: k.id, ime: k.ime, lokacija_id: k.lokacija_id }))}
+              slanjeUgaseno={slanjeUgaseno}
             />
           )}
 

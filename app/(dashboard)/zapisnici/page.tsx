@@ -1,7 +1,9 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { X } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
 import { downloadDokument } from "@/lib/supabase/storage"
 import { DocxPreview } from "@/components/domain/DocxPreview"
@@ -9,6 +11,7 @@ import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
 import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
 import { href } from "@/i18n/routes"
+import { jeAdmin } from "@/lib/auth/roles"
 import mammoth from "mammoth"
 
 // Isti page-size obrazac kao poslati-mejlovi/page.tsx (PER_PAGE + offset/range).
@@ -28,6 +31,12 @@ export default async function ZapisniciPage({
 }) {
   const t = await getTranslations("zapisnici")
   const tPag = await getTranslations("common.pagination")
+
+  // Zapisnici su admin-only (yoink zahtjev 2026-07-29): tab je ne-adminima sakriven
+  // (Sidebar), a ovdje se zatvara i direktan URL pristup — isti obrazac kao /asistent.
+  const korisnik = await getTrenutniKorisnik()
+  if (!korisnik || !jeAdmin(korisnik.uloga)) redirect(href("/pregled"))
+
   const sp = await searchParams
   const previewId = typeof sp.preview === "string" ? sp.preview : null
   const trazenaStrana = Math.max(1, Number(typeof sp.strana === "string" ? sp.strana : "1") || 1)

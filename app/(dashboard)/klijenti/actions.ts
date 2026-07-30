@@ -186,6 +186,14 @@ export async function deleteKlijent(
   const parsed = deleteKlijentSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
+  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
+  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
+  const { data: postoji } = await supabase
+    .from("klijenti")
+    .select("id")
+    .eq("id", parsed.data.id)
+    .maybeSingle()
+  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
   const { data: obrisano, error } = await supabase
     .from("klijenti")
     .delete()
@@ -367,6 +375,14 @@ export async function deleteLokacija(
   const parsed = deleteLokacijaSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
+  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
+  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
+  const { data: postoji } = await supabase
+    .from("lokacije")
+    .select("id")
+    .eq("id", parsed.data.id)
+    .maybeSingle()
+  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
   const { data: obrisano, error } = await supabase
     .from("lokacije")
     .delete()
@@ -465,6 +481,14 @@ export async function deleteProfilProvjere(
   const id = String(formData.get("id") ?? "")
   if (!id) return { ok: false, message: t("nedostajeId") }
   const supabase = await createServerSupabaseClient()
+  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
+  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
+  const { data: postoji } = await supabase
+    .from("klijent_provjere")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle()
+  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
   const { data: obrisano, error } = await supabase
     .from("klijent_provjere")
     .delete()
@@ -561,6 +585,15 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
+  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
+  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
+  const { data: postoji } = await supabase
+    .from("ugovori")
+    .select("id")
+    .eq("id", id)
+    .eq("klijent_id", klijent_id)
+    .maybeSingle()
+  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
   const { data: obrisano, error } = await supabase
     .from("ugovori")
     .delete()
@@ -664,6 +697,15 @@ export async function deleteKontakt(_prev: ActionResult, formData: FormData): Pr
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
+  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
+  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
+  const { data: postoji } = await supabase
+    .from("kontakt_osobe")
+    .select("id")
+    .eq("id", id)
+    .eq("klijent_id", klijent_id)
+    .maybeSingle()
+  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
   const { data: obrisano, error } = await supabase
     .from("kontakt_osobe")
     .delete()

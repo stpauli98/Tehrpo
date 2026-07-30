@@ -255,7 +255,7 @@ export type Database = {
           id: string
           interval_mjeseci: number | null
           klijent_id: string
-          lokacija_id: string
+          lokacija_id: string | null
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id: string | null
           vrsta_provjere_id: string
@@ -267,7 +267,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id: string
-          lokacija_id: string
+          lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id: string
@@ -279,7 +279,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id?: string
-          lokacija_id?: string
+          lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           ugovor_id?: string | null
           vrsta_provjere_id?: string
@@ -915,6 +915,7 @@ export type Database = {
           datum_potpisivanja: string | null
           id: string
           klijent_id: string
+          na_neodredjeno: boolean
           napomena: string | null
           vazenje_mjeseci: number | null
           zavodni_broj: string | null
@@ -928,6 +929,7 @@ export type Database = {
           datum_potpisivanja?: string | null
           id?: string
           klijent_id: string
+          na_neodredjeno?: boolean
           napomena?: string | null
           vazenje_mjeseci?: number | null
           zavodni_broj?: string | null
@@ -941,6 +943,7 @@ export type Database = {
           datum_potpisivanja?: string | null
           id?: string
           klijent_id?: string
+          na_neodredjeno?: boolean
           napomena?: string | null
           vazenje_mjeseci?: number | null
           zavodni_broj?: string | null

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Download, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { IKONA_INLINE_KLASA, Tooltip } from "@/components/ui/ikona-tooltip"
+import { useSmijePreuzeti } from "@/providers/korisnik-provider"
 
 /**
  * Preuzimanje dokumenta po S13: pending → `fetch` → `res.ok` provjera → tek onda
@@ -24,6 +25,10 @@ export function PreuzmiDokumentButton({
 }) {
   const tc = useTranslations("common")
   const [pending, setPending] = useState(false)
+  const smijePreuzeti = useSmijePreuzeti()
+
+  // `pregled` ne smije preuzimati — dugme se ne prikazuje (nakon svih hook poziva, Rules of Hooks).
+  if (!smijePreuzeti) return null
 
   async function preuzmi() {
     if (pending) return

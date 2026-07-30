@@ -26,6 +26,7 @@
     "greska": "Ein Fehler ist aufgetreten",
     "greskaNeocekivana": "Ein unerwarteter Fehler ist aufgetreten.",
     "greskaUcitavanja": "Fehler beim Laden der Daten.",
+    "izvozNijeDozvoljen": "Ihre Rolle darf keine Daten exportieren.",
     "samoAdministrator": "Nur Administrator.",
     "pokusajPonovo": "Erneut versuchen"
   },
@@ -874,6 +875,7 @@
     "dropzoneUkloni": "Ausgewählte Datei entfernen",
     "neispravniPodaci": "Ungültige Daten — aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "preuzimanjeNijeUspjelo": "Der Download ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "preuzimanjeNijeDozvoljeno": "Ihre Rolle darf keine Dokumente herunterladen.",
     "potvrdaBrisanjaNaslov": "Dokument löschen?",
     "potvrdaBrisanjaOpis": "Das Dokument und die Datei werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
     "tipovi": {

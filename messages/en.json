@@ -26,6 +26,7 @@
     "greska": "Something went wrong",
     "greskaNeocekivana": "An unexpected error occurred.",
     "greskaUcitavanja": "Failed to load data.",
+    "izvozNijeDozvoljen": "Your role is not allowed to export data.",
     "samoAdministrator": "Administrator only.",
     "pokusajPonovo": "Try again"
   },
@@ -874,6 +875,7 @@
     "dropzoneUkloni": "Remove selected file",
     "neispravniPodaci": "Invalid data — refresh the page and try again.",
     "preuzimanjeNijeUspjelo": "Download failed. Please try again.",
+    "preuzimanjeNijeDozvoljeno": "Your role is not allowed to download documents.",
     "potvrdaBrisanjaNaslov": "Delete document?",
     "potvrdaBrisanjaOpis": "The document and its file are permanently deleted. This cannot be undone.",
     "tipovi": {

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react"
 import type { Uloga } from "@/lib/auth/roles"
-import { mozeUrediti } from "@/lib/auth/roles"
+import { mozeUrediti, smijePreuzeti } from "@/lib/auth/roles"
 
 // null = uloga nepoznata (npr. profil red nedostaje) → tretira se kao najmanja privilegija.
 const KorisnikContext = createContext<{ uloga: Uloga | null }>({ uloga: null })
@@ -25,4 +25,10 @@ export function useUloga(): Uloga | null {
 export function useMozeUrediti(): boolean {
   const u = useUloga()
   return u ? mozeUrediti(u) : false
+}
+
+/** true ako tekuća uloga smije preuzimati/izvoziti; null/pregled → false. */
+export function useSmijePreuzeti(): boolean {
+  const u = useUloga()
+  return u ? smijePreuzeti(u) : false
 }

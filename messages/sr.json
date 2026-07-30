@@ -26,6 +26,7 @@
     "greska": "Došlo je do greške",
     "greskaNeocekivana": "Došlo je do neočekivane greške.",
     "greskaUcitavanja": "Greška pri učitavanju podataka.",
+    "izvozNijeDozvoljen": "Vaša uloga nema pravo izvoza podataka.",
     "samoAdministrator": "Samo administrator.",
     "pokusajPonovo": "Pokušaj ponovo"
   },
@@ -874,6 +875,7 @@
     "dropzoneUkloni": "Ukloni izabrani fajl",
     "neispravniPodaci": "Neispravni podaci — osvježite stranicu i pokušajte ponovo.",
     "preuzimanjeNijeUspjelo": "Preuzimanje nije uspjelo. Pokušajte ponovo.",
+    "preuzimanjeNijeDozvoljeno": "Vaša uloga nema pravo preuzimanja dokumenata.",
     "potvrdaBrisanjaNaslov": "Obrisati dokument?",
     "potvrdaBrisanjaOpis": "Dokument i fajl se trajno brišu. Ovo se ne može poništiti.",
     "tipovi": {

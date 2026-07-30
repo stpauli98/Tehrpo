@@ -556,7 +556,10 @@ const kontaktFields = {
   lokacija_id: z.union([z.string().uuid(), z.literal("")]).optional(),
   // Yoink 2026-07-30, stavka 7: kontakt forma može odmah kreirati novu lokaciju
   // umjesto da korisnik prvo ide u tab Lokacije.
-  lokacija_izbor: z.enum(["postojeca", "nova"]).optional(),
+  // "firma" = izričit izbor „Sve lokacije — kontakt firme" (lokacija_id = null).
+  // Postoji zbog firme BEZ ijedne lokacije: tamo se Select ne renderuje, pa bez
+  // ove grane kontakt firme ne bi bio unosiv (regresija C1, 2026-07-30).
+  lokacija_izbor: z.enum(["postojeca", "nova", "firma"]).optional(),
   nova_lokacija_naziv: optionalText(200),
   nova_lokacija_grad: optionalText(120),
   nova_lokacija_adresa: optionalText(300),
@@ -580,7 +583,9 @@ export async function createKontakt(_prev: ActionResult, formData: FormData): Pr
   // Yoink 2026-07-30, stavka 7: kontakt može povući novu lokaciju sa sobom.
   // Ista dedup provjera kao createLokacija — bez nje se ista lokacija unese
   // dvaput samo zbog razmaka ili veličine slova.
-  let lokacijaId = f.lokacija_id || null
+  // „firma" je izričit izbor kontakta firme — zanemari eventualni zaostali
+  // lokacija_id iz formData da izbor ne bi tiho ostao vezan za lokaciju.
+  let lokacijaId = f.lokacija_izbor === "firma" ? null : f.lokacija_id || null
   if (f.lokacija_izbor === "nova") {
     const naziv = (f.nova_lokacija_naziv ?? "").trim()
     if (!naziv) return { ok: false, errors: { nova_lokacija_naziv: [t("lokacijaNazivObavezan")] } }

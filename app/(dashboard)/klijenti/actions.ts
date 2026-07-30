@@ -29,6 +29,19 @@ function nijeObrisano(redovi: { id: string }[] | null): boolean {
   return !redovi || redovi.length === 0
 }
 
+/**
+ * Postoji li red koji brišemo? Provjera je RLS-scoped: red na firmi koja korisniku nije
+ * dodijeljena čita se kao „ne postoji", što mu je i tačno reći — ne odajemo postojanje
+ * zapisa na tuđim firmama. Bez ovoga svako brisanje bez pogotka (dupli submit, ustajala
+ * stranica, neko drugi već obrisao) tvrdi da je problem u dozvolama.
+ */
+async function postojiRed(
+  upit: PromiseLike<{ data: { id: string } | null }>,
+): Promise<boolean> {
+  const { data } = await upit
+  return data !== null
+}
+
 const optionalText = (max: number) =>
   z.string().max(max).optional().or(z.literal("").transform(() => undefined))
 
@@ -186,14 +199,9 @@ export async function deleteKlijent(
   const parsed = deleteKlijentSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
-  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
-  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
-  const { data: postoji } = await supabase
-    .from("klijenti")
-    .select("id")
-    .eq("id", parsed.data.id)
-    .maybeSingle()
-  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
+  if (!(await postojiRed(supabase.from("klijenti").select("id").eq("id", parsed.data.id).maybeSingle()))) {
+    return { ok: false, message: t("zapisNePostoji") }
+  }
   const { data: obrisano, error } = await supabase
     .from("klijenti")
     .delete()
@@ -375,14 +383,9 @@ export async function deleteLokacija(
   const parsed = deleteLokacijaSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
-  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
-  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
-  const { data: postoji } = await supabase
-    .from("lokacije")
-    .select("id")
-    .eq("id", parsed.data.id)
-    .maybeSingle()
-  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
+  if (!(await postojiRed(supabase.from("lokacije").select("id").eq("id", parsed.data.id).maybeSingle()))) {
+    return { ok: false, message: t("zapisNePostoji") }
+  }
   const { data: obrisano, error } = await supabase
     .from("lokacije")
     .delete()
@@ -481,14 +484,9 @@ export async function deleteProfilProvjere(
   const id = String(formData.get("id") ?? "")
   if (!id) return { ok: false, message: t("nedostajeId") }
   const supabase = await createServerSupabaseClient()
-  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
-  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
-  const { data: postoji } = await supabase
-    .from("klijent_provjere")
-    .select("id")
-    .eq("id", id)
-    .maybeSingle()
-  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
+  if (!(await postojiRed(supabase.from("klijent_provjere").select("id").eq("id", id).maybeSingle()))) {
+    return { ok: false, message: t("zapisNePostoji") }
+  }
   const { data: obrisano, error } = await supabase
     .from("klijent_provjere")
     .delete()
@@ -585,15 +583,13 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
-  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
-  const { data: postoji } = await supabase
-    .from("ugovori")
-    .select("id")
-    .eq("id", id)
-    .eq("klijent_id", klijent_id)
-    .maybeSingle()
-  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
+  if (
+    !(await postojiRed(
+      supabase.from("ugovori").select("id").eq("id", id).eq("klijent_id", klijent_id).maybeSingle(),
+    ))
+  ) {
+    return { ok: false, message: t("zapisNePostoji") }
+  }
   const { data: obrisano, error } = await supabase
     .from("ugovori")
     .delete()
@@ -697,15 +693,13 @@ export async function deleteKontakt(_prev: ActionResult, formData: FormData): Pr
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  // Razlikuj „nema reda" od „RLS odbio": bez ovoga korisnik dobije poruku o dozvolama
-  // i kad je red naprosto već obrisan (dupli submit, ustajala stranica).
-  const { data: postoji } = await supabase
-    .from("kontakt_osobe")
-    .select("id")
-    .eq("id", id)
-    .eq("klijent_id", klijent_id)
-    .maybeSingle()
-  if (!postoji) return { ok: false, message: t("zapisNePostoji") }
+  if (
+    !(await postojiRed(
+      supabase.from("kontakt_osobe").select("id").eq("id", id).eq("klijent_id", klijent_id).maybeSingle(),
+    ))
+  ) {
+    return { ok: false, message: t("zapisNePostoji") }
+  }
   const { data: obrisano, error } = await supabase
     .from("kontakt_osobe")
     .delete()

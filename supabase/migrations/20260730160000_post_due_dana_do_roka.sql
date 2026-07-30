@@ -12,8 +12,8 @@
 --   rok_dospijeca                          → JEDINA osnova za broj "kasni N" bilo gdje.
 -- `dana_do_ciklusa` ostaje u potpisu jer post_due ledger i dalje ključa po ciklusu.
 --
--- ⚠ ZONA — tijelo je prekopirano iz 20260730120000_vremenska_zona_belgrade.sql (grane
--- fix/e2e-flake-otpornost / fix/e2e-specovi-yoink), NE iz starijeg 20260728141000.
+-- ⚠ ZONA — tijelo je prekopirano iz 20260730120000_vremenska_zona_belgrade.sql (na main-u
+-- od PR #80), NE iz starijeg 20260728141000.
 -- Ta migracija je SQL sloj prebacila sa `current_date` (UTC sesija) na
 -- `(now() at time zone 'Europe/Belgrade')::date`, jer je između ponoći i 01:00/02:00 po
 -- lokalnom vremenu UTC datum još jučerašnji — termin s jučerašnjim rokom tada nije „kasni".

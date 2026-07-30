@@ -2,19 +2,22 @@ import { describe, it, expect } from "vitest"
 import { rokRelativnaOznaka, rokDatumOznaka } from "./hitno"
 
 describe("rokDatumOznaka", () => {
+  // Format je dd.MM.yyyy u svim jezicima — standard uveden u 20260730 „jedinstven
+  // standard vremena" (formatDatum u lib/date.ts). Ovi testovi ga ne definišu, samo
+  // ga koriste; ako se standard promijeni, mijenja se tamo pa i ovdje.
   it("bez zakazanog datuma prikazuje samo rok", () => {
-    expect(rokDatumOznaka("2026-06-27", null)).toBe("27.06.2026.")
+    expect(rokDatumOznaka("2026-06-27", null)).toBe("27.06.2026")
   })
   it("zakazan datum jednak roku ne dodaje šum", () => {
-    expect(rokDatumOznaka("2026-06-27", "2026-06-27")).toBe("27.06.2026.")
+    expect(rokDatumOznaka("2026-06-27", "2026-06-27")).toBe("27.06.2026")
   })
   it("prezakazan termin prikazuje OBA datuma", () => {
-    // Bez ovoga red na /pregled kaže samo "27.06.2026. · kasni 33 dana", pa izgleda
+    // Bez ovoga red na /pregled kaže samo "27.06.2026 · kasni 33 dana", pa izgleda
     // kao da niko ništa nije poduzeo — iako je izlazak dogovoren za 29.07.
-    expect(rokDatumOznaka("2026-06-27", "2026-07-29")).toBe("rok 27.06.2026. · zakazano 29.07.2026.")
+    expect(rokDatumOznaka("2026-06-27", "2026-07-29")).toBe("rok 27.06.2026 · zakazano 29.07.2026")
   })
   it("en", () => {
-    expect(rokDatumOznaka("2026-06-27", "2026-07-29", "en")).toBe("due 06/27/2026 · scheduled 07/29/2026")
+    expect(rokDatumOznaka("2026-06-27", "2026-07-29", "en")).toBe("due 27.06.2026 · scheduled 29.07.2026")
   })
   it("de", () => {
     expect(rokDatumOznaka("2026-06-27", "2026-07-29", "de")).toBe("Frist 27.06.2026 · geplant 29.07.2026")

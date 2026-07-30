@@ -40,10 +40,12 @@ export function rokDatumOznaka(
   datumZakazanIso: string | null | undefined,
   locale: Locale = APP_LOCALE,
 ): string {
-  const rok = formatDatum(rokIso, locale)
+  // formatDatum je jezički neutralan (dd.MM.yyyy, standard vremena) — `locale`
+  // ovdje utiče samo na riječi „rok"/„zakazano" oko datuma.
+  const rok = formatDatum(rokIso)
   if (!datumZakazanIso || datumZakazanIso === rokIso) return rok
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "common.rok" })
-  return t("rokIZakazano", { rok, zakazano: formatDatum(datumZakazanIso, locale) })
+  return t("rokIZakazano", { rok, zakazano: formatDatum(datumZakazanIso) })
 }
 
 export function rokRelativnaOznaka(rokIso: string, todayIso: string, locale: Locale = APP_LOCALE): RokOznaka {

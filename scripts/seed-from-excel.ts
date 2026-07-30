@@ -193,6 +193,12 @@ async function main() {
     const isReallyIzvrseno = t.izvor === "izvrseno" && t.datum <= todayStr
 
     if (isReallyIzvrseno) {
+      // PAŽNJA (od 2026-07-30): auto-ciklus se okida i na INSERT-u termina sa
+      // `status: "izvrseno"`, ne samo na prelazu u izvršeno. Na djevičanskom importu je
+      // bezopasno — vrste provjere još nemaju `interval_mjeseci`, pa trigger nema šta da
+      // izračuna. Ali ponovni seed NAKON što admin podesi podrazumijevane intervale
+      // generiše naredne termine koji dupliraju planirane redove iz samog Excela.
+      // Lijek poslije takvog re-importa: `pnpm dedup:termini`.
       terminiRows.push({
         klijent_id: klijentId,
         lokacija_id: lokacijaId,

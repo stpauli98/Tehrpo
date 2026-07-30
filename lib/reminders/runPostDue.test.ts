@@ -7,14 +7,15 @@ import type { SendArgs, SendResult } from "@/lib/email/resend"
 type PostDueRow = {
   termin_id: string; klijent_id: string; klijent_naziv: string; vrsta_naziv: string
   rok_dospijeca: string; datum_zakazan: string | null; ciklus_rok: string
-  dana_do_ciklusa: number; lokacija_naziv: string | null
+  dana_do_ciklusa: number; dana_do_roka: number; lokacija_naziv: string | null
   treba_interni: boolean; treba_firma: boolean
 }
 
 const ROW: PostDueRow = {
   termin_id: "t1", klijent_id: "k1", klijent_naziv: "CARMEUSE", vrsta_naziv: "Obilazak",
   rok_dospijeca: "2026-07-13", datum_zakazan: null, ciklus_rok: "2026-07-13",
-  dana_do_ciklusa: -6, lokacija_naziv: null, treba_interni: true, treba_firma: false,
+  dana_do_ciklusa: -6, dana_do_roka: -6, lokacija_naziv: null,
+  treba_interni: true, treba_firma: false,
 }
 
 function makeFake(opts: {
@@ -209,9 +210,9 @@ describe("runPostDue", () => {
       send: async (a) => { args = a; return { id: "re_4", dryRun: false } },
       delayMs: 0,
     })
-    // rok_dospijeca=2026-07-13, datum_zakazan=2026-07-15 — mejl mora prikazati OBA (sr format DD.MM.YYYY.)
-    expect(args!.html).toContain("13.07.2026.")
-    expect(args!.html).toContain("15.07.2026.")
+    // rok_dospijeca=2026-07-13, datum_zakazan=2026-07-15 — mejl mora prikazati OBA (format dd.MM.yyyy)
+    expect(args!.html).toContain("13.07.2026")
+    expect(args!.html).toContain("15.07.2026")
   })
 
   it("claim_post_due koji vrati grešku: ništa se ne šalje, greška se prijavljuje", async () => {
@@ -243,5 +244,29 @@ describe("runPostDue", () => {
     expect(res.errors).toHaveLength(1)
     expect(res.errors[0]!.message).toContain("upis nije uspio")
     expect(updates).toHaveLength(1)
+  })
+
+  it("prezakazan termin: kašnjenje se mjeri prema roku, ne prema zakazanom datumu", async () => {
+    // WAIKIKI / Ispitivanje hidranata (PROD, 30.07.2026): rok 27.06., zakazano 29.07.
+    // Ciklus (= datum_zakazan) služi SAMO za odluku kada ponovo slati; broj u predmetu
+    // i bedžu mora biti kašnjenje prema roku — inače mejl protivrječi sam sebi
+    // ("kasni 1 dan" u naslovu, "Rok dospijeća: 27.06." u tijelu) i ekranu /pregled.
+    const captured: SendArgs[] = []
+    const prezakazan: PostDueRow = {
+      ...ROW,
+      rok_dospijeca: "2026-06-27", datum_zakazan: "2026-07-29",
+      ciklus_rok: "2026-07-29", dana_do_ciklusa: -1, dana_do_roka: -33,
+    }
+    const { supabase } = makeFake({ rows: [prezakazan], korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, {
+      send: async (a) => { captured.push(a); return { id: "re_1", dryRun: false } },
+      delayMs: 0,
+    })
+    expect(res.sent).toHaveLength(1)
+    expect(captured[0]!.subject).toContain("kasni 33 dana")
+    expect(captured[0]!.subject).not.toContain("kasni 1 dan")
+    // Oba datuma ostaju u tijelu: rok je rok, zakazano je zakazano.
+    expect(captured[0]!.html).toContain("27.06.2026")
+    expect(captured[0]!.html).toContain("29.07.2026")
   })
 })

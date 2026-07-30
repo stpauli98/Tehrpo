@@ -3,6 +3,7 @@ import { createTranslator } from "next-intl"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { uploadDokument, removeDokument } from "@/lib/supabase/storage"
 import { APP_LOCALE } from "@/lib/locale"
+import { formatDatum } from "@/lib/date"
 import { getMessages } from "@/i18n/messages"
 import type { Database } from "@/db/types"
 
@@ -38,9 +39,10 @@ export async function snimiZapisnikDokument(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { terminId, klijentId, vrstaNaziv, datum, docx, uploadGreskaFallback } = opts
 
+  // `datum` je interno ISO ("YYYY-MM-DD"); ime fajla nosi standard prikaza dd.MM.yyyy
   const naziv = tIzvoz("imeFajla", {
     vrsta: vrstaNaziv ?? tIzvoz("provjeraFallback"),
-    datum,
+    datum: formatDatum(datum),
   })
   const path = `termini/${terminId}/zapisnik-${crypto.randomUUID()}.docx`
 

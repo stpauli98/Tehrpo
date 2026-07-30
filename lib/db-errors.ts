@@ -13,6 +13,11 @@ export function friendlyDbError(
   if (error?.message?.includes("chk_termini_datumi")) {
     return t("chkTerminiDatumi")
   }
+  // tg_zatvaranje_trazi_nalaz (20260730152000) diže 23514 sa porukom `nalaz_obavezan`
+  // kad se termin zatvara bez priloženog dokumenta i bez dozvole.
+  if (error?.message?.includes("nalaz_obavezan")) {
+    return t("nalazObavezan")
+  }
   switch (error?.code) {
     case "23505": return t("duplikat")
     case "23503": return t("uUpotrebi")

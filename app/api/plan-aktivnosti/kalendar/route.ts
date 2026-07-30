@@ -12,7 +12,7 @@ const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namesp
  * GET /api/plan-aktivnosti/kalendar
  *
  * Query params (mirror _views/kalendar.tsx searchParams):
- *   godina – year (default current year derived from today UTC)
+ *   godina – year (default current year derived from todayIso(), APP_TIME_ZONE)
  *   mjesec – "1".."12" (default current month; clamped 1–12)
  *
  * Returns:

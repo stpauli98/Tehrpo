@@ -19,13 +19,15 @@
     "rok": {
       "kasni": "kasni {count, plural, =1 {# dan} other {# dana}}",
       "danas": "danas",
-      "za": "za {count, plural, =1 {# dan} other {# dana}}"
+      "za": "za {count, plural, =1 {# dan} other {# dana}}",
+      "rokIZakazano": "rok {rok} · zakazano {zakazano}"
     },
     "sacuvano": "Sačuvano",
     "obrisano": "Obrisano",
     "greska": "Došlo je do greške",
     "greskaNeocekivana": "Došlo je do neočekivane greške.",
     "greskaUcitavanja": "Greška pri učitavanju podataka.",
+    "izvozNijeDozvoljen": "Vaša uloga nema pravo izvoza podataka.",
     "samoAdministrator": "Samo administrator.",
     "pokusajPonovo": "Pokušaj ponovo",
     "zaduzeniTi": "(ti)",
@@ -181,6 +183,7 @@
       "terminProvjeraOsvjezi": "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu.",
       "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
       "nedostajeId": "Nedostaje id.",
+      "brisanjeNijeDozvoljeno": "Vaše dozvole ne dopuštaju brisanje ovog zapisa.",
       "imeObavezno": "Ime je obavezno",
       "lokacijaPostoji": "Lokacija sa tim nazivom već postoji kod ovog klijenta.",
       "kontaktPostoji": "Kontakt osoba sa tim imenom već postoji kod ovog klijenta.",
@@ -894,7 +897,6 @@
     "uploadNijeUspio": "Upload nije uspio.",
     "zapisnikSamoIzvrsen": "Zapisnik se generiše samo za izvršen termin.",
     "generisanjeNijeUspjelo": "Generisanje nije uspjelo.",
-    "samoAdminBrise": "Samo administrator može brisati dokumente.",
     "dokumentNePostoji": "Dokument ne postoji.",
     "dokumentNePostojiIliNemaPristupa": "Dokument ne postoji ili nemate pristup.",
     "klijentObavezan": "Klijent je obavezan",
@@ -924,6 +926,7 @@
     "dropzoneUkloni": "Ukloni izabrani fajl",
     "neispravniPodaci": "Neispravni podaci — osvježite stranicu i pokušajte ponovo.",
     "preuzimanjeNijeUspjelo": "Preuzimanje nije uspjelo. Pokušajte ponovo.",
+    "preuzimanjeNijeDozvoljeno": "Vaša uloga nema pravo preuzimanja dokumenata.",
     "potvrdaBrisanjaNaslov": "Obrisati dokument?",
     "potvrdaBrisanjaOpis": "Dokument i fajl se trajno brišu. Ovo se ne može poništiti.",
     "tipovi": {
@@ -983,6 +986,7 @@
         "uloga": "Uloga",
         "podsjetnici": "Podsjetnici",
         "firme": "Firme",
+        "dozvole": "Dozvole",
         "akcije": "Akcije"
       },
       "ti": "(ti)",
@@ -1040,6 +1044,15 @@
       "sacuvano": "Sačuvano.",
       "greska": "Greška."
     },
+    "dozvole": {
+      "dozvoleSamoOperater": "Administrator smije sve, pregled ništa — prekidači vrijede za operatera.",
+      "smijeBrisatiSvoje": "Briše svoje unose",
+      "smijeBrisatiTudje": "Briše tuđe unose na svojim firmama",
+      "smijeBrisatiKlijente": "Briše klijenta, ugovor, lokaciju, kontakt osobe i veze s uslugama",
+      "smijeZatvoritiBezNalaza": "Zatvara aktivnost bez nalaza",
+      "dozvolaSacuvana": "Dozvola sačuvana.",
+      "dozvolaGreska": "Čuvanje dozvole nije uspjelo."
+    },
     "podsjetniciKontrole": {
       "naslov": "Automatsko slanje",
       "opis": "Gasi automatsko dnevno slanje (oba dnevna termina, i podsjetnike prije roka i one poslije roka). „Pokreni sada“ radi i dok je isključeno. Ne gasi „Obavijest o zakazivanju poslije roka“ — ona ima svoj prekidač ispod.",
@@ -1052,7 +1065,7 @@
     "vrijemeSlanja": {
       "naslov": "Vrijeme slanja",
       "opis": "Podsjetnici se šalju jednom dnevno, na jednom od dva termina.",
-      "zona": "po lokalnom vremenu (Beč)",
+      "zona": "po lokalnom vremenu (Beograd)",
       "ujutro": "Ujutro (oko 10–11h)",
       "poslijepodne": "Poslijepodne (oko 14–15h)"
     },
@@ -1140,7 +1153,10 @@
       "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama.",
       "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka.",
       "resetEmailGreska": "Slanje emaila za reset lozinke nije uspjelo.",
-      "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta."
+      "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta.",
+      "nepoznataDozvola": "Nepoznata dozvola.",
+      "korisnikNePostoji": "Korisnik ne postoji.",
+      "dozvoleSamoOperater": "Prekidači dozvola vrijede samo za operatera."
     },
     "novaVrsta": {
       "dugme": "Nova vrsta",
@@ -1363,7 +1379,9 @@
       "opened": "Otvoreno",
       "deliveryFailed": "Neuspjela dostava",
       "bounced": "Odbijeno",
-      "complained": "Prijava spama"
+      "complained": "Prijava spama",
+      "djelimicno": "{oznaka} ({pogodjenih} od {ukupno})",
+      "djelimicnoAdrese": "Nije stiglo na: {adrese}"
     },
     "filteri": {
       "tip": "Tip",
@@ -1434,6 +1452,7 @@
   },
   "dbErrors": {
     "chkTerminiDatumi": "Neispravan datum: datum izvršenja ne može biti u budućnosti, a interval mora biti između 1 i 120 mjeseci.",
+    "nalazObavezan": "Aktivnost se ne može zatvoriti bez priloženog nalaza. Priložite dokument ili tražite dozvolu od administratora.",
     "duplikat": "Zapis sa tim vrijednostima već postoji.",
     "uUpotrebi": "Zapis je povezan s drugim podacima i u upotrebi je.",
     "nevazeciPodaci": "Nevažeći podaci — provjerite unos.",

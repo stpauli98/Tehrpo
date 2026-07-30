@@ -6,7 +6,7 @@ import { PoslatiMejloviFilteri } from "@/components/domain/PoslatiMejloviFilteri
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
 import { href } from "@/i18n/routes"
-import { dodajDan, utcGranicaSarajevskogDana } from "@/lib/date"
+import { dodajDan, utcGranicaDana } from "@/lib/date"
 import { jeIsoDatum } from "@/lib/poslati-mejlovi"
 import { Constants, type Database } from "@/db/types"
 import { DEMO_MODE } from "@/lib/demo"
@@ -49,11 +49,12 @@ export default async function PoslatiMejloviPage({
   const { redovi, ukupno, error } = await dohvatiPoslateMejlove({
     tip,
     status,
-    // Granice sarajevskog dana sa eksplicitnom zonom (S7): `od` = ponoć izabranog
-    // dana, `do` = ponoć SLJEDEĆEG dana. RPC poredi `created_at >= p_od AND < p_do`,
-    // pa ekskluzivna gornja granica obuhvata cijeli izabrani dan (uklj. 23:59:59.999).
-    od: od ? utcGranicaSarajevskogDana(od) : null,
-    do: do_ ? utcGranicaSarajevskogDana(dodajDan(do_)) : null,
+    // Granice dana u APP_TIME_ZONE (Europe/Belgrade) sa eksplicitnom zonom (S7):
+    // `od` = ponoć izabranog dana, `do` = ponoć SLJEDEĆEG dana. RPC poredi
+    // `created_at >= p_od AND < p_do`, pa ekskluzivna gornja granica obuhvata
+    // cijeli izabrani dan (uklj. 23:59:59.999).
+    od: od ? utcGranicaDana(od) : null,
+    do: do_ ? utcGranicaDana(dodajDan(do_)) : null,
     samoGreske: sp.samo_greske === "1",
     samoNepregledane: sp.nepregledano === "1",
     limit: PER_PAGE,

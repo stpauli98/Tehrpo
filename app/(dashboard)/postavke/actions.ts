@@ -368,7 +368,7 @@ export async function updatePodsjetniciAktivni(
   return { ok: true }
 }
 
-// ─── Vrijeme slanja (lokalni sat Europe/Vienna) ─────────────────────────────
+// ─── Vrijeme slanja (lokalni sat Europe/Belgrade) ───────────────────────────
 
 export async function updateVrijemeSlanja(
   _prev: ActionResult,
@@ -490,6 +490,48 @@ export async function promijeniLozinku(trenutna: string, nova: string, potvrda: 
   if (authErr) return { ok: false, message: tMoj("greske.trenutnaPogresna") }
   const { error } = await supabase.auth.updateUser({ password: nova })
   if (error) return { ok: false, message: tMoj("greske.opsta") }
+  return { ok: true }
+}
+
+// ─── Prekidači dozvola po korisniku (brisanje, zatvaranje bez nalaza) ────────
+
+const DOZVOLE_KLJUCEVI = [
+  "smije_brisati_svoje",
+  "smije_brisati_tudje",
+  "smije_brisati_klijente",
+  "smije_zatvoriti_bez_nalaza",
+] as const
+
+/**
+ * Prekidači dozvola po korisniku (potvrđeno 30.07.2026.). Ima smisla samo za operatera —
+ * admin ionako smije sve, pregled ništa (vidi efektivneDozvole / SQL helpere).
+ * SSR (RLS) klijent: korisnici_wr = je_admin(), a auth.uid() je postavljen pa audit
+ * trigger zabilježi aktera.
+ */
+export async function postaviDozvolu(
+  korisnikId: string,
+  kljuc: (typeof DOZVOLE_KLJUCEVI)[number],
+  vrijednost: boolean,
+): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  if (!DOZVOLE_KLJUCEVI.includes(kljuc)) return { ok: false, message: t("nepoznataDozvola") }
+  const supabase = await createServerSupabaseClient()
+  // Prekidači važe samo za operatera (admin ima sve, pregled ništa — ni jedno ne čita
+  // kolone). Upis na admin/pregled red je danas bezopasan, ali vrijednost preživi kasniju
+  // promjenu uloge u operatera i tiho proradi, pa se odbija odmah.
+  const { data: meta } = await supabase
+    .from("korisnici")
+    .select("uloga")
+    .eq("id", korisnikId)
+    .maybeSingle()
+  if (!meta) return { ok: false, message: t("korisnikNePostoji") }
+  if (meta.uloga !== "operater") return { ok: false, message: t("dozvoleSamoOperater") }
+  // Eksplicitno tipizovan patch: computed-key literal direktno u .update({ [kljuc]: ... })
+  // gubi vezu sa uskim tipom kolone pa ga Supabase generisani Update tip odbija.
+  const patch: Partial<Record<(typeof DOZVOLE_KLJUCEVI)[number], boolean>> = { [kljuc]: vrijednost }
+  const { error } = await supabase.from("korisnici").update(patch).eq("id", korisnikId)
+  if (error) return { ok: false, message: error.message }
+  revalidatePath("/postavke")
   return { ok: true }
 }
 

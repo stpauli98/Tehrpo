@@ -2,7 +2,7 @@
 // CLAUDE.md već navodi drift između te dvije putanje kao problem kod plan-aktivnosti
 // ("route's filter logic deliberately mirrors the server-component query"); ovdje
 // se on izbjegava time što izvor postoji samo na jednom mjestu.
-import { dodajDan, jeIsoDatum, utcGranicaSarajevskogDana } from "@/lib/date"
+import { dodajDan, jeIsoDatum, utcGranicaDana } from "@/lib/date"
 import { parsirajKursor, type AktivnostKursor } from "./kursor"
 
 export type AktivnostFilteriUlaz = {
@@ -14,7 +14,7 @@ export type AktivnostFilteriUlaz = {
   kursor: AktivnostKursor | null
 }
 
-// utcGranicaSarajevskogDana i dodajDan bacaju greške na neispravnom datumu, pa se validacija
+// utcGranicaDana i dodajDan bacaju greške na neispravnom datumu, pa se validacija
 // radi PRIJE poziva: ručno pokvaren URL (?od=xyz) ignoriše filter umjesto da sruši stranicu.
 // Regex samo za format nije dovoljan — ISO gramatika dozvoljava DD do 31 u svakom mjesecu,
 // pa "2026-02-30" prođe regex ali je nevažeći. Koristi jeIsoDatum koja validiraround-tripom
@@ -29,10 +29,10 @@ export function parsirajAktivnostFiltere(
   const f: AktivnostFilteriUlaz = {
     kursor: parsirajKursor(uzmi("prijeVrijeme"), uzmi("prijeId")),
   }
-  if (od) f.od = utcGranicaSarajevskogDana(od)
+  if (od) f.od = utcGranicaDana(od)
   // `do` je ekskluzivna granica SLJEDEĆEG dana (RPC poredi vrijeme < p_do),
   // pa zadnja sekunda odabranog dana ne ispada.
-  if (doDatum) f.do = utcGranicaSarajevskogDana(dodajDan(doDatum))
+  if (doDatum) f.do = utcGranicaDana(dodajDan(doDatum))
   const akcija = uzmi("akcija")
   if (akcija) f.akcija = akcija
   const korisnik = uzmi("korisnik")

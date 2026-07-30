@@ -101,13 +101,18 @@ export async function runPostDue(
     // prikazati oba datuma, da se ne laže o roku.
     const zakazanoZa = r.datum_zakazan && r.datum_zakazan !== r.rok_dospijeca ? r.datum_zakazan : null
 
+    // Broj u predmetu i bedžu mjeri se ISKLJUČIVO prema roku (`dana_do_roka`), nikad prema
+    // ciklusu. Ciklus (coalesce(datum_zakazan, rok)) odlučuje samo KADA se ponovo šalje —
+    // v. where/claim iznad. Ranije je isti `dana_do_ciklusa` išao i u tekst, pa je prezakazan
+    // termin dobijao naslov "kasni 1 dan" iznad tijela u kojem piše "Rok dospijeća: 27.06.",
+    // dok je /pregled za isti termin javljao "kasni 33 dana".
     const args: SendArgs = kanal === "interni"
       ? {
           to: primaoci,
-          subject: reminderSubject({ vrsta: r.vrsta_naziv!, klijent: r.klijent_naziv!, danaDoRoka: r.dana_do_ciklusa! }),
+          subject: reminderSubject({ vrsta: r.vrsta_naziv!, klijent: r.klijent_naziv!, danaDoRoka: r.dana_do_roka! }),
           html: reminderHtml({
             klijent: r.klijent_naziv!, vrsta: r.vrsta_naziv!, rok: r.rok_dospijeca!,
-            danaDoRoka: r.dana_do_ciklusa!, lokacija: r.lokacija_naziv, zakazanoZa,
+            danaDoRoka: r.dana_do_roka!, lokacija: r.lokacija_naziv, zakazanoZa,
             terminId, klijentId: r.klijent_id!, baseUrl: env.NEXT_PUBLIC_APP_URL,
           }),
           attachments: [{

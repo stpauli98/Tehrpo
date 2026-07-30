@@ -1,6 +1,16 @@
-/** Datumski helperi — Bosanski format DD.MM.YYYY. iz ISO YYYY-MM-DD. */
+/**
+ * Datumski helperi — JEDINI standard vremena u aplikaciji:
+ *  - vremenska zona: APP_TIME_ZONE (Europe/Belgrade, CET/CEST) za svako
+ *    "danas"/"sada"/granicu dana i svaku konverziju instanta u zidno vrijeme;
+ *  - prikaz: "dd.MM.yyyy" za datume, "dd.MM.yyyy HH:mm" (24h) za datum+vrijeme —
+ *    identično za SVE lokale (sr/en/de), bez Intl grananja po lokalu;
+ *  - interno: ISO "YYYY-MM-DD" / ISO timestampovi (poređenja leksikografski).
+ */
 
 import { APP_LOCALE, type Locale } from "@/lib/locale"
+
+/** Jedina vremenska zona aplikacije. Vienna/Zagreb/Sarajevo imaju identičan offset — standard je Belgrade. */
+export const APP_TIME_ZONE = "Europe/Belgrade"
 
 export const MONTHS_BS = [
   "Januar", "Februar", "Mart", "April", "Maj", "Jun",
@@ -8,37 +18,40 @@ export const MONTHS_BS = [
 ] as const
 
 /**
- * ISO (ili Date-string) → lokalizovan prikaz datuma. Null/nevažeće → "—".
- * sr: zadržan postojeći hardkodirani "DD.MM.YYYY." oblik (early-return). Napomena:
- * provjereno empirijski (Node 24) da Intl.DateTimeFormat("sr"/"sr-Latn",
- * {day:"2-digit",month:"2-digit",year:"numeric"}) daje BAJT-IDENTIČAN tekst
- * ("28.07.2026.", uključujući tačku na kraju) — dakle ovdje razlika u formatu
- * NIJE razlog za hardkod. Zadržano zbog: (1) simetrije sa monthName() ispod, gdje
- * Intl za sr STVARNO daje drugačiji tekst, i (2) izbjegavanja runtime zavisnosti o
- * ICU podacima za "sr" (npr. small-icu Node build) za default lokal koji, po
- * §procedura-i18n Global Constraints, mora raditi bez ijedne env promjene.
- * en/de: Intl.DateTimeFormat(locale, ...) (§procedura-i18n Step 1).
+ * Zidne komponente instanta u APP_TIME_ZONE (dvocifreno, 24h).
+ * Preko Intl.formatToParts — bez zavisnosti o locale patternu ("en-CA" je samo
+ * nosač; sastavljanje je ručno), hourCycle "h23" da ponoć bude "00", ne "24".
  */
-export function formatDatum(iso: string | null | undefined, locale: Locale = APP_LOCALE): string {
+function zidneKomponente(instant: Date): { g: string; m: string; d: string; h: string; min: string } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(instant)
+  const p = (type: string) => parts.find((x) => x.type === type)?.value ?? ""
+  return { g: p("year"), m: p("month"), d: p("day"), h: p("hour"), min: p("minute") }
+}
+
+/**
+ * ISO datum (ili Date-string; uzima se samo datum-dio) → "dd.MM.yyyy".
+ * Null/nevažeće → "—". Jedan format za sve lokale — kalendarski datum se NE
+ * konvertuje kroz zonu (ulaz je već zidni datum); za instante (timestamptz)
+ * koristi formatDatumInstant / formatDatumVrijeme.
+ */
+export function formatDatum(iso: string | null | undefined): string {
   if (!iso) return "—"
   const parts = iso.slice(0, 10).split("-")
   if (parts.length !== 3) return "—"
   const [y, mo, d] = parts
   if (!y || !mo || !d) return "—"
   if (y.length !== 4) return "—"
-  if (locale === "sr") return `${d}.${mo}.${y}.`
-  const dt = new Date(Date.UTC(Number(y), Number(mo) - 1, Number(d)))
-  return new Intl.DateTimeFormat(locale, {
-    day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC",
-  }).format(dt)
+  return `${d}.${mo}.${y}`
 }
 
 /**
- * Naziv mjeseca (1=Januar), lokalizovan.
- * sr: zadržan postojeći hardkodirani MONTHS_BS (early-return) — CLDR "sr-Latn"
- * preko Intl.DateTimeFormat vraća malim slovom ("januar"), što bi promijenilo
- * postojeći, testovima provjeravan tekst (precedent: MonthCalendar.tsx, Task 8).
- * en/de: Intl.DateTimeFormat(locale, { month: "long" }).
+ * Naziv mjeseca (1=Januar), lokalizovan — tekstualni nazivi su i dalje po
+ * lokalu (standard dd.MM.yyyy se odnosi na numerički prikaz, ne na riječi).
+ * sr: hardkodirani MONTHS_BS (CLDR "sr-Latn" vraća malim slovom).
  */
 export function monthName(month1to12: number, locale: Locale = APP_LOCALE): string {
   if (month1to12 < 1 || month1to12 > 12) return ""
@@ -48,18 +61,15 @@ export function monthName(month1to12: number, locale: Locale = APP_LOCALE): stri
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
-/** Današnji datum kao "YYYY-MM-DD" (UTC, usklađen s DB current_date). */
+/** Današnji zidni datum u APP_TIME_ZONE kao "YYYY-MM-DD". (SQL parnjak: `(now() at time zone 'Europe/Belgrade')::date`.) */
 export function todayIso(): string {
-  const now = new Date()
-  const y = now.getUTCFullYear()
-  const m = String(now.getUTCMonth() + 1).padStart(2, "0")
-  const d = String(now.getUTCDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
+  const { g, m, d } = zidneKomponente(new Date())
+  return `${g}-${m}-${d}`
 }
 
-/** Tekuća godina (npr. 2026). */
+/** Tekuća godina (npr. 2026) po APP_TIME_ZONE. */
 export function currentYear(): number {
-  return new Date().getFullYear()
+  return Number(todayIso().slice(0, 4))
 }
 
 /** Prvi i zadnji dan mjeseca (ISO). month1to12: 1=Januar. */
@@ -107,22 +117,28 @@ export function periodRange(
   return { od: `${godina}-${pad(m)}-01`, do: `${godina}-${pad(m)}-${pad(last(godina, m))}` }
 }
 
-/** ISO timestamp → "26. 7. 2026. 12:00" — fiksna zona Europe/Sarajevo, locale iz APP_LOCALE (sr se INTERNO mapira u sr-Latn). Null/nevažeće → "—". Bez sekundi. */
+/** ISO timestamp (instant) → "dd.MM.yyyy HH:mm" (24h) u APP_TIME_ZONE. Null/nevažeće → "—". Bez sekundi. */
 export function formatDatumVrijeme(iso: string | null | undefined): string {
   if (!iso) return "—"
   const dt = new Date(iso)
   if (Number.isNaN(dt.getTime())) return "—"
-  return new Intl.DateTimeFormat(APP_LOCALE === "sr" ? "sr-Latn" : APP_LOCALE, {
-    timeZone: "Europe/Sarajevo",
-    day: "numeric", month: "numeric", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  }).format(dt)
+  const { g, m, d, h, min } = zidneKomponente(dt)
+  return `${d}.${m}.${g} ${h}:${min}`
 }
 
-/** Offset zone Europe/Sarajevo (ms) za dati UTC instant, izračunat preko Intl (bez novih zavisnosti). */
-function sarajevoOffsetMs(instant: Date): number {
+/** ISO timestamp (instant) → samo zidni datum "dd.MM.yyyy" u APP_TIME_ZONE. Null/nevažeće → "—". Za timestamptz kolone (npr. uploaded_at) kad se vrijeme ne prikazuje — slice(0,10) bi dao UTC datum! */
+export function formatDatumInstant(iso: string | null | undefined): string {
+  if (!iso) return "—"
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return "—"
+  const { g, m, d } = zidneKomponente(dt)
+  return `${d}.${m}.${g}`
+}
+
+/** Offset zone APP_TIME_ZONE (ms) za dati UTC instant, izračunat preko Intl (bez novih zavisnosti). */
+function zonaOffsetMs(instant: Date): number {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Sarajevo",
+    timeZone: APP_TIME_ZONE,
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
     hour12: false,
@@ -135,7 +151,7 @@ function sarajevoOffsetMs(instant: Date): number {
 
 /**
  * Type-guard za ISO datum "YYYY-MM-DD" — JEDINI izvor validacije prije
- * `utcGranicaSarajevskogDana` / `dodajDan`. Korisnički kontrolisan ulaz
+ * `utcGranicaDana` / `dodajDan(a)`. Korisnički kontrolisan ulaz
  * (URL parametar, polje forme) uvijek provući kroz ovo, pa nevaljan tiho
  * ignorisati — kao što stranice već rade za `tip`/`status`.
  *
@@ -153,7 +169,7 @@ export function jeIsoDatum(v: string | null | undefined): v is string {
 /**
  * Ulazna ograda datumskih helpera. Bez nje su dvije tihe katastrofe moguće:
  * `dodajDan("abc")` je vraćao string "NaN-NaN-NaN" (korupcija koja putuje
- * dalje u upit), a `utcGranicaSarajevskogDana("abc")` je bacao goli
+ * dalje u upit), a `utcGranicaDana("abc")` je bacao goli
  * `RangeError` iz Intl-a nad Invalid Date — poruku iz koje se ne vidi ni koja
  * funkcija ni koja vrijednost je kriva.
  */
@@ -166,30 +182,36 @@ function tvrdiIsoDatum(isoDatum: string, funkcija: string): void {
   }
 }
 
-/** ISO datum "YYYY-MM-DD" → UTC instant ponoći tog datuma u Europe/Sarajevo, npr. "2026-07-26" → "2026-07-25T22:00:00.000Z" (ljeto, UTC+2). Za datumske granice filtera (S7: eksplicitna zona, `do` kao ekskluzivni sljedeći dan). Baca na nevaljan ulaz — v. `jeIsoDatum`. */
-export function utcGranicaSarajevskogDana(isoDatum: string): string {
-  tvrdiIsoDatum(isoDatum, "utcGranicaSarajevskogDana")
+/** ISO datum "YYYY-MM-DD" → UTC instant ponoći tog datuma u APP_TIME_ZONE, npr. "2026-07-26" → "2026-07-25T22:00:00.000Z" (ljeto, UTC+2). Za datumske granice filtera (S7: eksplicitna zona, `do` kao ekskluzivni sljedeći dan). Baca na nevaljan ulaz — v. `jeIsoDatum`. */
+export function utcGranicaDana(isoDatum: string): string {
+  tvrdiIsoDatum(isoDatum, "utcGranicaDana")
   const [g, m, d] = isoDatum.split("-").map(Number)
   const utcPonoc = Date.UTC(g!, m! - 1, d!)
-  // DST prelazi u Sarajevu su u 02:00/03:00 lokalno — offset u UTC ponoć važi i za lokalnu ponoć istog dana
-  const offset = sarajevoOffsetMs(new Date(utcPonoc))
+  // DST prelazi (CET/CEST) su u 02:00/03:00 lokalno — offset u UTC ponoć važi i za lokalnu ponoć istog dana
+  const offset = zonaOffsetMs(new Date(utcPonoc))
   return new Date(utcPonoc - offset).toISOString()
 }
 
-/** ISO datum + 1 dan, TZ-safe (obrazac kao addMjeseci). Baca na nevaljan ulaz — v. `jeIsoDatum`. */
-export function dodajDan(isoDatum: string): string {
-  tvrdiIsoDatum(isoDatum, "dodajDan")
+/** ISO datum + N dana (N može biti negativan), TZ-safe (obrazac kao addMjeseci). Baca na nevaljan ulaz — v. `jeIsoDatum`. */
+export function dodajDana(isoDatum: string, dana: number): string {
+  tvrdiIsoDatum(isoDatum, "dodajDana")
   const [g, m, d] = isoDatum.split("-").map(Number)
-  const dt = new Date(Date.UTC(g!, m! - 1, d! + 1)) // Date.UTC normalizuje overflow dana
+  const dt = new Date(Date.UTC(g!, m! - 1, d! + dana)) // Date.UTC normalizuje overflow dana
   const pad = (n: number) => String(n).padStart(2, "0")
   return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`
 }
 
-/** Raspon [prvi dan tekućeg mjeseca, zadnji dan narednog mjeseca] (ISO, UTC, granica godine OK). */
+/** ISO datum + 1 dan. Baca na nevaljan ulaz — v. `jeIsoDatum`. */
+export function dodajDan(isoDatum: string): string {
+  tvrdiIsoDatum(isoDatum, "dodajDan")
+  return dodajDana(isoDatum, 1)
+}
+
+/** Raspon [prvi dan tekućeg mjeseca, zadnji dan narednog mjeseca] (ISO, granica godine OK). "Tekući" po APP_TIME_ZONE zidnom datumu instanta `danas` (default: sada). */
 export function tekuciNarednomMjesecuRange(danas?: Date): { from: string; to: string } {
-  const base = danas ?? new Date()
-  const y = base.getUTCFullYear()
-  const m = base.getUTCMonth() // 0..11 (tekući)
+  const zid = zidneKomponente(danas ?? new Date())
+  const y = Number(zid.g)
+  const m = Number(zid.m) - 1 // 0..11 (tekući)
   const pad = (n: number) => String(n).padStart(2, "0")
   const from = `${y}-${pad(m + 1)}-01`
   const end = new Date(Date.UTC(y, m + 2, 0)) // dan 0 mjeseca (m+2) = zadnji dan narednog (m+1)

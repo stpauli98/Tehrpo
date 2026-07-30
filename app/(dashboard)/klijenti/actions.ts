@@ -21,6 +21,14 @@ export type ActionResult =
   | { ok: true }
   | { ok: false; errors?: Record<string, string[] | undefined>; message?: string }
 
+// PostgREST DELETE koji RLS odbije vraća 0 redova BEZ greške. Bez `.select()` + provjere
+// dužine akcija bi javila uspjeh, a red bi ostao — sa `smije_brisati_klijente` koji je
+// podrazumijevano false to je zatečeno stanje svakog operatera. Isti obrazac koji
+// deleteDokumentAction već koristi.
+function nijeObrisano(redovi: { id: string }[] | null): boolean {
+  return !redovi || redovi.length === 0
+}
+
 const optionalText = (max: number) =>
   z.string().max(max).optional().or(z.literal("").transform(() => undefined))
 
@@ -194,13 +202,18 @@ export async function deleteKlijent(
   const parsed = deleteKlijentSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("klijenti").delete().eq("id", parsed.data.id)
+  const { data: obrisano, error } = await supabase
+    .from("klijenti")
+    .delete()
+    .eq("id", parsed.data.id)
+    .select("id")
   if (error) {
     const msg = /foreign key|violates|restrict/i.test(error.message)
       ? t("klijentImaTermine")
       : friendlyDbError(error)
     return { ok: false, message: msg }
   }
+  if (nijeObrisano(obrisano)) return { ok: false, message: t("brisanjeNijeDozvoljeno") }
   revalidatePath("/klijenti")
   return { ok: true }
 }
@@ -370,8 +383,13 @@ export async function deleteLokacija(
   const parsed = deleteLokacijaSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("lokacije").delete().eq("id", parsed.data.id)
+  const { data: obrisano, error } = await supabase
+    .from("lokacije")
+    .delete()
+    .eq("id", parsed.data.id)
+    .select("id")
   if (error) return { ok: false, message: friendlyDbError(error) }
+  if (nijeObrisano(obrisano)) return { ok: false, message: t("brisanjeNijeDozvoljeno") }
   revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
@@ -463,8 +481,13 @@ export async function deleteProfilProvjere(
   const id = String(formData.get("id") ?? "")
   if (!id) return { ok: false, message: t("nedostajeId") }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("klijent_provjere").delete().eq("id", id)
+  const { data: obrisano, error } = await supabase
+    .from("klijent_provjere")
+    .delete()
+    .eq("id", id)
+    .select("id")
   if (error) return { ok: false, message: friendlyDbError(error) }
+  if (nijeObrisano(obrisano)) return { ok: false, message: t("brisanjeNijeDozvoljeno") }
   revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
@@ -554,8 +577,14 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("ugovori").delete().eq("id", id).eq("klijent_id", klijent_id)
+  const { data: obrisano, error } = await supabase
+    .from("ugovori")
+    .delete()
+    .eq("id", id)
+    .eq("klijent_id", klijent_id)
+    .select("id")
   if (error) return { ok: false, message: friendlyDbError(error) }
+  if (nijeObrisano(obrisano)) return { ok: false, message: t("brisanjeNijeDozvoljeno") }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }
@@ -656,8 +685,14 @@ export async function deleteKontakt(_prev: ActionResult, formData: FormData): Pr
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("kontakt_osobe").delete().eq("id", id).eq("klijent_id", klijent_id)
+  const { data: obrisano, error } = await supabase
+    .from("kontakt_osobe")
+    .delete()
+    .eq("id", id)
+    .eq("klijent_id", klijent_id)
+    .select("id")
   if (error) return { ok: false, message: friendlyDbError(error) }
+  if (nijeObrisano(obrisano)) return { ok: false, message: t("brisanjeNijeDozvoljeno") }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
 }

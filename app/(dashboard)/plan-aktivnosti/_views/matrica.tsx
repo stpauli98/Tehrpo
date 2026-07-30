@@ -100,7 +100,7 @@ export function MatricaView({
       }))
     matrixRows = buildMatrix(inputs)
     const currentMonthNum = Number(today.slice(5, 7))
-    const currentYearNum = currentYear()
+    const currentYearNum = Number(today.slice(0, 4)) // isti todayIso snapshot kao mjesec — bez ponoćnog racea
     kolone = Array.from({ length: 12 }, (_, i) => ({
       id: String(i + 1),
       label: monthName(i + 1).slice(0, 3),

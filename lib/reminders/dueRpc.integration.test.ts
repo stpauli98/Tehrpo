@@ -3,6 +3,9 @@ import { Client } from "pg"
 
 const URL = process.env.TEST_DATABASE_URL
 
+/** SQL izraz za zidni "danas" u Europe/Belgrade (APP_TIME_ZONE) — parnjak `todayIso()` iz lib/date.ts. */
+const DANAS_SQL = "(now() at time zone 'Europe/Belgrade')::date"
+
 // Gate-uje se na TEST_DATABASE_URL da `pnpm test:unit` bez lokalnog DB i dalje prolazi.
 describe.skipIf(!URL)("get_due_podsjetnici (integracija, lokalni DB)", () => {
   let db: Client
@@ -30,7 +33,7 @@ describe.skipIf(!URL)("get_due_podsjetnici (integracija, lokalni DB)", () => {
   async function addTermin(ids: { klijent: string; vrsta: string }, offsetDana: number) {
     const r = await db.query(
       `insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca, status)
-       values ($1, $2, current_date + $3::int, 'planirano') returning id`,
+       values ($1, $2, ${DANAS_SQL} + $3::int, 'planirano') returning id`,
       [ids.klijent, ids.vrsta, offsetDana],
     )
     return r.rows[0].id as string
@@ -89,7 +92,7 @@ describe.skipIf(!URL)("get_due_podsjetnici (integracija, lokalni DB)", () => {
     await withSeed(async (ids) => {
       const r = await db.query(
         `insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca, status, datum_izvrsenja)
-         values ($1,$2, current_date - 1, 'izvrseno', current_date - 1) returning id`,
+         values ($1,$2, ${DANAS_SQL} - 1, 'izvrseno', ${DANAS_SQL} - 1) returning id`,
         [ids.klijent, ids.vrsta],
       )
       const t = r.rows[0].id as string

@@ -4,6 +4,35 @@ import { env } from "@/lib/env"
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * Domeni koji po standardu NIKAD ne postoje na javnom DNS-u: RFC 6762 (`.local`),
+ * RFC 2606 (`.invalid`, `.localhost`) i RFC 8375 (`.home.arpa`).
+ *
+ * Namjerno IZOSTAVLJENI `.test` i `.example`: ovaj repo ih koristi kao fiksture
+ * (E2E nalozi `*@tehpro.test`, klijentske adrese `*@example.com`), pa bi njihovo
+ * filtriranje ovdje ugasilo E2E pokrivenost podsjetnika. Za njih zaštita ostaje
+ * organizaciona — takav korisnik mora imati `prima_podsjetnike=false`.
+ */
+const NERUTABILNI_DOMENI = ["local", "localhost", "invalid", "home.arpa"] as const
+
+/**
+ * Smije li se na ovu adresu uopšte pokušati slanje.
+ *
+ * Postoji zbog PROD incidenta 30.07.2026: aktivan admin `admin@tehpro.local` ulazio je
+ * u svaki interni podsjetnik i tvrdo bounce-ovao. Kako Resend šalje jedan send (jedan
+ * `email_id`) na sve primaoce, taj jedan bounce je cijeli red u „Poslatim mejlovima"
+ * bojio u „Odbijeno" iako su ostali primaoci mejl uredno dobili — i punio brojač grešaka.
+ *
+ * Poređenje ide po CIJELOJ zoni na kraju hosta (`endsWith("." + zona)` ili tačan host),
+ * ne po `includes`: `local.ba` i `tehpro.localhost.ba` su legitimni domeni.
+ */
+export function jeDostavljiva(raw: string | null | undefined): boolean {
+  const e = (raw ?? "").trim().toLowerCase()
+  if (!EMAIL_RE.test(e)) return false // `root@localhost` pada već ovdje — nema tačke
+  const host = e.slice(e.lastIndexOf("@") + 1)
+  return !NERUTABILNI_DOMENI.some((z) => host === z || host.endsWith(`.${z}`))
+}
+
 export function parseEmailList(raw: string | null | undefined): string[] {
   if (!raw) return []
   return raw
@@ -18,7 +47,7 @@ export function assembleRecipients(args: { base: string[]; adminEmails: string[]
   const out: string[] = []
   for (const raw of [...args.base, ...args.adminEmails]) {
     const e = raw.trim()
-    if (!EMAIL_RE.test(e)) continue
+    if (!jeDostavljiva(e)) continue
     const key = e.toLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
@@ -102,7 +131,7 @@ export function buildRecipientIndex(
     for (const ko of kontakti) {
       if (!ko.podsjetnik_primalac || !firmaUkljucena.has(ko.klijent_id)) continue
       const email = (ko.email ?? "").trim()
-      if (!EMAIL_RE.test(email)) continue
+      if (!jeDostavljiva(email)) continue
       dodajFirmin(ko.klijent_id, ko.lokacija_id ?? null, email)
     }
     // Ad-hoc „čiste" adrese firme (nisu kontakti). firmaRecipientsForKlijent kasnije
@@ -111,7 +140,7 @@ export function buildRecipientIndex(
       if (!firmaUkljucena.has(k.id)) continue
       for (const raw of k.podsjetnik_emails ?? []) {
         const email = (raw ?? "").trim()
-        if (!EMAIL_RE.test(email)) continue
+        if (!jeDostavljiva(email)) continue
         dodajFirmin(k.id, null, email)
       }
     }
@@ -151,7 +180,7 @@ export function firmaRecipientsZa(
   const out: string[] = []
   for (const raw of [...vezani, ...firmini]) {
     const e = raw.trim().toLowerCase()
-    if (!EMAIL_RE.test(e) || seen.has(e)) continue
+    if (!jeDostavljiva(e) || seen.has(e)) continue
     seen.add(e)
     out.push(e)
   }

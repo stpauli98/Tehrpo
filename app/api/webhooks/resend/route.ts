@@ -3,7 +3,7 @@ import { env } from "@/lib/env"
 import { NextResponse } from "next/server"
 // integracija-dozvoli: admin-klijent — webhook ruta nije app request-path
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
-import { mapirajDostavu } from "@/lib/email/webhookDostava"
+import { mapirajDostavu, pogodjeneAdrese } from "@/lib/email/webhookDostava"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -21,7 +21,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing headers" }, { status: 401 })
   }
 
-  let event: { type: string; data?: { email_id?: string; created_at?: string }; created_at?: string }
+  let event: {
+    type: string
+    /** `to` u bounce/failed eventu nosi POGOĐENE adrese — v. `pogodjeneAdrese` ispod. */
+    data?: { email_id?: string; created_at?: string; to?: string[] | string }
+    created_at?: string
+  }
   try {
     event = new Resend(env.RESEND_API_KEY ?? "re_placeholder").webhooks.verify({
       payload: rawBody,
@@ -41,6 +46,10 @@ export async function POST(req: Request) {
       p_resend_id: event.data.email_id,
       p_status: status,
       p_at: event.data.created_at ?? event.created_at ?? new Date().toISOString(),
+      // Bez ovoga jedan loš primalac boji cijeli send u „Odbijeno" iako su ostali
+      // primili mejl. `dostavaObim` presijeca ovo sa `primaoci` i konzervativno
+      // tretira prazan niz kao potpun neuspjeh, pa nedostajuće `to` ništa ne kvari.
+      p_pogodjeni: pogodjeneAdrese(event.data.to),
     })
     if (error) {
       console.error("[resend-webhook] azuriraj_mejl_dostavu:", error.message)

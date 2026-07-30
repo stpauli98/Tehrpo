@@ -13,6 +13,8 @@ import { toDerivedStatus } from "@/lib/termini"
 import { APP_NAME } from "@/lib/brand"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { smijePreuzeti } from "@/lib/auth/roles"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -55,6 +57,12 @@ export async function GET(req: NextRequest) {
   const parsed = parseIzvozParams(sp)
   if (!parsed.ok) {
     return NextResponse.json({ error: tIzvoz("raspon.nevazeci") }, { status: 400 })
+  }
+
+  // `pregled` je čisto čitanje na ekranu — bez izvoza plana (potvrđeno 30.07.2026.).
+  const ja = await getTrenutniKorisnik()
+  if (!ja || !smijePreuzeti(ja.uloga)) {
+    return NextResponse.json({ error: tCommon("izvozNijeDozvoljen") }, { status: 403 })
   }
 
   const supabase = await createServerSupabaseClient()

@@ -9,9 +9,9 @@
 
 const PRAG_ZAGLAVLJENOG_MS = 15 * 60 * 1000
 
-/** Je li dati bečki ISO datum ponedjeljak. */
-export function jePonedjeljak(beckiDatum: string): boolean {
-  return new Date(`${beckiDatum}T00:00:00Z`).getUTCDay() === 1
+/** Je li dati beogradski (Europe/Belgrade) ISO datum ponedjeljak. */
+export function jePonedjeljak(bgDatum: string): boolean {
+  return new Date(`${bgDatum}T00:00:00Z`).getUTCDay() === 1
 }
 
 function danaIzmedju(od: string, do_: string): number {

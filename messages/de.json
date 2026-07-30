@@ -19,13 +19,15 @@
     "rok": {
       "kasni": "{count, plural, =1 {# Tag überfällig} other {# Tage überfällig}}",
       "danas": "heute fällig",
-      "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}"
+      "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}",
+      "rokIZakazano": "Frist {rok} · geplant {zakazano}"
     },
     "sacuvano": "Gespeichert",
     "obrisano": "Gelöscht",
     "greska": "Ein Fehler ist aufgetreten",
     "greskaNeocekivana": "Ein unerwarteter Fehler ist aufgetreten.",
     "greskaUcitavanja": "Fehler beim Laden der Daten.",
+    "izvozNijeDozvoljen": "Ihre Rolle darf keine Daten exportieren.",
     "samoAdministrator": "Nur Administrator.",
     "pokusajPonovo": "Erneut versuchen",
     "zaduzeniTi": "(Sie)",
@@ -181,6 +183,7 @@
       "terminProvjeraOsvjezi": "Die Prüfung wurde gespeichert, aber die Terminprüfung ist fehlgeschlagen — Seite aktualisieren.",
       "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
       "nedostajeId": "ID fehlt.",
+      "brisanjeNijeDozvoljeno": "Ihre Berechtigungen erlauben das Löschen dieses Datensatzes nicht.",
       "imeObavezno": "Name ist erforderlich",
       "lokacijaPostoji": "Ein Standort mit diesem Namen existiert bereits für diesen Kunden.",
       "kontaktPostoji": "Eine Kontaktperson mit diesem Namen existiert bereits für diesen Kunden.",
@@ -894,7 +897,6 @@
     "uploadNijeUspio": "Upload fehlgeschlagen.",
     "zapisnikSamoIzvrsen": "Das Protokoll kann nur für einen durchgeführten Termin erstellt werden.",
     "generisanjeNijeUspjelo": "Erstellung fehlgeschlagen.",
-    "samoAdminBrise": "Nur ein Administrator kann Dokumente löschen.",
     "dokumentNePostoji": "Das Dokument existiert nicht.",
     "dokumentNePostojiIliNemaPristupa": "Das Dokument existiert nicht oder Sie haben keinen Zugriff.",
     "klijentObavezan": "Kunde ist erforderlich",
@@ -924,6 +926,7 @@
     "dropzoneUkloni": "Ausgewählte Datei entfernen",
     "neispravniPodaci": "Ungültige Daten — aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "preuzimanjeNijeUspjelo": "Der Download ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "preuzimanjeNijeDozvoljeno": "Ihre Rolle darf keine Dokumente herunterladen.",
     "potvrdaBrisanjaNaslov": "Dokument löschen?",
     "potvrdaBrisanjaOpis": "Das Dokument und die Datei werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
     "tipovi": {
@@ -983,6 +986,7 @@
         "uloga": "Rolle",
         "podsjetnici": "Erinnerungen",
         "firme": "Firmen",
+        "dozvole": "Berechtigungen",
         "akcije": "Aktionen"
       },
       "ti": "(Du)",
@@ -1040,6 +1044,15 @@
       "sacuvano": "Gespeichert.",
       "greska": "Fehler."
     },
+    "dozvole": {
+      "dozvoleSamoOperater": "Administratoren dürfen alles, Betrachter nichts — diese Schalter gelten für Operatoren.",
+      "smijeBrisatiSvoje": "Eigene Einträge löschen",
+      "smijeBrisatiTudje": "Fremde Einträge in zugewiesenen Firmen löschen",
+      "smijeBrisatiKlijente": "Kunde, Vertrag, Standort, Kontakte und Leistungsverknüpfungen löschen",
+      "smijeZatvoritiBezNalaza": "Aktivität ohne Bericht abschließen",
+      "dozvolaSacuvana": "Berechtigung gespeichert.",
+      "dozvolaGreska": "Speichern der Berechtigung fehlgeschlagen."
+    },
     "podsjetniciKontrole": {
       "naslov": "Automatischer Versand",
       "opis": "Schaltet den automatischen täglichen Versand ab (beide Tagesläufe, Erinnerungen vor und nach dem Termin). „Jetzt ausführen“ funktioniert auch im ausgeschalteten Zustand. Es schaltet „Hinweis zur Terminierung nach Fristablauf“ nicht ab — dieser hat seinen eigenen Schalter darunter.",
@@ -1052,7 +1065,7 @@
     "vrijemeSlanja": {
       "naslov": "Sendezeit",
       "opis": "Erinnerungen werden einmal täglich zu einem von zwei Zeitpunkten versendet.",
-      "zona": "Ortszeit (Wien)",
+      "zona": "Ortszeit (Belgrad)",
       "ujutro": "Vormittags (ca. 10–11 Uhr)",
       "poslijepodne": "Nachmittags (ca. 14–15 Uhr)"
     },
@@ -1140,7 +1153,10 @@
       "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen.",
       "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen.",
       "resetEmailGreska": "Die E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden.",
-      "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen."
+      "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen.",
+      "nepoznataDozvola": "Unbekannte Berechtigung.",
+      "korisnikNePostoji": "Der Benutzer existiert nicht.",
+      "dozvoleSamoOperater": "Berechtigungsschalter gelten nur für Operatoren."
     },
     "novaVrsta": {
       "dugme": "Neue Art",
@@ -1363,7 +1379,9 @@
       "opened": "Geöffnet",
       "deliveryFailed": "Zustellung fehlgeschlagen",
       "bounced": "Unzustellbar",
-      "complained": "Als Spam gemeldet"
+      "complained": "Als Spam gemeldet",
+      "djelimicno": "{oznaka} ({pogodjenih} von {ukupno})",
+      "djelimicnoAdrese": "Nicht zugestellt an: {adrese}"
     },
     "filteri": {
       "tip": "Typ",
@@ -1434,6 +1452,7 @@
   },
   "dbErrors": {
     "chkTerminiDatumi": "Ungültiges Datum: das Ausführungsdatum darf nicht in der Zukunft liegen, und das Intervall muss zwischen 1 und 120 Monaten liegen.",
+    "nalazObavezan": "Die Aktivität kann ohne beigefügten Bericht nicht abgeschlossen werden. Fügen Sie ein Dokument bei oder bitten Sie einen Administrator um die Berechtigung.",
     "duplikat": "Ein Eintrag mit diesen Werten existiert bereits.",
     "uUpotrebi": "Der Eintrag ist mit anderen Daten verknüpft und wird verwendet.",
     "nevazeciPodaci": "Ungültige Daten — bitte überprüfen Sie die Eingabe.",

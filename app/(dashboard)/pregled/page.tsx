@@ -14,9 +14,10 @@ import { cn, FOCUS_RING } from "@/lib/utils"
 export default async function PregledPage() {
   const t = await getTranslations("pregled")
   const supabase = await createServerSupabaseClient()
-  // Godina i mjesec IZ ISTOG izvora (UTC, kao DB `current_date`) — `currentYear()`
-  // čita lokalni sat, pa bi oko Nove godine prsten „tekućeg mjeseca" pao na
-  // pogrešan bar (nova godina + mjesec 12).
+  // Godina i mjesec IZ ISTOG izvora — jedan poziv `todayIso()` (zidni datum po
+  // APP_TIME_ZONE, SQL parnjak `(now() at time zone 'Europe/Belgrade')::date`);
+  // dva odvojena čitanja sata bi oko Nove godine mogla dati prsten „tekućeg
+  // mjeseca" na pogrešnom baru (nova godina + mjesec 12).
   const danas = todayIso()
   const godina = Number(danas.slice(0, 4))
   const mjesec = Number(danas.slice(5, 7))

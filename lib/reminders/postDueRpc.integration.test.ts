@@ -3,6 +3,9 @@ import { Client } from "pg"
 
 const URL = process.env.TEST_DATABASE_URL
 
+/** SQL izraz za zidni "danas" u Europe/Belgrade (APP_TIME_ZONE) — parnjak `todayIso()` iz lib/date.ts. */
+const DANAS_SQL = "(now() at time zone 'Europe/Belgrade')::date"
+
 describe.skipIf(!URL)("get_post_due_termine + claim_post_due (integracija, lokalni DB)", () => {
   let db: Client
   beforeAll(async () => {
@@ -32,8 +35,8 @@ describe.skipIf(!URL)("get_post_due_termine + claim_post_due (integracija, lokal
   ) {
     const r = await db.query(
       `insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca, datum_zakazan, status)
-       values ($1, $2, current_date + $3::int,
-               case when $4::int is null then null else current_date + $4::int end,
+       values ($1, $2, ${DANAS_SQL} + $3::int,
+               case when $4::int is null then null else ${DANAS_SQL} + $4::int end,
                'planirano')
        returning id`,
       [ids.klijent, ids.vrsta, rokOffset, zakazanOffset],
@@ -171,7 +174,7 @@ describe.skipIf(!URL)("get_post_due_termine + claim_post_due (integracija, lokal
       expect(await postDue(t)).toHaveLength(0)
 
       // Rok pomjeren naprijed pa opet istekao — novi datum, dakle novi ciklus.
-      await db.query("update termini set rok_dospijeca = current_date - 3 where id = $1", [t])
+      await db.query(`update termini set rok_dospijeca = ${DANAS_SQL} - 3 where id = $1`, [t])
       const rows = await postDue(t)
       expect(rows).toHaveLength(1)
       expect(rows[0]!.ciklus_rok).not.toBe(ciklus1)

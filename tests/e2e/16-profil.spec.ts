@@ -115,7 +115,8 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       // stavka bez zadnjeg datuma, rok = uneseni prvi rok
       await expect(page.getByTestId("profil-row")).toHaveCount(1)
       await expect(page.getByTestId("profil-row")).toContainText("— (prvi put)")
-      await expect(page.getByTestId("profil-row")).toContainText("15.05.2027.")
+      // negativni lookahead: dokazuje da UI renderuje BEZ završne tačke (standard dd.MM.yyyy)
+      await expect(page.getByTestId("profil-row")).toContainText(/15\.05\.2027(?!\.)/)
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)

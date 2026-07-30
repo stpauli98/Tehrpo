@@ -935,6 +935,7 @@
         "uloga": "Role",
         "podsjetnici": "Reminders",
         "firme": "Companies",
+        "dozvole": "Permissions",
         "akcije": "Actions"
       },
       "ti": "(you)",
@@ -991,6 +992,15 @@
       "aria": "Receives email reminders",
       "sacuvano": "Saved.",
       "greska": "Error."
+    },
+    "dozvole": {
+      "dozvoleSamoOperater": "Administrators may do everything and viewers nothing — these switches apply to operators.",
+      "smijeBrisatiSvoje": "Delete own entries",
+      "smijeBrisatiTudje": "Delete other people's entries on assigned firms",
+      "smijeBrisatiKlijente": "Delete client, contract, location, contacts and service links",
+      "smijeZatvoritiBezNalaza": "Close an activity without a report",
+      "dozvolaSacuvana": "Permission saved.",
+      "dozvolaGreska": "Saving the permission failed."
     },
     "podsjetniciKontrole": {
       "naslov": "Automatic sending",
@@ -1092,7 +1102,8 @@
       "saljiKlijentimaGreska": "Failed to change sending to clients.",
       "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice.",
       "resetEmailGreska": "Failed to send the password reset email.",
-      "resetRateLimit": "Too many password reset requests. Try again in a few minutes."
+      "resetRateLimit": "Too many password reset requests. Try again in a few minutes.",
+      "nepoznataDozvola": "Unknown permission."
     },
     "novaVrsta": {
       "dugme": "New type",

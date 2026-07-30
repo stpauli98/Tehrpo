@@ -935,6 +935,7 @@
         "uloga": "Rolle",
         "podsjetnici": "Erinnerungen",
         "firme": "Firmen",
+        "dozvole": "Berechtigungen",
         "akcije": "Aktionen"
       },
       "ti": "(Du)",
@@ -991,6 +992,15 @@
       "aria": "Erhält E-Mail-Erinnerungen",
       "sacuvano": "Gespeichert.",
       "greska": "Fehler."
+    },
+    "dozvole": {
+      "dozvoleSamoOperater": "Administratoren dürfen alles, Betrachter nichts — diese Schalter gelten für Operatoren.",
+      "smijeBrisatiSvoje": "Eigene Einträge löschen",
+      "smijeBrisatiTudje": "Fremde Einträge in zugewiesenen Firmen löschen",
+      "smijeBrisatiKlijente": "Kunde, Vertrag, Standort, Kontakte und Leistungsverknüpfungen löschen",
+      "smijeZatvoritiBezNalaza": "Aktivität ohne Bericht abschließen",
+      "dozvolaSacuvana": "Berechtigung gespeichert.",
+      "dozvolaGreska": "Speichern der Berechtigung fehlgeschlagen."
     },
     "podsjetniciKontrole": {
       "naslov": "Automatischer Versand",
@@ -1092,7 +1102,8 @@
       "saljiKlijentimaGreska": "Änderung des Versands an Firmen fehlgeschlagen.",
       "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen.",
       "resetEmailGreska": "Die E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden.",
-      "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen."
+      "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen.",
+      "nepoznataDozvola": "Unbekannte Berechtigung."
     },
     "novaVrsta": {
       "dugme": "Neue Art",

@@ -935,6 +935,7 @@
         "uloga": "Uloga",
         "podsjetnici": "Podsjetnici",
         "firme": "Firme",
+        "dozvole": "Dozvole",
         "akcije": "Akcije"
       },
       "ti": "(ti)",
@@ -991,6 +992,15 @@
       "aria": "Prima email podsjetnike",
       "sacuvano": "Sačuvano.",
       "greska": "Greška."
+    },
+    "dozvole": {
+      "dozvoleSamoOperater": "Administrator smije sve, pregled ništa — prekidači vrijede za operatera.",
+      "smijeBrisatiSvoje": "Briše svoje unose",
+      "smijeBrisatiTudje": "Briše tuđe unose na svojim firmama",
+      "smijeBrisatiKlijente": "Briše klijenta, ugovor, lokaciju, kontakt osobe i veze s uslugama",
+      "smijeZatvoritiBezNalaza": "Zatvara aktivnost bez nalaza",
+      "dozvolaSacuvana": "Dozvola sačuvana.",
+      "dozvolaGreska": "Čuvanje dozvole nije uspjelo."
     },
     "podsjetniciKontrole": {
       "naslov": "Automatsko slanje",
@@ -1092,7 +1102,8 @@
       "saljiKlijentimaGreska": "Greška pri promjeni slanja firmama.",
       "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka.",
       "resetEmailGreska": "Slanje emaila za reset lozinke nije uspjelo.",
-      "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta."
+      "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta.",
+      "nepoznataDozvola": "Nepoznata dozvola."
     },
     "novaVrsta": {
       "dugme": "Nova vrsta",

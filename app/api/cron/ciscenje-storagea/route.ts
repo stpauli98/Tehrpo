@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { isCronAuthorized } from "@/lib/reminders/cronAuth"
-import { osirotjeliObjekti } from "@/lib/dokumenti/sweep"
+import { odluciSta, type StorageStavka } from "@/lib/dokumenti/sweep"
 import { env } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
@@ -12,8 +12,6 @@ const BUCKET = "tehpro-dokumenti"
 // Upload prvo piše fajl pa onda red u `dokumenti`. Fajl uhvaćen u tom procjepu izgleda
 // osirotjelo. 24h je isti prag koji već koristi lib/dokumenti-gc.ts.
 const GRACE_MS = 24 * 60 * 60 * 1000
-
-type StorageStavka = { path: string; kreiran: string } // kreiran = created_at objekta, ISO
 
 /** Rekurzivno pokupi sve objekte u bucketu (folderi nemaju `id`, fajlovi ga imaju), sa datumom kreiranja. */
 async function sveObjekte(
@@ -81,23 +79,14 @@ async function handle(req: Request) {
     const { putanje, error } = await svePutanjeUBazi(supabase)
     if (error) return NextResponse.json({ ok: false, error }, { status: 500 })
 
-    // Sumnjivo stanje: bucket pun a nijedan red u bazi. Realno znači pogrešan projekat,
-    // pogrešan ključ ili polomljen upit — nikad „sve je zaista smeće". Ne brišemo ništa.
-    if (putanje.length === 0 && objekti.length > 0) {
-      return NextResponse.json(
-        { ok: false, error: "dokumenti je prazan a bucket nije — prekid" },
-        { status: 500 },
-      )
+    // Sve odluke (prekid na praznu bazu, grace period, set-difference) su u čistoj
+    // odluciSta — ruta samo prikuplja I/O i izvršava presudu.
+    const odluka = odluciSta(objekti, putanje, Date.now(), GRACE_MS)
+    if (odluka.akcija === "prekid") {
+      return NextResponse.json({ ok: false, error: odluka.razlog }, { status: 500 })
     }
 
-    // Grace period PRIJE poređenja: svjež objekat se ne dira ni ako trenutno izgleda osirotjelo
-    // (upload je mogao upisati fajl ali još nije stigao da upiše red).
-    const sada = Date.now()
-    const zreliPuta = objekti
-      .filter((o) => sada - Date.parse(o.kreiran) >= GRACE_MS)
-      .map((o) => o.path)
-
-    const zaBrisanje = osirotjeliObjekti(zreliPuta, putanje)
+    const zaBrisanje = odluka.putanje
     if (!zaBrisanje.length) return NextResponse.json({ ok: true, obrisano: 0 })
 
     // Brisanje u grupama od 100, kao postojeći scripts/gc-orphan-dokumenti.ts.

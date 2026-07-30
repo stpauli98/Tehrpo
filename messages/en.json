@@ -337,7 +337,9 @@
         "info": "A summary of the checks from the Services tab with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
         "prazno": "No services defined. Add them via the Services tab.",
         "sljedeci": "next: {datum}",
-        "imenica": "services"
+        "imenica": "services",
+        "jednokratna": "one-off",
+        "jednokratnaInfo": "Manually entered appointment with no periodicity — no next due date is generated after completion."
       }
     },
     "ugovorSheet": {
@@ -484,7 +486,9 @@
         "zadnjiPut": "Last time",
         "sljedeciRok": "Next due date"
       },
-      "prviPut": "— (first time)"
+      "prviPut": "— (first time)",
+      "jednokratna": "one-off",
+      "jednokratnaInfo": "Manually entered appointment with no periodicity — no next due date is generated after completion."
     },
     "obrisiProfil": {
       "tooltip": "Remove service",

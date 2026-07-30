@@ -16,6 +16,8 @@ export type ProfilStavka = {
   sljedeci_rok: string | null
   /** status_izvedeni aktivnog termina, null kad aktivnog termina nema. */
   termin_status: string | null
+  /** Termin bez profil-stavke — nema periodiku, ne generiše sljedeći rok. */
+  jednokratna?: boolean
 }
 
 export async function ProfilTab({
@@ -55,7 +57,18 @@ export async function ProfilTab({
             <tbody>
               {stavke.map((s) => (
                 <tr key={s.id} data-testid="profil-row" className="border-t border-border">
-                  <td className="px-3 py-2 text-foreground">{s.vrsta_naziv}</td>
+                  <td className="px-3 py-2 text-foreground">
+                    {s.vrsta_naziv}
+                    {s.jednokratna && (
+                      <span
+                        className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground"
+                        title={t("jednokratnaInfo")}
+                        data-testid="usluga-jednokratna"
+                      >
+                        {t("jednokratna")}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-muted-foreground">{s.lokacija_naziv ?? "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{s.interval_mjeseci ?? "—"}</td>
                   <td className="px-3 py-2 tabular-nums">
@@ -67,7 +80,7 @@ export async function ProfilTab({
                       {s.termin_status && <StatusBadge status={s.termin_status} />}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-right"><ObrisiProfilButton id={s.id} /></td>
+                  <td className="px-3 py-2 text-right">{!s.jednokratna && <ObrisiProfilButton id={s.id} />}</td>
                 </tr>
               ))}
             </tbody>

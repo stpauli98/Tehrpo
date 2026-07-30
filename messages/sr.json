@@ -337,7 +337,9 @@
         "info": "Sažetak usluga iz taba Usluge sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red.",
         "prazno": "Nema definisanih usluga. Dodajte ih kroz tab Usluge.",
         "sljedeci": "sljedeći: {datum}",
-        "imenica": "usluga"
+        "imenica": "usluga",
+        "jednokratna": "jednokratno",
+        "jednokratnaInfo": "Termin unesen ručno, bez definisane periodike — po izvršenju se ne generiše sljedeći rok."
       }
     },
     "ugovorSheet": {
@@ -484,7 +486,9 @@
         "zadnjiPut": "Zadnji put",
         "sljedeciRok": "Sljedeći rok"
       },
-      "prviPut": "— (prvi put)"
+      "prviPut": "— (prvi put)",
+      "jednokratna": "jednokratno",
+      "jednokratnaInfo": "Termin unesen ručno, bez definisane periodike — po izvršenju se ne generiše sljedeći rok."
     },
     "obrisiProfil": {
       "tooltip": "Ukloni uslugu",

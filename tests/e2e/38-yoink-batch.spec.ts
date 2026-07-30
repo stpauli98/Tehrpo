@@ -327,4 +327,31 @@ test.describe("Yoink batch 2026-07-30", () => {
       await deleteKlijentByNaziv(naziv)
     }
   })
+
+  test("jednokratni termin je vidljiv u tabu Usluge", async ({ page }) => {
+    // DEMO baza ima 25+ termina bez profil-stavke; badge mora postojati bar negdje.
+    await page.goto("/klijenti")
+    const kartice = page.getByTestId("klijent-card")
+    const broj = await kartice.count()
+    let nadjen = false
+    // Sekvencijalna navigacija je namjerna — Playwright vozi jednu stranicu, ne može paralelno.
+    for (let i = 0; i < Math.min(broj, 6); i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await page.goto("/klijenti")
+      // eslint-disable-next-line no-await-in-loop
+      await kartice.nth(i).click()
+      // eslint-disable-next-line no-await-in-loop
+      await page.getByTestId("tab-profil").click()
+      // Sačekaj da se sadržaj taba stvarno učita (RSC navigacija) prije provjere bedža —
+      // bez ovoga isVisible() zna pucati na starom (id-karta) sadržaju.
+      // eslint-disable-next-line no-await-in-loop
+      await page.getByTestId("tab-profil-content").waitFor({ state: "visible" }).catch(() => {})
+      // eslint-disable-next-line no-await-in-loop
+      if (await page.getByTestId("usluga-jednokratna").first().isVisible().catch(() => false)) {
+        nadjen = true
+        break
+      }
+    }
+    expect(nadjen, "nijedan klijent nema jednokratnu uslugu — provjeri spojiJednokratne").toBe(true)
+  })
 })

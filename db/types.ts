@@ -471,6 +471,10 @@ export type Database = {
           id: string
           ime: string
           prima_podsjetnike: boolean
+          smije_brisati_klijente: boolean
+          smije_brisati_svoje: boolean
+          smije_brisati_tudje: boolean
+          smije_zatvoriti_bez_nalaza: boolean
           uloga: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Insert: {
@@ -480,6 +484,10 @@ export type Database = {
           id: string
           ime: string
           prima_podsjetnike?: boolean
+          smije_brisati_klijente?: boolean
+          smije_brisati_svoje?: boolean
+          smije_brisati_tudje?: boolean
+          smije_zatvoriti_bez_nalaza?: boolean
           uloga?: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Update: {
@@ -489,6 +497,10 @@ export type Database = {
           id?: string
           ime?: string
           prima_podsjetnike?: boolean
+          smije_brisati_klijente?: boolean
+          smije_brisati_svoje?: boolean
+          smije_brisati_tudje?: boolean
+          smije_zatvoriti_bez_nalaza?: boolean
           uloga?: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Relationships: []
@@ -1364,6 +1376,9 @@ export type Database = {
       oznaci_mejl_pregledan: { Args: { p_id: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      smije_brisati_klijente: { Args: never; Returns: boolean }
+      smije_brisati_zapis: { Args: { p_kreirao: string }; Returns: boolean }
+      smije_zatvoriti_bez_nalaza: { Args: never; Returns: boolean }
       tekst_u_uuid: { Args: { t: string }; Returns: string }
       ukloni_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }

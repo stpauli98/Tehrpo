@@ -1,9 +1,12 @@
 import { test, expect } from "@playwright/test"
 import {
   db, getPostavkeV2, setPostavkeV2, insertKlijent, insertLokacija, insertKontakt, deleteKlijentByNaziv,
-  firstVrstaSaIntervalom, deleteTerminiByKlijent, getVrstaInterval, setVrstaInterval,
+  firstVrstaSaIntervalom, deleteTerminiByKlijent, insertVrsta, deleteVrsta, deleteUgovoriByKlijent,
 } from "./db"
 
+// Nazivi throwaway redova nose prefikse koje `scripts/cleanup-test-data.ts` zna
+// obrisati (E2E Firma / E2E Kontakt / E2E Lokacija / E2E BezLok / E2E Vrsta) —
+// `finally` je prva odbrana, cleanup skripta je druga kad prolaz bude ubijen.
 test.describe("Yoink batch 2026-07-30", () => {
   test("tab se zove Usluge, ne Profil", async ({ page }) => {
     await page.goto("/klijenti")
@@ -13,78 +16,186 @@ test.describe("Yoink batch 2026-07-30", () => {
     await expect(page.getByTestId("tab-profil")).not.toContainText("Profil")
   })
 
-  test("ugovor se moze staviti na neodredjeno", async ({ page }) => {
-    await page.goto("/klijenti")
-    await page.getByTestId("klijent-card").first().click()
-    await page.getByTestId("tab-id-karta").click()
-    await page.getByTestId("novi-ugovor-btn").click()
+  test("ugovor na neodredjeno se PERZISTIRA (na_neodredjeno=true, datum_isteka=null)", async ({ page }) => {
+    // UI-only provjera (samo `toBeDisabled`) bi prošla i da server tiho odbija upis:
+    // `na_neodredjeno` koristi `z.literal("on")`, uži parser od susjednih checkbox-a,
+    // pa bi drugačija serijalizacija Base UI checkbox-a pala u field-grešku neprimijećeno.
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E Firma Neodredjeno ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    try {
+      await page.goto(`/klijenti/${klijentId}?tab=id-karta`)
+      await page.getByTestId("novi-ugovor-btn").click()
+      await expect(page.getByTestId("ugovor-sheet")).toBeVisible()
 
-    await expect(page.getByTestId("ugovor-sheet")).toBeVisible()
-    await page.getByTestId("ugovor-neodredjeno").click()
-    // Datum isteka postaje neaktivan
-    await expect(page.getByTestId("ugovor-istek")).toBeDisabled()
+      await page.getByTestId("ugovor-zavodni").fill(`UG-E2E-NEOD-${sufiks}`)
+      await page.getByTestId("ugovor-potpis").fill("2026-02-01")
+      await page.getByTestId("ugovor-neodredjeno").click()
+      // Datum isteka postaje neaktivan — i objašnjava ZAŠTO (I2).
+      await expect(page.getByTestId("ugovor-istek")).toBeDisabled()
+      await expect(page.getByTestId("ugovor-istek-neodredjeno")).toBeVisible()
+
+      await page.getByTestId("ugovor-submit").click()
+      await expect(page.getByTestId("ugovor-sheet")).toBeHidden({ timeout: 5000 })
+
+      const { data, error } = await db
+        .from("ugovori")
+        .select("na_neodredjeno, datum_isteka")
+        .eq("klijent_id", klijentId)
+        .eq("zavodni_broj", `UG-E2E-NEOD-${sufiks}`)
+        .maybeSingle()
+      if (error) throw new Error(`assert ugovor: ${error.message}`)
+      expect(data).not.toBeNull()
+      expect(data?.na_neodredjeno).toBe(true)
+      expect(data?.datum_isteka).toBeNull()
+    } finally {
+      await deleteUgovoriByKlijent(klijentId).catch(() => {})
+      await deleteKlijentByNaziv(naziv).catch(() => {})
+    }
   })
 
-  test("vazenje nudi custom broj mjeseci", async ({ page }) => {
-    await page.goto("/klijenti")
-    await page.getByTestId("klijent-card").first().click()
-    await page.getByTestId("tab-id-karta").click()
-    await page.getByTestId("novi-ugovor-btn").click()
+  test("custom broj mjeseci se PERZISTIRA u vazenje_mjeseci", async ({ page }) => {
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E Firma Vazenje ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    try {
+      await page.goto(`/klijenti/${klijentId}?tab=id-karta`)
+      await page.getByTestId("novi-ugovor-btn").click()
+      await expect(page.getByTestId("ugovor-sheet")).toBeVisible()
 
-    await page.getByTestId("ugovor-vazenje").click()
-    await page.getByRole("option", { name: /Drugo/ }).click()
-    await expect(page.getByTestId("ugovor-vazenje-custom")).toBeVisible()
-    await page.getByTestId("ugovor-vazenje-custom").fill("18")
-    await expect(page.getByTestId("ugovor-vazenje-custom")).toHaveValue("18")
+      await page.getByTestId("ugovor-zavodni").fill(`UG-E2E-VAZ-${sufiks}`)
+      await page.getByTestId("ugovor-vazenje").click()
+      await page.getByRole("option", { name: /Drugo/ }).click()
+      await expect(page.getByTestId("ugovor-vazenje-custom")).toBeVisible()
+      await page.getByTestId("ugovor-vazenje-custom").fill("18")
+      await expect(page.getByTestId("ugovor-vazenje-custom")).toHaveValue("18")
+
+      await page.getByTestId("ugovor-submit").click()
+      await expect(page.getByTestId("ugovor-sheet")).toBeHidden({ timeout: 5000 })
+
+      const { data, error } = await db
+        .from("ugovori")
+        .select("vazenje_mjeseci, na_neodredjeno")
+        .eq("klijent_id", klijentId)
+        .eq("zavodni_broj", `UG-E2E-VAZ-${sufiks}`)
+        .maybeSingle()
+      if (error) throw new Error(`assert ugovor: ${error.message}`)
+      expect(data).not.toBeNull()
+      expect(data?.vazenje_mjeseci).toBe(18)
+      expect(data?.na_neodredjeno).toBe(false)
+    } finally {
+      await deleteUgovoriByKlijent(klijentId).catch(() => {})
+      await deleteKlijentByNaziv(naziv).catch(() => {})
+    }
+  })
+
+  test("kontakt firme je unosiv i za firmu BEZ ijedne lokacije", async ({ page }) => {
+    // Regresija C1: fieldset „Lokacija" je za firmu bez lokacija nudio samo
+    // „Nova lokacija" (i to sa required nazivom), pa kontakt firme
+    // (lokacija_id = null) uopšte nije bio unosiv — korisnik je morao izmisliti
+    // lokaciju. Test dokazuje da izbor postoji, da je podrazumijevan i da se
+    // zaista upisuje kao NULL.
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E BezLok ${sufiks}`
+    const ime = `E2E Kontakt Firme ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    try {
+      await page.goto(`/klijenti/${klijentId}?tab=kontakti`)
+      await expect(page.getByTestId("tab-kontakti-content")).toBeVisible()
+      await page.getByTestId("novi-kontakt-btn").click()
+      await expect(page.getByTestId("kontakt-sheet")).toBeVisible()
+
+      // Podrazumijevani izbor je kontakt firme, ne „nova lokacija".
+      await expect(page.getByTestId("kontakt-lokacija-firma")).toBeChecked()
+
+      await page.getByTestId("kontakt-ime").fill(ime)
+      await page.getByTestId("kontakt-funkcija").fill("Direktor")
+      await page.getByTestId("kontakt-submit").click()
+      await expect(page.getByTestId("kontakt-sheet")).toBeHidden({ timeout: 5000 })
+
+      const { data, error } = await db
+        .from("kontakt_osobe")
+        .select("lokacija_id")
+        .eq("klijent_id", klijentId)
+        .eq("ime", ime)
+        .maybeSingle()
+      if (error) throw new Error(`assert kontakt: ${error.message}`)
+      expect(data).not.toBeNull()
+      expect(data?.lokacija_id).toBeNull()
+
+      // I nijedna lokacija nije usput izmišljena.
+      const { count } = await db
+        .from("lokacije")
+        .select("id", { count: "exact", head: true })
+        .eq("klijent_id", klijentId)
+      expect(count ?? 0).toBe(0)
+    } finally {
+      await deleteKlijentByNaziv(naziv).catch(() => {})
+    }
   })
 
   test("novi kontakt moze kreirati novu lokaciju", async ({ page }) => {
+    // Vlastita throwaway firma umjesto `klijent-card.first()`: ranije je test
+    // zauvijek dodavao kontakt i lokaciju PRAVOM demo klijentu, bez čišćenja.
     const sufiks = String(Date.now()).slice(-6)
-    await page.goto("/klijenti")
-    await page.getByTestId("klijent-card").first().click()
-    await page.getByTestId("tab-kontakti").click()
-    await page.getByTestId("novi-kontakt-btn").click()
+    const naziv = `E2E Kontakt Firma ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    try {
+      await page.goto(`/klijenti/${klijentId}?tab=kontakti`)
+      await expect(page.getByTestId("tab-kontakti-content")).toBeVisible()
+      await page.getByTestId("novi-kontakt-btn").click()
 
-    await page.getByTestId("kontakt-ime").fill(`E2E Kontakt ${sufiks}`)
-    await page.getByTestId("kontakt-lokacija-izbor").getByRole("radio", { name: /Nova/ }).click()
-    await page.getByTestId("kontakt-nova-lokacija-naziv").fill(`E2E Lokacija ${sufiks}`)
-    await page.getByTestId("kontakt-nova-lokacija-grad").fill("Banja Luka")
-    await page.getByTestId("kontakt-nova-lokacija-adresa").fill("Testna 1")
-    await page.getByTestId("kontakt-submit").click()
+      await page.getByTestId("kontakt-ime").fill(`E2E Kontakt ${sufiks}`)
+      await page.getByTestId("kontakt-lokacija-izbor").getByRole("radio", { name: /Nova/ }).click()
+      await page.getByTestId("kontakt-nova-lokacija-naziv").fill(`E2E Lokacija ${sufiks}`)
+      await page.getByTestId("kontakt-nova-lokacija-grad").fill("Banja Luka")
+      await page.getByTestId("kontakt-nova-lokacija-adresa").fill("Testna 1")
+      await page.getByTestId("kontakt-submit").click()
 
-    // Lokacija se pojavljuje u tabu Lokacije
-    await page.getByTestId("tab-lokacije").click()
-    await expect(page.getByTestId("lokacije-table")).toContainText(`E2E Lokacija ${sufiks}`)
+      // Lokacija se pojavljuje u tabu Lokacije
+      await page.getByTestId("tab-lokacije").click()
+      await expect(page.getByTestId("lokacije-table")).toContainText(`E2E Lokacija ${sufiks}`)
+    } finally {
+      // Kontakti i lokacije kaskadiraju sa klijentom (on delete cascade).
+      await deleteKlijentByNaziv(naziv).catch(() => {})
+    }
   })
 
   test("novi klijent ima puna polja i kreira prvu lokaciju", async ({ page }) => {
     const sufiks = String(Date.now()).slice(-6)
     const naziv = `E2E Firma ${sufiks}`
-    await page.goto("/klijenti")
-    await page.getByTestId("novi-klijent-btn").click()
+    try {
+      await page.goto("/klijenti")
+      await page.getByTestId("novi-klijent-btn").click()
 
-    await page.getByTestId("novi-klijent-naziv").fill(naziv)
-    await page.getByTestId("novi-klijent-adresa").fill("Kralja Petra 1")
-    await page.getByTestId("novi-klijent-telefon").fill("051111222")
-    await page.getByTestId("novi-klijent-email").fill(`e2e${sufiks}@tehpro.test`)
-    // Polja koja su ranije postojala SAMO u edit formi
-    await page.getByTestId("novi-klijent-pib").fill("4400000000001")
-    await page.getByTestId("novi-klijent-maticni_broj").fill("11111111")
-    await page.getByTestId("novi-klijent-sifra_djelatnosti").fill("4321")
-    // Prva lokacija
-    await page.getByTestId("novi-klijent-lokacija-naziv").fill("Centrala")
-    await page.getByTestId("novi-klijent-lokacija-grad").fill("Banja Luka")
-    await page.getByTestId("novi-klijent-submit").click()
+      await page.getByTestId("novi-klijent-naziv").fill(naziv)
+      await page.getByTestId("novi-klijent-adresa").fill("Kralja Petra 1")
+      await page.getByTestId("novi-klijent-telefon").fill("051111222")
+      await page.getByTestId("novi-klijent-email").fill(`e2e${sufiks}@tehpro.test`)
+      // Polja koja su ranije postojala SAMO u edit formi
+      await page.getByTestId("novi-klijent-pib").fill("4400000000001")
+      await page.getByTestId("novi-klijent-maticni_broj").fill("11111111")
+      await page.getByTestId("novi-klijent-sifra_djelatnosti").fill("4321")
+      // Prva lokacija
+      await page.getByTestId("novi-klijent-lokacija-naziv").fill("Centrala")
+      await page.getByTestId("novi-klijent-lokacija-grad").fill("Banja Luka")
+      await page.getByTestId("novi-klijent-submit").click()
 
-    await page.getByTestId("klijenti-search").fill(naziv)
-    await page.getByText(naziv).first().click()
-    // Matični broj je sačuvan
-    await page.getByTestId("uredi-klijent-btn").click()
-    await expect(page.getByTestId("edit-klijent-maticni_broj")).toHaveValue("11111111")
-    await page.keyboard.press("Escape")
-    // Prva lokacija postoji
-    await page.getByTestId("tab-lokacije").click()
-    await expect(page.getByTestId("lokacije-table")).toContainText("Centrala")
+      await page.getByTestId("klijenti-search").fill(naziv)
+      await page.getByText(naziv).first().click()
+      // Matični broj je sačuvan
+      await page.getByTestId("uredi-klijent-btn").click()
+      await expect(page.getByTestId("edit-klijent-maticni_broj")).toHaveValue("11111111")
+      await page.keyboard.press("Escape")
+      // Prva lokacija postoji
+      await page.getByTestId("tab-lokacije").click()
+      await expect(page.getByTestId("lokacije-table")).toContainText("Centrala")
+    } finally {
+      // Bez ovoga se `E2E Firma …` klijenti gomilaju u DEMO-u; lista je sortirana
+      // po nazivu pa bi istisnuli prave firme iz prvih 6 kartica koje skenira
+      // test „jednokratni termin je vidljiv u tabu Usluge".
+      await deleteKlijentByNaziv(naziv).catch(() => {})
+    }
   })
 
   test("checkbox podsjetnika je neaktivan uz objasnjenje kad je slanje ugaseno", async ({ page }) => {
@@ -162,7 +273,7 @@ test.describe("Yoink batch 2026-07-30", () => {
     }
   })
 
-  test("novi termin sa oznakom ponavljajuce zavrsi i u tabu Usluge", async ({ page }) => {
+  test("nova termin forma nudi izbor ponavljanja i podrazumijeva jednokratno", async ({ page }) => {
     // "novi-termin-btn" (NoviTerminButton) postoji samo u Lista prikazu — Kalendar
     // (podrazumijevani view) ima samo "Dodaj termin za <dan>" po ćeliji.
     await page.goto("/plan-aktivnosti?view=lista")
@@ -289,12 +400,12 @@ test.describe("Yoink batch 2026-07-30", () => {
     const lokNaziv = `E2E Lokacija Bez Intervala ${sufiks}`
     const klijentId = await insertKlijent(naziv)
     const lokacijaId = await insertLokacija(klijentId, lokNaziv)
-    const vrsta = await firstVrstaSaIntervalom()
-    const origInterval = await getVrstaInterval(vrsta.id)
+    // Throwaway vrsta BEZ intervala umjesto privremenog nuliranja prave vrste:
+    // ako prolaz bude ubijen prije `finally`, prava vrsta bi ostala bez svog
+    // podrazumijevanog intervala i tiho onemogućila „Dodaj uslugu" za sebe.
+    const vrsta = await insertVrsta(`E2E Vrsta Bez Intervala ${sufiks}`, null)
 
     try {
-      await setVrstaInterval(vrsta.id, null) // privremeno: vrsta bez podrazumijevanog intervala
-
       await page.goto("/plan-aktivnosti?view=lista")
       await page.getByTestId("novi-termin-btn").click()
       await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
@@ -321,10 +432,10 @@ test.describe("Yoink batch 2026-07-30", () => {
       if (tErr) throw new Error(`assert termini: ${tErr.message}`)
       expect(termini?.length ?? 0).toBe(0)
     } finally {
-      await setVrstaInterval(vrsta.id, origInterval)
       await db.from("klijent_provjere").delete().eq("klijent_id", klijentId)
       await deleteTerminiByKlijent(klijentId)
       await deleteKlijentByNaziv(naziv)
+      await deleteVrsta(vrsta.id).catch(() => {})
     }
   })
 

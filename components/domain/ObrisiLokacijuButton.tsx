@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAkcijaToast } from "@/components/akcija-toast"
 import { deleteLokacija, type ActionResult } from "@/app/(dashboard)/klijenti/actions"
-import { useMozeUrediti } from "@/providers/korisnik-provider"
+import { useDozvole } from "@/providers/korisnik-provider"
 
 const initial: ActionResult = { ok: true }
 
@@ -25,7 +25,8 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(deleteLokacija, initial)
   const submitted = useRef(false)
-  const mozeUrediti = useMozeUrediti()
+  // Lokacija je dio "klijent, ugovor i lokacija" prekidača (20260730151000).
+  const { smije_brisati_klijente } = useDozvole()
   useAkcijaToast(state, { uspjeh: tc("obrisano"), greska: tc("greska") })
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export function ObrisiLokacijuButton({ lokacijaId }: { lokacijaId: string }) {
     }
   }, [state, pending, router])
 
-  if (!mozeUrediti) return null
+  if (!smije_brisati_klijente) return null
 
   return (
     <Dialog>

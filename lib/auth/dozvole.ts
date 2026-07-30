@@ -9,25 +9,27 @@ export type Dozvole = {
   smije_brisati_svoje: boolean
   /** briše tuđe redove na firmama koje su mu dodijeljene */
   smije_brisati_tudje: boolean
-  /** briše klijenta, ugovor i lokaciju */
+  /** briše klijenta, ugovor, lokaciju, kontakt osobu i profil provjere */
   smije_brisati_klijente: boolean
   /** označava aktivnost kao izvršenu bez priloženog nalaza */
   smije_zatvoriti_bez_nalaza: boolean
 }
 
-export const PRAZNE_DOZVOLE: Dozvole = {
+// Zamrznute: obje se vraćaju po referenci iz `efektivneDozvole`, a PRAZNE_DOZVOLE je i
+// izvezena — bez freeze-a bi jedan slučajan upis zatrovao svakog kasnijeg potrošača.
+export const PRAZNE_DOZVOLE: Dozvole = Object.freeze({
   smije_brisati_svoje: false,
   smije_brisati_tudje: false,
   smije_brisati_klijente: false,
   smije_zatvoriti_bez_nalaza: false,
-}
+})
 
-const SVE_DOZVOLE: Dozvole = {
+const SVE_DOZVOLE: Dozvole = Object.freeze({
   smije_brisati_svoje: true,
   smije_brisati_tudje: true,
   smije_brisati_klijente: true,
   smije_zatvoriti_bez_nalaza: true,
-}
+})
 
 /** admin → sve; pregled → ništa; operater → kolone kakve jesu. */
 export function efektivneDozvole(uloga: Uloga, d: Dozvole): Dozvole {

@@ -846,7 +846,6 @@
     "uploadNijeUspio": "Upload nije uspio.",
     "zapisnikSamoIzvrsen": "Zapisnik se generiše samo za izvršen termin.",
     "generisanjeNijeUspjelo": "Generisanje nije uspjelo.",
-    "samoAdminBrise": "Samo administrator može brisati dokumente.",
     "dokumentNePostoji": "Dokument ne postoji.",
     "dokumentNePostojiIliNemaPristupa": "Dokument ne postoji ili nemate pristup.",
     "klijentObavezan": "Klijent je obavezan",
@@ -1104,7 +1103,9 @@
       "zakazanoObavijestGreska": "Greška pri promjeni obavijesti o zakazivanju poslije roka.",
       "resetEmailGreska": "Slanje emaila za reset lozinke nije uspjelo.",
       "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta.",
-      "nepoznataDozvola": "Nepoznata dozvola."
+      "nepoznataDozvola": "Nepoznata dozvola.",
+      "korisnikNePostoji": "Korisnik ne postoji.",
+      "dozvoleSamoOperater": "Prekidači dozvola vrijede samo za operatera."
     },
     "novaVrsta": {
       "dugme": "Nova vrsta",

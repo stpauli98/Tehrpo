@@ -266,28 +266,31 @@ describe.skipIf(!URL)("dozvole brisanja (integracija, lokalni DB)", () => {
           [klijentId, drugi],
         )
         const dokId = await noviDokument(klijentId, terminId, drugi)
+        const lokId = lok.rows[0].id as string
+        const ugId = ug.rows[0].id as string
         await dodijeli(ja, klijentId)
         await kaoKorisnik(ja)
 
-        for (const [tabela, id] of [
-          ["klijenti", klijentId],
-          ["lokacije", lok.rows[0].id],
-          ["ugovori", ug.rows[0].id],
-          ["dokumenti", dokId],
-        ] as const) {
-          await db.query(`update ${tabela} set kreirao_id = $1 where id = $2`, [ja, id])
-        }
+        // Svaki pokušaj preuzimanja prolazi kao naredba (tihi pin), ali ne mijenja vlasnika.
+        await db.query("update klijenti set kreirao_id = $1 where id = $2", [ja, klijentId])
+        await db.query("update lokacije set kreirao_id = $1 where id = $2", [ja, lokId])
+        await db.query("update ugovori set kreirao_id = $1 where id = $2", [ja, ugId])
+        await db.query("update dokumenti set kreirao_id = $1 where id = $2", [ja, dokId])
 
         await kaoServisni()
-        for (const [tabela, id] of [
-          ["klijenti", klijentId],
-          ["lokacije", lok.rows[0].id],
-          ["ugovori", ug.rows[0].id],
-          ["dokumenti", dokId],
-        ] as const) {
-          const v = await db.query(`select kreirao_id from ${tabela} where id = $1`, [id])
-          expect({ tabela, vlasnik: v.rows[0].kreirao_id }).toEqual({ tabela, vlasnik: drugi })
-        }
+        const v = await db.query(
+          `select (select kreirao_id from klijenti  where id = $1) as klijent,
+                  (select kreirao_id from lokacije  where id = $2) as lokacija,
+                  (select kreirao_id from ugovori   where id = $3) as ugovor,
+                  (select kreirao_id from dokumenti where id = $4) as dokument`,
+          [klijentId, lokId, ugId, dokId],
+        )
+        expect(v.rows[0]).toEqual({
+          klijent: drugi,
+          lokacija: drugi,
+          ugovor: drugi,
+          dokument: drugi,
+        })
       })
     })
   })

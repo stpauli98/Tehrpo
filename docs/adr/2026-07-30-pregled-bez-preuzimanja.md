@@ -54,3 +54,29 @@ umjesto da predaje potpisani URL pregledaču — što je van obima ovog zadatka.
 naručilac zatraži da se i ovo zatvori, rješenje je taj proxy (server strimuje fajl
 sa `Content-Disposition: inline` i internom autorizacijom, bez ikad izlažućeg
 potpisanog URL-a klijentu).
+
+## Dodatak (30.07.2026.): storage politika brisanja zaostaje za DB politikom
+
+Migracija `20260730151000` je, po potvrdi naručioca istog dana, ukinula staro pravilo
+„dokumente briše ISKLJUČIVO administrator" i proširila `dokumenti_del` na
+`smije_brisati_zapis(kreirao_id)` — operater sada briše po prekidačima svoje/tuđe.
+Storage politika `storage_dok_del` iz `20260703100000_dokumenti_delete_admin_only.sql`
+je **namjerno ostavljena na `je_admin()`**.
+
+Posljedica je asimetrija koju treba znati:
+
+- **Kroz aplikaciju je ispravno.** `deleteDokumentAction` prvo briše DB red pod RLS-om i
+  potvrđuje broj obrisanih redova, pa tek onda zove `removeDokument`, koji ide
+  **service-role** klijentom i storage politike ne vidi. Ovlašteni operater obriše i red
+  i fajl; neovlaštenom RLS vrati 0 redova i fajl se nikad ne dira.
+- **Direktnim PostgREST pozivom nastaje orphan.** Operater sa dozvolom može obrisati DB
+  red mimo aplikacije (anon ključ je u browser bundle-u), ali mu `storage_dok_del` neće
+  dati da obriše objekat — fajl ostaje u bucket-u bez reda koji na njega pokazuje.
+
+To je curenje prostora, ne curenje podataka: objekat bez DB reda nije dohvatljiv kroz
+aplikaciju jer svaki put do fajla kreće od `dokumenti.storage_path`. Politika se ne
+proširuje u ovoj iteraciji jer bi ispravno preslikavanje `smije_brisati_zapis(kreirao_id)`
+na `storage.objects` tražilo da politika iz putanje objekta rekonstruiše koji je red
+dokumenta u pitanju (`storage_path` → `dokumenti`), što je skuplje i krhkije od koristi.
+Ako se pojave orphan fajlovi, rješenje je periodično čišćenje koje poredi bucket sa
+`dokumenti.storage_path`, ne labavija storage politika.

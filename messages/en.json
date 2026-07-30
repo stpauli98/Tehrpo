@@ -846,7 +846,6 @@
     "uploadNijeUspio": "Upload failed.",
     "zapisnikSamoIzvrsen": "The record can only be generated for a completed appointment.",
     "generisanjeNijeUspjelo": "Generation failed.",
-    "samoAdminBrise": "Only an administrator can delete documents.",
     "dokumentNePostoji": "Document does not exist.",
     "dokumentNePostojiIliNemaPristupa": "Document does not exist or you don't have access.",
     "klijentObavezan": "Client is required",
@@ -1104,7 +1103,9 @@
       "zakazanoObavijestGreska": "Failed to change the after-deadline scheduling notice.",
       "resetEmailGreska": "Failed to send the password reset email.",
       "resetRateLimit": "Too many password reset requests. Try again in a few minutes.",
-      "nepoznataDozvola": "Unknown permission."
+      "nepoznataDozvola": "Unknown permission.",
+      "korisnikNePostoji": "The user does not exist.",
+      "dozvoleSamoOperater": "Permission switches apply to operators only."
     },
     "novaVrsta": {
       "dugme": "New type",

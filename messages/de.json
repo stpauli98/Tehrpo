@@ -846,7 +846,6 @@
     "uploadNijeUspio": "Upload fehlgeschlagen.",
     "zapisnikSamoIzvrsen": "Das Protokoll kann nur für einen durchgeführten Termin erstellt werden.",
     "generisanjeNijeUspjelo": "Erstellung fehlgeschlagen.",
-    "samoAdminBrise": "Nur ein Administrator kann Dokumente löschen.",
     "dokumentNePostoji": "Das Dokument existiert nicht.",
     "dokumentNePostojiIliNemaPristupa": "Das Dokument existiert nicht oder Sie haben keinen Zugriff.",
     "klijentObavezan": "Kunde ist erforderlich",
@@ -1104,7 +1103,9 @@
       "zakazanoObavijestGreska": "Änderung der Benachrichtigung bei Terminplanung nach Fälligkeit fehlgeschlagen.",
       "resetEmailGreska": "Die E-Mail zum Zurücksetzen des Passworts konnte nicht gesendet werden.",
       "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen.",
-      "nepoznataDozvola": "Unbekannte Berechtigung."
+      "nepoznataDozvola": "Unbekannte Berechtigung.",
+      "korisnikNePostoji": "Der Benutzer existiert nicht.",
+      "dozvoleSamoOperater": "Berechtigungsschalter gelten nur für Operatoren."
     },
     "novaVrsta": {
       "dugme": "Neue Art",

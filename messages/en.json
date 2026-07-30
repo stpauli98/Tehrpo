@@ -633,7 +633,11 @@
       "kreiram": "Creating…",
       "kreirajTermin": "Create appointment",
       "zaduzeniHintAdmin": "You can assign any worker — the company is granted to them automatically.",
-      "zaduzeniHintRadnik": "You can assign yourself or a colleague who already has access to this company."
+      "zaduzeniHintRadnik": "You can assign yourself or a colleague who already has access to this company.",
+      "ponavljanjeNaslov": "Entry type",
+      "ponavljanjeJednom": "One-off",
+      "ponavljanjePonavlja": "Recurring",
+      "ponavljanjePomoc": "A recurring appointment is also added to the Services tab, so the next due date is computed automatically after completion. Requires a location."
     },
     "actions": {
       "datumNeispravan": "Invalid date",
@@ -645,7 +649,9 @@
       "lokacijaNePripada": "The location does not belong to the selected client.",
       "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
       "datumObavezan": "Date is required",
-      "zaduzeniNemaPristup": "This person does not have access to the selected company. Company access is assigned by an admin in Settings → Users."
+      "zaduzeniNemaPristup": "This person does not have access to the selected company. Company access is assigned by an admin in Settings → Users.",
+      "ponavljanjeTraziLokaciju": "A recurring appointment must have a location.",
+      "ponavljanjeVrstaBezIntervala": "This type has no default interval — ask an admin to set it, or enter the appointment as one-off."
     }
   },
   "status": {

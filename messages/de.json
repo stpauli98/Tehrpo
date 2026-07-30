@@ -633,7 +633,11 @@
       "kreiram": "Erstelle…",
       "kreirajTermin": "Termin erstellen",
       "zaduzeniHintAdmin": "Sie können jeden Mitarbeiter zuweisen — die Firma wird ihm automatisch freigegeben.",
-      "zaduzeniHintRadnik": "Sie können sich selbst oder eine Kollegin/einen Kollegen zuweisen, die/der bereits Zugriff auf diese Firma hat."
+      "zaduzeniHintRadnik": "Sie können sich selbst oder eine Kollegin/einen Kollegen zuweisen, die/der bereits Zugriff auf diese Firma hat.",
+      "ponavljanjeNaslov": "Eintragsart",
+      "ponavljanjeJednom": "Einmalig",
+      "ponavljanjePonavlja": "Wiederkehrend",
+      "ponavljanjePomoc": "Ein wiederkehrender Termin wird auch im Tab Leistungen angelegt, sodass die nächste Frist nach Erledigung automatisch berechnet wird. Erfordert einen Standort."
     },
     "actions": {
       "datumNeispravan": "Ungültiges Datum",
@@ -645,7 +649,9 @@
       "lokacijaNePripada": "Der Standort gehört nicht zum ausgewählten Kunden.",
       "terminVecPostoji": "Ein Termin für diese Firma, Art und Frist existiert bereits.",
       "datumObavezan": "Datum ist erforderlich",
-      "zaduzeniNemaPristup": "Diese Person hat keinen Zugriff auf die ausgewählte Firma. Firmenzugriff wird vom Admin unter Einstellungen → Benutzer zugewiesen."
+      "zaduzeniNemaPristup": "Diese Person hat keinen Zugriff auf die ausgewählte Firma. Firmenzugriff wird vom Admin unter Einstellungen → Benutzer zugewiesen.",
+      "ponavljanjeTraziLokaciju": "Ein wiederkehrender Termin muss einen Standort haben.",
+      "ponavljanjeVrstaBezIntervala": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, oder erfassen Sie den Termin als einmalig."
     }
   },
   "status": {

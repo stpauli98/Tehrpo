@@ -158,4 +158,18 @@ test.describe("Yoink batch 2026-07-30", () => {
       await deleteKlijentByNaziv(naziv)
     }
   })
+
+  test("novi termin sa oznakom ponavljajuce zavrsi i u tabu Usluge", async ({ page }) => {
+    // "novi-termin-btn" (NoviTerminButton) postoji samo u Lista prikazu — Kalendar
+    // (podrazumijevani view) ima samo "Dodaj termin za <dan>" po ćeliji.
+    await page.goto("/plan-aktivnosti?view=lista")
+    await page.getByTestId("novi-termin-btn").click()
+    await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+
+    // Izbor postoji i podrazumijevano je jednokratno
+    const izbor = page.getByTestId("novi-termin-ponavljanje")
+    await expect(izbor).toBeVisible()
+    await expect(izbor.getByRole("radio", { name: /Jednokratno/ })).toBeChecked()
+    await expect(izbor.getByRole("radio", { name: /Ponavlja/ })).not.toBeChecked()
+  })
 })

@@ -28,10 +28,10 @@ function formatVrijednost(v: unknown, t: T): string {
   if (typeof v === "boolean") return v ? t("vrijednosti.da") : t("vrijednosti.ne")
   if (typeof v === "number") return String(v)
   if (typeof v === "string") {
-    // ISO datum YYYY-MM-DD
+    // ISO datum YYYY-MM-DD (zidni datum — bez konverzije kroz zonu)
     if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return formatDatum(v)
-    // ISO timestamp → datum + HH:mm (slice, TZ-safe; ne koristi Date() zbog TZ)
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return `${formatDatum(v)} ${v.slice(11, 16)}`
+    // ISO timestamp (instant) → "dd.MM.yyyy HH:mm" u APP_TIME_ZONE — sirovi slice bi prikazao UTC zidno vrijeme
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return formatDatumVrijeme(v)
     return v
   }
   return JSON.stringify(v)

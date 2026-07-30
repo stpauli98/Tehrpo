@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
+import { danasBg, kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
 import { izvrsiTermin } from "./db"
 
 /**
@@ -29,8 +29,9 @@ test.beforeAll(async () => {
   const prvi = firma.terminiTekuciIds[0]
   if (!prvi) throw new Error("fikstura nije napravila termin")
   terminId = prvi
-  // Zapisnik (AI) je dostupan samo za izvršen termin.
-  await izvrsiTermin(terminId, new Date().toISOString().slice(0, 10))
+  // Zapisnik (AI) je dostupan samo za izvršen termin. Danas po Europe/Belgrade —
+  // UTC slice bi noću dao jučerašnji datum.
+  await izvrsiTermin(terminId, danasBg())
 })
 
 test.afterAll(async () => {

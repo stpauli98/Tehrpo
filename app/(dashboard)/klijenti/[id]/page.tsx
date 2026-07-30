@@ -20,7 +20,7 @@ import { KontaktiKlijentList } from "@/components/domain/KontaktiKlijentList"
 import { KontaktHighlighter } from "@/components/domain/KontaktHighlighter"
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Pagination } from "@/components/domain/Pagination"
-import { formatDatum, addMjeseci } from "@/lib/date"
+import { formatDatum, formatDatumInstant, addMjeseci } from "@/lib/date"
 import { href } from "@/i18n/routes"
 import type { Database } from "@/db/types"
 
@@ -417,7 +417,8 @@ export default async function KlijentDetailPage({
                           <td className="px-3 py-2">{d.naziv}</td>
                           <td className="px-3 py-2 text-muted-foreground">{d.tip}</td>
                           <td className="px-3 py-2 text-muted-foreground">{d.generated_by_ai ? t("dokumentiTab.izvorAi") : t("dokumentiTab.izvorUpload")}</td>
-                          <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatum(d.uploaded_at)}</td>
+                          {/* uploaded_at je timestamptz (instant) — zidni datum po APP_TIME_ZONE, ne UTC datum-dio */}
+                          <td className="px-3 py-2 tabular-nums text-muted-foreground">{formatDatumInstant(d.uploaded_at)}</td>
                           <td className="px-3 py-2">
                             <span className="flex items-center justify-end gap-1">
                               <PreuzmiDokumentButton dokumentId={d.id} label={t("dokumentiTab.preuzmi")} testId="klijent-dokument-download" />

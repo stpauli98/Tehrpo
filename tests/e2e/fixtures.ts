@@ -33,10 +33,27 @@ function pad2(n: number): string {
   return String(n).padStart(2, "0")
 }
 
-/** Dan u tekućem mjesecu (UTC) — uvijek unutar podrazumijevanog "tekući+naredni" filtera liste. */
+/**
+ * Današnji zidni datum u Europe/Belgrade (APP_TIME_ZONE) kao "YYYY-MM-DD".
+ * `en-CA` formatira baš u ISO obliku — isti trik kao `todayIso()` u lib/date.ts.
+ */
+export function danasBg(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Belgrade" }).format(new Date())
+}
+
+/**
+ * Beogradski "danas" pomjeren za `offsetDana` (može biti negativan), kao "YYYY-MM-DD".
+ * Aritmetika ide preko UTC komponenti VEĆ dobijenog zidnog datuma — bez DST zamki.
+ */
+export function pomjerenDanasBg(offsetDana: number): string {
+  const [g, m, d] = danasBg().split("-").map(Number)
+  const dt = new Date(Date.UTC(g!, m! - 1, d! + offsetDana))
+  return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`
+}
+
+/** Dan u tekućem mjesecu (po Europe/Belgrade) — uvijek unutar podrazumijevanog "tekući+naredni" filtera liste. */
 function danUTekucemMjesecu(dan = 15): string {
-  const d = new Date()
-  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(dan)}`
+  return `${danasBg().slice(0, 7)}-${pad2(dan)}`
 }
 
 export type CiljniMjesec = { godina: number; mjesec: number }

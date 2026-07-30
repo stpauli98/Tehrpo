@@ -131,14 +131,14 @@ export function reminderHtml(args: {
   baseUrl?: string
 }, locale: Locale = APP_LOCALE): string {
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.podsjetnik" })
-  const rok = formatDatum(args.rok, locale)
+  const rok = formatDatum(args.rok)
   const kasni = args.danaDoRoka < 0
   const boja = kasni ? "#dc2626" : "#2563eb"
   const badgeTekst = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
   const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
   // Kad ciklus dolazi iz datum_zakazan, mejl mora prikazati OBA datuma — rok ostaje rok.
   const zakazanoRed = args.zakazanoZa
-    ? poljeRed(t("poljeZakazanoZa"), formatDatum(args.zakazanoZa, locale))
+    ? poljeRed(t("poljeZakazanoZa"), formatDatum(args.zakazanoZa))
     : ""
 
   // Dugmad: samo s baseUrl + odgovarajući id. Table-based ("bulletproof") za Outlook.
@@ -188,7 +188,7 @@ export function reminderHtmlFirma(args: {
   brand: FirmBrand
 }, locale: Locale = APP_LOCALE): string {
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.podsjetnik" })
-  const rok = formatDatum(args.rok, locale)
+  const rok = formatDatum(args.rok)
   const kasni = args.danaDoRoka < 0
   const boja = kasni ? "#dc2626" : "#2563eb"
   const badgeTekst = `${kasni ? t("znackaKasni") : t("znackaUskoro")} · ${danaTekst(args.danaDoRoka, locale)}`
@@ -238,7 +238,7 @@ export function rokIstekaoFirmaHtml(args: {
   const b = args.brand
   const boja = "#dc2626"
   const zakazanRed = args.zakazanoZa
-    ? poljeRed(t("poljeZakazan"), formatDatum(args.zakazanoZa, locale))
+    ? poljeRed(t("poljeZakazan"), formatDatum(args.zakazanoZa))
     : ""
   const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
   const kontakt = [b.email, b.phone, b.web].filter(Boolean).map((x) => escapeHtml(String(x))).join(" · ")
@@ -247,7 +247,7 @@ export function rokIstekaoFirmaHtml(args: {
   const telo = `${badge(boja, t("znacka"))}
           <p style="margin:12px 0 0;font-size:15px">${t("uvod")}</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;border-top:1px solid #e2e8f0;font-size:14px">
-            ${poljeRed(t("poljeRok"), formatDatum(args.rok, locale), true)}
+            ${poljeRed(t("poljeRok"), formatDatum(args.rok), true)}
             ${zakazanRed}
             ${poljeRed(t("poljeVrsta"), escapeHtml(args.vrsta))}
             ${poljeRed(t("poljeKlijent"), escapeHtml(args.klijent))}
@@ -292,13 +292,13 @@ export function digestHtml(args: {
 
   const redovi = args.stavke.map((s) => {
     const zakazano = s.zakazanoZa && s.zakazanoZa !== s.rok
-      ? `<br><span style="color:#64748b;font-size:12px">${t("zakazanoZa", { datum: formatDatum(s.zakazanoZa, locale) })}</span>`
+      ? `<br><span style="color:#64748b;font-size:12px">${t("zakazanoZa", { datum: formatDatum(s.zakazanoZa) })}</span>`
       : ""
     const lok = s.lokacija ? `<br><span style="color:#64748b;font-size:12px">${escapeHtml(s.lokacija)}</span>` : ""
     return `<tr>
       <td style="padding:8px 0;border-top:1px solid #e2e8f0">${escapeHtml(s.klijent)}${lok}</td>
       <td style="padding:8px 0;border-top:1px solid #e2e8f0">${escapeHtml(s.vrsta)}</td>
-      <td style="padding:8px 0;border-top:1px solid #e2e8f0;white-space:nowrap">${formatDatum(s.rok, locale)}${zakazano}</td>
+      <td style="padding:8px 0;border-top:1px solid #e2e8f0;white-space:nowrap">${formatDatum(s.rok)}${zakazano}</td>
       <td style="padding:8px 0;border-top:1px solid #e2e8f0;text-align:right;white-space:nowrap;color:${boja}">${danaTekst(s.danaDoCiklusa, locale)}</td>
     </tr>`
   }).join("")
@@ -344,8 +344,8 @@ export function zakazanoNakonRokaHtml(args: {
 }, locale: Locale = APP_LOCALE): string {
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "email.zakazanoNakonRoka" })
   const boja = "#dc2626"
-  const rok = formatDatum(args.rok, locale)
-  const zakazan = formatDatum(args.zakazan, locale)
+  const rok = formatDatum(args.rok)
+  const zakazan = formatDatum(args.zakazan)
   const lokRed = args.lokacija ? poljeRed(t("poljeLokacija"), escapeHtml(args.lokacija)) : ""
   const telo = `${badge(boja, t("znacka"))}
           <p style="margin:12px 0 0;font-size:15px">${t("uvod")}</p>

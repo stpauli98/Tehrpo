@@ -3,6 +3,9 @@ import { Client } from "pg"
 
 const URL = process.env.TEST_DATABASE_URL
 
+/** SQL izraz za zidni "danas" u Europe/Belgrade (APP_TIME_ZONE) — parnjak `todayIso()` iz lib/date.ts. */
+const DANAS_SQL = "(now() at time zone 'Europe/Belgrade')::date"
+
 // Gate na TEST_DATABASE_URL → `pnpm test:unit` bez lokalnog DB i dalje prolazi.
 describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
   let db: Client
@@ -29,7 +32,7 @@ describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
     await withSeed(async (ids) => {
       const t = await db.query(
         `insert into termini (klijent_id, vrsta_provjere_id, rok_dospijeca, status)
-         values ($1, $2, current_date + 30, 'planirano') returning id`,
+         values ($1, $2, ${DANAS_SQL} + 30, 'planirano') returning id`,
         [ids.klijent, ids.vrsta],
       )
       const r = await db.query("select nacin_izvrsenja from termini_view where id = $1", [t.rows[0].id])
@@ -41,13 +44,13 @@ describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
     await withSeed(async (ids) => {
       const ins = await db.query(
         `insert into termini (klijent_id, vrsta_provjere_id, interval_mjeseci, rok_dospijeca, status, nacin_izvrsenja)
-         values ($1, $2, 12, current_date + 10, 'planirano', 'pracenje') returning id`,
+         values ($1, $2, 12, ${DANAS_SQL} + 10, 'planirano', 'pracenje') returning id`,
         [ids.klijent, ids.vrsta],
       )
       const id = ins.rows[0].id as string
       // izvršenje termina → trigger umeće sljedeći
       await db.query(
-        `update termini set status = 'izvrseno', datum_izvrsenja = current_date where id = $1`,
+        `update termini set status = 'izvrseno', datum_izvrsenja = ${DANAS_SQL} where id = $1`,
         [id],
       )
       const next = await db.query(
@@ -68,12 +71,12 @@ describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
       // termin već izvrseno ali bez datuma (status postavljen ranije, datum kasnije)
       const ins = await db.query(
         `insert into termini (klijent_id, vrsta_provjere_id, interval_mjeseci, rok_dospijeca, status, datum_izvrsenja)
-         values ($1, $2, 12, current_date + 10, 'izvrseno', null) returning id`,
+         values ($1, $2, 12, ${DANAS_SQL} + 10, 'izvrseno', null) returning id`,
         [ids.klijent, ids.vrsta],
       )
       const id = ins.rows[0].id as string
       // naknadno popunjavanje datuma — guard (old.status='izvrseno') mora spriječiti novi ciklus
-      await db.query(`update termini set datum_izvrsenja = current_date where id = $1`, [id])
+      await db.query(`update termini set datum_izvrsenja = ${DANAS_SQL} where id = $1`, [id])
       const others = await db.query(
         `select id from termini where klijent_id = $1 and vrsta_provjere_id = $2 and id <> $3`,
         [ids.klijent, ids.vrsta, id],
@@ -86,12 +89,12 @@ describe.skipIf(!URL)("nacin_izvrsenja (integracija, lokalni DB)", () => {
     await withSeed(async (ids) => {
       const ins = await db.query(
         `insert into termini (klijent_id, vrsta_provjere_id, interval_mjeseci, rok_dospijeca, status)
-         values ($1, $2, null, current_date + 10, 'planirano') returning id`,
+         values ($1, $2, null, ${DANAS_SQL} + 10, 'planirano') returning id`,
         [ids.klijent, ids.vrsta],
       )
       const id = ins.rows[0].id as string
       await db.query(
-        `update termini set status = 'izvrseno', datum_izvrsenja = current_date where id = $1`,
+        `update termini set status = 'izvrseno', datum_izvrsenja = ${DANAS_SQL} where id = $1`,
         [id],
       )
       const others = await db.query(

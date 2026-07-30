@@ -81,7 +81,7 @@ function req(method: "GET" | "POST", opts?: { withAuth?: boolean; body?: unknown
   })
 }
 
-// Ljeti CEST (UTC+2): 2026-07-08T07:00:00Z → lokalno 09:00, datum 2026-07-08 (isto kao gating.test.ts).
+// Europe/Belgrade, ljeti CEST (UTC+2): 2026-07-08T07:00:00Z → lokalno 09:00, datum 2026-07-08 (isto kao gating.test.ts).
 const IZNAD_SATA = new Date("2026-07-08T07:00:00Z")
 // Lokalno 06:00 — ispod praga 8.
 const ISPOD_SATA = new Date("2026-07-08T04:00:00Z")
@@ -351,7 +351,7 @@ describe("GET /api/cron/reminders", () => {
     isCronAuthorizedMock.mockReturnValue(true)
     runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
     runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
-    vi.setSystemTime(new Date("2026-07-20T09:00:00Z")) // 11:00 Beč → sat >= 8
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z")) // 11:00 po Beogradu → sat >= 8
 
     const res = await GET(req("GET"))
     const body = await res.json()
@@ -412,7 +412,7 @@ describe("GET /api/cron/reminders", () => {
     createAdminSupabaseClientMock.mockReturnValue(supabase)
     isCronAuthorizedMock.mockReturnValue(true)
     runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
-    vi.setSystemTime(new Date("2026-07-20T09:00:00Z")) // bečki datum = 2026-07-20
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z")) // beogradski datum = 2026-07-20
 
     const res = await GET(req("GET"))
     const body = await res.json()

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { Constants } from "@/db/types"
-import { utcGranicaSarajevskogDana, dodajDan } from "@/lib/date"
+import { utcGranicaDana, dodajDan } from "@/lib/date"
 import {
   TIP_KEY,
   STATUS_KEY,
@@ -156,21 +156,21 @@ describe("jeIsoDatum — zaštita od/do parametara", () => {
   it("svaki prihvaćen datum je bezbjedan ulaz za granične helpere (ne baca)", () => {
     for (const v of ["2026-01-01", "2026-07-15", "2026-12-31", "2024-02-29"]) {
       expect(jeIsoDatum(v)).toBe(true)
-      expect(() => utcGranicaSarajevskogDana(v)).not.toThrow()
-      expect(() => utcGranicaSarajevskogDana(dodajDan(v))).not.toThrow()
+      expect(() => utcGranicaDana(v)).not.toThrow()
+      expect(() => utcGranicaDana(dodajDan(v))).not.toThrow()
     }
   })
 })
 
-describe("granice sarajevskog dana za od/do filter (S7)", () => {
+describe("granice dana (Europe/Belgrade) za od/do filter (S7)", () => {
   // Helperi žive u lib/date.ts (Talas 0); ovaj blok fiksira TAČNO ponašanje na koje
   // se oslanja page.tsx (od = granica dana, do = granica sljedećeg dana, RPC poredi `<`).
   it("zima (CET, +1) — ponoć je prethodni dan u 23:00 UTC", () => {
-    expect(utcGranicaSarajevskogDana("2026-01-15")).toBe("2026-01-14T23:00:00.000Z")
+    expect(utcGranicaDana("2026-01-15")).toBe("2026-01-14T23:00:00.000Z")
   })
 
   it("ljeto (CEST, +2) — ponoć je prethodni dan u 22:00 UTC", () => {
-    expect(utcGranicaSarajevskogDana("2026-07-15")).toBe("2026-07-14T22:00:00.000Z")
+    expect(utcGranicaDana("2026-07-15")).toBe("2026-07-14T22:00:00.000Z")
   })
 
   it("dodajDan prelazi granicu mjeseca", () => {
@@ -178,7 +178,7 @@ describe("granice sarajevskog dana za od/do filter (S7)", () => {
   })
 
   it("do=D uključuje mejl u 23:59 dana D, a isključuje 00:00 dana D+1", () => {
-    const granica = utcGranicaSarajevskogDana(dodajDan("2026-07-15"))
+    const granica = utcGranicaDana(dodajDan("2026-07-15"))
     const uPonoc23h59 = new Date("2026-07-15T21:59:00.000Z") // 23:59 sarajevski, dan D
     const sutraUPonoc = new Date("2026-07-15T22:00:00.000Z") // 00:00 sarajevski, dan D+1
     expect(uPonoc23h59.getTime()).toBeLessThan(new Date(granica).getTime())

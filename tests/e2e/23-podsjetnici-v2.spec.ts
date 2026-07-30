@@ -9,6 +9,7 @@ import {
   getPostavkeV2,
   setPostavkeV2,
 } from "./db"
+import { danasBg } from "./fixtures"
 
 // Pročitaj CRON_SECRET iz .env.local apsolutnom putanjom (isti obrazac kao 06-podsjetnici.spec.ts).
 function cronSecret(): string {
@@ -199,8 +200,8 @@ test.describe("Podsjetnici v2", () => {
     // upisati. Zaobilaženje SAT-gejta za POST pokriva unit test rute
     // (app/api/cron/reminders/route.test.ts), koji ga može mockovati bez baze.
     // Stanje koje bi GET (auto-cron) sigurno preskočio: marker "već slato danas"
-    // (zadnje_slanje_datum = danas po Europe/Vienna).
-    const danas = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Vienna" }).format(new Date())
+    // (zadnje_slanje_datum = danas po Europe/Belgrade, APP_TIME_ZONE).
+    const danas = danasBg()
     await setPostavkeV2({ zadnje_slanje_datum: danas })
     try {
       const secret = cronSecret()

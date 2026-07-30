@@ -176,7 +176,7 @@
       "prviRokObavezan": "Erste Frist ist erforderlich.",
       "lokacijaNePripada": "Der Standort gehört nicht zum Kunden.",
       "vrstaNemaInterval": "Diese Art hat kein Standardintervall — legen Sie eines in den Einstellungen fest.",
-      "provjeraVecPostoji": "Diese Prüfung existiert bereits im Profil.",
+      "provjeraVecPostoji": "Diese Leistung existiert bereits.",
       "terminProvjeraOsvjezi": "Die Prüfung wurde gespeichert, aber die Terminprüfung ist fehlgeschlagen — Seite aktualisieren.",
       "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
       "nedostajeId": "ID fehlt.",
@@ -257,7 +257,7 @@
       },
       "termini": {
         "label": "Termine",
-        "info": "Alle konkreten Fristen für diesen Kunden — vergangene und zukünftige. Jede Zeile ist ein Termin mit Fälligkeitsdatum, Status (geplant, terminiert, überfällig, durchgeführt) und zuständiger Person. Termine werden aus den im Profil definierten Prüfungen erzeugt."
+        "info": "Alle konkreten Fristen für diesen Kunden — vergangene und zukünftige. Jede Zeile ist ein Termin mit Fälligkeitsdatum, Status (geplant, terminiert, überfällig, durchgeführt) und zuständiger Person. Termine werden aus den im Tab Leistungen definierten Prüfungen erzeugt."
       },
       "lokacije": {
         "label": "Standorte",
@@ -276,7 +276,7 @@
         "info": "Versand von Erinnerungen an diese Firma (Umschalter + Adressen) und Zuweisung der Mitarbeiter, die für die Firma zuständig sind."
       },
       "profil": {
-        "label": "Profil",
+        "label": "Leistungen",
         "info": "Die Definition wiederkehrender Prüfungen für den Kunden: welche Art von Prüfung, an welchem Standort und in welchem Intervall durchgeführt wird. Aus diesen Einträgen werden automatisch Termine erzeugt. „Letztes Mal” ist die letzte tatsächliche Durchführung, „Nächste Frist” ist das Fälligkeitsdatum des aktiven Termins."
       }
     },
@@ -322,8 +322,8 @@
       "kontaktiInfo": "Kurze Vorschau der Unternehmenskontakte (die ersten paar). Die vollständige Liste und Suche befinden sich im Tab Kontakte.",
       "usluge": {
         "naslov": "Vereinbarte Leistungen",
-        "info": "Eine Zusammenfassung der Prüfungen aus dem Profil mit der jeweils nächsten Frist — ein schneller Überblick darüber, was vereinbart ist und was als Nächstes ansteht.",
-        "prazno": "Keine Leistungen definiert. Fügen Sie sie über den Tab Profil hinzu.",
+        "info": "Eine Zusammenfassung der Prüfungen aus dem Tab Leistungen mit der jeweils nächsten Frist — ein schneller Überblick darüber, was vereinbart ist und was als Nächstes ansteht.",
+        "prazno": "Keine Leistungen definiert. Fügen Sie sie über den Tab Leistungen hinzu.",
         "sljedeci": "nächste: {datum}",
         "imenica": "Leistungen"
       }
@@ -450,7 +450,7 @@
       "uspjeh": "Dokument hinzugefügt"
     },
     "profil": {
-      "prazno": "Keine Prüfungen im Profil. Fügen Sie eine Prüfung hinzu, um Termine zu erstellen.",
+      "prazno": "Keine Leistungen definiert. Fügen Sie eine Leistung hinzu, um Termine zu erstellen.",
       "kolone": {
         "vrsta": "Art",
         "lokacija": "Standort",
@@ -461,9 +461,9 @@
       "prviPut": "— (erstes Mal)"
     },
     "obrisiProfil": {
-      "tooltip": "Aus Profil entfernen",
-      "dialogNaslov": "Prüfung aus Profil entfernen?",
-      "dialogOpis": "Entfernt den Eintrag aus dem Profil. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
+      "tooltip": "Leistung entfernen",
+      "dialogNaslov": "Leistung entfernen?",
+      "dialogOpis": "Entfernt die Leistung aus der Liste. Bestehende Termine bleiben erhalten (werden unter Termine geführt).",
       "potvrdi": "Entfernen",
       "confirmPending": "Wird gelöscht…"
     },
@@ -497,7 +497,7 @@
     },
     "dodajProvjeru": {
       "dugme": "Prüfung hinzufügen",
-      "naslov": "Prüfung zum Profil hinzufügen",
+      "naslov": "Leistung hinzufügen",
       "opis": "Verknüpfen Sie eine Leistung mit einem Standort — Termin und Frist werden automatisch erstellt.",
       "bezLokacijaTekst": "Der Kunde hat keinen Standort, jede Prüfung muss jedoch mit einem Standort verknüpft sein.",
       "bezLokacijaLink": "Zuerst einen Standort des Kunden anlegen.",
@@ -508,8 +508,8 @@
       "poljeInterval": "Intervall (Monate) — aus der Art übernommen",
       "bezIntervalaTekst": "Diese Art hat kein Standardintervall — legen Sie es in den",
       "bezIntervalaLink": "Einstellungen",
-      "bezIntervalaKraj": "fest, bevor Sie sie zum Profil hinzufügen.",
-      "bezIntervalaOperater": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, bevor Sie sie zum Profil hinzufügen.",
+      "bezIntervalaKraj": "fest, bevor Sie die Leistung hinzufügen.",
+      "bezIntervalaOperater": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, bevor Sie die Leistung hinzufügen.",
       "poljeRadjenoRanije": "Wurde diese Prüfung bereits durchgeführt? *",
       "opcijaVecRadeno": "Ja — ich gebe das letzte Datum ein",
       "opcijaPrviPut": "Nein — zum ersten Mal (ich gebe die erste Frist ein)",

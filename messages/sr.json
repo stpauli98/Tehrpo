@@ -176,7 +176,7 @@
       "prviRokObavezan": "Prvi rok je obavezan.",
       "lokacijaNePripada": "Lokacija ne pripada klijentu.",
       "vrstaNemaInterval": "Vrsta nema podrazumijevani interval — postavite ga u Postavkama.",
-      "provjeraVecPostoji": "Ova provjera već postoji u profilu.",
+      "provjeraVecPostoji": "Ova usluga već postoji.",
       "terminProvjeraOsvjezi": "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu.",
       "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
       "nedostajeId": "Nedostaje id.",
@@ -257,7 +257,7 @@
       },
       "termini": {
         "label": "Termini",
-        "info": "Svi konkretni rokovi za ovog klijenta — prošli i budući. Svaki red je jedan termin sa datumom roka, statusom (planirano, zakazano, kasni, izvršeno) i zaduženom osobom. Termini se generišu iz provjera definisanih u Profilu."
+        "info": "Svi konkretni rokovi za ovog klijenta — prošli i budući. Svaki red je jedan termin sa datumom roka, statusom (planirano, zakazano, kasni, izvršeno) i zaduženom osobom. Termini se generišu iz usluga definisanih u tabu Usluge."
       },
       "lokacije": {
         "label": "Lokacije",
@@ -276,8 +276,8 @@
         "info": "Slanje podsjetnika ovoj firmi (uključi + adrese) i dodjela radnika koji rade na firmi."
       },
       "profil": {
-        "label": "Profil",
-        "info": "Definicija ponavljajućih provjera za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
+        "label": "Usluge",
+        "info": "Definicija ponavljajućih usluga za klijenta: koja vrsta provjere se radi, na kojoj lokaciji i kojim intervalom. Iz ovih stavki se automatski generišu termini. „Zadnji put” je posljednje stvarno izvršenje, „Sljedeći rok” je rok aktivnog termina."
       }
     },
     "pretraga": {
@@ -322,8 +322,8 @@
       "kontaktiInfo": "Skraćeni pregled kontakata firme (prvih nekoliko). Puni spisak i pretraga su u tabu Kontakti.",
       "usluge": {
         "naslov": "Ugovorene usluge",
-        "info": "Sažetak provjera iz Profila sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red.",
-        "prazno": "Nema definisanih usluga. Dodajte ih kroz tab Profil.",
+        "info": "Sažetak usluga iz taba Usluge sa sljedećim rokom za svaku — brzi uvid u to šta je ugovoreno i šta prvo dolazi na red.",
+        "prazno": "Nema definisanih usluga. Dodajte ih kroz tab Usluge.",
         "sljedeci": "sljedeći: {datum}",
         "imenica": "usluga"
       }
@@ -450,7 +450,7 @@
       "uspjeh": "Dokument dodat"
     },
     "profil": {
-      "prazno": "Nema provjera u profilu. Dodajte provjeru da generišete termine.",
+      "prazno": "Nema definisanih usluga. Dodajte uslugu da generišete termine.",
       "kolone": {
         "vrsta": "Vrsta",
         "lokacija": "Lokacija",
@@ -461,9 +461,9 @@
       "prviPut": "— (prvi put)"
     },
     "obrisiProfil": {
-      "tooltip": "Ukloni iz profila",
-      "dialogNaslov": "Ukloniti provjeru iz profila?",
-      "dialogOpis": "Uklanja stavku iz profila. Postojeći termini ostaju (vode se kroz Termini).",
+      "tooltip": "Ukloni uslugu",
+      "dialogNaslov": "Ukloniti uslugu?",
+      "dialogOpis": "Uklanja uslugu sa spiska. Postojeći termini ostaju (vode se kroz Termini).",
       "potvrdi": "Ukloni",
       "confirmPending": "Brišem…"
     },
@@ -497,7 +497,7 @@
     },
     "dodajProvjeru": {
       "dugme": "Dodaj provjeru",
-      "naslov": "Dodaj provjeru u profil",
+      "naslov": "Dodaj uslugu",
       "opis": "Veži uslugu za lokaciju — termin i rok se generišu automatski.",
       "bezLokacijaTekst": "Klijent nema nijednu lokaciju, a svaka provjera mora biti vezana za lokaciju.",
       "bezLokacijaLink": "Prvo unesite lokaciju klijenta.",
@@ -508,8 +508,8 @@
       "poljeInterval": "Interval (mjeseci) — povučeno iz vrste",
       "bezIntervalaTekst": "Ova vrsta nema podrazumijevani interval — postavite ga u",
       "bezIntervalaLink": "Postavkama",
-      "bezIntervalaKraj": "prije dodavanja u profil.",
-      "bezIntervalaOperater": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi prije dodavanja u profil.",
+      "bezIntervalaKraj": "prije dodavanja usluge.",
+      "bezIntervalaOperater": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi prije dodavanja usluge.",
       "poljeRadjenoRanije": "Da li je provjera već rađena? *",
       "opcijaVecRadeno": "Da — unosim zadnji datum",
       "opcijaPrviPut": "Ne — prvi put (unosim prvi rok)",

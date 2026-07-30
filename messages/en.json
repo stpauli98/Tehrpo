@@ -176,7 +176,7 @@
       "prviRokObavezan": "First deadline is required.",
       "lokacijaNePripada": "The location does not belong to the client.",
       "vrstaNemaInterval": "This type has no default interval — set one in Settings.",
-      "provjeraVecPostoji": "This check already exists in the profile.",
+      "provjeraVecPostoji": "This service already exists.",
       "terminProvjeraOsvjezi": "The check was saved, but the appointment check failed — refresh the page.",
       "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
       "nedostajeId": "Missing id.",
@@ -257,7 +257,7 @@
       },
       "termini": {
         "label": "Appointments",
-        "info": "All concrete deadlines for this client — past and future. Each row is one appointment with a due date, status (planned, scheduled, overdue, completed), and an assigned person. Appointments are generated from the checks defined in the Profile."
+        "info": "All concrete deadlines for this client — past and future. Each row is one appointment with a due date, status (planned, scheduled, overdue, completed), and an assigned person. Appointments are generated from the checks defined in the Services tab."
       },
       "lokacije": {
         "label": "Locations",
@@ -276,7 +276,7 @@
         "info": "Sending reminders to this company (toggle + addresses) and assigning the workers who work with the company."
       },
       "profil": {
-        "label": "Profile",
+        "label": "Services",
         "info": "The definition of recurring checks for the client: which type of check is performed, at which location, and at what interval. Appointments are generated automatically from these entries. “Last time” is the last actual completion, “Next deadline” is the due date of the active appointment."
       }
     },
@@ -322,8 +322,8 @@
       "kontaktiInfo": "A short preview of the company's contacts (the first few). The full list and search are in the Contacts tab.",
       "usluge": {
         "naslov": "Contracted services",
-        "info": "A summary of the checks from the Profile with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
-        "prazno": "No services defined. Add them via the Profile tab.",
+        "info": "A summary of the checks from the Services tab with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
+        "prazno": "No services defined. Add them via the Services tab.",
         "sljedeci": "next: {datum}",
         "imenica": "services"
       }
@@ -450,7 +450,7 @@
       "uspjeh": "Document added"
     },
     "profil": {
-      "prazno": "No checks in the profile. Add a check to generate appointments.",
+      "prazno": "No services defined. Add a service to generate appointments.",
       "kolone": {
         "vrsta": "Type",
         "lokacija": "Location",
@@ -461,9 +461,9 @@
       "prviPut": "— (first time)"
     },
     "obrisiProfil": {
-      "tooltip": "Remove from profile",
-      "dialogNaslov": "Remove check from profile?",
-      "dialogOpis": "Removes the item from the profile. Existing appointments remain (tracked under Appointments).",
+      "tooltip": "Remove service",
+      "dialogNaslov": "Remove service?",
+      "dialogOpis": "Removes the service from the list. Existing appointments remain (tracked under Appointments).",
       "potvrdi": "Remove",
       "confirmPending": "Deleting…"
     },
@@ -497,7 +497,7 @@
     },
     "dodajProvjeru": {
       "dugme": "Add check",
-      "naslov": "Add check to profile",
+      "naslov": "Add service",
       "opis": "Link a service to a location — the appointment and deadline are generated automatically.",
       "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
       "bezLokacijaLink": "Add a client location first.",
@@ -508,8 +508,8 @@
       "poljeInterval": "Interval (months) — taken from type",
       "bezIntervalaTekst": "This type has no default interval — set it in",
       "bezIntervalaLink": "Settings",
-      "bezIntervalaKraj": "before adding it to the profile.",
-      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding it to the profile.",
+      "bezIntervalaKraj": "before adding the service.",
+      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding the service.",
       "poljeRadjenoRanije": "Has this check already been done? *",
       "opcijaVecRadeno": "Yes — I'll enter the last date",
       "opcijaPrviPut": "No — first time (I'll enter the first deadline)",

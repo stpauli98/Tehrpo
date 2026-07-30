@@ -50,7 +50,7 @@
 | `lib/ugovori-vazenje.test.ts` | Vitest za gore |
 | `lib/termini-jednokratni.ts` | Čista logika: spajanje profil-stavki i jednokratnih termina u jedan spisak usluga |
 | `lib/termini-jednokratni.test.ts` | Vitest za gore |
-| `tests/e2e/30-yoink-batch.spec.ts` | E2E za sve UI promjene iz ovog batch-a |
+| `tests/e2e/38-yoink-batch.spec.ts` | E2E za sve UI promjene iz ovog batch-a |
 
 **Izmijenjene datoteke**
 
@@ -176,7 +176,7 @@ git commit -m "feat(klijenti): default tab je ID karta umjesto Termini"
 - Modify: `messages/sr.json`
 - Modify: `messages/en.json`
 - Modify: `messages/de.json`
-- Test: `tests/e2e/30-yoink-batch.spec.ts` (novi fajl)
+- Test: `tests/e2e/38-yoink-batch.spec.ts` (novi fajl)
 
 **Interfaces:**
 - Consumes: ništa
@@ -184,7 +184,7 @@ git commit -m "feat(klijenti): default tab je ID karta umjesto Termini"
 
 - [ ] **Step 1: Napiši failing E2E test**
 
-Kreiraj `tests/e2e/30-yoink-batch.spec.ts`:
+Kreiraj `tests/e2e/38-yoink-batch.spec.ts`:
 
 ```ts
 import { test, expect } from "@playwright/test"
@@ -205,7 +205,7 @@ test.describe("Yoink batch 2026-07-30", () => {
 - [ ] **Step 2: Pokreni test da vidiš da pada**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "zove Usluge" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "zove Usluge" --project=chromium
 ```
 
 Očekivano: FAIL — tab piše „Profil".
@@ -283,7 +283,7 @@ Očekivano: `sr==en: True  sr==de: True` i prazan skup razlike.
 - [ ] **Step 5: Pokreni test da prođe**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "zove Usluge" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "zove Usluge" --project=chromium
 ```
 
 Očekivano: PASS.
@@ -717,7 +717,7 @@ Konačno, u `<form action={...}>` propu (linija 61), prije `action(fd)`, upiši 
 
 - [ ] **Step 9: Napiši E2E test**
 
-Dodaj u `tests/e2e/30-yoink-batch.spec.ts`, unutar postojećeg `describe`:
+Dodaj u `tests/e2e/38-yoink-batch.spec.ts`, unutar postojećeg `describe`:
 
 ```ts
   test("ugovor se moze staviti na neodredjeno", async ({ page }) => {
@@ -750,7 +750,7 @@ Dodaj u `tests/e2e/30-yoink-batch.spec.ts`, unutar postojećeg `describe`:
 
 ```bash
 pnpm vitest run lib/ugovori-vazenje.test.ts
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts --project=chromium
 ```
 
 Očekivano: oba PASS.
@@ -765,19 +765,26 @@ git commit -m "feat(ugovori): na neodređeno + dropdown važenja sa custom broje
 
 ---
 
-### Task 5: Migracija — ravni kontakti lokacije u `kontakt_osobe`
+### Task 5: Ravni kontakti lokacije — migracija u `kontakt_osobe` i čišćenje koda
 
-**Yoink stavke 8+9, dio 1 (baza).**
+**Yoink stavke 8+9, cijele (baza + kod).**
+
+**Zašto je ovo jedan task a ne dva:** shema i kod koji je čita ne mogu se razdvojiti. Čim migracija obriše tri kolone, `pnpm typecheck` puca na svakom mjestu koje ih čita. Kad bi to bila dva taska, međukomit ne bi prolazio provjere iz Global Constraints. Zato migracija i čišćenje idu zajedno, u jednom commitu.
 
 **Kontekst iz DEMO baze (izmjereno 30.07.2026):** od 15 lokacija, **14 ima popunjen ravni kontakt**, i **nijedna od njih nema vezan `kontakt_osobe` red**. Znači migracija pravi 14 novih redova i nema kolizija. Svaki red sa bilo kojim kontakt podatkom ima i `kontakt_osoba` popunjen, ali `ime` je NOT NULL pa fallback ipak ide.
 
 **Files:**
 - Create: `supabase/migrations/20260730121000_lokacije_kontakti_u_kontakt_osobe.sql`
 - Modify: `db/types.ts` (auto-generisan)
+- Modify: `components/domain/LokacijaSheet.tsx:64-72`
+- Modify: `components/domain/LokacijeTab.tsx:42-95`
+- Modify: `app/(dashboard)/klijenti/[id]/page.tsx:378-420`
+- Modify: `app/(dashboard)/klijenti/actions.ts:158-162, 236-244, 272-280`
+- Modify: `tests/e2e/04-klijenti.spec.ts`
 
 **Interfaces:**
 - Consumes: ništa
-- Produces: kolone `lokacije.kontakt_osoba`, `lokacije.kontakt_email`, `lokacije.kontakt_telefon` **više ne postoje**. Task 6 uklanja kod koji ih čita.
+- Produces: kolone `lokacije.kontakt_osoba`, `lokacije.kontakt_email`, `lokacije.kontakt_telefon` **više ne postoje** ni u bazi ni u kodu. Jedini put do kontakta lokacije je `kontakt_osobe` preko fieldseta „Kontakt za lokaciju".
 
 - [ ] **Step 1: Snimi stanje prije migracije**
 
@@ -903,35 +910,9 @@ Očekivano: prazan spisak kolona; `vezanih_za_lokaciju` ≥ 14; uzorak pokazuje 
 pnpm db:types
 ```
 
-Očekivano: `db/types.ts` više nema `kontakt_osoba`/`kontakt_email`/`kontakt_telefon` u `lokacije`. `pnpm typecheck` će sada pucati na mjestima koja ih čitaju — to je očekivano i rješava se u Tasku 6.
+Očekivano: `db/types.ts` više nema `kontakt_osoba`/`kontakt_email`/`kontakt_telefon` u `lokacije`. `pnpm typecheck` sada puca na mjestima koja ih čitaju — to je očekivano i zatvara se u sljedećim koracima. **Ne commit-uj ovdje** — commit ide tek na kraju taska, kad kod i shema opet budu u skladu.
 
-- [ ] **Step 6: Commit (bez typecheck gate-a)**
-
-Ovo je jedini task gdje `pnpm typecheck` namjerno ne prolazi — kod koji čita obrisane kolone se uklanja u sljedećem tasku.
-
-```bash
-git add supabase/migrations/20260730121000_lokacije_kontakti_u_kontakt_osobe.sql db/types.ts
-git commit -m "feat(lokacije): prebaci ravne kontakte u kontakt_osobe pa obriši kolone"
-```
-
----
-
-### Task 6: Ukloni ravna kontakt polja iz UI-ja
-
-**Yoink stavke 8+9, dio 2 (kod).** Zatvara typecheck koji je Task 5 namjerno slomio.
-
-**Files:**
-- Modify: `components/domain/LokacijaSheet.tsx:64-72`
-- Modify: `components/domain/LokacijeTab.tsx:42-95`
-- Modify: `app/(dashboard)/klijenti/[id]/page.tsx:378-420`
-- Modify: `app/(dashboard)/klijenti/actions.ts:158-162, 236-244, 272-280`
-- Modify: `tests/e2e/04-klijenti.spec.ts`
-
-**Interfaces:**
-- Consumes: shema bez tri kolone (Task 5)
-- Produces: jedini put do kontakta lokacije je `kontakt_osobe` preko fieldseta „Kontakt za lokaciju"
-
-- [ ] **Step 1: Potvrdi da typecheck trenutno pada i gdje**
+- [ ] **Step 6: Potvrdi da typecheck pada i gdje**
 
 ```bash
 pnpm typecheck 2>&1 | grep -E "kontakt_osoba|kontakt_email|kontakt_telefon" | head -20
@@ -939,7 +920,7 @@ pnpm typecheck 2>&1 | grep -E "kontakt_osoba|kontakt_email|kontakt_telefon" | he
 
 Očekivano: greške u `LokacijaSheet.tsx`, `LokacijeTab.tsx`, `klijenti/[id]/page.tsx`, `klijenti/actions.ts`. To je tvoja radna lista.
 
-- [ ] **Step 2: Skrati FIELDS u LokacijaSheet**
+- [ ] **Step 7: Skrati FIELDS u LokacijaSheet**
 
 `components/domain/LokacijaSheet.tsx`, linije 64-72 — zamijeni cijeli `FIELDS` niz:
 
@@ -954,7 +935,7 @@ Očekivano: greške u `LokacijaSheet.tsx`, `LokacijeTab.tsx`, `klijenti/[id]/pag
   ]
 ```
 
-- [ ] **Step 3: Očisti Zod schemu i upise u actions.ts**
+- [ ] **Step 8: Očisti Zod schemu i upise u actions.ts**
 
 `app/(dashboard)/klijenti/actions.ts`:
 
@@ -982,7 +963,7 @@ U `updateLokacija`, obriši tri `if` linije:
   if (formData.has("kontakt_telefon")) patch.kontakt_telefon = f.kontakt_telefon ?? null
 ```
 
-- [ ] **Step 4: Pojednostavi kolonu Kontakt u LokacijeTab**
+- [ ] **Step 9: Pojednostavi kolonu Kontakt u LokacijeTab**
 
 `components/domain/LokacijeTab.tsx`, zamijeni cijelu `<td>` za kontakt (linije 67-95) ovim:
 
@@ -1010,7 +991,7 @@ U `updateLokacija`, obriši tri `if` linije:
 
 > Highlight sada cilja `k.id` (kontakt), ne `l.id` (lokaciju) — u tabu Kontakti se highlightuju kontakti.
 
-- [ ] **Step 5: Ukloni sekciju „kontakti po lokacijama" sa stranice klijenta**
+- [ ] **Step 10: Ukloni sekciju „kontakti po lokacijama" sa stranice klijenta**
 
 `app/(dashboard)/klijenti/[id]/page.tsx` — obriši cijeli blok od linije 378 (`{lokacije.some((l) => l.kontakt_osoba || ...)`) do zatvarajuće `)}` na liniji 420. Ta sekcija je postojala samo da prikaže ravne kontakte; sada su svi kontakti u `KontaktiKlijentList` iznad nje.
 
@@ -1018,7 +999,7 @@ Poslije brisanja provjeri da su `MapPin` i `InfoIkona` importi još u upotrebi n
 
 Obriši i sada neiskorištene i18n ključeve `klijenti.detalj.kontaktiTab.naslovLokacije`, `.infoLokacije`, `.urediULokacijama` iz **sva tri** kataloga.
 
-- [ ] **Step 6: Popravi E2E koji puni obrisana polja**
+- [ ] **Step 11: Popravi E2E koji puni obrisana polja**
 
 `tests/e2e/04-klijenti.spec.ts` — nađi dvije linije koje pune `lokacija-kontakt_osoba`:
 
@@ -1036,7 +1017,7 @@ await page.getByTestId("lokacija-kontakt-ime").fill("Ana A.")
 
 Ako test poslije toga asertira da se „Ana A." vidi u tabeli lokacija, ta asercija i dalje važi — `vezani()` renderuje isto ime.
 
-- [ ] **Step 7: Typecheck mora proći**
+- [ ] **Step 12: Typecheck mora proći**
 
 ```bash
 pnpm typecheck
@@ -1044,7 +1025,7 @@ pnpm typecheck
 
 Očekivano: 0 grešaka. Ako još ima referenci na obrisane kolone, ponovi Step 1 da ih nađeš.
 
-- [ ] **Step 8: Pokreni E2E**
+- [ ] **Step 13: Pokreni E2E**
 
 ```bash
 pnpm exec playwright test tests/e2e/04-klijenti.spec.ts --project=chromium
@@ -1052,17 +1033,19 @@ pnpm exec playwright test tests/e2e/04-klijenti.spec.ts --project=chromium
 
 Očekivano: PASS.
 
-- [ ] **Step 9: Lint i commit**
+- [ ] **Step 14: Lint, typecheck i commit**
+
+Migracija i čišćenje koda idu u **jedan** commit — shema bez koda koji je prati ne prolazi provjere.
 
 ```bash
 pnpm lint && pnpm typecheck
 git add -A
-git commit -m "refactor(lokacije): ukloni ravna kontakt polja iz forme, tabele i taba Kontakti"
+git commit -m "refactor(lokacije): ravni kontakti prebačeni u kontakt_osobe, kolone i kod uklonjeni"
 ```
 
 ---
 
-### Task 7: Kontakt forma može kreirati novu lokaciju
+### Task 6: Kontakt forma može kreirati novu lokaciju
 
 **Yoink stavka 7.**
 
@@ -1070,7 +1053,7 @@ git commit -m "refactor(lokacije): ukloni ravna kontakt polja iz forme, tabele i
 - Modify: `components/domain/KontaktSheet.tsx`
 - Modify: `app/(dashboard)/klijenti/actions.ts` (`createKontakt`)
 - Modify: `messages/{sr,en,de}.json`
-- Test: `tests/e2e/30-yoink-batch.spec.ts`
+- Test: `tests/e2e/38-yoink-batch.spec.ts`
 
 **Interfaces:**
 - Consumes: `createLokacija` obrazac dedupa iz Taska 6 (`normalizujNaziv`)
@@ -1078,7 +1061,7 @@ git commit -m "refactor(lokacije): ukloni ravna kontakt polja iz forme, tabele i
 
 - [ ] **Step 1: Napiši failing E2E test**
 
-Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
+Dodaj u `tests/e2e/38-yoink-batch.spec.ts`:
 
 ```ts
   test("novi kontakt moze kreirati novu lokaciju", async ({ page }) => {
@@ -1104,7 +1087,7 @@ Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
 - [ ] **Step 2: Pokreni test da vidiš da pada**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "kreirati novu lokaciju" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "kreirati novu lokaciju" --project=chromium
 ```
 
 Očekivano: FAIL — `kontakt-lokacija-izbor` ne postoji.
@@ -1263,7 +1246,7 @@ Zamijeni cijeli blok `{lokacije.length > 0 && (...)}` (linije 101-123) ovim:
 - [ ] **Step 6: Pokreni test da prođe**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "kreirati novu lokaciju" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "kreirati novu lokaciju" --project=chromium
 ```
 
 Očekivano: PASS.
@@ -1279,7 +1262,7 @@ git commit -m "feat(kontakti): nova lokacija (naziv/grad/adresa) direktno iz kon
 
 ---
 
-### Task 8: „Novi klijent" — puna forma + prva lokacija
+### Task 7: „Novi klijent" — puna forma + prva lokacija
 
 **Yoink stavka 4.**
 
@@ -1288,7 +1271,7 @@ git commit -m "feat(kontakti): nova lokacija (naziv/grad/adresa) direktno iz kon
 - Modify: `app/(dashboard)/klijenti/page.tsx` (prosljeđivanje `korisnici` u dugme)
 - Modify: `app/(dashboard)/klijenti/actions.ts` (`createKlijent`)
 - Modify: `messages/{sr,en,de}.json`
-- Test: `tests/e2e/30-yoink-batch.spec.ts`
+- Test: `tests/e2e/38-yoink-batch.spec.ts`
 
 **Interfaces:**
 - Consumes: `updateKlijentSchema` oblik polja (isti set)
@@ -1296,7 +1279,7 @@ git commit -m "feat(kontakti): nova lokacija (naziv/grad/adresa) direktno iz kon
 
 - [ ] **Step 1: Napiši failing E2E test**
 
-Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
+Dodaj u `tests/e2e/38-yoink-batch.spec.ts`:
 
 ```ts
   test("novi klijent ima puna polja i kreira prvu lokaciju", async ({ page }) => {
@@ -1335,7 +1318,7 @@ Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
 - [ ] **Step 2: Pokreni test da vidiš da pada**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "puna polja" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "puna polja" --project=chromium
 ```
 
 Očekivano: FAIL — `novi-klijent-pib` ne postoji.
@@ -1560,7 +1543,7 @@ Dodaj taj poziv u postojeći `Promise.all` te stranice (ne pravi zaseban serijsk
 - [ ] **Step 7: Pokreni test da prođe**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "puna polja" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "puna polja" --project=chromium
 ```
 
 Očekivano: PASS.
@@ -1576,7 +1559,7 @@ git commit -m "feat(klijenti): Novi klijent ima sva polja edit forme + prvu loka
 
 ---
 
-### Task 9: „Prima podsjetnike za ovu lokaciju" — neklikabilan kad je slanje ugašeno
+### Task 8: „Prima podsjetnike za ovu lokaciju" — neklikabilan kad je slanje ugašeno
 
 **Yoink stavka 10.**
 
@@ -1587,7 +1570,7 @@ git commit -m "feat(klijenti): Novi klijent ima sva polja edit forme + prvu loka
 - Modify: `components/domain/LokacijeTab.tsx`
 - Modify: `components/domain/LokacijaSheet.tsx:209-222`
 - Modify: `messages/{sr,en,de}.json`
-- Test: `tests/e2e/30-yoink-batch.spec.ts`
+- Test: `tests/e2e/38-yoink-batch.spec.ts`
 
 **Interfaces:**
 - Consumes: ništa iz ranijih taskova
@@ -1701,35 +1684,43 @@ Proslijedi ga u `LokacijeTab`:
 
 - [ ] **Step 5: Napiši E2E test**
 
-Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
+Dodaj u `tests/e2e/38-yoink-batch.spec.ts`:
 
 ```ts
   test("checkbox podsjetnika je neaktivan uz objasnjenje kad je slanje ugaseno", async ({ page }) => {
-    await page.goto("/klijenti")
-    await page.getByTestId("klijent-card").first().click()
-    await page.getByTestId("tab-lokacije").click()
-    await page.getByTestId("nova-lokacija-btn").click()
+    // Test sam postavlja preduslov umjesto da se oslanja na zatečeno stanje baze —
+    // inače bi prolazio i kad funkcija uopšte nije implementirana.
+    // Suite ionako ide sa --workers=1 jer specovi dijele globalni postavke id=1.
+    // Pročitaj-pa-vrati: bez restore-a bi ovaj spec tiho mijenjao ponašanje
+    // svih kasnijih specova (dijeljeni singleton red postavke id=1).
+    const prije = await getPostavkeV2()
+    await setPostavkeV2({ salji_klijentima: false })
+    try {
+      await page.goto("/klijenti")
+      await page.getByTestId("klijent-card").first().click()
+      await page.getByTestId("tab-lokacije").click()
+      await page.getByTestId("nova-lokacija-btn").click()
+      await page.getByTestId("lokacija-kontakt-izbor").getByRole("radio", { name: /Novi/ }).click()
 
-    await page.getByTestId("lokacija-kontakt-izbor").getByRole("radio", { name: /Novi/ }).click()
-
-    const checkbox = page.getByTestId("lokacija-kontakt-prima")
-    const objasnjenje = page.getByTestId("lokacija-kontakt-prima-ugaseno")
-
-    // DEMO baza ima salji_klijentima ugašeno → checkbox mora biti neaktivan.
-    // Ako je u međuvremenu uključen, test provjerava suprotnu granu.
-    if (await objasnjenje.isVisible()) {
-      await expect(checkbox).toBeDisabled()
-      await expect(objasnjenje).toContainText("Postavkama")
-    } else {
-      await expect(checkbox).toBeEnabled()
+      await expect(page.getByTestId("lokacija-kontakt-prima")).toBeDisabled()
+      await expect(page.getByTestId("lokacija-kontakt-prima-ugaseno")).toContainText("Postavkama")
+    } finally {
+      await setPostavkeV2({ salji_klijentima: prije.salji_klijentima })
     }
   })
+```
+
+`getPostavkeV2` i `setPostavkeV2` već postoje u `tests/e2e/db.ts` — ne piši nove helpere. Dodaj ih u import na vrhu spec fajla:
+
+```ts
+import { getPostavkeV2, setPostavkeV2 } from "./db"
+```
 ```
 
 - [ ] **Step 6: Pokreni test**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "checkbox podsjetnika" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "checkbox podsjetnika" --project=chromium
 ```
 
 Očekivano: PASS.
@@ -1752,7 +1743,7 @@ git commit -m "feat(lokacije): checkbox podsjetnika neaktivan uz objašnjenje ka
 
 ---
 
-### Task 10: Novi termin — izbor „jednokratno / ponavljajuće"
+### Task 9: Novi termin — izbor „jednokratno / ponavljajuće"
 
 **Yoink stavka 11, dio (b).**
 
@@ -1762,7 +1753,7 @@ git commit -m "feat(lokacije): checkbox podsjetnika neaktivan uz objašnjenje ka
 - Modify: `app/(dashboard)/termini/actions.ts` (`createTermin`)
 - Modify: `components/domain/NoviTerminDialog.tsx`
 - Modify: `messages/{sr,en,de}.json`
-- Test: `tests/e2e/30-yoink-batch.spec.ts`
+- Test: `tests/e2e/38-yoink-batch.spec.ts`
 
 **Interfaces:**
 - Consumes: ništa iz ranijih taskova
@@ -1770,7 +1761,7 @@ git commit -m "feat(lokacije): checkbox podsjetnika neaktivan uz objašnjenje ka
 
 - [ ] **Step 1: Napiši failing E2E test**
 
-Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
+Dodaj u `tests/e2e/38-yoink-batch.spec.ts`:
 
 ```ts
   test("novi termin sa oznakom ponavljajuce zavrsi i u tabu Usluge", async ({ page }) => {
@@ -1791,7 +1782,7 @@ Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
 - [ ] **Step 2: Pokreni test da vidiš da pada**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "ponavljajuce" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "ponavljajuce" --project=chromium
 ```
 
 Očekivano: FAIL — `novi-termin-ponavljanje` ne postoji.
@@ -1924,7 +1915,7 @@ U `<form action={...}>` propu, uz ostale `fd.set` pozive, dodaj:
 - [ ] **Step 6: Pokreni test da prođe**
 
 ```bash
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts -g "ponavljajuce" --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts -g "ponavljajuce" --project=chromium
 ```
 
 Očekivano: PASS.
@@ -1939,7 +1930,7 @@ git commit -m "feat(termini): izbor jednokratno/ponavljajuće — ponavljajući 
 
 ---
 
-### Task 11: Prikaži jednokratne termine u ID karti i Uslugama
+### Task 10: Prikaži jednokratne termine u ID karti i Uslugama
 
 **Yoink stavka 11, dio (c).** Ovim 25+ zatečenih termina prestaje biti nevidljivo, bez ijedne izmjene podataka.
 
@@ -1950,7 +1941,7 @@ git commit -m "feat(termini): izbor jednokratno/ponavljajuće — ponavljajući 
 - Modify: `components/domain/ProfilTab.tsx`
 - Modify: `components/domain/IdKartaTab.tsx`
 - Modify: `messages/{sr,en,de}.json`
-- Test: `tests/e2e/30-yoink-batch.spec.ts`
+- Test: `tests/e2e/38-yoink-batch.spec.ts`
 
 **Interfaces:**
 - Consumes: `ProfilStavka` tip iz `components/domain/ProfilTab.tsx`
@@ -2283,7 +2274,7 @@ U `items` mapiranju (linija 109) dodaj badge uz naziv usluge — odmah poslije `
 
 - [ ] **Step 9: Napiši E2E test**
 
-Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
+Dodaj u `tests/e2e/38-yoink-batch.spec.ts`:
 
 ```ts
   test("jednokratni termin je vidljiv u tabu Usluge", async ({ page }) => {
@@ -2309,7 +2300,7 @@ Dodaj u `tests/e2e/30-yoink-batch.spec.ts`:
 
 ```bash
 pnpm vitest run lib/termini-jednokratni.test.ts
-pnpm exec playwright test tests/e2e/30-yoink-batch.spec.ts --project=chromium
+pnpm exec playwright test tests/e2e/38-yoink-batch.spec.ts --project=chromium
 ```
 
 Očekivano: oba PASS.
@@ -2324,7 +2315,7 @@ git commit -m "feat(klijenti): jednokratni termini vidljivi u ID karti i Uslugam
 
 ---
 
-### Task 12: Završna verifikacija cijelog batch-a
+### Task 11: Završna verifikacija cijelog batch-a
 
 **Files:** nijedan (samo provjere)
 

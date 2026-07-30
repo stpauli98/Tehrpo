@@ -425,6 +425,7 @@ const ugovorFields = {
   datum_potpisivanja: dateOrNull,
   datum_isteka: dateOrNull,
   vazenje_mjeseci: intOrNull(1, 600),
+  na_neodredjeno: z.literal("on").optional().transform((v) => v === "on"),
   broj_obilazaka_mjesecno: intOrNull(0, 31),
   automatsko_obnavljanje: boolFromCheckbox,
   aktivan: boolFromCheckbox,
@@ -444,8 +445,19 @@ export async function createUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!validUgovorDatumi(f.datum_potpisivanja, f.datum_isteka)) {
     return { ok: false, message: t("datumIstekaNakonPotpisivanja") }
   }
+  // Neodređeno i konkretan istek se isključuju (isto pravilo kao DB CHECK) —
+  // hvatamo ga ovdje da korisnik dobije poruku umjesto sirove PG greške.
+  if (f.na_neodredjeno && f.datum_isteka) {
+    return { ok: false, errors: { datum_isteka: [t("ugovorIstekNeodredjeno")] } }
+  }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("ugovori").insert({ klijent_id, aktivan, ...f })
+  const { error } = await supabase.from("ugovori").insert({
+    klijent_id,
+    aktivan,
+    ...f,
+    na_neodredjeno: f.na_neodredjeno,
+    datum_isteka: f.na_neodredjeno ? null : f.datum_isteka,
+  })
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }
@@ -458,8 +470,18 @@ export async function updateUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!validUgovorDatumi(f.datum_potpisivanja, f.datum_isteka)) {
     return { ok: false, message: t("datumIstekaNakonPotpisivanja") }
   }
+  // Neodređeno i konkretan istek se isključuju (isto pravilo kao DB CHECK) —
+  // hvatamo ga ovdje da korisnik dobije poruku umjesto sirove PG greške.
+  if (f.na_neodredjeno && f.datum_isteka) {
+    return { ok: false, errors: { datum_isteka: [t("ugovorIstekNeodredjeno")] } }
+  }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("ugovori").update({ aktivan, ...f }).eq("id", id).eq("klijent_id", klijent_id)
+  const { error } = await supabase.from("ugovori").update({
+    aktivan,
+    ...f,
+    na_neodredjeno: f.na_neodredjeno,
+    datum_isteka: f.na_neodredjeno ? null : f.datum_isteka,
+  }).eq("id", id).eq("klijent_id", klijent_id)
   if (error) return { ok: false, message: friendlyDbError(error) }
   revalidatePath(`/klijenti/${klijent_id}`)
   return { ok: true }

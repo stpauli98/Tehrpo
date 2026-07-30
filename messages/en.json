@@ -19,7 +19,8 @@
     "rok": {
       "kasni": "{count, plural, =1 {# day overdue} other {# days overdue}}",
       "danas": "due today",
-      "za": "{count, plural, =1 {due in # day} other {due in # days}}"
+      "za": "{count, plural, =1 {due in # day} other {due in # days}}",
+      "rokIZakazano": "due {rok} · scheduled {zakazano}"
     },
     "sacuvano": "Saved",
     "obrisano": "Deleted",

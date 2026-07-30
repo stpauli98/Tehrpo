@@ -1,6 +1,7 @@
 import { createTranslator } from "next-intl"
 import { APP_LOCALE, type Locale } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { formatDatum } from "@/lib/date"
 
 export type RokTon = "danger" | "warning"
 export type RokOznaka = { text: string; tone: RokTon }
@@ -20,6 +21,29 @@ function danaIzmedju(aIso: string, bIso: string): number {
 // (common.rok.* katalog) se koristi samo za en/de gdje množina zavisi isključivo od n===1.
 function danRijec(n: number): string {
   return n % 10 === 1 && n % 100 !== 11 ? "dan" : "dana"
+}
+
+/**
+ * Datumski red uz „kasni N": rok sam, ili rok + zakazani datum kad se razlikuju.
+ *
+ * Zašto uopšte postoji: „kasni N" se UVIJEK mjeri prema `rok_dospijeca` (zakonska
+ * obaveza), pa prezakazan termin ostaje crven i poslije dogovorenog izlaska. Ako red
+ * uz to pokaže samo rok, izgleda kao da niko ništa nije poduzeo — a `/plan-aktivnosti`
+ * isti termin pozicionira po `datum_prikaza` (= zakazani datum) i pokazuje drugi datum.
+ * Zato ovdje idu oba: rok je rok, zakazano je zakazano.
+ *
+ * `datum_zakazan === rok_dospijeca` se tretira kao „nije prezakazan" — isti uslov koji
+ * `runPostDue` koristi za `zakazanoZa`, da ekran i mejl ne odluče različito.
+ */
+export function rokDatumOznaka(
+  rokIso: string,
+  datumZakazanIso: string | null | undefined,
+  locale: Locale = APP_LOCALE,
+): string {
+  const rok = formatDatum(rokIso, locale)
+  if (!datumZakazanIso || datumZakazanIso === rokIso) return rok
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "common.rok" })
+  return t("rokIZakazano", { rok, zakazano: formatDatum(datumZakazanIso, locale) })
 }
 
 export function rokRelativnaOznaka(rokIso: string, todayIso: string, locale: Locale = APP_LOCALE): RokOznaka {

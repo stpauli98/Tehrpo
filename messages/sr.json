@@ -19,7 +19,8 @@
     "rok": {
       "kasni": "kasni {count, plural, =1 {# dan} other {# dana}}",
       "danas": "danas",
-      "za": "za {count, plural, =1 {# dan} other {# dana}}"
+      "za": "za {count, plural, =1 {# dan} other {# dana}}",
+      "rokIZakazano": "rok {rok} · zakazano {zakazano}"
     },
     "sacuvano": "Sačuvano",
     "obrisano": "Obrisano",

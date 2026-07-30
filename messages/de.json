@@ -19,7 +19,8 @@
     "rok": {
       "kasni": "{count, plural, =1 {# Tag überfällig} other {# Tage überfällig}}",
       "danas": "heute fällig",
-      "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}"
+      "za": "{count, plural, =1 {fällig in # Tag} other {fällig in # Tagen}}",
+      "rokIZakazano": "Frist {rok} · geplant {zakazano}"
     },
     "sacuvano": "Gespeichert",
     "obrisano": "Gelöscht",

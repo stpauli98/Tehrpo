@@ -160,6 +160,7 @@ export type Database = {
           generated_by_ai: boolean
           id: string
           klijent_id: string
+          kreirao_id: string | null
           mime_type: string | null
           naziv: string
           storage_path: string
@@ -173,6 +174,7 @@ export type Database = {
           generated_by_ai?: boolean
           id?: string
           klijent_id: string
+          kreirao_id?: string | null
           mime_type?: string | null
           naziv: string
           storage_path: string
@@ -186,6 +188,7 @@ export type Database = {
           generated_by_ai?: boolean
           id?: string
           klijent_id?: string
+          kreirao_id?: string | null
           mime_type?: string | null
           naziv?: string
           storage_path?: string
@@ -208,6 +211,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dokumenti_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
           {
@@ -329,6 +339,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          kreirao_id: string | null
           maticni_broj: string | null
           napomena: string | null
           naziv: string
@@ -346,6 +357,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          kreirao_id?: string | null
           maticni_broj?: string | null
           napomena?: string | null
           naziv: string
@@ -363,6 +375,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          kreirao_id?: string | null
           maticni_broj?: string | null
           napomena?: string | null
           naziv?: string
@@ -376,6 +389,13 @@ export type Database = {
           zaduzeni_tehpro_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "klijenti_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "klijenti_zaduzeni_tehpro_id_fkey"
             columns: ["zaduzeni_tehpro_id"]
@@ -451,6 +471,10 @@ export type Database = {
           id: string
           ime: string
           prima_podsjetnike: boolean
+          smije_brisati_klijente: boolean
+          smije_brisati_svoje: boolean
+          smije_brisati_tudje: boolean
+          smije_zatvoriti_bez_nalaza: boolean
           uloga: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Insert: {
@@ -460,6 +484,10 @@ export type Database = {
           id: string
           ime: string
           prima_podsjetnike?: boolean
+          smije_brisati_klijente?: boolean
+          smije_brisati_svoje?: boolean
+          smije_brisati_tudje?: boolean
+          smije_zatvoriti_bez_nalaza?: boolean
           uloga?: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Update: {
@@ -469,6 +497,10 @@ export type Database = {
           id?: string
           ime?: string
           prima_podsjetnike?: boolean
+          smije_brisati_klijente?: boolean
+          smije_brisati_svoje?: boolean
+          smije_brisati_tudje?: boolean
+          smije_zatvoriti_bez_nalaza?: boolean
           uloga?: Database["public"]["Enums"]["korisnik_uloga"]
         }
         Relationships: []
@@ -517,6 +549,7 @@ export type Database = {
           grad: string | null
           id: string
           klijent_id: string
+          kreirao_id: string | null
           naziv: string
           regija: string | null
         }
@@ -526,6 +559,7 @@ export type Database = {
           grad?: string | null
           id?: string
           klijent_id: string
+          kreirao_id?: string | null
           naziv: string
           regija?: string | null
         }
@@ -535,6 +569,7 @@ export type Database = {
           grad?: string | null
           id?: string
           klijent_id?: string
+          kreirao_id?: string | null
           naziv?: string
           regija?: string | null
         }
@@ -553,6 +588,13 @@ export type Database = {
             referencedRelation: "klijenti_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lokacije_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
         ]
       }
       mejl_log: {
@@ -560,6 +602,7 @@ export type Database = {
           created_at: string
           delivery_at: string | null
           delivery_status: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni: string[]
           greska: string | null
           id: string
           klijent_id: string | null
@@ -576,6 +619,7 @@ export type Database = {
           created_at?: string
           delivery_at?: string | null
           delivery_status?: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni?: string[]
           greska?: string | null
           id?: string
           klijent_id?: string | null
@@ -592,6 +636,7 @@ export type Database = {
           created_at?: string
           delivery_at?: string | null
           delivery_status?: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni?: string[]
           greska?: string | null
           id?: string
           klijent_id?: string | null
@@ -822,6 +867,7 @@ export type Database = {
           id: string
           interval_mjeseci: number | null
           klijent_id: string
+          kreirao_id: string | null
           lokacija_id: string | null
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena: string | null
@@ -839,6 +885,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id: string
+          kreirao_id?: string | null
           lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
@@ -856,6 +903,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id?: string
+          kreirao_id?: string | null
           lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
@@ -878,6 +926,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termini_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
           {
@@ -906,6 +961,7 @@ export type Database = {
           datum_potpisivanja: string | null
           id: string
           klijent_id: string
+          kreirao_id: string | null
           na_neodredjeno: boolean
           napomena: string | null
           vazenje_mjeseci: number | null
@@ -920,6 +976,7 @@ export type Database = {
           datum_potpisivanja?: string | null
           id?: string
           klijent_id: string
+          kreirao_id?: string | null
           na_neodredjeno?: boolean
           napomena?: string | null
           vazenje_mjeseci?: number | null
@@ -934,6 +991,7 @@ export type Database = {
           datum_potpisivanja?: string | null
           id?: string
           klijent_id?: string
+          kreirao_id?: string | null
           na_neodredjeno?: boolean
           napomena?: string | null
           vazenje_mjeseci?: number | null
@@ -952,6 +1010,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ugovori_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
         ]
@@ -1014,6 +1079,7 @@ export type Database = {
           delivery_status:
             | Database["public"]["Enums"]["mejl_dostava_status"]
             | null
+          dostava_pogodjeni: string[] | null
           greska: string | null
           id: string | null
           klijent_id: string | null
@@ -1128,6 +1194,7 @@ export type Database = {
       azuriraj_mejl_dostavu: {
         Args: {
           p_at: string
+          p_pogodjeni?: string[]
           p_resend_id: string
           p_status: Database["public"]["Enums"]["mejl_dostava_status"]
         }
@@ -1241,6 +1308,7 @@ export type Database = {
           created_at: string
           delivery_at: string
           delivery_status: Database["public"]["Enums"]["mejl_dostava_status"]
+          dostava_pogodjeni: string[]
           greska: string
           id: string
           klijent_id: string
@@ -1261,6 +1329,7 @@ export type Database = {
         Returns: {
           ciklus_rok: string
           dana_do_ciklusa: number
+          dana_do_roka: number
           datum_zakazan: string
           klijent_id: string
           klijent_naziv: string
@@ -1308,6 +1377,9 @@ export type Database = {
       oznaci_mejl_pregledan: { Args: { p_id: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      smije_brisati_klijente: { Args: never; Returns: boolean }
+      smije_brisati_zapis: { Args: { p_kreirao: string }; Returns: boolean }
+      smije_zatvoriti_bez_nalaza: { Args: never; Returns: boolean }
       tekst_u_uuid: { Args: { t: string }; Returns: string }
       ukloni_podsjetnik_email: {
         Args: { p_email: string; p_klijent_id: string }

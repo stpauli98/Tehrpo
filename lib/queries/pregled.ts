@@ -19,11 +19,14 @@ export type HitnoKasniItem = {
   vrsta_naziv: string
   lokacija_naziv: string | null
   rok_dospijeca: string
+  /** Dogovoren izlazak. NULL = nije prezakazan. Red mora pokazati oba datuma kad se razlikuju. */
+  datum_zakazan: string | null
   status_izvedeni: string
 }
 
-const SELECT_HITNO =
-  "id, klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca, status_izvedeni"
+/** Izvezen radi testa: kolona koju upit ne izabere stiže u komponentu kao undefined. */
+export const SELECT_HITNO =
+  "id, klijent_id, klijent_naziv, vrsta_naziv, lokacija_naziv, rok_dospijeca, datum_zakazan, status_izvedeni"
 
 /** Statusi koji ne pripadaju ni jednoj „traži se akcija" metrici, u PostgREST `in` sintaksi. */
 const ZAVRSENI_STATUSI = '("izvrseno","otkazano")'

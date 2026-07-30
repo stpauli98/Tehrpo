@@ -611,8 +611,7 @@
       "rokObavezan": "Rok je obavezan",
       "lokacijaNePripada": "Lokacija ne pripada izabranom klijentu.",
       "terminVecPostoji": "Termin za istu firmu, vrstu i rok već postoji.",
-      "datumObavezan": "Datum je obavezan",
-      "nalazObavezan": "Aktivnost se ne može zatvoriti bez priloženog nalaza. Priložite dokument ili tražite dozvolu od administratora."
+      "datumObavezan": "Datum je obavezan"
     }
   },
   "status": {
@@ -1385,6 +1384,7 @@
   },
   "dbErrors": {
     "chkTerminiDatumi": "Neispravan datum: datum izvršenja ne može biti u budućnosti, a interval mora biti između 1 i 120 mjeseci.",
+    "nalazObavezan": "Aktivnost se ne može zatvoriti bez priloženog nalaza. Priložite dokument ili tražite dozvolu od administratora.",
     "duplikat": "Zapis sa tim vrijednostima već postoji.",
     "uUpotrebi": "Zapis je povezan s drugim podacima i u upotrebi je.",
     "nevazeciPodaci": "Nevažeći podaci — provjerite unos.",

@@ -611,8 +611,7 @@
       "rokObavezan": "Due date is required",
       "lokacijaNePripada": "The location does not belong to the selected client.",
       "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
-      "datumObavezan": "Date is required",
-      "nalazObavezan": "The activity cannot be closed without an attached report. Attach a document or ask an administrator for permission."
+      "datumObavezan": "Date is required"
     }
   },
   "status": {
@@ -1385,6 +1384,7 @@
   },
   "dbErrors": {
     "chkTerminiDatumi": "Invalid date: the completion date cannot be in the future, and the interval must be between 1 and 120 months.",
+    "nalazObavezan": "The activity cannot be closed without an attached report. Attach a document or ask an administrator for permission.",
     "duplikat": "A record with these values already exists.",
     "uUpotrebi": "The record is linked to other data and is in use.",
     "nevazeciPodaci": "Invalid data — please check your input.",

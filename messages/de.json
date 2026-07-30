@@ -611,8 +611,7 @@
       "rokObavezan": "Frist ist erforderlich",
       "lokacijaNePripada": "Der Standort gehört nicht zum ausgewählten Kunden.",
       "terminVecPostoji": "Ein Termin für diese Firma, Art und Frist existiert bereits.",
-      "datumObavezan": "Datum ist erforderlich",
-      "nalazObavezan": "Die Aktivität kann ohne beigefügten Bericht nicht abgeschlossen werden. Fügen Sie ein Dokument bei oder bitten Sie einen Administrator um die Berechtigung."
+      "datumObavezan": "Datum ist erforderlich"
     }
   },
   "status": {
@@ -1385,6 +1384,7 @@
   },
   "dbErrors": {
     "chkTerminiDatumi": "Ungültiges Datum: das Ausführungsdatum darf nicht in der Zukunft liegen, und das Intervall muss zwischen 1 und 120 Monaten liegen.",
+    "nalazObavezan": "Die Aktivität kann ohne beigefügten Bericht nicht abgeschlossen werden. Fügen Sie ein Dokument bei oder bitten Sie einen Administrator um die Berechtigung.",
     "duplikat": "Ein Eintrag mit diesen Werten existiert bereits.",
     "uUpotrebi": "Der Eintrag ist mit anderen Daten verknüpft und wird verwendet.",
     "nevazeciPodaci": "Ungültige Daten — bitte überprüfen Sie die Eingabe.",

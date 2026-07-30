@@ -160,6 +160,7 @@ export type Database = {
           generated_by_ai: boolean
           id: string
           klijent_id: string
+          kreirao_id: string | null
           mime_type: string | null
           naziv: string
           storage_path: string
@@ -173,6 +174,7 @@ export type Database = {
           generated_by_ai?: boolean
           id?: string
           klijent_id: string
+          kreirao_id?: string | null
           mime_type?: string | null
           naziv: string
           storage_path: string
@@ -186,6 +188,7 @@ export type Database = {
           generated_by_ai?: boolean
           id?: string
           klijent_id?: string
+          kreirao_id?: string | null
           mime_type?: string | null
           naziv?: string
           storage_path?: string
@@ -208,6 +211,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dokumenti_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
           {
@@ -329,6 +339,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          kreirao_id: string | null
           maticni_broj: string | null
           napomena: string | null
           naziv: string
@@ -346,6 +357,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          kreirao_id?: string | null
           maticni_broj?: string | null
           napomena?: string | null
           naziv: string
@@ -363,6 +375,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          kreirao_id?: string | null
           maticni_broj?: string | null
           napomena?: string | null
           naziv?: string
@@ -376,6 +389,13 @@ export type Database = {
           zaduzeni_tehpro_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "klijenti_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "klijenti_zaduzeni_tehpro_id_fkey"
             columns: ["zaduzeni_tehpro_id"]
@@ -520,6 +540,7 @@ export type Database = {
           kontakt_email: string | null
           kontakt_osoba: string | null
           kontakt_telefon: string | null
+          kreirao_id: string | null
           naziv: string
           regija: string | null
         }
@@ -532,6 +553,7 @@ export type Database = {
           kontakt_email?: string | null
           kontakt_osoba?: string | null
           kontakt_telefon?: string | null
+          kreirao_id?: string | null
           naziv: string
           regija?: string | null
         }
@@ -544,6 +566,7 @@ export type Database = {
           kontakt_email?: string | null
           kontakt_osoba?: string | null
           kontakt_telefon?: string | null
+          kreirao_id?: string | null
           naziv?: string
           regija?: string | null
         }
@@ -560,6 +583,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lokacije_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
         ]
@@ -831,6 +861,7 @@ export type Database = {
           id: string
           interval_mjeseci: number | null
           klijent_id: string
+          kreirao_id: string | null
           lokacija_id: string | null
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena: string | null
@@ -848,6 +879,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id: string
+          kreirao_id?: string | null
           lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
@@ -865,6 +897,7 @@ export type Database = {
           id?: string
           interval_mjeseci?: number | null
           klijent_id?: string
+          kreirao_id?: string | null
           lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
@@ -887,6 +920,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termini_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
           {
@@ -915,6 +955,7 @@ export type Database = {
           datum_potpisivanja: string | null
           id: string
           klijent_id: string
+          kreirao_id: string | null
           napomena: string | null
           vazenje_mjeseci: number | null
           zavodni_broj: string | null
@@ -928,6 +969,7 @@ export type Database = {
           datum_potpisivanja?: string | null
           id?: string
           klijent_id: string
+          kreirao_id?: string | null
           napomena?: string | null
           vazenje_mjeseci?: number | null
           zavodni_broj?: string | null
@@ -941,6 +983,7 @@ export type Database = {
           datum_potpisivanja?: string | null
           id?: string
           klijent_id?: string
+          kreirao_id?: string | null
           napomena?: string | null
           vazenje_mjeseci?: number | null
           zavodni_broj?: string | null
@@ -958,6 +1001,13 @@ export type Database = {
             columns: ["klijent_id"]
             isOneToOne: false
             referencedRelation: "klijenti_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ugovori_kreirao_id_fkey"
+            columns: ["kreirao_id"]
+            isOneToOne: false
+            referencedRelation: "korisnici"
             referencedColumns: ["id"]
           },
         ]

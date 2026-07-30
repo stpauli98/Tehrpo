@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test"
-import { db, getPostavkeV2, setPostavkeV2, insertKlijent, insertLokacija, insertKontakt, deleteKlijentByNaziv } from "./db"
+import {
+  db, getPostavkeV2, setPostavkeV2, insertKlijent, insertLokacija, insertKontakt, deleteKlijentByNaziv,
+  firstVrstaSaIntervalom, deleteTerminiByKlijent, getVrstaInterval, setVrstaInterval,
+} from "./db"
 
 test.describe("Yoink batch 2026-07-30", () => {
   test("tab se zove Usluge, ne Profil", async ({ page }) => {
@@ -171,5 +174,157 @@ test.describe("Yoink batch 2026-07-30", () => {
     await expect(izbor).toBeVisible()
     await expect(izbor.getByRole("radio", { name: /Jednokratno/ })).toBeChecked()
     await expect(izbor.getByRole("radio", { name: /Ponavlja/ })).not.toBeChecked()
+  })
+
+  test("ponavljajuci termin upisuje i klijent_provjere red (profil-stavku)", async ({ page }) => {
+    // Regresija za yoink stavku 11(b): createTermin je do sada pisao SAMO
+    // termin. Ovaj test provjerava STVARNI upis u bazu (ne samo UI), inače bi
+    // prošao identično i da je cijeli ponavljajući write path obrisan.
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E Ponavlja ${sufiks}`
+    const lokNaziv = `E2E Lokacija Ponavlja ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    const lokacijaId = await insertLokacija(klijentId, lokNaziv)
+    const vrsta = await firstVrstaSaIntervalom() // vrsta SA podrazumijevanim intervalom — uslov za ponavljajući unos
+
+    try {
+      await page.goto("/plan-aktivnosti?view=lista")
+      await page.getByTestId("novi-termin-btn").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+
+      await page.getByTestId("novi-klijent").click()
+      await page.getByRole("option", { name: naziv }).click()
+      await page.getByTestId("novi-lokacija").click()
+      await page.getByRole("option", { name: lokNaziv }).click()
+      await page.getByTestId("novi-vrsta").click()
+      await page.getByRole("option", { name: vrsta.naziv, exact: true }).click()
+      await page.getByTestId("novi-rok").fill("2028-03-11")
+      await page.getByTestId("novi-termin-ponavljanje").getByRole("radio", { name: /Ponavlja/ }).click()
+      await page.getByTestId("novi-submit").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+
+      // Termin je upisan
+      const { data: termini, error: tErr } = await db
+        .from("termini")
+        .select("id")
+        .eq("klijent_id", klijentId)
+        .eq("vrsta_provjere_id", vrsta.id)
+        .eq("lokacija_id", lokacijaId)
+      if (tErr) throw new Error(`assert termini: ${tErr.message}`)
+      expect(termini?.length).toBe(1)
+
+      // I profil-stavka (klijent_provjere) — sa interval_mjeseci=null (prati podrazumijevani interval vrste)
+      const { data: kp, error: kpErr } = await db
+        .from("klijent_provjere")
+        .select("id, interval_mjeseci")
+        .eq("klijent_id", klijentId)
+        .eq("vrsta_provjere_id", vrsta.id)
+        .eq("lokacija_id", lokacijaId)
+        .maybeSingle()
+      if (kpErr) throw new Error(`assert klijent_provjere: ${kpErr.message}`)
+      expect(kp).not.toBeNull()
+      expect(kp?.interval_mjeseci).toBeNull()
+    } finally {
+      await db.from("klijent_provjere").delete().eq("klijent_id", klijentId)
+      await deleteTerminiByKlijent(klijentId)
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+
+  test("jednokratni termin NE upisuje klijent_provjere red", async ({ page }) => {
+    // Pinuje default: ad-hoc unos ne smije tiho postati trajna obaveza (profil-stavka).
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E Jednokratno ${sufiks}`
+    const lokNaziv = `E2E Lokacija Jednokratno ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    const lokacijaId = await insertLokacija(klijentId, lokNaziv)
+    const vrsta = await firstVrstaSaIntervalom()
+
+    try {
+      await page.goto("/plan-aktivnosti?view=lista")
+      await page.getByTestId("novi-termin-btn").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+
+      await page.getByTestId("novi-klijent").click()
+      await page.getByRole("option", { name: naziv }).click()
+      await page.getByTestId("novi-lokacija").click()
+      await page.getByRole("option", { name: lokNaziv }).click()
+      await page.getByTestId("novi-vrsta").click()
+      await page.getByRole("option", { name: vrsta.naziv, exact: true }).click()
+      await page.getByTestId("novi-rok").fill("2028-04-12")
+      // "Jednokratno" ostaje izabrano (default) — namjerno se NE dira izbor.
+      await page.getByTestId("novi-submit").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
+
+      const { data: termini, error: tErr } = await db
+        .from("termini")
+        .select("id")
+        .eq("klijent_id", klijentId)
+        .eq("vrsta_provjere_id", vrsta.id)
+        .eq("lokacija_id", lokacijaId)
+      if (tErr) throw new Error(`assert termini: ${tErr.message}`)
+      expect(termini?.length).toBe(1)
+
+      const { data: kp, error: kpErr } = await db
+        .from("klijent_provjere")
+        .select("id")
+        .eq("klijent_id", klijentId)
+        .eq("vrsta_provjere_id", vrsta.id)
+        .eq("lokacija_id", lokacijaId)
+        .maybeSingle()
+      if (kpErr) throw new Error(`assert klijent_provjere: ${kpErr.message}`)
+      expect(kp).toBeNull()
+    } finally {
+      await db.from("klijent_provjere").delete().eq("klijent_id", klijentId)
+      await deleteTerminiByKlijent(klijentId)
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+
+  test("ponavljajuci bez podrazumijevanog intervala vrste prijavljuje gresku i ne kreira termin", async ({ page }) => {
+    // Guard: birajući "Ponavlja se" za vrstu BEZ podrazumijevanog intervala korisnik
+    // ne smije ostati sa upisanim terminom i greškom (validacija je PRIJE upisa).
+    const sufiks = String(Date.now()).slice(-6)
+    const naziv = `E2E Bez Intervala ${sufiks}`
+    const lokNaziv = `E2E Lokacija Bez Intervala ${sufiks}`
+    const klijentId = await insertKlijent(naziv)
+    const lokacijaId = await insertLokacija(klijentId, lokNaziv)
+    const vrsta = await firstVrstaSaIntervalom()
+    const origInterval = await getVrstaInterval(vrsta.id)
+
+    try {
+      await setVrstaInterval(vrsta.id, null) // privremeno: vrsta bez podrazumijevanog intervala
+
+      await page.goto("/plan-aktivnosti?view=lista")
+      await page.getByTestId("novi-termin-btn").click()
+      await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+
+      await page.getByTestId("novi-klijent").click()
+      await page.getByRole("option", { name: naziv }).click()
+      await page.getByTestId("novi-lokacija").click()
+      await page.getByRole("option", { name: lokNaziv }).click()
+      await page.getByTestId("novi-vrsta").click()
+      await page.getByRole("option", { name: vrsta.naziv, exact: true }).click()
+      await page.getByTestId("novi-rok").fill("2028-05-13")
+      await page.getByTestId("novi-termin-ponavljanje").getByRole("radio", { name: /Ponavlja/ }).click()
+      await page.getByTestId("novi-submit").click()
+
+      await expect(page.getByText(/nema podrazumijevani interval/)).toBeVisible()
+      // Sheet ostaje otvoren — akcija nije uspjela, forma se ne resetuje/zatvara.
+      await expect(page.getByTestId("novi-termin-sheet")).toBeVisible()
+
+      const { data: termini, error: tErr } = await db
+        .from("termini")
+        .select("id")
+        .eq("klijent_id", klijentId)
+        .eq("lokacija_id", lokacijaId)
+      if (tErr) throw new Error(`assert termini: ${tErr.message}`)
+      expect(termini?.length ?? 0).toBe(0)
+    } finally {
+      await setVrstaInterval(vrsta.id, origInterval)
+      await db.from("klijent_provjere").delete().eq("klijent_id", klijentId)
+      await deleteTerminiByKlijent(klijentId)
+      await deleteKlijentByNaziv(naziv)
+    }
   })
 })

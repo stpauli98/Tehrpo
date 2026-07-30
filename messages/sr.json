@@ -1359,7 +1359,9 @@
       "opened": "Otvoreno",
       "deliveryFailed": "Neuspjela dostava",
       "bounced": "Odbijeno",
-      "complained": "Prijava spama"
+      "complained": "Prijava spama",
+      "djelimicno": "{oznaka} ({pogodjenih} od {ukupno})",
+      "djelimicnoAdrese": "Nije stiglo na: {adrese}"
     },
     "filteri": {
       "tip": "Tip",

@@ -9,8 +9,60 @@ import {
   jeGreska,
   jeDemo,
   jeIsoDatum,
+  dostavaObim,
   type MejlRed,
 } from "./poslati-mejlovi"
+
+describe("dostavaObim", () => {
+  // PROD 30.07.2026: send na [nmil32@icloud.com, pregled@nextpixel.dev, admin@tehpro.local]
+  // dobio je jedan `email.bounced` event zbog `.local` adrese. Resend u `data.to` vraća
+  // POGOĐENE adrese, pa se djelimičan bounce da razlikovati od potpunog.
+  const P = ["nmil32@icloud.com", "pregled@nextpixel.dev", "admin@tehpro.local"]
+
+  it("uspješna dostava nije greška ni po kom obimu", () => {
+    expect(dostavaObim({ delivery_status: "delivered", primaoci: P, dostava_pogodjeni: [] }))
+      .toEqual({ vrsta: "nije_greska" })
+  })
+
+  it("jedna pogođena adresa od tri → djelimično", () => {
+    expect(dostavaObim({ delivery_status: "bounced", primaoci: P, dostava_pogodjeni: ["admin@tehpro.local"] }))
+      .toEqual({ vrsta: "djelimicna", pogodjeni: ["admin@tehpro.local"], pogodjenih: 1, ukupno: 3 })
+  })
+
+  it("sve adrese pogođene → potpuna", () => {
+    expect(dostavaObim({ delivery_status: "bounced", primaoci: P, dostava_pogodjeni: P }))
+      .toEqual({ vrsta: "potpuna" })
+  })
+
+  it("bez podatka o pogođenima (stariji redovi) → potpuna, bez izmišljanja", () => {
+    // Redovi upisani prije nego što je webhook počeo slati `data.to` nemaju šta da dijele.
+    expect(dostavaObim({ delivery_status: "bounced", primaoci: P, dostava_pogodjeni: [] }))
+      .toEqual({ vrsta: "potpuna" })
+    expect(dostavaObim({ delivery_status: "bounced", primaoci: P, dostava_pogodjeni: null }))
+      .toEqual({ vrsta: "potpuna" })
+  })
+
+  it("velika slova i razmaci se poklapaju sa primaocima", () => {
+    expect(dostavaObim({ delivery_status: "bounced", primaoci: P, dostava_pogodjeni: [" ADMIN@Tehpro.Local "] }))
+      .toEqual({ vrsta: "djelimicna", pogodjeni: ["admin@tehpro.local"], pogodjenih: 1, ukupno: 3 })
+  })
+
+  it("adresa koja nije među primaocima se ignoriše (ne pravi lažni 'djelimično')", () => {
+    expect(dostavaObim({ delivery_status: "bounced", primaoci: P, dostava_pogodjeni: ["neko@drugi.com"] }))
+      .toEqual({ vrsta: "potpuna" })
+  })
+
+  it("jedan primalac → potpuna, nikad 'djelimično 1 od 1'", () => {
+    expect(dostavaObim({
+      delivery_status: "bounced", primaoci: ["admin@tehpro.local"], dostava_pogodjeni: ["admin@tehpro.local"],
+    })).toEqual({ vrsta: "potpuna" })
+  })
+
+  it("greska_slanja je potpuna — mejl nikad nije ni otišao", () => {
+    expect(dostavaObim({ delivery_status: "nepoznato", primaoci: P, dostava_pogodjeni: [], status: "greska_slanja" }))
+      .toEqual({ vrsta: "potpuna" })
+  })
+})
 
 /** Minimalni red za `jeGreska` — funkcija čita samo `status` i `delivery_status`. */
 function red(

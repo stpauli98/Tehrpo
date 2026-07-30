@@ -1359,7 +1359,9 @@
       "opened": "Geöffnet",
       "deliveryFailed": "Zustellung fehlgeschlagen",
       "bounced": "Unzustellbar",
-      "complained": "Als Spam gemeldet"
+      "complained": "Als Spam gemeldet",
+      "djelimicno": "{oznaka} ({pogodjenih} von {ukupno})",
+      "djelimicnoAdrese": "Nicht zugestellt an: {adrese}"
     },
     "filteri": {
       "tip": "Typ",

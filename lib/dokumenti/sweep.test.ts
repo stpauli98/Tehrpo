@@ -1,65 +1,65 @@
 import { describe, it, expect } from "vitest"
-import { osirotjeliObjekti, odluciSta, type StorageStavka } from "./sweep"
-
-describe("osirotjeliObjekti", () => {
-  it("vraća objekte kojima nema reda u bazi", () => {
-    expect(
-      osirotjeliObjekti(["termini/a/x.pdf", "termini/b/y.pdf"], ["termini/a/x.pdf"]),
-    ).toEqual(["termini/b/y.pdf"])
-  })
-
-  it("prazan storage → prazan rezultat", () => {
-    expect(osirotjeliObjekti([], ["termini/a/x.pdf"])).toEqual([])
-  })
-
-  it("sve povezano → ništa za brisanje", () => {
-    const p = ["termini/a/x.pdf", "termini/b/y.pdf"]
-    expect(osirotjeliObjekti(p, p)).toEqual([])
-  })
-
-  it("red u bazi bez fajla se ignoriše (nije naš posao)", () => {
-    expect(osirotjeliObjekti(["termini/a/x.pdf"], ["termini/a/x.pdf", "termini/c/z.pdf"])).toEqual([])
-  })
-
-  it("prazna baza uz pun storage → SVI objekti izgledaju osirotjelo (opasan smjer — čisto matematički tačno)", () => {
-    // Ovo je namjerno pinovano ovdje: sama funkcija ne smije da nagađa je li prazna baza
-    // legitimna ili je znak polomljenog upita/pogrešnog projekta — to je posao pozivaoca
-    // (vidi odluciSta ispod, koji odbija da obriše kad je baza prazna a bucket nije).
-    expect(osirotjeliObjekti(["termini/a/x.pdf", "termini/b/y.pdf"], [])).toEqual([
-      "termini/a/x.pdf",
-      "termini/b/y.pdf",
-    ])
-  })
-})
+import { odluciSta, type StorageObjekat } from "./sweep"
 
 describe("odluciSta", () => {
   const GRACE_MS = 24 * 60 * 60 * 1000
   const SADA = Date.parse("2026-07-30T12:00:00.000Z")
 
-  const stavka = (path: string, kreiran: string): StorageStavka => ({ path, kreiran })
   const stara = new Date(SADA - GRACE_MS * 2).toISOString() // dovoljno starije od grace
   const svjeza = new Date(SADA - GRACE_MS / 2).toISOString() // mlađe od grace
-  // Nevezan red u bazi — drži putanjeUBazi neprazan da se guard 1 ne umiješa
-  // dok se izolovano testira grace filter/set-difference na drugom fajlu.
-  const nevezanRed = "klijenti/nekidrugi/ugovor.pdf"
+  const stavka = (path: string, updatedAt = stara): StorageObjekat => ({ path, updatedAt })
 
-  it("prazna baza + pun bucket → prekid (guard 1)", () => {
-    const odluka = odluciSta([stavka("termini/a/x.pdf", stara)], [], SADA, GRACE_MS)
-    expect(odluka.akcija).toBe("prekid")
+  /**
+   * Punilo za ogradu po udjelu: N fajlova koji SVI imaju red u bazi, pa nisu kandidati.
+   * Bez njih bi svaki test sa jednim osirotjelim fajlom udario u prag od 50%.
+   */
+  const uparenih = (n: number) => {
+    const putanje = Array.from({ length: n }, (_, i) => `klijenti/upareni/${i}.pdf`)
+    return { objekti: putanje.map((p) => stavka(p)), putanje }
+  }
+
+  it("prazna baza + pun bucket → prekid (ograda 1)", () => {
+    const odluka = odluciSta([stavka("termini/a/x.pdf")], [], SADA, GRACE_MS)
+    expect(odluka).toEqual({
+      akcija: "prekid",
+      razlog: "dokumenti je prazan a bucket nije — prekid",
+    })
   })
 
   it("prazna baza + prazan bucket → NIJE prekid (svjež install, nema šta da se briše)", () => {
-    expect(odluciSta([], [], SADA, GRACE_MS)).toEqual({ akcija: "brisi", putanje: [] })
+    expect(odluciSta([], [], SADA, GRACE_MS)).toEqual({
+      akcija: "brisi",
+      putanje: [],
+      presvjezi: [],
+      slomljeniRedovi: [],
+    })
   })
 
   it("osirotjeli fajl mlađi od grace → NE ulazi u putanje za brisanje", () => {
-    const odluka = odluciSta([stavka("termini/a/x.pdf", svjeza)], [nevezanRed], SADA, GRACE_MS)
-    expect(odluka).toEqual({ akcija: "brisi", putanje: [] })
+    const p = uparenih(4)
+    const odluka = odluciSta(
+      [...p.objekti, stavka("termini/a/x.pdf", svjeza)],
+      p.putanje,
+      SADA,
+      GRACE_MS,
+    )
+    expect(odluka).toEqual({
+      akcija: "brisi",
+      putanje: [],
+      presvjezi: ["termini/a/x.pdf"],
+      slomljeniRedovi: [],
+    })
   })
 
   it("osirotjeli fajl stariji od grace → ULAZI u putanje za brisanje", () => {
-    const odluka = odluciSta([stavka("termini/a/x.pdf", stara)], [nevezanRed], SADA, GRACE_MS)
-    expect(odluka).toEqual({ akcija: "brisi", putanje: ["termini/a/x.pdf"] })
+    const p = uparenih(4)
+    const odluka = odluciSta([...p.objekti, stavka("termini/a/x.pdf")], p.putanje, SADA, GRACE_MS)
+    expect(odluka).toEqual({
+      akcija: "brisi",
+      putanje: ["termini/a/x.pdf"],
+      presvjezi: [],
+      slomljeniRedovi: [],
+    })
   })
 
   it("mlad fajl SA redom u bazi → ne briše se (grace i set-difference se ne miješaju pogrešno)", () => {
@@ -69,16 +69,91 @@ describe("odluciSta", () => {
       SADA,
       GRACE_MS,
     )
-    expect(odluka).toEqual({ akcija: "brisi", putanje: [] })
+    expect(odluka).toEqual({
+      akcija: "brisi",
+      putanje: [],
+      presvjezi: [],
+      slomljeniRedovi: [],
+    })
   })
 
-  it("kreiran nedostaje/neparsibilan → fajl je zaštićen, ne briše se", () => {
+  it("updatedAt nedostaje/neparsibilan → fajl je zaštićen, ne briše se", () => {
+    const p = uparenih(4)
     const odluka = odluciSta(
-      [stavka("termini/a/x.pdf", "nije-datum")],
-      [nevezanRed],
+      [...p.objekti, stavka("termini/a/x.pdf", "nije-datum")],
+      p.putanje,
       SADA,
       GRACE_MS,
     )
-    expect(odluka).toEqual({ akcija: "brisi", putanje: [] })
+    expect(odluka).toEqual({
+      akcija: "brisi",
+      putanje: [],
+      presvjezi: ["termini/a/x.pdf"],
+      slomljeniRedovi: [],
+    })
+  })
+
+  it("red u bazi bez fajla → prijavljuje se kao slomljen, ne briše se ništa", () => {
+    const odluka = odluciSta(
+      [stavka("termini/a/x.pdf")],
+      ["termini/a/x.pdf", "termini/nestao/y.pdf"],
+      SADA,
+      GRACE_MS,
+    )
+    expect(odluka).toEqual({
+      akcija: "brisi",
+      putanje: [],
+      presvjezi: [],
+      slomljeniRedovi: ["termini/nestao/y.pdf"],
+    })
+  })
+
+  describe("ograda 2 — udio bucketa", () => {
+    /**
+     * Oblik kvara koji ograda 1 NE vidi: popis iz baze je DJELIMIČNO pročitan (tiho odsjecanje
+     * paginacije), pa `putanjeUBazi` nije prazan — ograda 1 ćuti — a svi redovi iza reza
+     * izgledaju osirotjelo. Ovdje je pročitana 1 od 10 putanja: 9/10 objekata bi bilo obrisano.
+     */
+    it("djelimično pročitan popis (9/10 objekata kandidati) → prekid, ne brisanje", () => {
+      const sviObjekti = Array.from({ length: 10 }, (_, i) => stavka(`termini/a/${i}.pdf`))
+      const procitano = ["termini/a/0.pdf"] // ostalih 9 redova odsječeno
+      const odluka = odluciSta(sviObjekti, procitano, SADA, GRACE_MS)
+      expect(odluka.akcija).toBe("prekid")
+      expect(odluka.akcija === "prekid" && odluka.razlog).toBe(
+        "previše kandidata: 9/10 objekata (prag 50%) — prekid",
+      )
+    })
+
+    it("granica: TAČNO 50% bucketa → i dalje briše", () => {
+      const sviObjekti = Array.from({ length: 10 }, (_, i) => stavka(`termini/a/${i}.pdf`))
+      const uBazi = sviObjekti.slice(0, 5).map((o) => o.path)
+      const odluka = odluciSta(sviObjekti, uBazi, SADA, GRACE_MS)
+      expect(odluka).toEqual({
+        akcija: "brisi",
+        putanje: ["termini/a/5.pdf", "termini/a/6.pdf", "termini/a/7.pdf", "termini/a/8.pdf", "termini/a/9.pdf"],
+        presvjezi: [],
+        slomljeniRedovi: [],
+      })
+    })
+
+    it("granica: jedan preko 50% (6/10) → prekid", () => {
+      const sviObjekti = Array.from({ length: 10 }, (_, i) => stavka(`termini/a/${i}.pdf`))
+      const uBazi = sviObjekti.slice(0, 4).map((o) => o.path)
+      const odluka = odluciSta(sviObjekti, uBazi, SADA, GRACE_MS)
+      expect(odluka).toEqual({
+        akcija: "prekid",
+        razlog: "previše kandidata: 6/10 objekata (prag 50%) — prekid",
+      })
+    })
+
+    it("udio se računa na SVE objekte, ne samo na zrele — mladi kandidati ne troše kvotu", () => {
+      // 4 zrela osirotjela + 4 svježa osirotjela + 4 uparena = 12 objekata, 4 kandidata (33%).
+      const zreli = Array.from({ length: 4 }, (_, i) => stavka(`termini/zreo/${i}.pdf`))
+      const svjezi = Array.from({ length: 4 }, (_, i) => stavka(`termini/svjez/${i}.pdf`, svjeza))
+      const p = uparenih(4)
+      const odluka = odluciSta([...zreli, ...svjezi, ...p.objekti], p.putanje, SADA, GRACE_MS)
+      expect(odluka.akcija).toBe("brisi")
+      expect(odluka.akcija === "brisi" && odluka.putanje).toEqual(zreli.map((o) => o.path))
+    })
   })
 })

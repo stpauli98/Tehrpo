@@ -118,7 +118,8 @@ const updateSchema = z.object({
   datum_izvrsenja: optionalDate.refine((d) => !d || d <= todayIso(), NE_U_BUDUCNOSTI),
   zaduzeni: z.string().max(200).optional().or(z.literal("").transform(() => undefined)),
   napomena: z.string().max(2000).optional().or(z.literal("").transform(() => undefined)),
-  status: z.enum(["planirano", "zakazano", "izvrseno", "otkazano"]).optional(),
+  // `status` namjerno NIJE u patch šemi: zatvaranje ide kroz markIzvrseno (uz kapiju
+  // tg_zatvaranje_trazi_nalaz), otkazivanje kroz vlastitu putanju nize. Nijedan UI ga ne šalje.
 })
 
 export async function updateTermin(
@@ -140,7 +141,6 @@ export async function updateTermin(
   if (formData.has("datum_izvrsenja")) patch.datum_izvrsenja = fields.datum_izvrsenja ?? null
   if (formData.has("zaduzeni")) patch.zaduzeni = fields.zaduzeni ?? null
   if (formData.has("napomena")) patch.napomena = fields.napomena ?? null
-  if (fields.status) patch.status = fields.status
 
   const supabase = await createServerSupabaseClient()
 
@@ -165,10 +165,8 @@ export async function updateTermin(
     const { data: cur } = await supabase
       .from("termini").select("status, rok_dospijeca").eq("id", id).maybeSingle()
     rokDospijeca = cur?.rok_dospijeca ?? null
-    if (!fields.status) {
-      if (cur?.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
-      else if (cur?.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
-    }
+    if (cur?.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
+    else if (cur?.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
   }
 
   if (Object.keys(patch).length === 0) return { ok: true }

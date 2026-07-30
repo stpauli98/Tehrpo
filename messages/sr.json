@@ -184,6 +184,7 @@
       "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
       "nedostajeId": "Nedostaje id.",
       "brisanjeNijeDozvoljeno": "Vaše dozvole ne dopuštaju brisanje ovog zapisa.",
+      "zapisNePostoji": "Zapis više ne postoji — vjerovatno je već obrisan.",
       "imeObavezno": "Ime je obavezno",
       "lokacijaPostoji": "Lokacija sa tim nazivom već postoji kod ovog klijenta.",
       "kontaktPostoji": "Kontakt osoba sa tim imenom već postoji kod ovog klijenta.",

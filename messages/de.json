@@ -184,6 +184,7 @@
       "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
       "nedostajeId": "ID fehlt.",
       "brisanjeNijeDozvoljeno": "Ihre Berechtigungen erlauben das Löschen dieses Datensatzes nicht.",
+      "zapisNePostoji": "Der Datensatz existiert nicht mehr — er wurde vermutlich bereits gelöscht.",
       "imeObavezno": "Name ist erforderlich",
       "lokacijaPostoji": "Ein Standort mit diesem Namen existiert bereits für diesen Kunden.",
       "kontaktPostoji": "Eine Kontaktperson mit diesem Namen existiert bereits für diesen Kunden.",

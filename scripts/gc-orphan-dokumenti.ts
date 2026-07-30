@@ -9,9 +9,9 @@
  * Slomljeni redovi (red u bazi, fajl fali) se SAMO prijavljuju — nikad ne brišu.
  */
 import { createAdminSupabaseClient } from "../lib/supabase/admin"
-import { analizirajOrphan, type StorageObjekat } from "../lib/dokumenti-gc"
+import { analizirajOrphan } from "../lib/dokumenti-gc"
+import { listajFajlove, svePutanjeUBazi, DOKUMENTI_BUCKET } from "../lib/dokumenti/popis"
 
-const DOKUMENTI_BUCKET = "tehpro-dokumenti"
 const apply = process.argv.includes("--apply")
 const graceArg = process.argv.find((a) => a.startsWith("--grace-hours="))
 const graceHours = graceArg ? Number(graceArg.split("=")[1]) : 24
@@ -22,58 +22,18 @@ if (!Number.isFinite(graceHours) || graceHours <= 0) {
   process.exit(1)
 }
 
-type Sb = ReturnType<typeof createAdminSupabaseClient>
 const PAGE = 100
-
-// Rekurzivno izlistaj sve FAJLOVE ispod prefiksa. Folderi imaju id === null.
-async function listajFajlove(sb: Sb, prefix: string): Promise<StorageObjekat[]> {
-  const rezultat: StorageObjekat[] = []
-  let offset = 0
-  for (;;) {
-    const { data, error } = await sb.storage
-      .from(DOKUMENTI_BUCKET)
-      .list(prefix, { limit: PAGE, offset })
-    if (error) throw new Error(`list "${prefix}": ${error.message}`)
-    const stavke = data ?? []
-    for (const s of stavke) {
-      const puniPut = prefix ? `${prefix}/${s.name}` : s.name
-      if (s.id === null) {
-        const ugnijezdeni = await listajFajlove(sb, puniPut) // folder → rekurzija
-        rezultat.push(...ugnijezdeni)
-      } else {
-        rezultat.push({
-          path: puniPut,
-          updatedAt: s.updated_at ?? s.created_at ?? new Date().toISOString(),
-        })
-      }
-    }
-    if (stavke.length < PAGE) break
-    offset += PAGE
-  }
-  return rezultat
-}
 
 async function main() {
   const sb = createAdminSupabaseClient()
 
   // 1) svi fajlovi u bucketu (rekurzivno kroz klijenti/ ugovori/ termini/)
-  const bucketObjekti = await listajFajlove(sb, "")
+  //    2) sve putanje iz baze (paginirano + provjera potpunosti)
+  //    Oba popisa dolaze iz lib/dokumenti/popis.ts — istu kopiju koristi i noćni cron.
+  const bucketObjekti = await listajFajlove(sb)
 
-  // 2) sve putanje iz baze (paginirano — PostgREST cap = 1000 redova po upitu)
-  const dbPutanje: string[] = []
-  const DB_PAGE = 1000
-  let dbOffset = 0
-  for (;;) {
-    const { data: dok, error } = await sb
-      .from("dokumenti")
-      .select("storage_path")
-      .range(dbOffset, dbOffset + DB_PAGE - 1)
-    if (error) throw new Error(`select dokumenti: ${error.message}`)
-    const red = dok ?? []
-    for (const d of red) dbPutanje.push(d.storage_path as string)
-    if (red.length < DB_PAGE) break
-    dbOffset += DB_PAGE
-  }
+  const { putanje: dbPutanje, error: popisGreska } = await svePutanjeUBazi(sb)
+  if (popisGreska) throw new Error(`select dokumenti: ${popisGreska}`)
 
   // 3) analiza
   const r = analizirajOrphan({ bucketObjekti, dbPutanje, sada: Date.now(), graceMs })

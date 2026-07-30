@@ -184,6 +184,7 @@
       "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
       "nedostajeId": "Missing id.",
       "brisanjeNijeDozvoljeno": "Your permissions do not allow deleting this record.",
+      "zapisNePostoji": "The record no longer exists — it was probably already deleted.",
       "imeObavezno": "Name is required",
       "lokacijaPostoji": "A location with that name already exists for this client.",
       "kontaktPostoji": "A contact person with that name already exists for this client.",

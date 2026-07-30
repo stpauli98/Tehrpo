@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl"
 import { postaviDozvolu } from "@/app/(dashboard)/postavke/actions"
 import { toastRezultat } from "@/components/akcija-toast"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { efektivneDozvole, type Dozvole } from "@/lib/auth/dozvole"
 import type { Uloga } from "@/lib/auth/roles"
 
@@ -31,28 +32,33 @@ function JedanPrekidac({
   const [pending, start] = useTransition()
   const ime = t(labela)
   // Isti razlog kao u PrimaPodsjetnikeToggle: disabled checkbox ne prima fokus, pa
-  // objašnjenje mora i u pristupačno ime, ne samo u tooltip.
+  // objašnjenje mora i u pristupačno ime, ne samo u tooltip. Vizuelno ide kroz isti
+  // <Tooltip> koji PrimaPodsjetnikeToggle dobija na svom pozivnom mjestu u
+  // KorisniciTabela — dva prekidača u istom redu tabele treba da izgledaju isto.
   const opis = razlog ? `${ime} — ${razlog}` : ime
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      <Checkbox
-        checked={checked}
-        disabled={pending || onemoguceno}
-        data-testid={`dozvola-${kljuc}-${korisnikId}`}
-        aria-label={opis}
-        title={onemoguceno ? razlog : ime}
-        onCheckedChange={(next) => {
-          setChecked(next)
-          start(async () => {
-            const r = toastRezultat(await postaviDozvolu(korisnikId, kljuc, next), {
-              uspjeh: t("dozvolaSacuvana"),
-              greska: t("dozvolaGreska"),
+      <span className="group/tt relative inline-flex">
+        <Checkbox
+          checked={checked}
+          disabled={pending || onemoguceno}
+          data-testid={`dozvola-${kljuc}-${korisnikId}`}
+          aria-label={opis}
+          title={onemoguceno ? undefined : ime}
+          onCheckedChange={(next) => {
+            setChecked(next)
+            start(async () => {
+              const r = toastRezultat(await postaviDozvolu(korisnikId, kljuc, next), {
+                uspjeh: t("dozvolaSacuvana"),
+                greska: t("dozvolaGreska"),
+              })
+              if (!r.ok) setChecked(!next) // brana odbila → vrati na stvarno stanje
             })
-            if (!r.ok) setChecked(!next) // brana odbila → vrati na stvarno stanje
-          })
-        }}
-      />
+          }}
+        />
+        {onemoguceno && razlog && <Tooltip>{razlog}</Tooltip>}
+      </span>
       <span>{ime}</span>
     </label>
   )

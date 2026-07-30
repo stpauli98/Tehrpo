@@ -53,7 +53,9 @@ describe("reminderHtml", () => {
     const html = reminderHtml(baza)
     expect(html).toContain("AS &amp; co")
     expect(html).toContain("Hidranti")
-    expect(html).toContain("15.09.2026.")
+    expect(html).toContain("15.09.2026")
+    // Standard je dd.MM.yyyy — bez tačke iza godine.
+    expect(html).not.toMatch(/\d{2}\.\d{2}\.\d{4}\./)
   })
   it("izostavlja lokaciju kad je null", () => {
     expect(reminderHtml(baza)).not.toContain("Lokacija")

@@ -8,8 +8,8 @@
  * `next-intl/server` i server akciju, pa mape žive ovdje — bez ijedne zavisnosti
  * osim generisanih tipova.
  *
- * Granice sarajevskog dana za `od`/`do` filtere (S7) NISU ovdje — isporučio ih je
- * Talas 0 u `lib/date.ts` (`utcGranicaSarajevskogDana`, `dodajDan`); `page.tsx` ih
+ * Granice dana (APP_TIME_ZONE, Europe/Belgrade) za `od`/`do` filtere (S7) NISU ovdje — isporučio ih je
+ * Talas 0 u `lib/date.ts` (`utcGranicaDana`, `dodajDan`); `page.tsx` ih
  * konzumira odatle.
  */
 
@@ -77,7 +77,7 @@ export type MejlRed = {
 
 /**
  * Type-guard za datumske URL parametre (`od`/`do`) prije slanja u
- * `utcGranicaSarajevskogDana`: helper na nevaljanom ulazu baca `RangeError`
+ * `utcGranicaDana`: helper na nevaljanom ulazu baca `RangeError`
  * (Intl nad Invalid Date), što bi cijelu rutu srušilo u `error.tsx` umjesto da
  * greška ostane u stranici (S1). Traži strogi `yyyy-MM-dd` i odbacuje nepostojeće
  * datume ("2026-13-45" bi se inače tiho prelio u februar 2027).

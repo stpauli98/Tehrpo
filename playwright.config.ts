@@ -21,6 +21,9 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: `http://localhost:${E2E_PORT}`,
+    // Browser kontekst deterministički u standardnoj zoni aplikacije (APP_TIME_ZONE
+    // u lib/date.ts) — testovi ne smiju zavisiti od zone mašine na kojoj se vrte.
+    timezoneId: "Europe/Belgrade",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

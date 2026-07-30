@@ -69,3 +69,14 @@ export async function getTerminDetail(id: string) {
   if (!r.ok) await baci(r)
   return r.json()
 }
+
+/** Skupovi za "Novi termin" formu (kalendar "+"). Isti S1 ugovor kao ostali fetcheri. */
+export async function getTerminiFormPodaci() {
+  const r = await fetch(`/api/plan-aktivnosti/form-podaci`)
+  if (!r.ok) await baci(r)
+  return r.json() as Promise<{
+    klijenti: { id: string; naziv: string }[]
+    vrste: { id: string; naziv: string }[]
+    lokacije: { id: string; naziv: string; klijent_id: string }[]
+  }>
+}

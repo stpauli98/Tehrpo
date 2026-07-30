@@ -7,14 +7,15 @@ import {
   deleteTerminiByKlijent,
   deleteKlijentByNaziv,
 } from "./db"
+import { danasBg, pomjerenDanasBg } from "./fixtures"
 
 test.describe("Kasni + zakazano — oznaka zakazivanja uz Kasni badge", () => {
   test("zakazan termin sa prošlim rokom prikazuje Kasni i 'zak.' oznaku u listi", async ({ page }) => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     const vrsta = await firstVrstaSaIntervalom()
-    const juce = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
-    const danas = new Date().toISOString().slice(0, 10)
+    const juce = pomjerenDanasBg(-1)
+    const danas = danasBg()
     try {
       const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta.id, rok: juce })
       await zakaziTermin(tid, danas)
@@ -38,8 +39,8 @@ test.describe("Validacija datuma izvršenja", () => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     const vrsta = await firstVrstaSaIntervalom()
-    const juce = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
-    const sutra = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
+    const juce = pomjerenDanasBg(-1)
+    const sutra = pomjerenDanasBg(1)
     try {
       const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta.id, rok: juce })
 
@@ -48,7 +49,7 @@ test.describe("Validacija datuma izvršenja", () => {
 
       // Klijentska pre-validacija (S2): polje nosi `max` = danas, pa pregledač sam
       // odbija budući datum i forma se uopšte ne šalje.
-      const danas = new Date().toISOString().slice(0, 10)
+      const danas = danasBg()
       await expect(page.getByTestId("mark-datum")).toHaveAttribute("max", danas)
 
       // Server ostaje izvor istine — zaobiđi native validaciju forme (`noValidate`,
@@ -76,10 +77,9 @@ test.describe("Zakazani datum — pozicioniranje i upozorenje", () => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     const vrsta = await firstVrstaSaIntervalom()
-    // rok 13., zakazan 20. istog (budućeg) mjeseca — oba u istom prikazu mjeseca
-    const now = new Date()
-    const g = now.getUTCFullYear()
-    const m = String(now.getUTCMonth() + 1).padStart(2, "0")
+    // rok 13., zakazan 20. istog (budućeg) mjeseca — oba u istom prikazu mjeseca;
+    // tekući mjesec po Europe/Belgrade (APP_TIME_ZONE)
+    const [g, m] = danasBg().split("-") as [string, string]
     const rok = `${g}-${m}-13`
     const zakazan = `${g}-${m}-20`
     try {
@@ -104,8 +104,8 @@ test.describe("Zakazani datum — pozicioniranje i upozorenje", () => {
     const naziv = "E2E-TMP " + Date.now()
     const kid = await insertKlijent(naziv)
     const vrsta = await firstVrstaSaIntervalom()
-    const juce = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
-    const sutra = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
+    const juce = pomjerenDanasBg(-1)
+    const sutra = pomjerenDanasBg(1)
     try {
       const tid = await insertTermin({ klijentId: kid, vrstaId: vrsta.id, rok: juce })
 

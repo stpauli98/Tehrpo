@@ -23,7 +23,7 @@ describe("podsjetniciAktivni", () => {
   })
 })
 
-describe("lokalniSatIDatum (Europe/Vienna)", () => {
+describe("lokalniSatIDatum (Europe/Belgrade)", () => {
   it("ljeti CEST: 04:00Z → sat 6, datum 2026-07-08", () => {
     expect(lokalniSatIDatum(LJETO_04Z)).toEqual({ sat: 6, datum: "2026-07-08" })
   })

@@ -56,9 +56,13 @@ export function Sidebar({ mejlGreske = 0 }: { mejlGreske?: number }) {
 
   const collapsed = width < COLLAPSE_THRESHOLD
 
+  // Admin-only stavke: Asistent i Zapisnici (yoink zahtjev 2026-07-29) + Aktivnost.
+  // null uloga (profil nedostaje) = najmanja privilegija → također sakriveno.
   let navItems: (typeof NAV_ITEMS)[number][] = [...NAV_ITEMS]
-  if (uloga === "pregled") navItems = navItems.filter((i) => i.href !== href("/asistent"))
-  if (uloga !== "admin") navItems = navItems.filter((i) => i.href !== href("/aktivnost"))
+  if (uloga !== "admin") {
+    const adminOnly: string[] = [href("/asistent"), href("/zapisnici"), href("/aktivnost")]
+    navItems = navItems.filter((i) => !adminOnly.includes(i.href))
+  }
 
   // Učitaj zapamćenu širinu nakon mounta. Početni render (server i klijent) koristi
   // DEFAULT_WIDTH pa nema hydration mismatch-a; perzistirana širina se primjenjuje tek
@@ -181,7 +185,11 @@ export function Sidebar({ mejlGreske = 0 }: { mejlGreske?: number }) {
       style={{ width }}
       onTransitionEnd={() => setAnimating(false)}
       className={cn(
-        "relative my-3 ml-3 shrink-0",
+        // z-20: nav mora imati SVOJ stacking context, inače njegov absolute
+        // tooltip (z-50) i dalje završi ISPOD <main> sadržaja — <main> je kasniji
+        // sibling u istom (roditeljskom) stacking contextu pa ga po default
+        // DOM redosljedu crta iznad, bez obzira na z-index unutar nav-a.
+        "relative z-20 my-3 ml-3 shrink-0",
         animating && "transition-[width] duration-300 ease-out motion-reduce:transition-none",
       )}
     >

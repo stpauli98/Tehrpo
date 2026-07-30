@@ -27,7 +27,10 @@
     "greskaNeocekivana": "An unexpected error occurred.",
     "greskaUcitavanja": "Failed to load data.",
     "samoAdministrator": "Administrator only.",
-    "pokusajPonovo": "Try again"
+    "pokusajPonovo": "Try again",
+    "zaduzeniTi": "(you)",
+    "zaduzeniPrikaziListu": "Show suggestions",
+    "zaduzeniSlobodanUnos": "No matches — the typed name is kept"
   },
   "shell": {
     "nav": {
@@ -552,7 +555,9 @@
       "ariaMjesec": "Month",
       "ariaNacin": "Execution method",
       "ariaGodina": "Year",
-      "ariaPretraga": "Search companies"
+      "ariaPretraga": "Search companies",
+      "ponisti": "Reset filters",
+      "ariaStatus": "Status"
     },
     "sheet": {
       "naslovFallback": "Appointment",
@@ -600,7 +605,9 @@
       "poljeZaduzeni": "Assigned to",
       "placeholderZaduzeni": "e.g. Marija K.",
       "kreiram": "Creating…",
-      "kreirajTermin": "Create appointment"
+      "kreirajTermin": "Create appointment",
+      "zaduzeniHintAdmin": "You can assign any worker — the company is granted to them automatically.",
+      "zaduzeniHintRadnik": "You can assign yourself or a colleague who already has access to this company."
     },
     "actions": {
       "datumNeispravan": "Invalid date",
@@ -611,7 +618,8 @@
       "rokObavezan": "Due date is required",
       "lokacijaNePripada": "The location does not belong to the selected client.",
       "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
-      "datumObavezan": "Date is required"
+      "datumObavezan": "Date is required",
+      "zaduzeniNemaPristup": "This person does not have access to the selected company. Company access is assigned by an admin in Settings → Users."
     }
   },
   "status": {
@@ -642,6 +650,7 @@
     "naslov": "Activity plan",
     "izvoz": {
       "preuzmi": "Download",
+      "preuzmiOpis": "Export activity plan to PDF or Excel",
       "naslovModala": "Download report",
       "format": "Format",
       "formatPdf": "PDF",
@@ -671,8 +680,11 @@
     },
     "viewSwitcher": {
       "kalendar": "Calendar",
+      "kalendarOpis": "View appointments by day of the month",
       "lista": "List",
-      "matrica": "Matrix"
+      "listaOpis": "View appointments as a filterable list",
+      "matrica": "Matrix",
+      "matricaOpis": "View appointments in a client × type matrix"
     },
     "nav": {
       "prethodniMjesec": "Previous month",
@@ -697,7 +709,8 @@
     },
     "monthCalendar": {
       "danAriaLabel": "Day {broj}",
-      "jos": "{count} more"
+      "jos": "{count} more",
+      "dodajTermin": "Add appointment for {datum}"
     },
     "kalendar": {
       "nemaTerminaZaDan": "No appointments for this day.",
@@ -1002,7 +1015,7 @@
     "vrijemeSlanja": {
       "naslov": "Send time",
       "opis": "Reminders are sent once a day, at one of two slots.",
-      "zona": "local time (Vienna)",
+      "zona": "local time (Belgrade)",
       "ujutro": "Morning (around 10–11)",
       "poslijepodne": "Afternoon (around 14–15)"
     },

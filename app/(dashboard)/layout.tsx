@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   const { data: mejlGreske } = await supabase.rpc("get_mejl_greske_broj")
   return (
     <DashboardQueryProvider>
-      <KorisnikProvider uloga={korisnik?.uloga ?? null}>
+      <KorisnikProvider uloga={korisnik?.uloga ?? null} ime={korisnik?.ime ?? null}>
         <DesktopOnlyGate />
         <AktivnostTracker />
         <div className="hidden lg:flex flex-col h-screen">

@@ -46,10 +46,13 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
     await withTx(async () => {
       const uid = await createUser("operater", "ITEST Operater")
       await kaoKorisnik(uid)
-      const r = await db.query(
-        "insert into klijenti (naziv) values ($1) returning kreirao_id",
-        [`ITEST firma ${crypto.randomUUID()}`],
-      )
+      const naziv = `ITEST firma ${crypto.randomUUID()}`
+      // RETURNING se evaluira pod SELECT politikom prije nego što tg_klijent_auto_dodjela
+      // kreira korisnik_klijent red (ima_pristup_klijentu bi vratio false). Umjesto toga:
+      // insert kao authenticated, reset role, pa select nakon AFTER triggera.
+      await db.query("insert into klijenti (naziv) values ($1)", [naziv])
+      await db.query("reset role")
+      const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
       expect(r.rows[0].kreirao_id).toBe(uid)
     })
   })
@@ -69,10 +72,13 @@ describe.skipIf(!URL)("kreirao_id (integracija, lokalni DB)", () => {
       const autor = await createUser("operater", "ITEST Autor")
       const drugi = await createUser("operater", "ITEST Drugi")
       await kaoKorisnik(drugi)
-      const r = await db.query(
-        "insert into klijenti (naziv, kreirao_id) values ($1,$2) returning kreirao_id",
-        [`ITEST firma ${crypto.randomUUID()}`, autor],
-      )
+      const naziv = `ITEST firma ${crypto.randomUUID()}`
+      // RETURNING se evaluira pod SELECT politikom prije nego što tg_klijent_auto_dodjela
+      // kreira korisnik_klijent red (ima_pristup_klijentu bi vratio false). Umjesto toga:
+      // insert kao authenticated, reset role, pa select nakon AFTER triggera.
+      await db.query("insert into klijenti (naziv, kreirao_id) values ($1,$2)", [naziv, autor])
+      await db.query("reset role")
+      const r = await db.query("select kreirao_id from klijenti where naziv = $1", [naziv])
       expect(r.rows[0].kreirao_id).toBe(autor)
     })
   })

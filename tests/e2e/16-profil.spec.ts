@@ -85,7 +85,17 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       await page.getByRole("option", { name: "E2E Lokacija", exact: true }).click()
       await page.getByTestId("profil-zadnji-datum").fill("2026-02-01")
       await page.getByTestId("profil-submit").click()
-      await expect(page.getByText("Ova provjera već postoji u profilu.")).toBeVisible()
+      // Ista poruka se prikazuje na DVA mjesta (yoink batch: useAkcijaToast toastuje
+      // res.message povrh postojeće inline greške) — nescopovani getByText bi bio
+      // strict-mode violation, zato svaki kanal asertujemo zasebno.
+      // 1) inline greška u formi (<p role="alert"> unutar dodaj-provjeru-form)
+      await expect(
+        page.getByTestId("dodaj-provjeru-form").getByText("Ova provjera već postoji u profilu."),
+      ).toBeVisible()
+      // 2) toast (sonner) — dokazuje da je i toast kanal stvarno okinut
+      await expect(
+        page.locator("[data-sonner-toast]").getByText("Ova provjera već postoji u profilu."),
+      ).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)

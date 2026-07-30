@@ -60,7 +60,12 @@ test.describe("PP-1 — ID karta (klijent/ugovor/kontakt/dokument)", () => {
     await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
     await page.getByTestId("tab-dokumenti").click()
     await expect(page.getByTestId("klijent-dok-upload")).toBeVisible()
-    await page.getByTestId("klijent-dok-tip").selectOption("ugovor")
+    // Base UI Select: testid je na SelectTrigger (button), ne na native <select> —
+    // otvori klikom i izaberi opciju preko role=option (obrazac iz 08-dokumenti/23-podsjetnici-v2).
+    const tipTrigger = page.getByTestId("klijent-dok-tip")
+    await tipTrigger.click()
+    await page.getByRole("option", { name: "Ugovor", exact: true }).click()
+    await expect(tipTrigger).toContainText("Ugovor")
     await page.getByTestId("klijent-dok-file").setInputFiles({
       name: "ugovor-e2e.pdf",
       mimeType: "application/pdf",

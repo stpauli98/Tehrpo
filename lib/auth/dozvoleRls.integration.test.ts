@@ -369,4 +369,204 @@ describe.skipIf(!URL)("dozvole brisanja (integracija, lokalni DB)", () => {
       })
     })
   })
+
+  // ── lokacije / ugovori / kontakt_osobe / klijent_provjere DELETE ───────────
+  // Sve četiri tabele gate-uju DELETE preko istog smije_brisati_klijente() koji
+  // koristi i klijenti_del (vidi "smije_brisati_klijente upravlja brisanjem klijenta" gore),
+  // ali nijedna od njih nije imala vlastiti test — to je propust koji je pustio da
+  // proširenje dokumenti_del prođe neprimijećeno dok ga nije uhvatila cjelokupna revizija grane.
+  async function novaLokacija(klijentId: string): Promise<string> {
+    const r = await db.query(
+      "insert into lokacije (klijent_id, naziv) values ($1,$2) returning id",
+      [klijentId, `ITEST lokacija ${crypto.randomUUID()}`],
+    )
+    return r.rows[0].id as string
+  }
+  async function obrisiLokaciju(id: string): Promise<number> {
+    const r = await db.query("delete from lokacije where id = $1", [id])
+    return r.rowCount ?? 0
+  }
+
+  async function noviUgovor(klijentId: string): Promise<string> {
+    const r = await db.query("insert into ugovori (klijent_id) values ($1) returning id", [klijentId])
+    return r.rows[0].id as string
+  }
+  async function obrisiUgovor(id: string): Promise<number> {
+    const r = await db.query("delete from ugovori where id = $1", [id])
+    return r.rowCount ?? 0
+  }
+
+  async function novaKontaktOsoba(klijentId: string): Promise<string> {
+    const r = await db.query(
+      "insert into kontakt_osobe (klijent_id, ime) values ($1,$2) returning id",
+      [klijentId, `ITEST Kontakt ${crypto.randomUUID()}`],
+    )
+    return r.rows[0].id as string
+  }
+  async function obrisiKontaktOsobu(id: string): Promise<number> {
+    const r = await db.query("delete from kontakt_osobe where id = $1", [id])
+    return r.rowCount ?? 0
+  }
+
+  // klijent_provjere.lokacija_id je NOT NULL bez defaulta — nije bilo u brief-ovoj tabeli
+  // obaveznih kolona (verifikovano protiv \d klijent_provjere na lokalnom stack-u), pa svaka
+  // provjera dobija vlastitu lokaciju kao fixture.
+  async function novaProvjera(klijentId: string, lokacijaId: string): Promise<string> {
+    const r = await db.query(
+      "insert into klijent_provjere (klijent_id, vrsta_provjere_id, lokacija_id) values ($1,$2,$3) returning id",
+      [klijentId, await novaVrsta(), lokacijaId],
+    )
+    return r.rows[0].id as string
+  }
+  async function obrisiProvjeru(id: string): Promise<number> {
+    const r = await db.query("delete from klijent_provjere where id = $1", [id])
+    return r.rowCount ?? 0
+  }
+
+  describe("brisanje lokacija prati smije_brisati_klijente, ne probija dodjelu", () => {
+    it("operater bez smije_brisati_klijente ne briše lokaciju na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const bez = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(bez)
+        const lokId = await novaLokacija(klijentId)
+        await dodijeli(bez, klijentId)
+        await kaoKorisnik(bez)
+        expect(await obrisiLokaciju(lokId)).toBe(0)
+      })
+    })
+
+    it("operater sa smije_brisati_klijente briše lokaciju na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const { klijentId } = await firmaSaTerminom(sa)
+        const lokId = await novaLokacija(klijentId)
+        await dodijeli(sa, klijentId)
+        await kaoKorisnik(sa)
+        expect(await obrisiLokaciju(lokId)).toBe(1)
+      })
+    })
+
+    it("smije_brisati_klijente ne probija dodjelu — nedodijeljena firma ostaje nedodirljiva (lokacije)", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const drugi = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(drugi)
+        const lokId = await novaLokacija(klijentId)
+        // NEMA dodjele za `sa`
+        await kaoKorisnik(sa)
+        expect(await obrisiLokaciju(lokId)).toBe(0)
+      })
+    })
+  })
+
+  describe("brisanje ugovora prati smije_brisati_klijente, ne probija dodjelu", () => {
+    it("operater bez smije_brisati_klijente ne briše ugovor na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const bez = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(bez)
+        const ugId = await noviUgovor(klijentId)
+        await dodijeli(bez, klijentId)
+        await kaoKorisnik(bez)
+        expect(await obrisiUgovor(ugId)).toBe(0)
+      })
+    })
+
+    it("operater sa smije_brisati_klijente briše ugovor na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const { klijentId } = await firmaSaTerminom(sa)
+        const ugId = await noviUgovor(klijentId)
+        await dodijeli(sa, klijentId)
+        await kaoKorisnik(sa)
+        expect(await obrisiUgovor(ugId)).toBe(1)
+      })
+    })
+
+    it("smije_brisati_klijente ne probija dodjelu — nedodijeljena firma ostaje nedodirljiva (ugovori)", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const drugi = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(drugi)
+        const ugId = await noviUgovor(klijentId)
+        // NEMA dodjele za `sa`
+        await kaoKorisnik(sa)
+        expect(await obrisiUgovor(ugId)).toBe(0)
+      })
+    })
+  })
+
+  describe("brisanje kontakt osoba prati smije_brisati_klijente, ne probija dodjelu", () => {
+    it("operater bez smije_brisati_klijente ne briše kontakt osobu na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const bez = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(bez)
+        const kontaktId = await novaKontaktOsoba(klijentId)
+        await dodijeli(bez, klijentId)
+        await kaoKorisnik(bez)
+        expect(await obrisiKontaktOsobu(kontaktId)).toBe(0)
+      })
+    })
+
+    it("operater sa smije_brisati_klijente briše kontakt osobu na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const { klijentId } = await firmaSaTerminom(sa)
+        const kontaktId = await novaKontaktOsoba(klijentId)
+        await dodijeli(sa, klijentId)
+        await kaoKorisnik(sa)
+        expect(await obrisiKontaktOsobu(kontaktId)).toBe(1)
+      })
+    })
+
+    it("smije_brisati_klijente ne probija dodjelu — nedodijeljena firma ostaje nedodirljiva (kontakt osobe)", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const drugi = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(drugi)
+        const kontaktId = await novaKontaktOsoba(klijentId)
+        // NEMA dodjele za `sa`
+        await kaoKorisnik(sa)
+        expect(await obrisiKontaktOsobu(kontaktId)).toBe(0)
+      })
+    })
+  })
+
+  describe("brisanje klijent_provjere prati smije_brisati_klijente, ne probija dodjelu", () => {
+    it("operater bez smije_brisati_klijente ne briše profil provjere na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const bez = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(bez)
+        const lokId = await novaLokacija(klijentId)
+        const provjeraId = await novaProvjera(klijentId, lokId)
+        await dodijeli(bez, klijentId)
+        await kaoKorisnik(bez)
+        expect(await obrisiProvjeru(provjeraId)).toBe(0)
+      })
+    })
+
+    it("operater sa smije_brisati_klijente briše profil provjere na dodijeljenoj firmi", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const { klijentId } = await firmaSaTerminom(sa)
+        const lokId = await novaLokacija(klijentId)
+        const provjeraId = await novaProvjera(klijentId, lokId)
+        await dodijeli(sa, klijentId)
+        await kaoKorisnik(sa)
+        expect(await obrisiProvjeru(provjeraId)).toBe(1)
+      })
+    })
+
+    it("smije_brisati_klijente ne probija dodjelu — nedodijeljena firma ostaje nedodirljiva (klijent_provjere)", async () => {
+      await withTx(async () => {
+        const sa = await createUser("operater", { klijenti: true })
+        const drugi = await createUser("operater")
+        const { klijentId } = await firmaSaTerminom(drugi)
+        const lokId = await novaLokacija(klijentId)
+        const provjeraId = await novaProvjera(klijentId, lokId)
+        // NEMA dodjele za `sa`
+        await kaoKorisnik(sa)
+        expect(await obrisiProvjeru(provjeraId)).toBe(0)
+      })
+    })
+  })
 })

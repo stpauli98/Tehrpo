@@ -774,7 +774,8 @@ git commit -m "feat(ugovori): na neodređeno + dropdown važenja sa custom broje
 **Kontekst iz DEMO baze (izmjereno 30.07.2026):** od 15 lokacija, **14 ima popunjen ravni kontakt**, i **nijedna od njih nema vezan `kontakt_osobe` red**. Znači migracija pravi 14 novih redova i nema kolizija. Svaki red sa bilo kojim kontakt podatkom ima i `kontakt_osoba` popunjen, ali `ime` je NOT NULL pa fallback ipak ide.
 
 **Files:**
-- Create: `supabase/migrations/20260730121000_lokacije_kontakti_u_kontakt_osobe.sql`
+- Create: `supabase/migrations/20260730121000_lokacije_kontakti_u_kontakt_osobe.sql` (prebacivanje)
+- Create: `supabase/migrations/20260730122000_lokacije_drop_kontakt_kolone.sql` (drop, TEK poslije provjere)
 - Modify: `db/types.ts` (auto-generisan)
 - Modify: `components/domain/LokacijaSheet.tsx:64-72`
 - Modify: `components/domain/LokacijeTab.tsx:42-95`
@@ -856,19 +857,19 @@ where (
       and lower(btrim(ko.ime)) = lower(btrim(coalesce(nullif(btrim(l.kontakt_osoba), ''), l.naziv)))
   );
 
--- 2) Tek sada ukloni kolone.
-alter table lokacije drop column if exists kontakt_osoba;
-alter table lokacije drop column if exists kontakt_email;
-alter table lokacije drop column if exists kontakt_telefon;
+-- Drop kolona NIJE ovdje — ide zasebnom migracijom TEK poslije provjere da su
+-- svi podaci stvarno prebačeni. Vidi 20260730122000_lokacije_drop_kontakt_kolone.sql.
 ```
 
-- [ ] **Step 3: Primijeni na DEMO**
+**Zašto dvije migracije a ne jedna:** verifikacija mora stajati IZMEĐU prebacivanja i brisanja. Da su u istom fajlu, provjera „je li prebačeno 14 redova" izvršila bi se tek nakon što su kolone već nepovratno obrisane — ako insert zakaže, podataka više nema odakle vratiti.
+
+- [ ] **Step 3: Primijeni SAMO migraciju prebacivanja na DEMO**
 
 ```bash
 pnpm db:apply-cloud --demo supabase/migrations/20260730121000_lokacije_kontakti_u_kontakt_osobe.sql
 ```
 
-Očekivano: potvrda DEMO ref-a i izvršenje bez greške.
+Očekivano: potvrda DEMO ref-a i izvršenje bez greške. Kolone u ovom trenutku i dalje postoje — to je namjerno.
 
 - [ ] **Step 4: Provjeri rezultat**
 
@@ -879,19 +880,28 @@ const url = process.env.DATABASE_URL_DEMO
 if (!url || !url.includes("mtwwotmwrasozmcgqwhc")) throw new Error("Nije DEMO ref")
 async function main() {
   const c = new Client({ connectionString: url }); await c.connect()
-  const { rows: kol } = await c.query(`
-    select column_name from information_schema.columns
-    where table_name='lokacije' and column_name in
-      ('kontakt_osoba','kontakt_email','kontakt_telefon')`)
-  console.log("Preostale ravne kolone (treba biti prazno):"); console.table(kol)
+  // Svaka lokacija koja JOŠ ima ravni kontakt mora sada imati i vezani kontakt_osobe red.
+  const { rows: nepokriveni } = await c.query(`
+    select l.id, l.naziv, l.kontakt_osoba
+    from lokacije l
+    where (coalesce(btrim(l.kontakt_osoba),'')<>''
+        or coalesce(btrim(l.kontakt_email),'')<>''
+        or coalesce(btrim(l.kontakt_telefon),'')<>'')
+      and not exists (select 1 from kontakt_osobe ko where ko.lokacija_id = l.id)`)
+  console.log("NEPREBAČENE lokacije (MORA biti prazno prije drop-a):")
+  console.table(nepokriveni)
   const { rows: ko } = await c.query(`
-    select count(*) as vezanih_za_lokaciju from kontakt_osobe where lokacija_id is not null`)
+    select count(*)::int as vezanih_za_lokaciju from kontakt_osobe where lokacija_id is not null`)
   console.table(ko)
   const { rows: uzorak } = await c.query(`
     select ko.ime, ko.email, ko.telefon, l.naziv as lokacija, ko.podsjetnik_primalac
     from kontakt_osobe ko join lokacije l on l.id = ko.lokacija_id
     order by l.naziv limit 20`)
   console.table(uzorak)
+  if (nepokriveni.length > 0) {
+    console.error(`STOP: ${nepokriveni.length} lokacija nije prebačeno — NE pokrećI drop migraciju.`)
+    process.exitCode = 1
+  }
   await c.end()
 }
 main()
@@ -900,11 +910,31 @@ pnpm exec tsx --env-file=.env.development.local scripts/_tmp-poslije.ts
 rm -f scripts/_tmp-poslije.ts
 ```
 
-Očekivano: prazan spisak kolona; `vezanih_za_lokaciju` ≥ 14; uzorak pokazuje imena poput „Sabine Wagner", „Anja Löffler", „Goran Jović" sa `podsjetnik_primalac = false`.
+Očekivano: **prazan spisak nepokrivenih lokacija**; `vezanih_za_lokaciju` ≥ 14; uzorak pokazuje imena poput „Sabine Wagner", „Anja Löffler", „Goran Jović" sa `podsjetnik_primalac = false`.
 
-**Ako `vezanih_za_lokaciju` nije barem 14 — stani i ne nastavljaj.** Podaci su izgubljeni; vrati se na Step 2 i popravi upit prije nego se ide dalje.
+**Ako spisak nepokrivenih NIJE prazan — stani i ne pokreći drop migraciju.** Kolone su još tu i podaci nisu izgubljeni; vrati se na Step 2, popravi upit, ponovo primijeni (migracija je idempotentna) i tek onda nastavi.
 
-- [ ] **Step 5: Regeneriši tipove**
+- [ ] **Step 5: Napiši i primijeni drop migraciju**
+
+Tek kad je Step 4 čist, kreiraj `supabase/migrations/20260730122000_lokacije_drop_kontakt_kolone.sql`:
+
+```sql
+-- supabase/migrations/20260730122000_lokacije_drop_kontakt_kolone.sql
+-- Yoink 2026-07-30, stavke 8+9, drugi korak: uklanjanje ravnih kontakt kolona.
+--
+-- Odvojeno od 20260730121000 namjerno: prebacivanje podataka mora biti
+-- provjereno PRIJE nego što se izvor nepovratno obriše.
+
+alter table lokacije drop column if exists kontakt_osoba;
+alter table lokacije drop column if exists kontakt_email;
+alter table lokacije drop column if exists kontakt_telefon;
+```
+
+```bash
+pnpm db:apply-cloud --demo supabase/migrations/20260730122000_lokacije_drop_kontakt_kolone.sql
+```
+
+- [ ] **Step 6: Regeneriši tipove**
 
 ```bash
 pnpm db:types
@@ -912,7 +942,7 @@ pnpm db:types
 
 Očekivano: `db/types.ts` više nema `kontakt_osoba`/`kontakt_email`/`kontakt_telefon` u `lokacije`. `pnpm typecheck` sada puca na mjestima koja ih čitaju — to je očekivano i zatvara se u sljedećim koracima. **Ne commit-uj ovdje** — commit ide tek na kraju taska, kad kod i shema opet budu u skladu.
 
-- [ ] **Step 6: Potvrdi da typecheck pada i gdje**
+- [ ] **Step 7: Potvrdi da typecheck pada i gdje**
 
 ```bash
 pnpm typecheck 2>&1 | grep -E "kontakt_osoba|kontakt_email|kontakt_telefon" | head -20
@@ -920,7 +950,7 @@ pnpm typecheck 2>&1 | grep -E "kontakt_osoba|kontakt_email|kontakt_telefon" | he
 
 Očekivano: greške u `LokacijaSheet.tsx`, `LokacijeTab.tsx`, `klijenti/[id]/page.tsx`, `klijenti/actions.ts`. To je tvoja radna lista.
 
-- [ ] **Step 7: Skrati FIELDS u LokacijaSheet**
+- [ ] **Step 8: Skrati FIELDS u LokacijaSheet**
 
 `components/domain/LokacijaSheet.tsx`, linije 64-72 — zamijeni cijeli `FIELDS` niz:
 
@@ -935,7 +965,7 @@ Očekivano: greške u `LokacijaSheet.tsx`, `LokacijeTab.tsx`, `klijenti/[id]/pag
   ]
 ```
 
-- [ ] **Step 8: Očisti Zod schemu i upise u actions.ts**
+- [ ] **Step 9: Očisti Zod schemu i upise u actions.ts**
 
 `app/(dashboard)/klijenti/actions.ts`:
 
@@ -963,7 +993,7 @@ U `updateLokacija`, obriši tri `if` linije:
   if (formData.has("kontakt_telefon")) patch.kontakt_telefon = f.kontakt_telefon ?? null
 ```
 
-- [ ] **Step 9: Pojednostavi kolonu Kontakt u LokacijeTab**
+- [ ] **Step 10: Pojednostavi kolonu Kontakt u LokacijeTab**
 
 `components/domain/LokacijeTab.tsx`, zamijeni cijelu `<td>` za kontakt (linije 67-95) ovim:
 
@@ -991,7 +1021,7 @@ U `updateLokacija`, obriši tri `if` linije:
 
 > Highlight sada cilja `k.id` (kontakt), ne `l.id` (lokaciju) — u tabu Kontakti se highlightuju kontakti.
 
-- [ ] **Step 10: Ukloni sekciju „kontakti po lokacijama" sa stranice klijenta**
+- [ ] **Step 11: Ukloni sekciju „kontakti po lokacijama" sa stranice klijenta**
 
 `app/(dashboard)/klijenti/[id]/page.tsx` — obriši cijeli blok od linije 378 (`{lokacije.some((l) => l.kontakt_osoba || ...)`) do zatvarajuće `)}` na liniji 420. Ta sekcija je postojala samo da prikaže ravne kontakte; sada su svi kontakti u `KontaktiKlijentList` iznad nje.
 
@@ -999,7 +1029,7 @@ Poslije brisanja provjeri da su `MapPin` i `InfoIkona` importi još u upotrebi n
 
 Obriši i sada neiskorištene i18n ključeve `klijenti.detalj.kontaktiTab.naslovLokacije`, `.infoLokacije`, `.urediULokacijama` iz **sva tri** kataloga.
 
-- [ ] **Step 11: Popravi E2E koji puni obrisana polja**
+- [ ] **Step 12: Popravi E2E koji puni obrisana polja**
 
 `tests/e2e/04-klijenti.spec.ts` — nađi dvije linije koje pune `lokacija-kontakt_osoba`:
 
@@ -1017,7 +1047,7 @@ await page.getByTestId("lokacija-kontakt-ime").fill("Ana A.")
 
 Ako test poslije toga asertira da se „Ana A." vidi u tabeli lokacija, ta asercija i dalje važi — `vezani()` renderuje isto ime.
 
-- [ ] **Step 12: Typecheck mora proći**
+- [ ] **Step 13: Typecheck mora proći**
 
 ```bash
 pnpm typecheck
@@ -1025,7 +1055,7 @@ pnpm typecheck
 
 Očekivano: 0 grešaka. Ako još ima referenci na obrisane kolone, ponovi Step 1 da ih nađeš.
 
-- [ ] **Step 13: Pokreni E2E**
+- [ ] **Step 14: Pokreni E2E**
 
 ```bash
 pnpm exec playwright test tests/e2e/04-klijenti.spec.ts --project=chromium
@@ -1033,7 +1063,7 @@ pnpm exec playwright test tests/e2e/04-klijenti.spec.ts --project=chromium
 
 Očekivano: PASS.
 
-- [ ] **Step 14: Lint, typecheck i commit**
+- [ ] **Step 15: Lint, typecheck i commit**
 
 Migracija i čišćenje koda idu u **jedan** commit — shema bez koda koji je prati ne prolazi provjere.
 

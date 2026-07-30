@@ -1745,7 +1745,6 @@ Dodaj u `tests/e2e/38-yoink-batch.spec.ts`:
 ```ts
 import { getPostavkeV2, setPostavkeV2 } from "./db"
 ```
-```
 
 - [ ] **Step 6: Pokreni test**
 

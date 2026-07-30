@@ -157,11 +157,8 @@ const lokacijaFields = {
   grad: optionalText(120),
   regija: optionalText(120),
   adresa: optionalText(300),
-  kontakt_osoba: optionalText(200),
-  kontakt_email: optionalEmail(200),
-  kontakt_telefon: optionalText(60),
-  // Izbor kontakta za lokaciju (v. LokacijaSheet). Nezavisan od gornjih slobodnih
-  // polja — ona ostaju dok se podaci ne presele u kontakt_osobe.
+  // Izbor kontakta za lokaciju (v. LokacijaSheet). Kontakt lokacije živi
+  // isključivo u kontakt_osobe od 2026-07-30.
   kontakt_izbor: z.enum(["bez", "postojeci", "novi"]).optional(),
   kontakt_id: z.union([z.string().uuid(), z.literal("")]).optional(),
   kontakt_ime: optionalText(200),
@@ -241,9 +238,6 @@ export async function createLokacija(
     grad: f.grad ?? null,
     regija: f.regija ?? null,
     adresa: f.adresa ?? null,
-    kontakt_osoba: f.kontakt_osoba ?? null,
-    kontakt_email: f.kontakt_email ?? null,
-    kontakt_telefon: f.kontakt_telefon ?? null,
   }).select("id").single()
   if (error) return { ok: false, message: friendlyDbError(error) }
 
@@ -278,9 +272,6 @@ export async function updateLokacija(
   if (formData.has("grad")) patch.grad = f.grad ?? null
   if (formData.has("regija")) patch.regija = f.regija ?? null
   if (formData.has("adresa")) patch.adresa = f.adresa ?? null
-  if (formData.has("kontakt_osoba")) patch.kontakt_osoba = f.kontakt_osoba ?? null
-  if (formData.has("kontakt_email")) patch.kontakt_email = f.kontakt_email ?? null
-  if (formData.has("kontakt_telefon")) patch.kontakt_telefon = f.kontakt_telefon ?? null
   // Prazan patch nije razlog za izlaz ako korisnik mijenja SAMO vezu kontakta.
   if (Object.keys(patch).length === 0 && (!f.kontakt_izbor || f.kontakt_izbor === "bez")) return { ok: true }
   const supabase = await createServerSupabaseClient()

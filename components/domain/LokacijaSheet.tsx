@@ -59,16 +59,13 @@ export function LokacijaSheet({
     slobodniKontakti.map((k) => [k.id, k.ime]),
   )
 
-  // [name, label, obavezno, inputType] — tip polja se grana ovdje da bi browser
-  // uhvatio nevalidan email prije round-tripa (S2).
+  // [name, label, obavezno, inputType]. Kontakt polja su uklonjena 2026-07-30 —
+  // kontakt lokacije živi isključivo u kontakt_osobe (fieldset ispod).
   const FIELDS: readonly [string, string, boolean, "text" | "email" | "tel"][] = [
     ["naziv", t("poljeNaziv"), true, "text"],
     ["grad", t("poljeGrad"), false, "text"],
     ["regija", t("poljeRegija"), false, "text"],
     ["adresa", t("poljeAdresa"), false, "text"],
-    ["kontakt_osoba", t("poljeKontaktOsoba"), false, "text"],
-    ["kontakt_email", t("poljeEmail"), false, "email"],
-    ["kontakt_telefon", t("poljeTelefon"), false, "text"],
   ]
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(

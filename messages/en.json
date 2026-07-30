@@ -203,10 +203,7 @@
         }
       },
       "kontaktiTab": {
-        "infoPuniSpisak": "Full list of the company's contacts, searchable by name and role.",
-        "naslovLokacije": "Location contacts",
-        "infoLokacije": "Contact persons for individual locations, derived from location data. Edited in the Locations tab.",
-        "urediULokacijama": "Edit in Locations"
+        "infoPuniSpisak": "Full list of the company's contacts, searchable by name and role."
       },
       "dokumentiTab": {
         "prazno": "No documents for this client.",
@@ -409,7 +406,6 @@
       "poljeGrad": "City",
       "poljeRegija": "Region",
       "poljeAdresa": "Address",
-      "poljeKontaktOsoba": "Contact person",
       "poljeEmail": "Email",
       "poljeTelefon": "Phone",
       "kontaktNaslov": "Contact for this location",

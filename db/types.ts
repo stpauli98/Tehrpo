@@ -517,9 +517,6 @@ export type Database = {
           grad: string | null
           id: string
           klijent_id: string
-          kontakt_email: string | null
-          kontakt_osoba: string | null
-          kontakt_telefon: string | null
           naziv: string
           regija: string | null
         }
@@ -529,9 +526,6 @@ export type Database = {
           grad?: string | null
           id?: string
           klijent_id: string
-          kontakt_email?: string | null
-          kontakt_osoba?: string | null
-          kontakt_telefon?: string | null
           naziv: string
           regija?: string | null
         }
@@ -541,9 +535,6 @@ export type Database = {
           grad?: string | null
           id?: string
           klijent_id?: string
-          kontakt_email?: string | null
-          kontakt_osoba?: string | null
-          kontakt_telefon?: string | null
           naziv?: string
           regija?: string | null
         }

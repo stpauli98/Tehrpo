@@ -203,10 +203,7 @@
         }
       },
       "kontaktiTab": {
-        "infoPuniSpisak": "Vollständige Liste der Unternehmenskontakte, durchsuchbar nach Name und Funktion.",
-        "naslovLokacije": "Standortkontakte",
-        "infoLokacije": "Kontaktpersonen der einzelnen Standorte, abgeleitet aus den Standortdaten. Bearbeitung im Tab Standorte.",
-        "urediULokacijama": "In Standorten bearbeiten"
+        "infoPuniSpisak": "Vollständige Liste der Unternehmenskontakte, durchsuchbar nach Name und Funktion."
       },
       "dokumentiTab": {
         "prazno": "Keine Dokumente für diesen Kunden.",
@@ -409,7 +406,6 @@
       "poljeGrad": "Stadt",
       "poljeRegija": "Region",
       "poljeAdresa": "Adresse",
-      "poljeKontaktOsoba": "Kontaktperson",
       "poljeEmail": "E-Mail",
       "poljeTelefon": "Telefon",
       "kontaktNaslov": "Kontakt für diesen Standort",

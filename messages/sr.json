@@ -203,10 +203,7 @@
         }
       },
       "kontaktiTab": {
-        "infoPuniSpisak": "Puni spisak kontakata firme sa pretragom po imenu i funkciji.",
-        "naslovLokacije": "Kontakti lokacija",
-        "infoLokacije": "Kontakt osobe pojedinačnih lokacija, izvedene iz podataka lokacije. Uređuju se u tabu Lokacije.",
-        "urediULokacijama": "Uredi u Lokacijama"
+        "infoPuniSpisak": "Puni spisak kontakata firme sa pretragom po imenu i funkciji."
       },
       "dokumentiTab": {
         "prazno": "Nema dokumenata za ovog klijenta.",
@@ -409,7 +406,6 @@
       "poljeGrad": "Grad",
       "poljeRegija": "Regija",
       "poljeAdresa": "Adresa",
-      "poljeKontaktOsoba": "Kontakt osoba",
       "poljeEmail": "Email",
       "poljeTelefon": "Telefon",
       "kontaktNaslov": "Kontakt za ovu lokaciju",

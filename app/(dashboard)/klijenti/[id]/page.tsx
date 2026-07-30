@@ -1,8 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { ChevronLeft, MapPin } from "lucide-react"
-import { InfoIkona } from "@/components/ui/info-ikona"
+import { ChevronLeft } from "lucide-react"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { KlijentTabs } from "@/components/domain/KlijentTabs"
 import { StatusBadge } from "@/components/domain/StatusBadge"
@@ -374,50 +373,6 @@ export default async function KlijentDetailPage({
                   info={t("kontaktiTab.infoPuniSpisak")}
                 />
               </section>
-
-              {lokacije.some((l) => l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
-                <section className={`${KARTICA} p-5`}>
-                  <div className="mb-3 flex items-center gap-2">
-                    <MapPin className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
-                    <h3 className="text-sm font-semibold text-foreground">{t("kontaktiTab.naslovLokacije")}</h3>
-                    <InfoIkona
-                      tekst={t("kontaktiTab.infoLokacije")}
-                      testId="info-sekcija-kontakti-lokacija"
-                    />
-                  </div>
-                  <ul className="space-y-2">
-                    {lokacije.map(
-                      (l) =>
-                        (l.kontakt_osoba || l.kontakt_email || l.kontakt_telefon) && (
-                          <li
-                            key={l.id}
-                            id={`kontakt-${l.id}`}
-                            data-testid="kontakt-lokacija-card"
-                            className="scroll-mt-24 rounded-xl border border-border p-3 text-sm"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-medium">
-                                {l.kontakt_osoba ?? "—"}
-                                <span className="font-normal text-muted-foreground"> · {l.naziv}</span>
-                              </span>
-                              <Link
-                                href={href(`/klijenti/${id}?tab=lokacije`)}
-                                className="shrink-0 text-xs text-brand hover:underline"
-                              >
-                                {t("kontaktiTab.urediULokacijama")}
-                              </Link>
-                            </div>
-                            {(l.kontakt_telefon || l.kontakt_email) && (
-                              <div className="mt-1 text-muted-foreground">
-                                {[l.kontakt_telefon, l.kontakt_email].filter(Boolean).join(" · ")}
-                              </div>
-                            )}
-                          </li>
-                        )
-                    )}
-                  </ul>
-                </section>
-              )}
             </div>
           )}
 

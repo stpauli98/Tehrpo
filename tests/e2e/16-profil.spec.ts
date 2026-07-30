@@ -21,7 +21,9 @@ test.describe("Faza Profil — tab", () => {
       await page.goto(`/klijenti/${kid}?tab=profil`)
       await expect(page.getByTestId("tab-profil-content")).toBeVisible()
       await expect(page.getByTestId("dodaj-provjeru-btn")).toBeVisible()
-      await expect(page.getByText("Nema provjera u profilu")).toBeVisible()
+      // Terminologija je s PR #82/#83 prešla sa "provjera" na "usluga"
+      // (klijenti.profil.prazno u messages) — spec je bio zaostao.
+      await expect(page.getByText("Nema definisanih usluga")).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)
@@ -93,11 +95,11 @@ test.describe("Faza Profil — dodavanje i generisanje termina", () => {
       // strict-mode violation, zato svaki kanal asertujemo zasebno.
       // 1) inline greška u formi (<p role="alert"> unutar dodaj-provjeru-form)
       await expect(
-        page.getByTestId("dodaj-provjeru-form").getByText("Ova provjera već postoji u profilu."),
+        page.getByTestId("dodaj-provjeru-form").getByText("Ova usluga već postoji."),
       ).toBeVisible()
       // 2) toast (sonner) — dokazuje da je i toast kanal stvarno okinut
       await expect(
-        page.locator("[data-sonner-toast]").getByText("Ova provjera već postoji u profilu."),
+        page.locator("[data-sonner-toast]").getByText("Ova usluga već postoji."),
       ).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)

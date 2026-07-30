@@ -31,6 +31,9 @@ test.describe("Podsjetnici — combobox primalaca (kontakti + ad-hoc)", () => {
       await expect(page.getByTestId("kontakt-sheet")).toBeVisible()
       await page.getByTestId("kontakt-ime").fill("E2E Sa Mejlom")
       await page.getByTestId("kontakt-email").fill("e2e-primalac@example.com")
+      // PR #83: kontakt sheet traži lokaciju; klijent bez lokacija ima samo opciju
+      // "Nova lokacija" čiji je naziv obavezan (inače submit ne prolazi validaciju).
+      await page.getByTestId("kontakt-nova-lokacija-naziv").fill("Lokacija E2E Primaoci")
       await page.getByTestId("kontakt-submit").click()
       await expect(page.getByTestId("kontakt-sheet")).toBeHidden({ timeout: 5000 })
 

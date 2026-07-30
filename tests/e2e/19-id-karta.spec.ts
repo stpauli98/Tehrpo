@@ -49,6 +49,10 @@ test.describe("PP-1 — ID karta (klijent/ugovor/kontakt/dokument)", () => {
     await page.getByTestId("novi-kontakt-btn").click()
     await page.getByTestId("kontakt-ime").fill("Marko Marković")
     await page.getByTestId("kontakt-funkcija").fill("Direktor")
+    // PR #83 je dodao sekciju LOKACIJA u kontakt sheet. Klijent bez lokacija dobija
+    // samo opciju "Nova lokacija", a njen naziv je OBAVEZAN — bez njega HTML5
+    // validacija blokira submit i sheet ostane otvoren.
+    await page.getByTestId("kontakt-nova-lokacija-naziv").fill("Lokacija E2E ID karta")
     await page.getByTestId("kontakt-submit").click()
     await expect(page.getByTestId("kontakt-sheet")).toBeHidden({ timeout: 5000 })
     await expect(page.getByTestId("kontakt-red")).toContainText("Marko Marković")

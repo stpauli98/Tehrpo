@@ -22,6 +22,7 @@
     "preview:emails": "tsx --env-file=.env.local scripts/preview-emails.ts",
     "preview:import": "tsx --env-file=.env.local scripts/preview-import.ts",
     "db:apply-cloud": "tsx --env-file=.env.local scripts/apply-cloud-migration.ts",
+    "ugasi:nerutabilne": "tsx --env-file=.env.local scripts/ugasi-nerutabilne-podsjetnike.ts",
     "rls:check": "tsx scripts/check-rls-coverage.ts",
     "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts",
     "gc:dokumenti": "tsx --env-file=.env.local scripts/gc-orphan-dokumenti.ts",

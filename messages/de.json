@@ -189,7 +189,8 @@
       "podsjetnikEmailKontakt": "Die Adresse ist bereits als Kontakt Empfänger.",
       "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
       "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung.",
-      "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich."
+      "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich.",
+      "klijentBezLokacije": "Der Kunde wurde erstellt, der erste Standort jedoch nicht: {poruka} Fügen Sie ihn im Tab Standorte hinzu."
     },
     "detalj": {
       "nazad": "Kunden",

@@ -189,7 +189,8 @@
       "podsjetnikEmailKontakt": "Adresa je već primalac kao kontakt.",
       "podsjetnikEmailNijeDodat": "Nije moguće dodati adresu.",
       "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli.",
-      "lokacijaNazivObavezan": "Naziv nove lokacije je obavezan."
+      "lokacijaNazivObavezan": "Naziv nove lokacije je obavezan.",
+      "klijentBezLokacije": "Klijent je kreiran, ali prva lokacija nije: {poruka} Dodajte je u tabu Lokacije."
     },
     "detalj": {
       "nazad": "Klijenti",

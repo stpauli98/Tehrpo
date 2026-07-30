@@ -189,7 +189,8 @@
       "podsjetnikEmailKontakt": "The address is already a recipient as a contact.",
       "podsjetnikEmailNijeDodat": "The address could not be added.",
       "nepostojeciKorisnik": "Non-existent user in the assignment.",
-      "lokacijaNazivObavezan": "The new location name is required."
+      "lokacijaNazivObavezan": "The new location name is required.",
+      "klijentBezLokacije": "The client was created, but the first location was not: {poruka} Add it in the Locations tab."
     },
     "detalj": {
       "nazad": "Clients",

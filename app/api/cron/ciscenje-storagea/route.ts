@@ -1,6 +1,13 @@
 /**
  * Noćno metenje osirotjelih objekata iz bucketa `tehpro-dokumenti` (cron: vercel.json).
  *
+ * BRISANJE JE ISKLJUČENO DOK SE IZRIČITO NE UKLJUČI: bez `CISCENJE_STORAGEA_APPLY=1`
+ * ruta radi PROBNI prolaz — izračuna odluku, ispiše u log tačno šta bi obrisala i vrati
+ * `{ ok: true, probno: true, biObrisano, putanje }`, a `remove()` ne pozove. Isti odnos
+ * kao kod ručnog `pnpm gc:dokumenti` (dry-run po defaultu, `--apply` za stvarno brisanje);
+ * automatska varijanta je opasnija pa ne smije biti labavija. Prije uključivanja flag-a
+ * pogledaj bar jedan probni prolaz u Vercel logovima.
+ *
  * Bucket drži zakonski obavezne zapisnike zaštite na radu — brisanje je nepovratno.
  */
 import { NextResponse } from "next/server"
@@ -16,6 +23,11 @@ export const runtime = "nodejs"
 // Upload prvo piše fajl pa onda red u `dokumenti`. Fajl uhvaćen u tom procjepu izgleda
 // osirotjelo. 24h je isti prag koji već koristi scripts/gc-orphan-dokumenti.ts.
 const GRACE_MS = 24 * 60 * 60 * 1000
+
+/** Brisanje se izvršava SAMO uz eksplicitni flag; sve ostalo (prazno, "0", "false") = probni prolaz. */
+function brisanjeUkljuceno(): boolean {
+  return env.CISCENJE_STORAGEA_APPLY === "1"
+}
 
 async function handle(req: Request) {
   if (!isCronAuthorized(req.headers.get("authorization"), env.CRON_SECRET)) {
@@ -50,6 +62,20 @@ async function handle(req: Request) {
 
     // Jedini trag o obrisanim fajlovima: tg_audit pokriva redove u `dokumenti`, ne storage
     // objekte. Bez ovog log-a se poslije pogrešnog brisanja ne bi znalo ni ŠTA tražiti u backupu.
+    if (!brisanjeUkljuceno()) {
+      console.warn(
+        `[ciscenje-storagea] PROBNO (CISCENJE_STORAGEA_APPLY nije "1") — bi obrisao ${zaBrisanje.length} objekata:`,
+        zaBrisanje,
+      )
+      return NextResponse.json({
+        ok: true,
+        probno: true,
+        biObrisano: zaBrisanje.length,
+        putanje: zaBrisanje,
+        slomljeniRedovi: odluka.slomljeniRedovi,
+      })
+    }
+
     // Brisanje u grupama od 100, kao postojeći scripts/gc-orphan-dokumenti.ts.
     let obrisano = 0
     for (let i = 0; i < zaBrisanje.length; i += 100) {

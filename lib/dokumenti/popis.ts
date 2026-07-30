@@ -57,44 +57,63 @@ export async function listajFajlove(
 }
 
 /**
- * Sve `storage_path` vrijednosti iz `dokumenti`, paginirano.
+ * Sve `storage_path` vrijednosti iz `dokumenti`, paginirano KEYSET-om (kursor po vrijednosti
+ * kolone), ne OFFSET-om.
  *
- * Cijela sigurnost metenja stoji na tome da je ovaj popis POTPUN: svaka putanja koja fali
- * ovdje izgleda kao osirotjeli fajl i biva obrisana. Paginacija sama po sebi to NE garantuje:
+ * Cijela sigurnost metenja stoji na tome da je ovaj popis POTPUN: svaka putanja koja fali ovdje
+ * izgleda kao osirotjeli fajl i biva obrisana. `LIMIT/OFFSET` to ne može dati, iz tri razloga:
  *
- * - `LIMIT/OFFSET` bez `ORDER BY` Postgres ne obavezuje ni na kakav poredak između dva upita,
- *   pa red može ispasti iz rezultata između stranice N i N+1 (HOT update, autovacuum, promjena
- *   plana). Zato `.order("storage_path")` — stabilan poredak po jedinstvenoj koloni.
- * - „Stani kad stranica vrati manje od `STRANICA_DB`" je tačno samo dok je `STRANICA_DB` STROGO
- *   ispod PostgREST-ovog `db-max-rows`. Ako je server cap ikad manji ili jednak, prva stranica
- *   vrati manje redova, petlja stane, i sve iza tog reza je nevidljivo — bez greške.
+ * 1. Bez `ORDER BY` Postgres ne obavezuje ni na kakav poredak između dva upita, pa red može
+ *    ispasti iz rezultata između stranice N i N+1 (HOT update, autovacuum, promjena plana).
+ * 2. „Stani kad stranica vrati manje od `STRANICA_DB`" je tačno samo dok je `STRANICA_DB` STROGO
+ *    ispod PostgREST-ovog `db-max-rows`. Ako je server cap ikad manji ili jednak, prva stranica
+ *    vrati manje redova, petlja stane, i sve iza tog reza je nevidljivo — bez greške.
+ * 3. OFFSET se pomjera pod nogama. Konkurentni DELETE unutar VEĆ PROČITANOG prefiksa pomjeri sve
+ *    preostale redove naniže, pa `offset` preskoči tačno onoliko ŽIVIH redova koliko je obrisano
+ *    ispred njih. Nijedan zbir na kraju to ne hvata: obrisani redovi izlaze i iz brojača i iz
+ *    popisa, pa se `count` i dužina popisa i dalje poklope — provjera prođe nad NEPOTPUNIM
+ *    popisom. (2500 redova; stranica 1 pročita rangove 0–999; 100 redova iz tog prefiksa se
+ *    obriše; stranica 2 na offsetu 1000 čita nekadašnje rangove 1100–2099, a 100 živih redova
+ *    koji su skliznuli u 900–999 ne pročita niko. 2400 = 2400, provjera ćuti, 100 živih fajlova
+ *    izgleda osirotjelo.) Ograda po udjelu tu ne pomaže — 100/2400 je ~4%.
  *
- * Zato se na kraju broj skupljenih putanja poredi sa `count: "exact"`. Manjak koji se ne može
- * objasniti se vraća kao EKSPLICITNA greška, jer pozivalac na grešku prekida prije brisanja —
- * tiho odsijecanje pretvoreno u glasan otkaz. Istovremeni INSERT/DELETE u `dokumenti` tokom
- * paginacije takođe može oboriti ovu provjeru; to je lažni alarm koji košta jedan preskočen
- * noćni prolaz, što je jeftinije od jednog pogrešnog brisanja.
+ * Keyset je imun na sve tri po konstrukciji: svaka stranica traži `storage_path > zadnja`, pa
+ * pozicija reda ne zavisi ni od čega osim od njegove vlastite vrijednosti. Brisanje ili
+ * ubacivanje IZA kursora ne pomjera ništa što tek treba pročitati, a petlja staje tek na PRAZNU
+ * stranicu — kratka stranica (server cap) samo znači još jedan krug. Zato je i `count`-provjera
+ * uklonjena umjesto zadržana: uz keyset više ništa ne bi hvatala, a pod konkurentnim pisanjem bi
+ * i dalje mogla proći nad nepotpunim popisom. Ograda koja laže je gora nego nikakva.
+ *
+ * Šta keyset NE pokriva, i zašto je to u redu:
+ *
+ * - Red UBAČEN tokom paginacije sa putanjom manjom od kursora se ne pročita. Takav red je upravo
+ *   nastao upload-om, pa je i njegov fajl nastao maločas — grace period (24h) ga štiti od
+ *   brisanja. Ovo je isti procjep zbog kojeg grace uopšte postoji.
+ * - `dokumenti.storage_path` NEMA unique constraint (20260620201156_supporting_tables.sql:12);
+ *   jedinstvenost je de-facto, iz UUID-a u putanji. Sa `.gt()` nad nejedinstvenim ključem bi
+ *   tačan duplikat na granici stranice bio preskočen. Bezopasno je: potrošač koristi SAMO
+ *   vrijednost putanje, a dvije iste putanje znače isti fajl — dovoljno je da ga popis sadrži
+ *   jednom da fajl NE bude proglašen osirotjelim. Preskočen duplikat ne može ništa izgubiti.
+ *
+ * Nema indeksa na `storage_path` (samo `idx_dokumenti_termin`), pa svaka stranica sortira.
+ * Tabela je mala i posao je noćni; ako ikad poraste, indeks je popravka, ne promjena logike.
  */
 export async function svePutanjeUBazi(sb: Sb): Promise<{ putanje: string[]; error: string | null }> {
   const putanje: string[] = []
-  let offset = 0
-  let ukupno: number | null = null
+  let zadnja = "" // kursor: svaka neprazna putanja je > "" , pa prva stranica kreće od početka
   for (;;) {
-    // eslint-disable-next-line no-await-in-loop -- paginacija po offsetu; broj stranica prati veličinu tabele
-    const { data, error, count } = await sb
+    // eslint-disable-next-line no-await-in-loop -- keyset paginacija; broj stranica prati veličinu tabele
+    const { data, error } = await sb
       .from("dokumenti")
-      .select("storage_path", { count: "exact" })
-      .order("storage_path") // stabilna paginacija
-      .range(offset, offset + STRANICA_DB - 1)
+      .select("storage_path")
+      .gt("storage_path", zadnja)
+      .order("storage_path")
+      .limit(STRANICA_DB)
     if (error) return { putanje: [], error: error.message }
-    if (count !== null && count !== undefined) ukupno = count
     const red = data ?? []
+    if (red.length === 0) break // jedini uslov prekida — kratka stranica NIJE kraj
     for (const r of red) putanje.push(r.storage_path)
-    if (red.length < STRANICA_DB) break
-    offset += STRANICA_DB
-  }
-  if (ukupno !== null && putanje.length !== ukupno) {
-    return { putanje: [], error: `nepotpun popis dokumenti: ${putanje.length}/${ukupno}` }
+    zadnja = red[red.length - 1]!.storage_path
   }
   return { putanje, error: null }
 }

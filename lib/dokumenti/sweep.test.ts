@@ -146,14 +146,27 @@ describe("odluciSta", () => {
       })
     })
 
-    it("udio se računa na SVE objekte, ne samo na zrele — mladi kandidati ne troše kvotu", () => {
-      // 4 zrela osirotjela + 4 svježa osirotjela + 4 uparena = 12 objekata, 4 kandidata (33%).
-      const zreli = Array.from({ length: 4 }, (_, i) => stavka(`termini/zreo/${i}.pdf`))
-      const svjezi = Array.from({ length: 4 }, (_, i) => stavka(`termini/svjez/${i}.pdf`, svjeza))
-      const p = uparenih(4)
+    /**
+     * Imenilac je CIJELI bucket (prije grace filtera), ne samo zreli objekti — grace-zaštićeni
+     * fajlovi ulaze u kvotu iako sami nisu kandidati. Ulaz je izabran tako da RAZLIKUJE ta dva
+     * imenioca, jer ih većina brojeva ne razlikuje:
+     *   5 zrelih osirotjelih + 5 svježih osirotjelih + 2 uparena (stara) = 12 objekata.
+     *   sadašnji imenilac (svih 12):        5/12 = 41.7% ≤ 50% → briši   ← ovo tvrdi ovaj test
+     *   imenilac „samo zreli" (5 + 2 = 7):  5/7  = 71.4% > 50% → prekid
+     * Namjerno se zadržava širi imenilac: udio svježih fajlova u ovom bucketu je mali, pa je
+     * uži imenilac samo šum, a odluka „koji je imenilac ispravan" ne mijenja se tiho.
+     */
+    it("imenilac je cijeli bucket — grace-zaštićeni fajlovi ulaze u kvotu", () => {
+      const zreli = Array.from({ length: 5 }, (_, i) => stavka(`termini/zreo/${i}.pdf`))
+      const svjezi = Array.from({ length: 5 }, (_, i) => stavka(`termini/svjez/${i}.pdf`, svjeza))
+      const p = uparenih(2)
       const odluka = odluciSta([...zreli, ...svjezi, ...p.objekti], p.putanje, SADA, GRACE_MS)
-      expect(odluka.akcija).toBe("brisi")
-      expect(odluka.akcija === "brisi" && odluka.putanje).toEqual(zreli.map((o) => o.path))
+      expect(odluka).toEqual({
+        akcija: "brisi",
+        putanje: zreli.map((o) => o.path),
+        presvjezi: svjezi.map((o) => o.path),
+        slomljeniRedovi: [],
+      })
     })
   })
 })

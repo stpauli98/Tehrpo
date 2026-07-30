@@ -178,6 +178,7 @@
       "terminProvjeraOsvjezi": "Die Prüfung wurde gespeichert, aber die Terminprüfung ist fehlgeschlagen — Seite aktualisieren.",
       "terminNijeGenerisan": "Die Prüfung wurde gespeichert, aber der Termin wurde nicht erstellt: {poruka}",
       "nedostajeId": "ID fehlt.",
+      "brisanjeNijeDozvoljeno": "Ihre Berechtigungen erlauben das Löschen dieses Datensatzes nicht.",
       "imeObavezno": "Name ist erforderlich",
       "lokacijaPostoji": "Ein Standort mit diesem Namen existiert bereits für diesen Kunden.",
       "kontaktPostoji": "Eine Kontaktperson mit diesem Namen existiert bereits für diesen Kunden.",

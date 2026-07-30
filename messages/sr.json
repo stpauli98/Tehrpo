@@ -178,6 +178,7 @@
       "terminProvjeraOsvjezi": "Provjera je sačuvana, ali provjera termina nije uspjela — osvježi stranicu.",
       "terminNijeGenerisan": "Provjera je sačuvana, ali termin nije generisan: {poruka}",
       "nedostajeId": "Nedostaje id.",
+      "brisanjeNijeDozvoljeno": "Vaše dozvole ne dopuštaju brisanje ovog zapisa.",
       "imeObavezno": "Ime je obavezno",
       "lokacijaPostoji": "Lokacija sa tim nazivom već postoji kod ovog klijenta.",
       "kontaktPostoji": "Kontakt osoba sa tim imenom već postoji kod ovog klijenta.",

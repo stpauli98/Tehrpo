@@ -53,38 +53,24 @@ test.describe("Podsjetnici — combobox primalaca (kontakti + ad-hoc)", () => {
 
       // 2a) Izaberi postojeći kontakt iz liste.
       //
-      // Zašto retry: na webkitu je klik na opciju povremeno ostajao bez efekta (chip
-      // nikad ne dođe, 34 × resolved to 0 elements) — dropdown se zatvori na blur
-      // prije nego klik stigne do handlera. Chromium je prolazio, dakle nije greška
-      // aplikacije nego interakcijski race sa custom comboboxom.
-      //
-      // Retry je bezbjedan jer je korak IDEMPOTENTAN: petlja prvo provjeri chip i
-      // klikne SAMO ako ga još nema, pa dupli primalac nije moguć.
-      await expect(async () => {
-        if ((await cipKontakt.count()) === 0) {
-          // `pressSequentially`, ne `fill`: lista se renderuje samo dok je combobox
-          // `open`, a taj state pali fokus/klik. Na webkitu je `fill` upisao tekst BEZ
-          // fokus događaja → input je imao "E2E Sa" a dropdown nijednu opciju (vidljivo
-          // na Playwright screenshotu pada). Kucanje se ponaša kao pravi korisnik.
-          await input.click()
-          await input.fill("")
-          await input.pressSequentially("E2E Sa")
-          await page.getByTestId(/^opcija-kontakt-/).first().click({ timeout: 5_000 })
-        }
-        await expect(cipKontakt).toHaveCount(1, { timeout: 5_000 })
-      }).toPass({ timeout: 30_000 })
+      // Namjerno BEZ retry-a: klik na opciju mora raditi iz prvog puta u OBA browsera.
+      // Na webkitu nije radio jer je PrimaociCombobox zatvarao listu na blur prije nego
+      // onClick stigne (Safari ne fokusira <button>, pa je relatedTarget bio null) —
+      // popravljeno u komponenti sa onMouseDown + preventDefault. Ovaj test je čuvar te
+      // popravke: retry bi ga učinio zelenim i sa vraćenim bugom.
+      await input.click()
+      await input.fill("E2E Sa")
+      const opcijaKontakt = page.getByTestId(/^opcija-kontakt-/)
+      await expect(opcijaKontakt).toHaveCount(1)
+      await opcijaKontakt.first().click()
+      await expect(cipKontakt).toHaveCount(1)
       await expect(input).toBeEnabled() // sačekaj da transition završi
 
-      // 2b) Dodaj ad-hoc mejl — isti mehanizam, ista zaštita (uslov: chip s tim mejlom).
-      await expect(async () => {
-        if ((await cipAdHoc.count()) === 0) {
-          await input.click()
-          await input.fill("")
-          await input.pressSequentially(adHoc)
-          await page.getByTestId("opcija-adhoc").click({ timeout: 5_000 })
-        }
-        await expect(cipAdHoc).toBeVisible({ timeout: 5_000 })
-      }).toPass({ timeout: 30_000 })
+      // 2b) Dodaj ad-hoc mejl — isti put kroz listu, ista invarijanta.
+      await input.fill(adHoc)
+      await expect(page.getByTestId("opcija-adhoc")).toBeVisible()
+      await page.getByTestId("opcija-adhoc").click()
+      await expect(cipAdHoc).toBeVisible()
       await expect(input).toBeEnabled()
 
       // 3) Reload → oba perzistirala (SSR fetch, ne lokalni state).

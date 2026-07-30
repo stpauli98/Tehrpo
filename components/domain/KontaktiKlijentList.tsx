@@ -92,7 +92,12 @@ export function KontaktiKlijentList({
       ) : (
         <ul className="space-y-2">
           {vidljivi.map((k) => (
-            <li key={k.id} data-testid="kontakt-red" className="rounded-xl border border-border p-3 text-sm transition-colors motion-reduce:transition-none hover:border-border hover:bg-muted/60">
+            <li
+              key={k.id}
+              id={`kontakt-${k.id}`}
+              data-testid="kontakt-red"
+              className="scroll-mt-24 rounded-xl border border-border p-3 text-sm transition-colors motion-reduce:transition-none hover:border-border hover:bg-muted/60"
+            >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {k.ime}

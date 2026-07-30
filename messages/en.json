@@ -19,7 +19,8 @@
     "rok": {
       "kasni": "{count, plural, =1 {# day overdue} other {# days overdue}}",
       "danas": "due today",
-      "za": "{count, plural, =1 {due in # day} other {due in # days}}"
+      "za": "{count, plural, =1 {due in # day} other {due in # days}}",
+      "rokIZakazano": "due {rok} · scheduled {zakazano}"
     },
     "sacuvano": "Saved",
     "obrisano": "Deleted",
@@ -169,6 +170,7 @@
       "brojOpseg": "Number must be {min}–{max}",
       "datumNeispravan": "Invalid date",
       "datumIstekaNakonPotpisivanja": "The expiry date must be after the signing date.",
+      "ugovorIstekNeodredjeno": "No expiry date for an open-ended contract.",
       "neispravanZahtjev": "Invalid request.",
       "vrstaObavezna": "Type is required.",
       "lokacijaObavezna": "Location is required.",
@@ -176,7 +178,7 @@
       "prviRokObavezan": "First deadline is required.",
       "lokacijaNePripada": "The location does not belong to the client.",
       "vrstaNemaInterval": "This type has no default interval — set one in Settings.",
-      "provjeraVecPostoji": "This check already exists in the profile.",
+      "provjeraVecPostoji": "This service already exists.",
       "terminProvjeraOsvjezi": "The check was saved, but the appointment check failed — refresh the page.",
       "terminNijeGenerisan": "The check was saved, but the appointment was not generated: {poruka}",
       "nedostajeId": "Missing id.",
@@ -187,7 +189,8 @@
       "podsjetnikEmailPostoji": "The address has already been added.",
       "podsjetnikEmailKontakt": "The address is already a recipient as a contact.",
       "podsjetnikEmailNijeDodat": "The address could not be added.",
-      "nepostojeciKorisnik": "Non-existent user in the assignment."
+      "nepostojeciKorisnik": "Non-existent user in the assignment.",
+      "lokacijaNazivObavezan": "The new location name is required."
     },
     "detalj": {
       "nazad": "Clients",
@@ -202,10 +205,7 @@
         }
       },
       "kontaktiTab": {
-        "infoPuniSpisak": "Full list of the company's contacts, searchable by name and role.",
-        "naslovLokacije": "Location contacts",
-        "infoLokacije": "Contact persons for individual locations, derived from location data. Edited in the Locations tab.",
-        "urediULokacijama": "Edit in Locations"
+        "infoPuniSpisak": "Full list of the company's contacts, searchable by name and role."
       },
       "dokumentiTab": {
         "prazno": "No documents for this client.",
@@ -257,7 +257,7 @@
       },
       "termini": {
         "label": "Appointments",
-        "info": "All concrete deadlines for this client — past and future. Each row is one appointment with a due date, status (planned, scheduled, overdue, completed), and an assigned person. Appointments are generated from the checks defined in the Profile."
+        "info": "All concrete deadlines for this client — past and future. Each row is one appointment with a due date, status (planned, scheduled, overdue, completed), and an assigned person. Appointments are generated from the checks defined in the Services tab."
       },
       "lokacije": {
         "label": "Locations",
@@ -276,7 +276,7 @@
         "info": "Sending reminders to this company (toggle + addresses) and assigning the workers who work with the company."
       },
       "profil": {
-        "label": "Profile",
+        "label": "Services",
         "info": "The definition of recurring checks for the client: which type of check is performed, at which location, and at what interval. Appointments are generated automatically from these entries. “Last time” is the last actual completion, “Next deadline” is the due date of the active appointment."
       }
     },
@@ -293,6 +293,19 @@
       "poljeTelefon": "Phone *",
       "poljeEmail": "Email *",
       "poljeNapomena": "Note",
+      "poljePib": "VAT ID",
+      "poljeMaticniBroj": "Company number",
+      "poljeSifraDjelatnosti": "Activity code",
+      "poljeZaduzeni": "Assigned person ({appName})",
+      "poljeTipOdnosa": "Relationship type",
+      "nijePostavljeno": "Not set",
+      "tipUgovor": "Contract",
+      "tipPonuda": "Offer",
+      "lokacijaNaslov": "First location",
+      "lokacijaNaziv": "Location name",
+      "lokacijaGrad": "City",
+      "lokacijaAdresa": "Address",
+      "lokacijaPomoc": "Services are always tied to a location — without one you cannot add any.",
       "submitPending": "Creating…",
       "submit": "Create client",
       "uspjeh": "Client created"
@@ -322,8 +335,8 @@
       "kontaktiInfo": "A short preview of the company's contacts (the first few). The full list and search are in the Contacts tab.",
       "usluge": {
         "naslov": "Contracted services",
-        "info": "A summary of the checks from the Profile with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
-        "prazno": "No services defined. Add them via the Profile tab.",
+        "info": "A summary of the checks from the Services tab with the next deadline for each — a quick overview of what's contracted and what's coming up first.",
+        "prazno": "No services defined. Add them via the Services tab.",
         "sljedeci": "next: {datum}",
         "imenica": "services"
       }
@@ -340,7 +353,14 @@
       "poljeObilasci": "Visits / month",
       "poljeAutoObnavljanje": "Automatic renewal",
       "poljeAktivan": "Active contract (deactivates others)",
+      "poljeNaNeodredjeno": "Open-ended contract",
       "poljeNapomena": "Note",
+      "vazenjeNeodredjeno": "Open-ended",
+      "vazenjeCustom": "Other (enter months)",
+      "vazenjeOdaberi": "Select duration",
+      "vazenjePreset": "{count} mo.",
+      "vazenjeGreskaOpseg": "Months must be a whole number between 1 and 600.",
+      "istekNeodredjeno": "No expiry date for an open-ended contract.",
       "submitPending": "Saving…",
       "submitEdit": "Save changes",
       "submitNovi": "Create contract"
@@ -352,6 +372,7 @@
       "bezBroja": "No number",
       "aktivan": "active",
       "neaktivan": "inactive",
+      "naNeodredjeno": "open-ended",
       "obrisiAriaLabel": "Delete contract",
       "obilazMjesecno": " · {count} visits/mo.",
       "vazenjeMjeseci": " · duration {count} mo.",
@@ -374,6 +395,12 @@
       "poljeLokacija": "Location",
       "lokacijaSve": "All locations — company contact",
       "lokacijaPomoc": "A company contact receives reminders for all locations. Bound to a location — only for that one.",
+      "lokacijaIzborPostojeca": "Existing location",
+      "lokacijaIzborNova": "New location",
+      "novaLokacijaNaziv": "Location name",
+      "novaLokacijaGrad": "City",
+      "novaLokacijaAdresa": "Address",
+      "novaLokacijaPomoc": "The new location is added to the Locations tab and the contact is linked to it.",
       "poljeTelefon": "Phone",
       "poljeEmail": "Email",
       "submitPending": "Saving…",
@@ -400,7 +427,6 @@
       "poljeGrad": "City",
       "poljeRegija": "Region",
       "poljeAdresa": "Address",
-      "poljeKontaktOsoba": "Contact person",
       "poljeEmail": "Email",
       "poljeTelefon": "Phone",
       "kontaktNaslov": "Contact for this location",
@@ -409,6 +435,7 @@
       "kontaktNovi": "New contact",
       "kontaktIme": "Full name",
       "kontaktPrima": "Receives reminders for this location",
+      "kontaktPrimaUgaseno": "Sending reminders to clients is turned off in Settings — until an administrator enables it, this contact will receive no emails.",
       "kontaktPomoc": "A bound contact receives reminders only for this location. Company contacts get them regardless.",
       "submitPending": "Saving…",
       "submitEdit": "Save changes",
@@ -450,7 +477,7 @@
       "uspjeh": "Document added"
     },
     "profil": {
-      "prazno": "No checks in the profile. Add a check to generate appointments.",
+      "prazno": "No services defined. Add a service to generate appointments.",
       "kolone": {
         "vrsta": "Type",
         "lokacija": "Location",
@@ -461,9 +488,9 @@
       "prviPut": "— (first time)"
     },
     "obrisiProfil": {
-      "tooltip": "Remove from profile",
-      "dialogNaslov": "Remove check from profile?",
-      "dialogOpis": "Removes the item from the profile. Existing appointments remain (tracked under Appointments).",
+      "tooltip": "Remove service",
+      "dialogNaslov": "Remove service?",
+      "dialogOpis": "Removes the service from the list. Existing appointments remain (tracked under Appointments).",
       "potvrdi": "Remove",
       "confirmPending": "Deleting…"
     },
@@ -497,7 +524,7 @@
     },
     "dodajProvjeru": {
       "dugme": "Add check",
-      "naslov": "Add check to profile",
+      "naslov": "Add service",
       "opis": "Link a service to a location — the appointment and deadline are generated automatically.",
       "bezLokacijaTekst": "The client has no locations, and every check must be linked to a location.",
       "bezLokacijaLink": "Add a client location first.",
@@ -508,8 +535,8 @@
       "poljeInterval": "Interval (months) — taken from type",
       "bezIntervalaTekst": "This type has no default interval — set it in",
       "bezIntervalaLink": "Settings",
-      "bezIntervalaKraj": "before adding it to the profile.",
-      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding it to the profile.",
+      "bezIntervalaKraj": "before adding the service.",
+      "bezIntervalaOperater": "This type has no default interval — ask an admin to set it before adding the service.",
       "poljeRadjenoRanije": "Has this check already been done? *",
       "opcijaVecRadeno": "Yes — I'll enter the last date",
       "opcijaPrviPut": "No — first time (I'll enter the first deadline)",
@@ -607,7 +634,11 @@
       "kreiram": "Creating…",
       "kreirajTermin": "Create appointment",
       "zaduzeniHintAdmin": "You can assign any worker — the company is granted to them automatically.",
-      "zaduzeniHintRadnik": "You can assign yourself or a colleague who already has access to this company."
+      "zaduzeniHintRadnik": "You can assign yourself or a colleague who already has access to this company.",
+      "ponavljanjeNaslov": "Entry type",
+      "ponavljanjeJednom": "One-off",
+      "ponavljanjePonavlja": "Recurring",
+      "ponavljanjePomoc": "A recurring appointment is also added to the Services tab, so the next due date is computed automatically after completion. Requires a location."
     },
     "actions": {
       "datumNeispravan": "Invalid date",
@@ -619,7 +650,9 @@
       "lokacijaNePripada": "The location does not belong to the selected client.",
       "terminVecPostoji": "An appointment for this company, type and deadline already exists.",
       "datumObavezan": "Date is required",
-      "zaduzeniNemaPristup": "This person does not have access to the selected company. Company access is assigned by an admin in Settings → Users."
+      "zaduzeniNemaPristup": "This person does not have access to the selected company. Company access is assigned by an admin in Settings → Users.",
+      "ponavljanjeTraziLokaciju": "A recurring appointment must have a location.",
+      "ponavljanjeVrstaBezIntervala": "This type has no default interval — ask an admin to set it, or enter the appointment as one-off."
     }
   },
   "status": {
@@ -1326,7 +1359,9 @@
       "opened": "Opened",
       "deliveryFailed": "Delivery failed",
       "bounced": "Bounced",
-      "complained": "Marked as spam"
+      "complained": "Marked as spam",
+      "djelimicno": "{oznaka} ({pogodjenih} of {ukupno})",
+      "djelimicnoAdrese": "Not delivered to: {adrese}"
     },
     "filteri": {
       "tip": "Type",

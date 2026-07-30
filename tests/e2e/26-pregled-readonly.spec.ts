@@ -30,7 +30,8 @@ test.describe("pregled — read-only UX", () => {
       await assignKlijent(uid, kid)
       await injectSessionFor(context, email, LOZINKA)
 
-      // Default tab (bez ?tab=) je "termini" — vidi app/(dashboard)/klijenti/[id]/page.tsx.
+      // Default tab (bez ?tab=) je "id-karta" — vidi app/(dashboard)/klijenti/[id]/page.tsx
+      // (yoink 2026-07-30, stavka 1).
       await page.goto(`/klijenti/${kid}`)
 
       // čitanje radi: naziv firme vidljiv (h1, uvijek renderovan van tab-conditional bloka)
@@ -39,7 +40,12 @@ test.describe("pregled — read-only UX", () => {
       // write-akcije SAKRIVENE (pure-trigger gate: useMozeUrediti() → return null za pregled):
       // 1) "Uredi klijenta" — header, van tab-conditional bloka, uvijek na ekranu.
       await expect(page.getByTestId("uredi-klijent-btn")).toHaveCount(0)
-      // 2) "Dodaj provjeru" — na "termini" tabu (default), koji je aktivan bez navigacije.
+      // 2) "Dodaj provjeru" — samo na "termini" tabu (DodajProvjeruButton je renderovan
+      // isključivo unutar `{tab === "termini" && (...)}`). Default tab je "id-karta", pa
+      // navigiramo eksplicitno na termini — inače bi asercija count===0 prošla samo zato
+      // što se taj tab uopšte ne renderuje, ne zato što gate stvarno sakriva dugme.
+      await page.goto(`/klijenti/${kid}?tab=termini`)
+      await expect(page.getByTestId("tab-termini-content")).toBeVisible({ timeout: 30_000 })
       await expect(page.getByTestId("dodaj-provjeru-btn")).toHaveCount(0)
 
       // 3) "Novi kontakt" — na "kontakti" tabu, navigiraj tamo za dodatnu potvrdu.

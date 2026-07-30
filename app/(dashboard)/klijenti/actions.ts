@@ -6,6 +6,7 @@ import { createTranslator } from "next-intl"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { addMjeseci } from "@/lib/date"
 import { friendlyDbError } from "@/lib/db-errors"
+import { postojiRed, type PostojanjeIshod } from "@/lib/db-postoji"
 import { normalizujNaziv } from "@/lib/klijenti"
 import { validUgovorDatumi } from "@/lib/ugovori"
 import { APP_LOCALE } from "@/lib/locale"
@@ -30,16 +31,14 @@ function nijeObrisano(redovi: { id: string }[] | null): boolean {
 }
 
 /**
- * Postoji li red koji brišemo? Provjera je RLS-scoped: red na firmi koja korisniku nije
- * dodijeljena čita se kao „ne postoji", što mu je i tačno reći — ne odajemo postojanje
- * zapisa na tuđim firmama. Bez ovoga svako brisanje bez pogotka (dupli submit, ustajala
- * stranica, neko drugi već obrisao) tvrdi da je problem u dozvolama.
+ * Presuda pre-fetcha pred brisanjem (vidi `lib/db-postoji.ts`): greška upita → poruka o
+ * grešci, prazan rezultat BEZ greške → „zapis ne postoji". Nikad obrnuto — pad lookup-a
+ * ne smije da se predstavi kao nepostojeći zapis.
  */
-async function postojiRed(
-  upit: PromiseLike<{ data: { id: string } | null }>,
-): Promise<boolean> {
-  const { data } = await upit
-  return data !== null
+function provjeriPostojanje(ishod: PostojanjeIshod): ActionResult | null {
+  if (ishod.greska) return { ok: false, message: friendlyDbError(ishod.greska) }
+  if (!ishod.postoji) return { ok: false, message: t("zapisNePostoji") }
+  return null
 }
 
 const optionalText = (max: number) =>
@@ -215,9 +214,10 @@ export async function deleteKlijent(
   const parsed = deleteKlijentSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
-  if (!(await postojiRed(supabase.from("klijenti").select("id").eq("id", parsed.data.id).maybeSingle()))) {
-    return { ok: false, message: t("zapisNePostoji") }
-  }
+  const nema = provjeriPostojanje(
+    await postojiRed(supabase.from("klijenti").select("id").eq("id", parsed.data.id).maybeSingle()),
+  )
+  if (nema) return nema
   const { data: obrisano, error } = await supabase
     .from("klijenti")
     .delete()
@@ -399,9 +399,10 @@ export async function deleteLokacija(
   const parsed = deleteLokacijaSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const supabase = await createServerSupabaseClient()
-  if (!(await postojiRed(supabase.from("lokacije").select("id").eq("id", parsed.data.id).maybeSingle()))) {
-    return { ok: false, message: t("zapisNePostoji") }
-  }
+  const nema = provjeriPostojanje(
+    await postojiRed(supabase.from("lokacije").select("id").eq("id", parsed.data.id).maybeSingle()),
+  )
+  if (nema) return nema
   const { data: obrisano, error } = await supabase
     .from("lokacije")
     .delete()
@@ -500,9 +501,10 @@ export async function deleteProfilProvjere(
   const id = String(formData.get("id") ?? "")
   if (!id) return { ok: false, message: t("nedostajeId") }
   const supabase = await createServerSupabaseClient()
-  if (!(await postojiRed(supabase.from("klijent_provjere").select("id").eq("id", id).maybeSingle()))) {
-    return { ok: false, message: t("zapisNePostoji") }
-  }
+  const nema = provjeriPostojanje(
+    await postojiRed(supabase.from("klijent_provjere").select("id").eq("id", id).maybeSingle()),
+  )
+  if (nema) return nema
   const { data: obrisano, error } = await supabase
     .from("klijent_provjere")
     .delete()
@@ -599,13 +601,12 @@ export async function deleteUgovor(_prev: ActionResult, formData: FormData): Pro
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  if (
-    !(await postojiRed(
+  const nema = provjeriPostojanje(
+    await postojiRed(
       supabase.from("ugovori").select("id").eq("id", id).eq("klijent_id", klijent_id).maybeSingle(),
-    ))
-  ) {
-    return { ok: false, message: t("zapisNePostoji") }
-  }
+    ),
+  )
+  if (nema) return nema
   const { data: obrisano, error } = await supabase
     .from("ugovori")
     .delete()
@@ -714,13 +715,12 @@ export async function deleteKontakt(_prev: ActionResult, formData: FormData): Pr
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const { id, klijent_id } = parsed.data
   const supabase = await createServerSupabaseClient()
-  if (
-    !(await postojiRed(
+  const nema = provjeriPostojanje(
+    await postojiRed(
       supabase.from("kontakt_osobe").select("id").eq("id", id).eq("klijent_id", klijent_id).maybeSingle(),
-    ))
-  ) {
-    return { ok: false, message: t("zapisNePostoji") }
-  }
+    ),
+  )
+  if (nema) return nema
   const { data: obrisano, error } = await supabase
     .from("kontakt_osobe")
     .delete()

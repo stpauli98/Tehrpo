@@ -1,12 +1,21 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx"
 import { createTranslator } from "next-intl"
-import type { ZapisnikInput } from "./content"
+import { type ZapisnikInput, type ZapisnikIzvor } from "./content"
 import { APP_NAME } from "../brand"
 import { APP_LOCALE, type Locale } from "../locale"
 import { formatDatum } from "../date"
 import { getMessages } from "@/i18n/messages"
 
-export type ZapisnikData = ZapisnikInput & { nalaz: string; zakljucak: string }
+export type ZapisnikData = ZapisnikInput & {
+  nalaz: string
+  zakljucak: string
+  /**
+   * Porijeklo teksta (N11). Kad je "sablon", dokument dobija vidljivo upozorenje ispod
+   * naslova. Opcionalno: `dryGenerateZapisnik` istu napomenu već ugrađuje u `nalaz`
+   * (jedini kanal koji sigurno stigne kroz sve pozivaoce), pa se ovdje ne duplira.
+   */
+  izvor?: ZapisnikIzvor
+}
 
 function polje(label: string, value: string): Paragraph {
   return new Paragraph({
@@ -20,6 +29,12 @@ function odlomci(tekst: string): Paragraph[] {
 
 export async function buildZapisnikDocx(data: ZapisnikData, locale: Locale = APP_LOCALE): Promise<Buffer> {
   const t = createTranslator({ locale, messages: getMessages(locale), namespace: "izvoz.zapisnik" })
+  const napomena = t("sablonNapomena")
+  // Upozorenje se dodaje samo ako ga `nalaz` već ne nosi (izbjegava dvostruki ispis).
+  const upozorenje: Paragraph[] =
+    data.izvor === "sablon" && !data.nalaz.includes(napomena)
+      ? [new Paragraph({ children: [new TextRun({ text: napomena, bold: true })] })]
+      : []
   const doc = new Document({
     sections: [
       {
@@ -33,6 +48,7 @@ export async function buildZapisnikDocx(data: ZapisnikData, locale: Locale = APP
             alignment: AlignmentType.CENTER,
             children: [new TextRun({ text: t("podnaslov", { appName: APP_NAME }), italics: true })],
           }),
+          ...upozorenje,
           new Paragraph({ text: "" }),
           polje(t("poljeKlijent"), data.klijent),
           polje(t("poljeLokacija"), data.lokacija ?? "—"),

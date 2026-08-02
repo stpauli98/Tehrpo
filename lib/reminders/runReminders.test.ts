@@ -176,7 +176,7 @@ describe("runReminders", () => {
     const send = async (a: SendArgs): Promise<SendResult> => { sent.push(a); return { id: "x", dryRun: true } }
     const { supabase } = makeFake({
       saljiKlijentima: true,
-      korisnici: [{ id: "a", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
+      korisnici: [{ id: "a", email: "admin@tehpro.ba", uloga: "admin", aktivan: true, prima_podsjetnike: true }],
       klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["adhoc@firma.ba"] }],
       dueRows: [baseRow], // baseRow.klijent_id === "k1"
     })
@@ -190,7 +190,7 @@ describe("runReminders", () => {
     const send = async (a: SendArgs): Promise<SendResult> => { sent.push({ to: a.to, bcc: a.bcc }); return { id: "x", dryRun: true } }
     const { supabase } = makeFake({
       saljiKlijentima: true,
-      korisnici: [{ id: "a", email: "radnik@tehpro.test", uloga: "operater", aktivan: true, prima_podsjetnike: true }],
+      korisnici: [{ id: "a", email: "radnik@tehpro.ba", uloga: "operater", aktivan: true, prima_podsjetnike: true }],
       kk: [{ korisnik_id: "a", klijent_id: "k1" }],
       klijenti: [{ id: "k1", salji_podsjetnik_klijentu: true }],
       kontakti: [{ klijent_id: "k1", email: "firma@drina.ba", podsjetnik_primalac: true }],
@@ -198,7 +198,7 @@ describe("runReminders", () => {
     })
     await runReminders(supabase, { send })
     // interni: radnik u to, firma NIJE u to
-    const interni = sent.find((s) => s.to.includes("radnik@tehpro.test"))
+    const interni = sent.find((s) => s.to.includes("radnik@tehpro.ba"))
     expect(interni).toBeTruthy()
     expect(interni!.to).not.toContain("firma@drina.ba")
     // firmin: firma u bcc

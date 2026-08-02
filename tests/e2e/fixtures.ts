@@ -9,6 +9,7 @@
  * Naziv uvijek počinje prefiksom koji `scripts/cleanup-test-data.ts` prepoznaje
  * (`JUNK_KLIJENT`), pa i zaostatak nakon pada testa ima svog čistača.
  */
+import type { Page } from "@playwright/test"
 import {
   insertKlijent,
   insertLokacija,
@@ -49,6 +50,35 @@ export function pomjerenDanasBg(offsetDana: number): string {
   const [g, m, d] = danasBg().split("-").map(Number)
   const dt = new Date(Date.UTC(g!, m! - 1, d! + offsetDana))
   return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`
+}
+
+/**
+ * `page.goto` otporan na Next.js router refresh koji je "u letu".
+ *
+ * Povod (flake u punom e2e prolazu, oba browsera): server akcija zove
+ * `revalidatePath`, App Router zbog toga pokrene refresh navigaciju na TRENUTNI
+ * URL, a ona stigne tek nakon što test već pozove `goto` na novi URL. Playwright
+ * tada baca `Navigation to "…" is interrupted by another navigation to "…"` —
+ * dakle pad koji nema veze sa ponašanjem aplikacije. Reprodukovano u
+ * 04-klijenti (`?q=` nakon kreiranja klijenta), 37-kontakt-lokacija
+ * (`?tab=kontakti` nakon kreiranja lokacije) i 24-podsjetnici-primaoci.
+ *
+ * Čekanje na UI znak ne pomaže: sheet se zatvori PRIJE nego refresh stigne, pa
+ * nema determinističkog signala da je navigacija završena. Zato jedan ciljani
+ * retry — refresh se ne ponavlja, pa je drugi `goto` čist. Svaka druga greška
+ * se propušta dalje, da ne maskiramo stvarne padove.
+ */
+export async function idiNa(
+  page: Page,
+  url: string,
+  opcije?: Parameters<Page["goto"]>[1],
+): Promise<void> {
+  try {
+    await page.goto(url, opcije)
+  } catch (e) {
+    if (!(e instanceof Error) || !/interrupted by another navigation/.test(e.message)) throw e
+    await page.goto(url, opcije)
+  }
 }
 
 /** Dan u tekućem mjesecu (po Europe/Belgrade) — uvijek unutar podrazumijevanog "tekući+naredni" filtera liste. */

@@ -45,7 +45,11 @@ import {
 } from "../lib/integracija/migracije"
 import { nadjiNeparitet, nadjiIcuOne, type Katalog } from "../lib/integracija/prijevodi"
 import { provjeriIzvore, type Izvor, type Nalaz } from "../lib/integracija/pravila"
-import { sanitizujSql, filtrirajNamjernePolicyless } from "../lib/integracija/sql"
+import {
+  sanitizujSql,
+  filtrirajNamjernePolicyless,
+  filtrirajOznaceneIzuzetke,
+} from "../lib/integracija/sql"
 import {
   parsirajOpcije,
   filtrirajSqlImena,
@@ -151,13 +155,20 @@ function odaberiPutanjeMigracija(opcije: Opcije, sveImenaMigracija: string[]): s
 /** Svaki fajl ide kroz provjeriSql ZASEBNO (jedan Izvor = jedan fajl) — tako `putanja`
  *  i `linija` u nalazu pokazuju na stvaran fajl i stvarnu liniju, ne na sintetički
  *  agregat. */
-async function ucitajMigracijeIzvore(putanje: string[]): Promise<Izvor[]> {
-  return Promise.all(
-    putanje.map(async (putanja) => ({
-      putanja,
-      sadrzaj: sanitizujSql(await readFile(join(KORIJEN, putanja), "utf8")),
-    })),
+async function ucitajMigracijeIzvore(
+  putanje: string[],
+): Promise<{ izvori: Izvor[]; sirovo: Map<string, string> }> {
+  const sirovo = new Map<string, string>()
+  const izvori = await Promise.all(
+    putanje.map(async (putanja) => {
+      const tekst = await readFile(join(KORIJEN, putanja), "utf8")
+      // Sirov sadržaj se čuva jer `integracija-dozvoli` marker živi u komentaru, a
+      // sanitizacija komentare maskira — filter izuzetaka mora gledati original.
+      sirovo.set(putanja, tekst)
+      return { putanja, sadrzaj: sanitizujSql(tekst) }
+    }),
   )
+  return { izvori, sirovo }
 }
 
 async function main(): Promise<void> {
@@ -255,12 +266,13 @@ async function main(): Promise<void> {
       : `ℹ obuhvat migracija: ${putanjeMigracija.length} fajl(ova) — commitovano u odnosu na ${opcije.baza} ILI necommitovano u radnom stablu (untracked/staged/modified)`,
   )
 
-  const sviIzvori = [
-    ...(await ucitajTsIzvore()),
-    ...(await ucitajMigracijeIzvore(putanjeMigracija)),
-  ]
+  const migracije = await ucitajMigracijeIzvore(putanjeMigracija)
+  const sviIzvori = [...(await ucitajTsIzvore()), ...migracije.izvori]
   nalazi.push(
-    ...filtrirajNamjernePolicyless(provjeriIzvore(sviIzvori), RLS_INTENTIONAL_POLICYLESS),
+    ...filtrirajOznaceneIzuzetke(
+      filtrirajNamjernePolicyless(provjeriIzvore(sviIzvori), RLS_INTENTIONAL_POLICYLESS),
+      migracije.sirovo,
+    ),
   )
 
   if (nalazi.length === 0) {

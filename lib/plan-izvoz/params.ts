@@ -6,7 +6,16 @@ export type IzvozOpseg = "sve" | "filtrirano"
 
 export type IzvozParams =
   | { ok: true; legacy: true; format: IzvozFormat; count: boolean }
-  | { ok: true; legacy: false; format: IzvozFormat; opseg: IzvozOpseg; period: IzvozPeriod; count: boolean }
+  | {
+      ok: true
+      legacy: false
+      format: IzvozFormat
+      opseg: IzvozOpseg
+      period: IzvozPeriod
+      count: boolean
+      /** Uključi otvorene obaveze prenesene iz perioda prije odabranog. Default: da. */
+      preneseno: boolean
+    }
   | { ok: false; greska: "raspon" }
 
 export function parseIzvozParams(sp: URLSearchParams): IzvozParams {
@@ -19,6 +28,10 @@ export function parseIzvozParams(sp: URLSearchParams): IzvozParams {
 
   const opseg: IzvozOpseg = sp.get("opseg") === "filtrirano" ? "filtrirano" : "sve"
   const godina = Number(sp.get("godina")) || currentYear()
+  // Prenesene obaveze su UKLJUČENE po defaultu — plan koji ih izostavi laže klijentu
+  // (na prelazu godine to je većina otvorenih stavki). `preneseno=0` = striktno
+  // kalendarski period, za onoga ko to izričito traži.
+  const preneseno = sp.get("preneseno") !== "0"
 
   let period: IzvozPeriod
   switch (periodParam) {
@@ -45,5 +58,5 @@ export function parseIzvozParams(sp: URLSearchParams): IzvozParams {
       period = { mod: "om" }
       break
   }
-  return { ok: true, legacy: false, format, opseg, period, count }
+  return { ok: true, legacy: false, format, opseg, period, count, preneseno }
 }

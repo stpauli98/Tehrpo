@@ -163,6 +163,45 @@ export function sanitizujSql(sadrzaj: string): string {
  * test ne bi pao jer je poruka slobodan tekst). Nalaz bez `tabela` polja se ZADRŽAVA
  * (fail-loud: nepoznata tabela se ne izuzima).
  */
+/**
+ * Marker kojim migracija sama izuzima svoj nalaz `zastita-uklonjena`:
+ *
+ *     -- integracija-dozvoli: zastita-uklonjena — <razlog>
+ *
+ * Postoji jer je uklanjanje politike PONEKAD SAMA POPRAVKA: politika koju ne koristi nijedan
+ * legitiman tok (sav I/O ide service-role klijentom koji zaobilazi RLS) je čista napadačka
+ * površina, a njeno uklanjanje ostavlja tabelu STROŽOM, ne slabijom — bez INSERT/UPDATE
+ * politike Postgres podrazumijevano odbija upis. Pravilo to ne može znati jer gleda jedan
+ * fajl i broji politike u njemu.
+ *
+ * Bez ovog izuzetka takva migracija zauvijek obara gate, što gura na gore rješenje: lažnu
+ * politiku `with check (false)` koja postoji samo da alat bude zadovoljan.
+ *
+ * Razlog iza crte je OBAVEZAN — goli marker ne vrijedi, isto kao kod admin-klijenta.
+ * Traži se u SIROVOM sadržaju (prije `sanitizujSql`), jer sanitizacija maskira komentare.
+ */
+const MARKER_SQL_DOZVOLI = /^[^\S\n]*--[^\S\n]*integracija-dozvoli:[^\S\n]*zastita-uklonjena[^\S\n]*[—–-][^\S\n]*(\S.*?)[^\S\n]*$/m
+
+/**
+ * Izbaci nalaze pravila "zastita-uklonjena" za one fajlove koji nose marker izuzetka.
+ * `sirovoPoPutanji` mora držati sadržaj PRIJE `sanitizujSql` — poslije sanitizacije markera nema.
+ *
+ * Filtrira PO FAJLU, ne globalno: marker u jednoj migraciji ne izuzima drugu. Ostala pravila
+ * (uključujući "tabela-bez-politike" i "rls-iskljucen") prolaze nepromijenjena — marker izuzima
+ * isključivo ono što je autor migracije eksplicitno naveo. Nalaz čija putanja nije u mapi se
+ * ZADRŽAVA (fail-loud, isto kao kod policyless filtera).
+ */
+export function filtrirajOznaceneIzuzetke(
+  nalazi: readonly Nalaz[],
+  sirovoPoPutanji: ReadonlyMap<string, string>,
+): Nalaz[] {
+  return nalazi.filter((n) => {
+    if (n.pravilo !== "zastita-uklonjena") return true
+    const sirovo = sirovoPoPutanji.get(n.putanja)
+    return sirovo === undefined || !MARKER_SQL_DOZVOLI.test(sirovo)
+  })
+}
+
 export function filtrirajNamjernePolicyless(
   nalazi: readonly Nalaz[],
   allowlist: readonly string[],

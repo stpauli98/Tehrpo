@@ -175,7 +175,14 @@ export function PrimaociCombobox({
         ))}
       </div>
 
-      {/* Combobox — dodavanje primalaca; skriveno za pregled (read-only) */}
+      {/* Combobox — dodavanje primalaca; skriveno za pregled (read-only).
+          Blur zatvara listu kad fokus ode van komponente — to je i dalje tačno za klik
+          IZVAN. Klik NA OPCIJU je poseban slučaj: Safari pri kliku ne prebacuje fokus na
+          <button>, pa blur inputa dolazi sa relatedTarget === null, contains(null) je
+          false, lista se zatvori PRIJE nego onClick opcije stigne i izbor se tiho izgubi
+          (bez greške, bez poruke). Zato opcije ispod hvataju onMouseDown + preventDefault.
+          Alternativa „ignoriši relatedTarget === null" je odbačena: tada klik na prazan
+          prostor izvan komponente prestane zatvarati listu. */}
       {mozeUrediti && (
       <div
         ref={rootRef} className="relative"
@@ -198,6 +205,9 @@ export function PrimaociCombobox({
             id="primaoci-lista" role="listbox" data-testid="primaoci-lista"
             className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-border bg-card py-1 shadow-lg"
           >
+            {/* onMouseDown + preventDefault na opcijama: fokus ostaje u inputu, pa se blur
+                ne okine i lista preživi do onClick-a (v. komentar na onBlur iznad — Safari
+                ne fokusira <button> na klik). Bez toga se izbor primaoca tiho gubi. */}
             {opcije.map((o, i) => (
               <li key={o.id} role="option" aria-selected={hi === i}>
                 <button
@@ -207,6 +217,7 @@ export function PrimaociCombobox({
                     hi === i && "bg-muted",
                     FOCUS_RING,
                   )}
+                  onMouseDown={(e) => e.preventDefault()}
                   onMouseEnter={() => setHi(i)} onClick={() => dodajKontakt(o.id)}
                 >
                   <span className="font-medium">{o.ime}{o.funkcija && <span className="font-normal text-muted-foreground"> · {o.funkcija}</span>}</span>
@@ -223,6 +234,7 @@ export function PrimaociCombobox({
                     hi === opcije.length && "bg-muted",
                     FOCUS_RING,
                   )}
+                  onMouseDown={(e) => e.preventDefault()}
                   onMouseEnter={() => setHi(opcije.length)} onClick={() => dodajEmail(q)}
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden />

@@ -1,9 +1,16 @@
 import { test, expect } from "@playwright/test"
 import { deleteKlijentByNaziv } from "./db"
-import { kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
+import { idiNa, kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
 
 // Firma sa lokacijama i terminima koju testovi sami naprave i sami obrišu —
 // nijedan test se ne oslanja na konkretnu zasijanu firmu iz DEMO skupa.
+//
+// Napomena o timeout-ima: `toBeHidden()` na sheet-ovima je nekad nosio ručni
+// `{ timeout: 5000 }`, iako je globalni expect budžet 15s (playwright.config.ts).
+// Sheet se zatvara tek kad server akcija završi (`!pending && state.ok` u
+// useEffect-u komponente), a upis u cloud DEMO uz RLS i audit trigger to znao
+// prebaciti preko 5s → "Expected: hidden, Received: visible" na Lokacije CRUD
+// testu, u oba browsera. Override je uklonjen: config je jedini izvor budžeta.
 let fx: FirmaFikstura
 
 test.beforeAll(async () => {
@@ -23,13 +30,42 @@ async function kreirajKlijent(page: import("@playwright/test").Page, naziv: stri
   await page.getByTestId("novi-klijent-telefon").fill("+387 51 000 000")
   await page.getByTestId("novi-klijent-email").fill("e2e-klijent@example.com")
   await page.getByTestId("novi-klijent-submit").click()
-  await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden({ timeout: 5000 })
+  // Bez ručnog `{ timeout: 5000 }` — v. napomenu o timeout-ima na vrhu fajla (PR #81).
+  await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden()
+  // Server akcija radi `revalidatePath`, pa App Router sam pokrene osvježavanje /klijenti.
+  // Ako pozivalac odmah izda `page.goto`, ta osvježavajuća navigacija prekine njegovu i
+  // Playwright baci „interrupted by another navigation". Čekamo STANJE (mreža se smirila =
+  // refresh je slegao), ne fiksnu pauzu i ne retry.
+  await page.waitForLoadState("networkidle")
+}
+
+/**
+ * Čeka da React STVARNO hidrira dati čvor. Tabovi klijenta (KlijentTabs) nisu <a href>
+ * nego `router.push` u klijentskoj komponenti: klik nad još-ne-hidriranim SSR HTML-om
+ * tiho propadne, URL nikad ne dobije `?tab=…` i `waitForURL` istekne (webkit, dev build,
+ * puno paralelnih workera — tačan uzrok pada #246 u finalnom prolazu).
+ * Provjera je STANJE — React na hidriranom host čvoru ostavlja `__reactFiber$…` /
+ * `__reactProps$…` ključeve — a ne pauza i ne retry.
+ */
+async function cekajHidraciju(page: import("@playwright/test").Page, testId: string) {
+  await page.getByTestId(testId).waitFor({ state: "visible" })
+  await page.waitForFunction(
+    (id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`)
+      return !!el && Object.keys(el).some((k) => k.startsWith("__react"))
+    },
+    testId,
+  )
 }
 
 async function otvoriKlijent(page: import("@playwright/test").Page, naziv: string) {
-  await page.goto("/klijenti?q=" + encodeURIComponent(naziv), { waitUntil: "domcontentloaded" })
+  // idiNa (ne goto): kreiranje klijenta revalidira /klijenti, pa refresh navigacija
+  // može prekinuti ovaj goto — v. komentar helpera u fixtures.ts.
+  await idiNa(page, "/klijenti?q=" + encodeURIComponent(naziv), { waitUntil: "domcontentloaded" })
   await page.getByTestId("klijent-card").filter({ hasText: naziv }).first().click()
   await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
+  // Traka tabova mora biti hidrirana prije bilo kakvog klika po detaljima klijenta.
+  await cekajHidraciju(page, "tab-id-karta")
 }
 
 test.describe.configure({ mode: "serial" })
@@ -117,6 +153,7 @@ test.describe("Faza 4 — Lokacije CRUD", () => {
       await page.waitForURL(/tab=lokacije/)
 
       // create
+      await cekajHidraciju(page, "nova-lokacija-btn")
       await page.getByTestId("nova-lokacija-btn").click()
       await expect(page.getByTestId("lokacija-sheet")).toBeVisible()
       await page.getByTestId("lokacija-naziv").fill("Test Lokacija")
@@ -124,7 +161,7 @@ test.describe("Faza 4 — Lokacije CRUD", () => {
       await page.getByTestId("lokacija-kontakt-izbor").getByRole("radio", { name: /Novi/ }).click()
       await page.getByTestId("lokacija-kontakt-ime").fill("Marko M.")
       await page.getByTestId("lokacija-submit").click()
-      await expect(page.getByTestId("lokacija-sheet")).toBeHidden({ timeout: 5000 })
+      await expect(page.getByTestId("lokacija-sheet")).toBeHidden()
       await expect(page.getByTestId("lokacije-table")).toContainText("Test Lokacija")
 
       // edit — promijeni grad
@@ -133,7 +170,7 @@ test.describe("Faza 4 — Lokacije CRUD", () => {
       await expect(page.getByTestId("lokacija-sheet")).toBeVisible()
       await page.getByTestId("lokacija-grad").fill("Prijedor")
       await page.getByTestId("lokacija-submit").click()
-      await expect(page.getByTestId("lokacija-sheet")).toBeHidden({ timeout: 5000 })
+      await expect(page.getByTestId("lokacija-sheet")).toBeHidden()
       await expect(page.getByTestId("lokacija-row").filter({ hasText: "Test Lokacija" })).toContainText("Prijedor")
 
       // delete — red nestane
@@ -159,7 +196,7 @@ test.describe("Faza 4 — Novi klijent", () => {
       await page.getByTestId("novi-klijent-telefon").fill("+387 51 000 000")
       await page.getByTestId("novi-klijent-email").fill("e2e-klijent@example.com")
       await page.getByTestId("novi-klijent-submit").click()
-      await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden({ timeout: 5000 })
+      await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden()
       const after = Number((await page.getByTestId("klijenti-total").textContent())?.match(/\d+/)?.[0] ?? "0")
       expect(after).toBe(before + 1)
     } finally {
@@ -178,7 +215,7 @@ test.describe("Faza 4 — Klijent edit i delete", () => {
       await expect(page.getByTestId("klijent-edit-sheet")).toBeVisible()
       await page.getByTestId("edit-klijent-napomena").fill("E2E napomena " + Date.now())
       await page.getByTestId("edit-klijent-submit").click()
-      await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden({ timeout: 5000 })
+      await expect(page.getByTestId("klijent-edit-sheet")).toBeHidden()
     } finally {
       await deleteKlijentByNaziv(naziv)
     }
@@ -238,12 +275,13 @@ test.describe("Faza 4 — Vizuelni smoke", () => {
       await otvoriKlijent(page, naziv)
       await page.getByTestId("tab-lokacije").click()
       await page.waitForURL(/tab=lokacije/)
+      await cekajHidraciju(page, "nova-lokacija-btn")
       await page.getByTestId("nova-lokacija-btn").click()
       await page.getByTestId("lokacija-naziv").fill("Centrala")
       await page.getByTestId("lokacija-kontakt-izbor").getByRole("radio", { name: /Novi/ }).click()
       await page.getByTestId("lokacija-kontakt-ime").fill("Ana A.")
       await page.getByTestId("lokacija-submit").click()
-      await expect(page.getByTestId("lokacija-sheet")).toBeHidden({ timeout: 5000 })
+      await expect(page.getByTestId("lokacija-sheet")).toBeHidden()
       // Lokacijski kontakt se prikazuje u Lokacije tabu (tab Kontakti je sad za kontakte FIRME).
       await expect(page.getByTestId("lokacije-table")).toContainText("Ana A.")
     } finally {

@@ -84,7 +84,7 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   {
     name: "predloziZapisnik",
     description:
-      "Pripremi PRIJEDLOG teksta zapisnika za jedan termin (po termin_id, koji dobiješ iz searchTermini). Vraća nalaz i zaključak. NE snima — korisnik potvrđuje snimanje u interfejsu.",
+      "Pripremi PRIJEDLOG teksta zapisnika za jedan termin (po termin_id, koji dobiješ iz searchTermini). Vraća nalaz i zaključak. NE snima — korisnik potvrđuje snimanje u interfejsu. Radi ISKLJUČIVO za termine u statusu 'izvrseno' — za neizvršen termin vraća odbijenicu i prijedlog se ne pravi.",
     input_schema: {
       type: "object",
       properties: { termin_id: { type: "string", description: "UUID termina iz searchTermini rezultata" } },
@@ -152,13 +152,21 @@ export async function executeTool(name: string, input: unknown): Promise<ToolRes
     if (!terminId) return { forModel: "Nedostaje termin_id." }
     const { data: t, error } = await supabase
       .from("termini_view")
-      .select("klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
+      .select("klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja, status")
       .eq("id", terminId)
       .maybeSingle()
     // S1: pad upita nije isto što i „nema reda" — bez ove grane bi kvar baze model
     // prijavio korisniku kao „termin ne postoji" (ostala tri alata već razlikuju).
     if (error) return { forModel: `Greška pri čitanju termina: ${error.message}` }
     if (!t) return { forModel: "Termin sa tim ID-em ne postoji." }
+    // N12: bez `proposal` UI ne prikazuje dugme „Snimi zapisnik", pa se prijedlog za
+    // neizvršen termin uopšte ne nudi. Server akcija (snimiZapisnik) ima isti guard —
+    // ovo je samo da korisnik ne dobije dugme koje bi svakako bilo odbijeno.
+    if (t.status !== "izvrseno") {
+      return {
+        forModel: `Termin nije izvršen (status: ${t.status ?? "nepoznat"}). Zapisnik dokumentuje IZVRŠENU provjeru, pa prijedlog nije napravljen i dugme za snimanje nije ponuđeno. Objasni korisniku da termin prvo mora biti evidentiran kao izvršen (sa datumom izvršenja), pa tek onda može zapisnik. NE izmišljaj tekst zapisnika sam.`,
+      }
+    }
     // datum_izvrsenja je `date` kolona (zidni datum); fallback "danas" po APP_TIME_ZONE (todayIso), ne UTC
     const datum = t.datum_izvrsenja ?? todayIso()
     const c = await generateZapisnik({

@@ -437,6 +437,136 @@ describe("KoStaPrimaTab — wiring (mutation-killing)", () => {
     expect(tekst).not.toContain("nepokriveneLokacije")
   })
 
+  // ---- PROVJERA PRED SLANJE (B5) -------------------------------------------------------
+  // Ekran je jedino mjesto na kojem vlasnik prije prvog stvarnog slanja vidi ko bi šta dobio.
+  // Adresa koju motor odbaci (`jeDostavljiva`) do sada je sa ekrana samo NESTAJALA — izgledala
+  // je kao da nikad nije ni unesena. Ovi testovi brane da odbacivanje bude vidljivo.
+
+  describe("odbačene adrese su vidljive, ne tiho izostavljene", () => {
+    it("admin sa nerutabilnom adresom: banner ga imenuje, a spisak „uvijek primaju“ ga NE sadrži", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        korisnici: [
+          { id: "a1", ime: "Test Admin", email: "admin@tehpro.local", uloga: "admin", aktivan: true, prima_podsjetnike: true },
+          { id: "a2", ime: "Pravi Admin", email: "sef@tehpro.ba", uloga: "admin", aktivan: true, prima_podsjetnike: true },
+        ],
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+        kontakt_osobe: [],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+
+      const banner = findByTestId(root, "ksp-stalni-odbaceni-banner")
+      expect(banner).toBeDefined()
+      expect(textOf(banner)).toContain("admin@tehpro.local")
+      const uvijek = textOf(findByTestId(root, "ksp-uvijek-primaju"))
+      expect(uvijek).toContain("sef@tehpro.ba")
+      expect(uvijek).not.toContain("admin@tehpro.local")
+    })
+
+    it("bez ijedne odbačene adrese banner se ne prikazuje (nije stalno upozorenje)", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        korisnici: [
+          { id: "a2", ime: "Pravi Admin", email: "sef@tehpro.ba", uloga: "admin", aktivan: true, prima_podsjetnike: true },
+        ],
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+        kontakt_osobe: [],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      expect(findByTestId(await KoStaPrimaTab(), "ksp-stalni-odbaceni-banner")).toBeUndefined()
+    })
+
+    it("neaktivan admin sa nerutabilnom adresom NE pali banner (motor ga ionako ne bi ni razmatrao)", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        korisnici: [
+          { id: "a1", ime: "Test Admin", email: "admin@tehpro.local", uloga: "admin", aktivan: false, prima_podsjetnike: true },
+          { id: "a3", ime: "Opt-out", email: "admin@tehpro.test", uloga: "admin", aktivan: true, prima_podsjetnike: false },
+        ],
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: [] }],
+        kontakt_osobe: [],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      expect(findByTestId(await KoStaPrimaTab(), "ksp-stalni-odbaceni-banner")).toBeUndefined()
+    })
+
+    it("firmina adresa na rezervisanom domenu (example.com) se imenuje u redu firme", async () => {
+      // Najopasniji slučaj: red i dalje kaže „prima" (brojAdresa računa EMAIL_RE-validne),
+      // a motor ne bi poslao NIŠTA. Bez ove poruke ekran bi tvrdio nešto neistinito.
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["dokumentacija@example.com"] }],
+        kontakt_osobe: [
+          { klijent_id: "k1", email: "sef@firma.local", podsjetnik_primalac: true, lokacija_id: null },
+          { klijent_id: "k1", email: "uredan@firma.ba", podsjetnik_primalac: true, lokacija_id: null },
+        ],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+
+      const red = findByTestId(root, "ksp-odbacene-k1")
+      expect(red).toBeDefined()
+      const tekst = textOf(red)
+      expect(tekst).toContain("dokumentacija@example.com")
+      expect(tekst).toContain("sef@firma.local")
+      expect(tekst).not.toContain("uredan@firma.ba")
+    })
+
+    it("kontakt koji NIJE flagovan kao primalac se ne prijavljuje kao odbačen (nije ni kandidat)", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["uredan@firma.ba"] }],
+        kontakt_osobe: [
+          { klijent_id: "k1", email: "sef@firma.local", podsjetnik_primalac: false, lokacija_id: null },
+        ],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      expect(findByTestId(await KoStaPrimaTab(), "ksp-odbacene-k1")).toBeUndefined()
+    })
+
+    it("gejt: dok firma ionako ne prima (saljiFirmi=false), spisak odbačenih je šum i ne prikazuje se", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        klijenti: [{ id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: false, podsjetnik_emails: ["dokumentacija@example.com"] }],
+        kontakt_osobe: [],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+      expect(findByTestId(root, "ksp-odbacene-k1")).toBeUndefined()
+      expect(textOf(findByTestId(root, "ksp-razlog-k1"))).toContain("razlogFirma")
+    })
+
+    it("odbačena adresa jedne firme ne curi u red druge firme", async () => {
+      const { supabase } = makeSupabaseMock({
+        postavke: { salji_klijentima: true, podsjetnici_aktivni: true },
+        klijenti: [
+          { id: "k1", naziv: "Firma Jedna", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["lose@example.com"] },
+          { id: "k2", naziv: "Firma Dva", salji_podsjetnik_klijentu: true, podsjetnik_emails: ["dobro@firma.ba"] },
+        ],
+        kontakt_osobe: [],
+        lokacije: [],
+      })
+      createServerSupabaseClientMock.mockResolvedValue(supabase)
+
+      const root = await KoStaPrimaTab()
+      expect(findByTestId(root, "ksp-odbacene-k1")).toBeDefined()
+      expect(findByTestId(root, "ksp-odbacene-k2")).toBeUndefined()
+    })
+  })
+
   describe("gejt trebaUpozorenje mora važiti i za terminiBezLokacije, ne samo za nepokrivene lokacije (M15)", () => {
     // Sva tri testa: k1 ima termin bez lokacije (bi trebalo terminiBezLokacije=true da nije
     // gejta) — svaki test zatvara gejt jednim drugim razlogom iz precedencije

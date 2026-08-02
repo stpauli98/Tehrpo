@@ -33,13 +33,20 @@ export async function snimiZapisnik(_prev: ActionResult, formData: FormData): Pr
   const supabase = await createServerSupabaseClient()
   const { data: term, error: termErr } = await supabase
     .from("termini_view")
-    .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja")
+    .select("klijent_id, klijent_naziv, lokacija_naziv, vrsta_naziv, datum_izvrsenja, status")
     .eq("id", termin_id)
     .maybeSingle()
   // S1: pad upita nije isto što i „nema reda" — bez ove grane oboje bi javljalo
   // „Termin ne postoji", pa bi kvar baze izgledao kao pogrešan podatak u prijedlogu.
   if (termErr) return { ok: false, message: t("greskaCitanja") }
   if (!term || !term.klijent_id) return { ok: false, message: t("terminNePostoji") }
+
+  // N12: zapisnik dokumentuje IZVRŠENU zakonsku provjeru. Isti guard kao na putu kroz
+  // /dokumenti (generateZapisnikAction) — bez njega bi asistent snimio .docx o pregledu
+  // koji se nikad nije desio, neraspoznatljiv od legitimnog zapisnika.
+  // Provjerava se sirovi `status`, ne `status_izvedeni` (koji 'planirano' po roku prikazuje
+  // kao 'kasni'), da guard ostane byte-identičan drugom putu.
+  if (term.status !== "izvrseno") return { ok: false, message: t("zapisnikSamoIzvrsen") }
 
   // datum_izvrsenja je `date` kolona (zidni datum); fallback "danas" po APP_TIME_ZONE (todayIso), ne UTC
   const datum = term.datum_izvrsenja ?? todayIso()

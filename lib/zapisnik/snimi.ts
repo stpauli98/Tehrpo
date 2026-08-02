@@ -5,6 +5,7 @@ import { uploadDokument, removeDokument } from "@/lib/supabase/storage"
 import { APP_LOCALE } from "@/lib/locale"
 import { formatDatum } from "@/lib/date"
 import { getMessages } from "@/i18n/messages"
+import { zapisnikDryRun, type ZapisnikIzvor } from "./content"
 import type { Database } from "@/db/types"
 
 const tIzvoz = createTranslator({
@@ -33,11 +34,25 @@ export async function snimiZapisnikDokument(
     vrstaNaziv: string | null
     datum: string
     docx: Buffer
+    /**
+     * Porijeklo sadržaja (N11) — upisuje se u `dokumenti.zapisnik_izvor`.
+     *
+     * Kad ga pozivalac ne proslijedi, izvodi se iz okruženja: ako zapisnik u ovoj
+     * instalaciji uopšte NE MOŽE biti model-generisan (nema ANTHROPIC_API_KEY ili je
+     * ZAPISNIK_DRY_RUN=1), sadržaj je šablonski.
+     *
+     * NE dira `generated_by_ai` — ta kolona odgovara na drugo pitanje („je li dokument
+     * generisan ili otpremljen?") i za svaki zapisnik iz ovog puta je tačno. Ranije je
+     * ovdje stajalo `generated_by_ai: izvor === "model"`, čime je šablonski zapisnik
+     * postajao neraspoznatljiv od ručno otpremljenog dokumenta — druga neistina umjesto prve.
+     */
+    izvor?: ZapisnikIzvor
     /** i18n fallback pozivaoca kad Storage padne bez `Error` poruke (namespace mu je vlastiti). */
     uploadGreskaFallback: string
   },
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { terminId, klijentId, vrstaNaziv, datum, docx, uploadGreskaFallback } = opts
+  const izvor: ZapisnikIzvor = opts.izvor ?? (zapisnikDryRun() ? "sablon" : "model")
 
   // `datum` je interno ISO ("YYYY-MM-DD"); ime fajla nosi standard prikaza dd.MM.yyyy
   const naziv = tIzvoz("imeFajla", {
@@ -61,6 +76,7 @@ export async function snimiZapisnikDokument(
     velicina_bajt: docx.length,
     tip: "zapisnik",
     generated_by_ai: true,
+    zapisnik_izvor: izvor,
   })
   if (error) {
     try {

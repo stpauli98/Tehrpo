@@ -74,6 +74,46 @@ export async function updatePostavke(
 // Koristi ga postaviVrstaInterval (inline autosave u tabeli Vrste pregleda).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+// C1: uklanjanje periodike sa vrste TIHO ubija lance obaveza.
+//
+// tg_termini_auto_cycle sljedeći ciklus računa iz
+// coalesce(termini.interval_mjeseci, vrste_provjera.podrazumevani_interval_mjeseci).
+// Otvoreni ponavljajući termin koji nema VLASTITI interval visi, dakle, o intervalu vrste:
+// čim se on obriše, zatvaranje tog termina prolazi bez sljedećeg ciklusa — zakonska obaveza
+// nestane iz plana. Baza to od sada bilježi (prekinuti_lanci) i javlja u zdravlje_sistema(),
+// ali ovdje se sprječava da uopšte nastane.
+//
+// Zašto SPRJEČAVANJE, a ne samo upozorenje: rezultat akcije koji UI prikazuje je ili uspjeh
+// ili poruka greške (lib/akcija-toast.ts) — „uspjeh sa upozorenjem" se ne bi vidio nigdje, a
+// upozorenje koje niko ne pročita je isto što i tišina. Sistem uz to VEĆ odbija da napravi
+// ponavljajući termin nad vrstom bez intervala (app/(dashboard)/termini/actions.ts i
+// klijenti/actions.ts); ovo je isto pravilo, samo na drugom kraju — inače invarijanta vrijedi
+// pri unosu, a ruši se naknadnim brisanjem.
+//
+// Izlaz iz situacije postoji i bez ove akcije: termini se mogu otkazati/zatvoriti, ili im se
+// isključi ponavljanje — tek onda periodika vrste više nikome ne treba.
+type SupabaseKlijent = Awaited<ReturnType<typeof createServerSupabaseClient>>
+
+async function periodikaSeSmijeUkloniti(
+  supabase: SupabaseKlijent,
+  vrstaId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const { count, error } = await supabase
+    .from("termini")
+    .select("id", { count: "exact", head: true })
+    .eq("vrsta_provjere_id", vrstaId)
+    .eq("ponavlja_se", true)
+    .is("interval_mjeseci", null)
+    .is("datum_izvrsenja", null)
+    .in("status", ["planirano", "zakazano"])
+
+  // Neprovjereno ≠ bezopasno: ako provjera ne uspije, radnja se ne pušta. Uklanjanje
+  // periodike nije hitno i ponovni pokušaj ništa ne košta; tiho ubijen lanac košta rok.
+  if (error) return { ok: false, message: t("periodikaProvjeraNijeUspjela") }
+  if ((count ?? 0) > 0) return { ok: false, message: t("periodikaUklanjanjeBlokirano", { broj: count ?? 0 }) }
+  return { ok: true }
+}
+
 // ─── Nova vrsta pregleda ─────────────────────────────────────────────────────
 
 const createVrstaSchema = z.object({
@@ -306,6 +346,19 @@ export async function updateVrsta(_prev: ActionResult, formData: FormData): Prom
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { id, naziv, interval, zakonski_osnov, vodi_dokumentaciju } = parsed.data
   const supabase = await createServerSupabaseClient()
+
+  // C1: periodika se smije UKLONITI samo ako od nje ne visi nijedan otvoren lanac.
+  // Provjerava se prije upisa — ostatak izmjene (naziv, osnov, dokumentacija) se ne smije
+  // primijeniti napola.
+  if (interval === null) {
+    const { data: trenutna } = await supabase
+      .from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", id).maybeSingle()
+    if (trenutna?.podrazumevani_interval_mjeseci != null) {
+      const provjera = await periodikaSeSmijeUkloniti(supabase, id)
+      if (!provjera.ok) return { ok: false, message: provjera.message }
+    }
+  }
+
   const { error } = await supabase.from("vrste_provjera").update({
     naziv,
     podrazumevani_interval_mjeseci: interval,
@@ -340,6 +393,19 @@ export async function postaviVrstaInterval(vrstaId: string, interval: number | n
     return { ok: false, message: t("intervalNeispravanTacka") }
   }
   const supabase = await createServerSupabaseClient()
+
+  // C1: brisanje intervala (polje se isprazni pa se izgubi fokus) je do sada prolazilo bez
+  // ijedne provjere, iako je to jedini korak koji otvorenim ponavljajućim terminima te vrste
+  // oduzima periodiku.
+  if (interval === null) {
+    const { data: trenutna } = await supabase
+      .from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", vrstaId).maybeSingle()
+    if (trenutna?.podrazumevani_interval_mjeseci != null) {
+      const provjera = await periodikaSeSmijeUkloniti(supabase, vrstaId)
+      if (!provjera.ok) return { ok: false, message: provjera.message }
+    }
+  }
+
   const { error } = await supabase
     .from("vrste_provjera")
     .update({ podrazumevani_interval_mjeseci: interval })

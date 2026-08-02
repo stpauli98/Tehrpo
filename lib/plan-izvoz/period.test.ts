@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest"
-import { validRaspon, izvozPeriodRange, izvozPeriodLabel } from "./period"
+import {
+  validRaspon,
+  izvozPeriodRange,
+  izvozPeriodLabel,
+  prenesenoGranica,
+  prenesenoOrIzraz,
+  jePreneseniRed,
+} from "./period"
 
 describe("validRaspon", () => {
   it("oba ISO i od<=do → true", () => {
@@ -40,5 +47,74 @@ describe("izvozPeriodLabel", () => {
     expect(l).toContain("01.07.2026")
     expect(l).toContain("15.07.2026")
     expect(l).toContain("–")
+  })
+})
+
+// ── Prelazak godine (B2): otvorene obaveze iz ranijih perioda ne smiju nestati ──
+
+describe("prenesenoGranica", () => {
+  it("god → 1. januar te godine", () => {
+    expect(prenesenoGranica({ mod: "god", godina: 2027 })).toBe("2027-01-01")
+  })
+  it("mj → prvi dan tog mjeseca", () => {
+    expect(prenesenoGranica({ mod: "mj", godina: 2027, mjesec: 3 })).toBe("2027-03-01")
+  })
+  it("om → prvi dan tekućeg mjeseca (danas override)", () => {
+    expect(prenesenoGranica({ mod: "om" }, "2027-01-04")).toBe("2027-01-01")
+  })
+  it("raspon → 'od'", () => {
+    expect(prenesenoGranica({ mod: "raspon", od: "2027-02-10", do: "2027-03-01" })).toBe("2027-02-10")
+  })
+  it("svi → null (nema donje granice, nema prenosa)", () => {
+    expect(prenesenoGranica({ mod: "svi" })).toBeNull()
+  })
+})
+
+describe("jePreneseniRed", () => {
+  it("datum ispod granice → preneseno", () => {
+    expect(jePreneseniRed("2026-11-30", "2027-01-01")).toBe(true)
+  })
+  it("datum na granici ili iznad → nije preneseno", () => {
+    expect(jePreneseniRed("2027-01-01", "2027-01-01")).toBe(false)
+    expect(jePreneseniRed("2027-06-15", "2027-01-01")).toBe(false)
+  })
+  it("bez granice (mod 'svi') ili bez datuma → nije preneseno", () => {
+    expect(jePreneseniRed("2026-11-30", null)).toBe(false)
+    expect(jePreneseniRed(null, "2027-01-01")).toBe(false)
+  })
+})
+
+describe("prenesenoOrIzraz", () => {
+  const izraz = prenesenoOrIzraz("2027-01-01", "2027-12-31")
+
+  it("prva grana je period, druga su otvorene obaveze prije granice", () => {
+    expect(izraz).toBe(
+      "and(datum_prikaza.gte.2027-01-01,datum_prikaza.lte.2027-12-31)," +
+        "and(datum_prikaza.lt.2027-01-01,status_izvedeni.neq.izvrseno,status_izvedeni.neq.otkazano)",
+    )
+  })
+
+  // Izraz je ugovor prema PostgREST-u; ovdje ga izvršavamo kao predikat da dokažemo
+  // koje redove hvata, bez zavisnosti od baze.
+  const ocijeni = (r: { datum_prikaza: string; status_izvedeni: string }) =>
+    (r.datum_prikaza >= "2027-01-01" && r.datum_prikaza <= "2027-12-31") ||
+    (r.datum_prikaza < "2027-01-01" &&
+      r.status_izvedeni !== "izvrseno" &&
+      r.status_izvedeni !== "otkazano")
+
+  it("hvata zaostalu obavezu iz 2026. koja je i dalje otvorena", () => {
+    expect(ocijeni({ datum_prikaza: "2026-11-15", status_izvedeni: "kasni" })).toBe(true)
+    expect(ocijeni({ datum_prikaza: "2019-03-01", status_izvedeni: "planirano" })).toBe(true)
+  })
+  it("NE vuče zatvorenu istoriju iz ranijih godina", () => {
+    expect(ocijeni({ datum_prikaza: "2026-11-15", status_izvedeni: "izvrseno" })).toBe(false)
+    expect(ocijeni({ datum_prikaza: "2026-11-15", status_izvedeni: "otkazano" })).toBe(false)
+  })
+  it("zadržava sve iz same godine, bez obzira na status", () => {
+    expect(ocijeni({ datum_prikaza: "2027-05-05", status_izvedeni: "izvrseno" })).toBe(true)
+    expect(ocijeni({ datum_prikaza: "2027-05-05", status_izvedeni: "planirano" })).toBe(true)
+  })
+  it("NE vuče buduće godine", () => {
+    expect(ocijeni({ datum_prikaza: "2028-01-02", status_izvedeni: "planirano" })).toBe(false)
   })
 })

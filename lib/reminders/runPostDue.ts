@@ -17,7 +17,19 @@ export type Kanal = "interni" | "firma"
 export type SentItem = { terminId: string; kanal: Kanal; to: string[]; resendId: string; dryRun: boolean }
 export type SkipItem = { terminId: string; kanal: Kanal; razlog: string }
 export type ErrItem = { terminId: string; kanal: Kanal; message: string }
-export type PostDueRunResult = { sent: SentItem[]; skipped: SkipItem[]; errors: ErrItem[] }
+export type PostDueRunResult = {
+  sent: SentItem[]
+  skipped: SkipItem[]
+  errors: ErrItem[]
+  /**
+   * Koliko kanala (termin × kanal) je ostalo NEOBRAĐENO u ovom prolazu — zbog cap-a
+   * ili istrošenog vremenskog budžeta. Nije gubitak: claim se za njih nije ni uzeo,
+   * pa ih get_post_due_termine vraća i u sljedećem prolazu (cron je na 0 * * * *).
+   */
+  deferred: number
+  /** true kad je prekid izazvao vremenski budžet (a ne cap) — razlikovanje za nadzor. */
+  prekinutoZbogVremena: boolean
+}
 
 type Outcome =
   | ({ kind: "sent" } & SentItem)
@@ -41,27 +53,43 @@ type PostDueObavijestiUpdate = Database["public"]["Tables"]["post_due_obavijesti
  * stvarnu obavijest za taj ciklus — upravo scenario koji claim-first sprječava
  * za pravo slanje. Namjerno eksplicitan flag, ne poređenje `deps.send === drySend`:
  * referenca funkcije nije pouzdan signal (poziv može doći umotan/rebinding-om).
+ *
+ * OGRADE PROTIV PREKIDA (maxPerRun + deadlineAt): petlja je throttlovana (~1,36 s po
+ * grupi), a Vercel funkciju ubija na maxDuration. Kill usred obrade je opasan upravo
+ * zbog claim-first redoslijeda: claim je upisan, mejl je možda otišao, ali označavanje
+ * ishoda više nikad ne stigne → red ostaje 'u_toku' i za 15 minuta se šalje ponovo.
+ * Zato se prolaz sam zaustavlja PRIJE roka i ostatak prijavljuje kroz `deferred`.
+ * Ništa se ne gubi: neobrađeni kanali nemaju claim, pa ih sljedeći prolaz vidi.
  */
 export async function runPostDue(
   supabase: SupabaseClient<Database>,
   deps: {
     send?: (a: SendArgs) => Promise<SendResult>
+    maxPerRun?: number
     batchSize?: number
     delayMs?: number
     dryRun?: boolean
+    /** Apsolutni rok (Date.now() skala). Kad istekne, prolaz staje i ostatak ide u `deferred`. */
+    deadlineAt?: number
+    /** Izvor vremena — samo radi determinističkih testova; produkcija koristi Date.now. */
+    sada?: () => number
   } = {},
 ): Promise<PostDueRunResult> {
   const send = deps.send ?? sendEmail
   const isDryRun = deps.dryRun === true
   const brand = firmBrand()
   const fromAddr = env.EMAIL_FROM ?? "no-reply@tehpro"
+  const maxPerRun = Math.max(1, deps.maxPerRun ?? (Number(env.REMINDER_MAX_PER_RUN) || 90))
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
   const delayMs = deps.delayMs ?? (Number(env.REMINDER_BATCH_DELAY_MS) || 1100)
+  const deadlineAt = deps.deadlineAt
+  const sada = deps.sada ?? (() => Date.now())
+  const prazno = (): PostDueRunResult => ({ sent: [], skipped: [], errors: [], deferred: 0, prekinutoZbogVremena: false })
 
   const { data: due, error } = await supabase.rpc("get_post_due_termine")
   if (error) throw new Error(error.message)
   const rows = due ?? []
-  if (rows.length === 0) return { sent: [], skipped: [], errors: [] }
+  if (rows.length === 0) return prazno()
 
   // Baca ako se postavke/primaoci ne mogu pročitati. Namjerno: tiho tretiranje
   // transientnog kvara kao "prekidač je isključen" trajno bi progutalo firmin kanal,
@@ -178,15 +206,35 @@ export async function runPostDue(
     if (r.treba_firma) zadaci.push(() => obradiKanal(r, "firma"))
   }
 
+  // Cap po prolazu. get_post_due_termine sortira najhitnije prvo, pa odsijecanje repa
+  // odgađa najmanje hitne, a ne nasumične.
+  const zaObradu = zadaci.slice(0, maxPerRun)
+  let deferred = zadaci.length - zaObradu.length
+  let prekinutoZbogVremena = false
+  if (deferred > 0) {
+    console.warn(`[post-due] cap ${maxPerRun}/prolaz — odgođeno ${deferred} kanala za sljedeći prolaz`)
+  }
+
   const outcomes: Outcome[] = []
-  for (let i = 0; i < zadaci.length; i += batchSize) {
-    const grupa = zadaci.slice(i, i + batchSize)
+  for (let i = 0; i < zaObradu.length; i += batchSize) {
+    // Provjera je PRIJE grupe (uključujući prvu): bolje ne započeti slanje nego biti
+    // ubijen između mejla i upisa ishoda. Gladovanja nema — post-due se vrti svakih sat
+    // vremena, a pre-due (koji jedini može pojesti budžet) najviše jednom dnevno.
+    if (deadlineAt !== undefined && sada() >= deadlineAt) {
+      deferred += zaObradu.length - i
+      prekinutoZbogVremena = true
+      break
+    }
+    const grupa = zaObradu.slice(i, i + batchSize)
     // eslint-disable-next-line no-await-in-loop -- throttling: namjerno sekvencijalne grupe radi Resend rate-limita
     outcomes.push(...(await Promise.all(grupa.map((f) => f()))))
-    if (delayMs > 0 && i + batchSize < zadaci.length) {
+    if (delayMs > 0 && i + batchSize < zaObradu.length) {
       // eslint-disable-next-line no-await-in-loop -- pauza između grupa (rate-limit)
       await new Promise((resolve) => setTimeout(resolve, delayMs))
     }
+  }
+  if (prekinutoZbogVremena) {
+    console.warn(`[post-due] vremenski budžet istekao — odgođeno ${deferred} kanala za sljedeći prolaz`)
   }
 
   const sent: SentItem[] = []
@@ -197,5 +245,5 @@ export async function runPostDue(
     else if (o.kind === "skip") skipped.push({ terminId: o.terminId, kanal: o.kanal, razlog: o.razlog })
     else errors.push({ terminId: o.terminId, kanal: o.kanal, message: o.message })
   }
-  return { sent, skipped, errors }
+  return { sent, skipped, errors, deferred, prekinutoZbogVremena }
 }

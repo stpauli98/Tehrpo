@@ -15,14 +15,31 @@ import {
   validirajFajl,
   MAX_MB,
 } from "@/lib/dokumenti"
-// getTrenutniKorisnik/jeAdmin namjerno NISU importovani: brisanje dokumenta više ne traži
-// admina (naručilac obrnuo pravilo 30.07.2026.) — odlučuje RLS `dokumenti_del` + provjera
-// broja obrisanih redova nize u deleteDokumentAction.
+// `jeAdmin` namjerno NIJE uvezen: brisanje dokumenta više ne traži admina (naručilac
+// obrnuo pravilo 30.07.2026.) — odlučuje RLS `dokumenti_del` + provjera broja obrisanih
+// redova nize u deleteDokumentAction. `getTrenutniKorisnik`/`mozeUrediti` služe SAMO
+// kao predgejt za pisanje (v. `smijeUredjivati` ispod).
+import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { mozeUrediti } from "@/lib/auth/roles"
 import { todayIso } from "@/lib/date"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
+
+/**
+ * Predgejt za SVAKO pisanje dokumenata (upload, generisanje zapisnika).
+ *
+ * RLS na `dokumenti` već odbija ulogu `pregled` (`not je_pregled()` u `dokumenti_ins`),
+ * ali to je POSLJEDNJI korak: fajl u Storage ide preko service-role klijenta (koji RLS
+ * ne vidi), a zapisnik prije toga plati poziv modela. Bez ovog gejta je read-only
+ * korisnik mogao potrošiti Anthropic kredit i ostaviti osirotjeli blob u bucketu,
+ * a odbijenicu dobiti tek na DB insertu. Zato: uloga PRVA, model i Storage tek poslije.
+ */
+async function smijeUredjivati(): Promise<boolean> {
+  const ja = await getTrenutniKorisnik()
+  return !!ja && mozeUrediti(ja.uloga)
+}
 
 export type ActionResult =
   | { ok: true }
@@ -42,6 +59,8 @@ export async function uploadDokumentAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  if (!(await smijeUredjivati())) return { ok: false, message: t("izmjenaNijeDozvoljena") }
+
   const parsed = uploadSchema.safeParse({
     termin_id: formData.get("termin_id"),
     // default čuva ponašanje starih formi/testova bez `tip` polja
@@ -114,6 +133,9 @@ export async function generateZapisnikAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  // PRIJE svega: uloga. Ispod ove linije se troši model i piše u Storage.
+  if (!(await smijeUredjivati())) return { ok: false, message: t("izmjenaNijeDozvoljena") }
+
   const parsed = genSchema.safeParse({ termin_id: formData.get("termin_id") })
   if (!parsed.success) {
     // Hidden polja (termin_id/dokument_id/klijent_id) korisnik ne može ispraviti → `message`
@@ -232,6 +254,8 @@ export async function uploadKlijentDokumentAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  if (!(await smijeUredjivati())) return { ok: false, message: t("izmjenaNijeDozvoljena") }
+
   const parsed = uploadKlijentSchema.safeParse({
     klijent_id: formData.get("klijent_id"),
     tip: formData.get("tip") ?? "ostalo",

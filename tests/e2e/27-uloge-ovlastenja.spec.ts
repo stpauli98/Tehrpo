@@ -47,9 +47,11 @@ test.describe.serial("Uloge i ovlaštenja", () => {
   let opId = ""
   let pregledId = ""
   let mojaId = ""
+  let tudjaId = ""
   let dokumentId = ""
   let dokumentStoragePath = ""
   let terminId = ""
+  let terminTudjaId = ""
   let OP_EMAIL = ""
   let PREGLED_EMAIL = ""
   let FIRMA_MOJA = ""
@@ -67,13 +69,21 @@ test.describe.serial("Uloge i ovlaštenja", () => {
     await deleteKlijentByNaziv(FIRMA_MOJA).catch(() => {})
     await deleteKlijentByNaziv(FIRMA_TUDJA).catch(() => {})
     mojaId = await insertKlijent(FIRMA_MOJA)
-    await insertKlijent(FIRMA_TUDJA)
+    tudjaId = await insertKlijent(FIRMA_TUDJA)
 
     // Termin na svakoj firmi da obje imaju red u centralnom planu. Rok pada u tekući+naredni
     // mjesec (default "lista" filter kad mjesec nije naveden u URL-u — vidi parsePlanFilteri),
     // tako da se ne oslanjamo na to koji je dan tačno "danas" kad se test pokrene.
+    //
+    // Termin za FIRMA_TUDJA je OBAVEZAN, a ranije je nedostajao (komentar je tvrdio „na svakoj
+    // firmi", kod je pravio samo jedan): centralni plan lista TERMINE, pa firma bez termina
+    // nema šta ni da prikaže — provjera „FIRMA_TUDJA se ne vidi" bila je tada tačna i kad bi
+    // scoping bio potpuno pokvaren. Tuđi termin namjerno ima ISTI rok kao naš, tako da ga
+    // nijedan filtar ne može izostaviti iz razloga koji nema veze sa dodjelom firmi:
+    // ako se ne vidi, jedini preostali razlog je scoping po dodijeljenim firmama.
     const vrstaId = await firstActiveVrstaId()
     terminId = await insertTermin({ klijentId: mojaId, vrstaId, rok: "2026-08-15" })
+    terminTudjaId = await insertTermin({ klijentId: tudjaId, vrstaId, rok: "2026-08-15" })
 
     // Dokument na terminu — meta za test preuzimanja/pregleda. Storage objekat JE potreban:
     // `createSignedUrl` na Supabase Storage-u provjerava postojanje objekta prije izdavanja
@@ -116,6 +126,7 @@ test.describe.serial("Uloge i ovlaštenja", () => {
     // u DEMO bazi. `dokumenti.termin_id` je `on delete cascade` pa se dokument red obriše
     // zajedno sa terminom.
     if (terminId) await deleteTermin(terminId).catch(() => {})
+    if (terminTudjaId) await deleteTermin(terminTudjaId).catch(() => {})
     await clearDodjele(opId).catch(() => {})
     await clearDodjele(pregledId).catch(() => {})
     await deleteKlijentByNaziv(FIRMA_MOJA).catch(() => {})
@@ -158,6 +169,8 @@ test.describe.serial("Uloge i ovlaštenja", () => {
     // Prvo potvrdi da je STRANICA STVARNO UČITALA PODATKE (ne prazan/pao ekran) —
     // ako ovo ne prođe, odsustvo FIRMA_TUDJA ispod ne bi dokazivalo scoping nego pad učitavanja.
     await expect(page.getByText(FIRMA_MOJA).first()).toBeVisible({ timeout: 30_000 })
+    // Tuđa firma IMA termin sa istim rokom (v. beforeAll) — da je scoping pukao, red bi bio
+    // ovdje uz naš. Nula redova je zato dokaz izolacije, a ne posljedica prazne firme.
     await expect(page.getByText(FIRMA_TUDJA)).toHaveCount(0)
   })
 })

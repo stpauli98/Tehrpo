@@ -34,7 +34,11 @@ function makeFake(opts: {
   const updates: Array<{ id: unknown; patch: Record<string, unknown> }> = []
   const mejlLogTipovi: string[] = []
   const rpcPozivi: string[] = []
-  const claims = [...(opts.claimIds ?? ["c1", "c2", "c3", "c4"])]
+  // Bez eksplicitne liste claim-ovi se izdaju neograničeno (c1, c2, …) — testovi sa
+  // velikim backlog-om trebaju stotine, a fiksna lista bi im tiho vratila null i
+  // pretvorila "poslato" u "claim drži neko drugi".
+  const claims = opts.claimIds ? [...opts.claimIds] : null
+  let brojacClaimova = 0
   const fake = {
     from(table: string) {
       if (table === "postavke") {
@@ -67,7 +71,8 @@ function makeFake(opts: {
       if (name === "get_post_due_termine") return { data: opts.rows ?? [], error: null }
       if (name === "claim_post_due") {
         if (opts.claimError) return { data: null, error: { message: opts.claimError } }
-        return { data: claims.shift() ?? null, error: null }
+        brojacClaimova += 1
+        return { data: claims ? (claims.shift() ?? null) : `c${brojacClaimova}`, error: null }
       }
       if (name === "zabiljezi_mejl_log") {
         mejlLogTipovi.push(String(params?.p_tip))
@@ -268,5 +273,136 @@ describe("runPostDue", () => {
     // Oba datuma ostaju u tijelu: rok je rok, zakazano je zakazano.
     expect(captured[0]!.html).toContain("27.06.2026")
     expect(captured[0]!.html).toContain("29.07.2026")
+  })
+})
+
+// Backlog: N termina, svaki sa oba kanala → 2N zadataka. Isti oblik kao stvarni
+// get_post_due_termine (RPC sortira najhitnije prvo, pa je odsijecanje repa odgoda
+// najmanje hitnih).
+function backlog(n: number): PostDueRow[] {
+  return Array.from({ length: n }, (_, i) => ({
+    ...ROW,
+    termin_id: `t${i + 1}`,
+    klijent_id: "k1",
+    dana_do_ciklusa: -(n - i),
+    dana_do_roka: -(n - i),
+    treba_interni: true,
+    treba_firma: false,
+  }))
+}
+
+describe("runPostDue — ograde protiv prekida na velikom backlog-u", () => {
+  it("bez cap-a bi obradio sve; sa cap-om obradi tačno maxPerRun i ostatak prijavi kao deferred", async () => {
+    const { supabase } = makeFake({ rows: backlog(200), korisnici: [ADMIN] })
+    let poslato = 0
+    const res = await runPostDue(supabase, {
+      send: async () => { poslato += 1; return { id: `re_${poslato}`, dryRun: false } },
+      maxPerRun: 30,
+      delayMs: 0,
+    })
+    expect(poslato).toBe(30)
+    expect(res.sent).toHaveLength(30)
+    expect(res.deferred).toBe(170)
+    expect(res.prekinutoZbogVremena).toBe(false)
+  })
+
+  it("odgođeni kanali NEMAJU claim — zato ih sljedeći prolaz preuzme, ništa se ne gubi", async () => {
+    // Ovo je razlika između "cap" i "gubitak": claim_post_due se smije pozvati samo
+    // za ono što se stvarno obrađuje. Da se claim uzimao unaprijed, odgođeni redovi bi
+    // 15 minuta stajali u 'u_toku' i niko im ne bi poslao mejl.
+    const { supabase, rpcPozivi } = makeFake({ rows: backlog(100), korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, { send: okSend, maxPerRun: 12, delayMs: 0 })
+    const brojClaimova = rpcPozivi.filter((n) => n === "claim_post_due").length
+    expect(brojClaimova).toBe(12)
+    expect(res.deferred).toBe(88)
+
+    // Sljedeći prolaz: RPC i dalje vraća 88 neobrađenih (nema claim-a koji bi ih sakrio).
+    const drugi = makeFake({ rows: backlog(100).slice(12), korisnici: [ADMIN] })
+    const res2 = await runPostDue(drugi.supabase, { send: okSend, maxPerRun: 12, delayMs: 0 })
+    expect(res2.sent).toHaveLength(12)
+    expect(res2.deferred).toBe(76)
+  })
+
+  it("vremenski budžet: staje prije roka i ne započinje grupu koju ne može završiti", async () => {
+    // Simulirani sat: svako slanje traje 500 ms, rok je 3 s od početka. Grupe su po 2,
+    // pa stanu tačno dvije grupe (t=1000→2000, t=2000→3000); treća bi počela na t=3000
+    // što je već rok → prekid.
+    let sat = 1000
+    const { supabase, rpcPozivi } = makeFake({ rows: backlog(50), korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, {
+      send: async () => { sat += 500; return { id: "re_x", dryRun: false } },
+      batchSize: 2,
+      delayMs: 0,
+      deadlineAt: 3000,
+      sada: () => sat,
+    })
+    expect(res.sent).toHaveLength(4)
+    expect(res.deferred).toBe(46)
+    expect(res.prekinutoZbogVremena).toBe(true)
+    // Ključno za idempotenciju: nijedan claim nije uzet za ono što nije poslato.
+    expect(rpcPozivi.filter((n) => n === "claim_post_due")).toHaveLength(4)
+  })
+
+  it("rok koji je istekao prije početka: ništa se ne šalje, sve je deferred (a ne izgubljeno)", async () => {
+    // Realan slučaj: pre-due je pojeo cijeli budžet zahtjeva. Bolje nijedan mejl nego
+    // mejl koji Vercel ubije između slanja i upisa ishoda (→ duplikat za 15 minuta).
+    let poslato = 0
+    const { supabase, rpcPozivi } = makeFake({ rows: backlog(24), korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, {
+      send: async () => { poslato += 1; return { id: "x", dryRun: false } },
+      delayMs: 0,
+      deadlineAt: 1000,
+      sada: () => 5000,
+    })
+    expect(poslato).toBe(0)
+    expect(res.sent).toHaveLength(0)
+    expect(res.deferred).toBe(24)
+    expect(res.prekinutoZbogVremena).toBe(true)
+    expect(rpcPozivi).not.toContain("claim_post_due")
+  })
+
+  it("produkcijski parametri: run staje unutar maxDuration umjesto da ga Vercel ubije", async () => {
+    // Stvarna propusnost throttlovane petlje (mjereno nad cloud DEMO bazom):
+    // batchSize=2, delayMs=1100 → ~1,36 s po grupi od 2 zadatka. Rok koji ruta daje
+    // post-due krugu je pocetak+90 s (120 s maxDuration − 15 s rezerve za odgovor
+    // − 15 s rezerve za digest).
+    //
+    // Simulirani sat je izveden iz broja završenih grupa, pa je stvarno trajanje testa
+    // milisekunde, a mjerena veličina je ista kao u produkciji.
+    const MS_PO_GRUPI = 1360
+    const ROK_POST_DUE_MS = 90_000
+    const KILL_MS = 120_000
+    const UKUPNO = 400 // 200 isteklih termina × 2 kanala
+
+    let sends = 0
+    const sada = () => Math.ceil(sends / 2) * MS_PO_GRUPI
+
+    const { supabase } = makeFake({ rows: backlog(UKUPNO), korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, {
+      send: async () => { sends += 1; return { id: `re_${sends}`, dryRun: false } },
+      maxPerRun: UKUPNO, // cap namjerno ne veže — dokazujemo da GRANICU postavlja vrijeme
+      batchSize: 2,
+      delayMs: 0,
+      deadlineAt: ROK_POST_DUE_MS,
+      sada,
+    })
+
+    // Bez ograde bi svih 400 zadataka trajalo ~272 s — Vercel bi ubio funkciju usred
+    // slanja, a claim-first bi ostavio red 'u_toku' → duplikat za 15 minuta.
+    expect((UKUPNO / 2) * MS_PO_GRUPI).toBeGreaterThan(KILL_MS)
+
+    expect(res.prekinutoZbogVremena).toBe(true)
+    expect(sada()).toBeLessThan(KILL_MS) // stali smo SAMI, prije kill-a
+    expect(res.sent.length).toBeGreaterThan(100) // budžet je iskorišten, nije protraćen
+    // Ništa se ne gubi: svaki zadatak je ili poslat ili odgođen za sljedeći prolaz.
+    expect(res.sent.length + res.skipped.length + res.errors.length + res.deferred).toBe(UKUPNO)
+  })
+
+  it("bez deadlineAt ponašanje je nepromijenjeno (ručno pokretanje iz skripte)", async () => {
+    const { supabase } = makeFake({ rows: backlog(5), korisnici: [ADMIN] })
+    const res = await runPostDue(supabase, { send: okSend, delayMs: 0 })
+    expect(res.sent).toHaveLength(5)
+    expect(res.deferred).toBe(0)
+    expect(res.prekinutoZbogVremena).toBe(false)
   })
 })

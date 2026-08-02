@@ -194,7 +194,8 @@
       "podsjetnikEmailNijeDodat": "Die Adresse konnte nicht hinzugefügt werden.",
       "nepostojeciKorisnik": "Nicht existierender Benutzer in der Zuweisung.",
       "lokacijaNazivObavezan": "Der Name des neuen Standorts ist erforderlich.",
-      "klijentBezLokacije": "Der Kunde wurde erstellt, der erste Standort jedoch nicht: {poruka} Fügen Sie ihn im Tab Standorte hinzu."
+      "klijentBezLokacije": "Der Kunde wurde erstellt, der erste Standort jedoch nicht: {poruka} Fügen Sie ihn im Tab Standorte hinzu.",
+      "promjenaNijeDozvoljena": "Ihre Berechtigungen erlauben diese Änderung nicht."
     },
     "detalj": {
       "nazad": "Kunden",
@@ -555,6 +556,15 @@
       "nacinPracenje": "Nur Fristverfolgung",
       "dodajem": "Füge hinzu…",
       "dodajIGenerisi": "Hinzufügen und Termin erstellen"
+    },
+    "aktivan": {
+      "aktivan": "Versand aktiv",
+      "ugasen": "Pausiert",
+      "ugasiAria": "Erinnerungen für diesen Kunden abschalten",
+      "vratiAria": "Erinnerungen für diesen Kunden wieder einschalten",
+      "uspjehUgasen": "Erinnerungen abgeschaltet. Historie und Dokumente bleiben erhalten.",
+      "uspjehVracen": "Erinnerungen wieder eingeschaltet.",
+      "greskaFallback": "Die Änderung wurde nicht gespeichert."
     }
   },
   "termini": {
@@ -660,7 +670,9 @@
       "datumObavezan": "Datum ist erforderlich",
       "zaduzeniNemaPristup": "Diese Person hat keinen Zugriff auf die ausgewählte Firma. Firmenzugriff wird vom Admin unter Einstellungen → Benutzer zugewiesen.",
       "ponavljanjeTraziLokaciju": "Ein wiederkehrender Termin muss einen Standort haben.",
-      "ponavljanjeVrstaBezIntervala": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, oder erfassen Sie den Termin als einmalig."
+      "ponavljanjeVrstaBezIntervala": "Diese Art hat kein Standardintervall — bitten Sie einen Administrator, es festzulegen, oder erfassen Sie den Termin als einmalig.",
+      "izmijenioDrugi": "Jemand anderes hat diesen Termin inzwischen geändert. Aktualisieren Sie die Seite und versuchen Sie es erneut.",
+      "terminNijeDostupan": "Dieser Termin ist nicht mehr verfügbar — er wurde gelöscht oder Sie haben keinen Zugriff. Aktualisieren Sie die Seite."
     }
   },
   "status": {
@@ -717,7 +729,8 @@
       "rasponNevazeci": "Ungültiger Datumsbereich (von muss ≤ bis sein).",
       "preuzimam": "Wird heruntergeladen…",
       "uspjeh": "Bericht heruntergeladen.",
-      "greskaPreuzimanja": "Herunterladen fehlgeschlagen."
+      "greskaPreuzimanja": "Herunterladen fehlgeschlagen.",
+      "previseAktivnosti": "Zu viele Aktivitäten: {broj} (Grenze: {granica}). Zeitraum oder Filter eingrenzen."
     },
     "viewSwitcher": {
       "kalendar": "Kalender",
@@ -746,7 +759,9 @@
       "viseTerminaTitle": "Mehrere Termine — Liste öffnen",
       "prazno": "Keine Daten.",
       "celijaAriaLabel": "{vrsta}, Tag {dan}, {status}",
-      "celijaViseAriaLabel": "{vrsta}, Tag {dan}, {status}, {broj, plural, =1 {# weiterer Termin} other {# weitere Termine}}"
+      "celijaViseAriaLabel": "{vrsta}, Tag {dan}, {status}, {broj, plural, =1 {# weiterer Termin} other {# weitere Termine}}",
+      "celijaPrenesenoAriaLabel": "{vrsta}, übertragen aus einem früheren Jahr, Frist {datum}, {status}",
+      "celijaPrenesenoViseAriaLabel": "{vrsta}, übertragen aus einem früheren Jahr, Frist {datum}, {status}, {broj, plural, =1 {# weiterer Termin} other {# weitere Termine}}"
     },
     "monthCalendar": {
       "danAriaLabel": "Tag {broj}",
@@ -763,7 +778,9 @@
     "matrica": {
       "izaberiteKlijenta": "Wählen Sie einen Kunden, um die Jahresmatrix anzuzeigen.",
       "nemaTerminaMjesec": "Keine Termine für den ausgewählten Monat.",
-      "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr."
+      "nemaTerminaGodina": "Dieser Kunde hat keine Termine im ausgewählten Jahr.",
+      "prenesenoKolona": "Übertragen",
+      "prenesenoObjasnjenje": "Die Spalte „Übertragen“ zeigt offene Pflichten, deren Frist vor {godina} abgelaufen ist — sie müssen weiterhin erfüllt werden."
     },
     "prikaz": {
       "modKlijent": "Nach Kunde",
@@ -928,6 +945,7 @@
     "neispravniPodaci": "Ungültige Daten — aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "preuzimanjeNijeUspjelo": "Der Download ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "preuzimanjeNijeDozvoljeno": "Ihre Rolle darf keine Dokumente herunterladen.",
+    "izmjenaNijeDozvoljena": "Ihre Rolle darf keine Dokumente hinzufügen oder erzeugen.",
     "potvrdaBrisanjaNaslov": "Dokument löschen?",
     "potvrdaBrisanjaOpis": "Das Dokument und die Datei werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
     "tipovi": {
@@ -1107,7 +1125,9 @@
       "uvijekPrimajuPrazno": "Erhalten immer: derzeit erhält kein Administrator Erinnerungen und REMINDER_TO ist nicht gesetzt.",
       "nepokriveneLokacije": "Keine Empfänger für Standorte: {lokacije}.",
       "terminiBezLokacijeNepokriveni": "Termine ohne Standort haben keinen Empfänger — füge eine Adresse hinzu, die die gesamte Firma abdeckt.",
-      "nepotpuniPodaciBanner": "Die Liste der Firmen, Standorte, Kontakte oder Termine wurde abgeschnitten (zu viele Zeilen) — die Tabelle und die Abdeckungshinweise sind möglicherweise unvollständig."
+      "nepotpuniPodaciBanner": "Die Liste der Firmen, Standorte, Kontakte oder Termine wurde abgeschnitten (zu viele Zeilen) — die Tabelle und die Abdeckungshinweise sind möglicherweise unvollständig.",
+      "odbaceneAdrese": "Erhält nicht: {adrese} — die Engine verwirft diese Adressen (reservierte/nicht existierende Domain oder ungültiges Format). Korrigiere sie, bevor der Versand an echte Adressen beginnt.",
+      "stalniOdbaceniBanner": "Aus „Erhalten immer“ verworfen: {adrese}. Diese Adressen sind konfiguriert, werden von der Engine aber NICHT verwendet (reservierte/nicht existierende Domain oder ungültiges Format) — prüfe REMINDER_TO und die Administratorkonten."
     },
     "reminderForm": {
       "naDan": "am Tag",
@@ -1157,7 +1177,9 @@
       "resetRateLimit": "Zu viele Anfragen zum Zurücksetzen des Passworts. Bitte in einigen Minuten erneut versuchen.",
       "nepoznataDozvola": "Unbekannte Berechtigung.",
       "korisnikNePostoji": "Der Benutzer existiert nicht.",
-      "dozvoleSamoOperater": "Berechtigungsschalter gelten nur für Operatoren."
+      "dozvoleSamoOperater": "Berechtigungsschalter gelten nur für Operatoren.",
+      "periodikaUklanjanjeBlokirano": "Das Intervall kann nicht entfernt werden: {broj} offene Termine dieser Art gelten als wiederkehrend und haben kein eigenes Intervall — beim Abschluss würde die Kette abreißen und die Pflicht aus dem Plan verschwinden. Storniere oder schließe zuerst diese Termine (oder deaktiviere ihre Wiederholung), erst danach das Intervall der Art entfernen.",
+      "periodikaProvjeraNijeUspjela": "Es konnte nicht geprüft werden, wie viele offene Termine von diesem Intervall abhängen — das Intervall wurde nicht entfernt. Bitte erneut versuchen."
     },
     "novaVrsta": {
       "dugme": "Neue Art",
@@ -1269,6 +1291,7 @@
       "neispravniPodaci": "Die Entwurfsdaten sind ungültig.",
       "greskaCitanja": "Das Laden des Termins ist fehlgeschlagen.",
       "terminNePostoji": "Der Termin existiert nicht.",
+      "zapisnikSamoIzvrsen": "Das Protokoll kann nur für einen durchgeführten Termin gespeichert werden.",
       "snimanjeNijeUspjelo": "Speichern fehlgeschlagen."
     },
     "api": {
@@ -1398,7 +1421,8 @@
     "oznaciPregledanim": "Als geprüft markieren",
     "praznoFilteri": "Keine Ergebnisse für die gewählten Filter.",
     "oznacenoPregledanim": "Als geprüft markiert.",
-    "greskaOznacavanja": "Markieren als geprüft fehlgeschlagen. Bitte erneut versuchen."
+    "greskaOznacavanja": "Markieren als geprüft fehlgeschlagen. Bitte erneut versuchen.",
+    "oznacavanjeNijeDozvoljeno": "Ihre Rolle darf E-Mails nicht als geprüft markieren."
   },
   "izvoz": {
     "plan": {
@@ -1414,7 +1438,8 @@
         "status": "Status",
         "periodika": "Periodik (Mon.)",
         "odgovorna": "Verantwortliche Person",
-        "nacin": "Art"
+        "nacin": "Art",
+        "preneseno": "Übertragen"
       },
       "kolonePdf": {
         "klijent": "Kunde",
@@ -1424,7 +1449,8 @@
         "status": "Status",
         "periodika": "Periodik",
         "odgovorna": "Verantwortlich",
-        "nacin": "Art"
+        "nacin": "Art",
+        "preneseno": "Übertr."
       },
       "nacin": {
         "izvrsava": "Führt aus",
@@ -1432,9 +1458,13 @@
       },
       "greska": "Fehler",
       "greskaGenerisanje": "Fehler beim Generieren der Datei: {poruka}",
+      "previseRedova": "Export ist zu groß — höchstens {granica} Aktivitäten pro Datei. Zeitraum oder Filter eingrenzen und erneut versuchen.",
       "raspon": {
         "nevazeci": "Ungültiger Datumsbereich (von muss ≤ bis sein)."
-      }
+      },
+      "prenesenoDa": "Ja",
+      "prenesenoNe": "—",
+      "prenesenoNapomena": "Enthält {broj, plural, =1 {# offene Pflicht, die} other {# offene Pflichten, die}} aus der Zeit vor {datum} übertragen {broj, plural, =1 {wurde} other {wurden}}."
     },
     "zapisnik": {
       "naslov": "PROTOKOLL ÜBER DIE DURCHGEFÜHRTE PRÜFUNG",
@@ -1448,7 +1478,9 @@
       "zakljucak": "Schlussfolgerung",
       "potpis": "Unterschrift der befugten Person: ______________________________",
       "imeFajla": "Protokoll - {vrsta} - {datum}.docx",
-      "provjeraFallback": "Prüfung"
+      "provjeraFallback": "Prüfung",
+      "sablonNapomena": "HINWEIS: Dieser Text ist ein Vorlagenentwurf — er wurde nicht von einem KI-Modell erstellt. Bitte vor der Beglaubigung prüfen und ergänzen.",
+      "greskaModelOdgovor": "Das Modell hat kein gültiges Protokoll zurückgegeben. Es wurde nichts gespeichert — bitte erneut versuchen."
     }
   },
   "dbErrors": {

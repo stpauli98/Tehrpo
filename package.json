@@ -14,7 +14,7 @@
     "test:e2e:ui": "playwright test --ui",
     "db:types": "supabase gen types typescript --local > db/types.ts",
     "db:reset": "supabase db reset",
-    "seed": "tsx --env-file=.env.local scripts/seed-from-excel.ts",
+    "seed": "tsx --env-file=.env.local --env-file=.env.development.local scripts/seed-from-excel.ts",
     "backfill:grad": "tsx --env-file=.env.local scripts/backfill-lokacija-grad.ts",
     "dedup:termini": "tsx --env-file=.env.local scripts/dedup-termini.ts",
     "cleanup:test-data": "tsx --env-file=.env.local --env-file=.env.development.local scripts/cleanup-test-data.ts",
@@ -27,7 +27,9 @@
     "rls:check": "tsx scripts/check-rls-coverage.ts",
     "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts",
     "gc:dokumenti": "tsx --env-file=.env.local scripts/gc-orphan-dokumenti.ts",
-    "provjeri:integraciju": "tsx scripts/provjeri-integraciju.ts"
+    "provjeri:integraciju": "tsx scripts/provjeri-integraciju.ts",
+    "audit:sql": "tsx --env-file=.env.local scripts/audit-upit.ts",
+    "audit:proba": "tsx --env-file=.env.local scripts/audit-proba-migracija.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

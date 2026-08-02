@@ -6,6 +6,7 @@ import { MAX_PORUKA_ZNAKOVA, type ChatTurn, type ChatEvent } from "@/lib/claude/
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
+import { jeAdmin } from "@/lib/auth/roles"
 import { rateLimitWindows, prekoracenLimit } from "@/lib/claude/rate-limit"
 
 export const dynamic = "force-dynamic"
@@ -26,7 +27,11 @@ export async function POST(req: Request): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     })
   }
-  if (korisnik.uloga === "pregled") {
+  // Asistent je ADMIN-ONLY (stranica `/asistent` redirektuje ne-admina od 30.07.2026.).
+  // Do 02.08.2026. je ova ruta odbijala samo `pregled`, pa je operater — kome UI ne
+  // prikazuje ni link ni stranicu — i dalje mogao direktnim POST-om trošiti model
+  // (plaćeni pozivi) i čitati podatke kroz alate asistenta. Sakriven UI nije ovlaštenje.
+  if (!jeAdmin(korisnik.uloga)) {
     return new Response(JSON.stringify({ error: t("zabranjeno") }), {
       status: 403,
       headers: { "Content-Type": "application/json" },

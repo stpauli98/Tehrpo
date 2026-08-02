@@ -38,6 +38,43 @@ export function izvozPeriodRange(p: IzvozPeriod, danas?: string): { from: string
   }
 }
 
+/**
+ * Statusi koji znače da je obaveza ZATVORENA. Sve ostalo je otvoreno i, ako mu je
+ * datum_prikaza ispod donje granice perioda, prenosi se u plan tog perioda.
+ */
+export const ZATVORENI_STATUSI = ["izvrseno", "otkazano"] as const
+
+/**
+ * Donja granica perioda — datum ispod kojeg otvorena obaveza „ispada" iz plana
+ * (i zato mora biti prikazana kao PRENESENA). null = period nema donju granicu
+ * (mod "svi") → nema šta da se prenosi.
+ */
+export function prenesenoGranica(p: IzvozPeriod, danas?: string): string | null {
+  return izvozPeriodRange(p, danas)?.from ?? null
+}
+
+/**
+ * PostgREST `or=` izraz: red je UNUTAR perioda ILI je otvorena obaveza iz ranijeg
+ * perioda (prenesena). Bez ovoga godišnji plan za 2027. gubi sve zaostalo iz 2026.
+ *
+ * Namjerno `status_izvedeni.neq.X` umjesto `not.in.(...)` — ugniježđene zagrade
+ * unutar `or()`/`and()` su izvor grešaka u PostgREST parseru.
+ */
+export function prenesenoOrIzraz(from: string, to: string): string {
+  const uPeriodu = `and(datum_prikaza.gte.${from},datum_prikaza.lte.${to})`
+  const zatvoreni = ZATVORENI_STATUSI.map((s) => `status_izvedeni.neq.${s}`).join(",")
+  const preneseno = `and(datum_prikaza.lt.${from},${zatvoreni})`
+  return `${uPeriodu},${preneseno}`
+}
+
+/**
+ * Je li red prenesen iz ranijeg perioda. Redovi ispod granice u rezultatu upita su
+ * po konstrukciji otvoreni (v. `prenesenoOrIzraz`), pa je dovoljna provjera datuma.
+ */
+export function jePreneseniRed(datumPrikaza: string | null | undefined, granica: string | null): boolean {
+  return !!granica && !!datumPrikaza && datumPrikaza < granica
+}
+
 /** Ljudski čitljiv label perioda (PDF/Excel podnaslov + naziv fajla). `sviLabel` = prevod za "svi mjeseci". */
 export function izvozPeriodLabel(p: IzvozPeriod, sviLabel: string, danas?: string): string {
   switch (p.mod) {

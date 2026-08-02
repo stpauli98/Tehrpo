@@ -1,3 +1,6 @@
+import { createTranslator } from "next-intl"
+import { env } from "@/lib/env"
+import { getMessages } from "@/i18n/messages"
 import { APP_NAME } from "../brand"
 import { APP_LOCALE, type Locale } from "../locale"
 import { formatDatum } from "../date"
@@ -10,13 +13,50 @@ export type ZapisnikInput = {
   zaduzeni: string | null
 }
 
-export type ZapisnikContent = { nalaz: string; zakljucak: string; dryRun: boolean }
+/**
+ * Odakle tekst zapisnika STVARNO dolazi (N11).
+ *  - "model"  = napisao ga je jezički model iz svog odgovora
+ *  - "sablon" = deterministični lokalni šablon (dry-run / offline), nije ga niko generisao
+ */
+export type ZapisnikIzvor = "model" | "sablon"
+
+export type ZapisnikContent = {
+  nalaz: string
+  zakljucak: string
+  /** Jedini izvor istine o porijeklu teksta. */
+  izvor: ZapisnikIzvor
+  /** Izvedeno iz `izvor` — nikad se ne postavlja ručno, pa ne može lagati (N11). */
+  dryRun: boolean
+}
+
+/**
+ * Jedina dozvoljena konstrukcija `ZapisnikContent`-a: `dryRun` se RAČUNA iz `izvor`,
+ * pa ne postoji način da šablonski tekst bude označen kao model-generisan.
+ */
+export function zapisnikContent(
+  nalaz: string,
+  zakljucak: string,
+  izvor: ZapisnikIzvor,
+): ZapisnikContent {
+  return { nalaz, zakljucak, izvor, dryRun: izvor === "sablon" }
+}
+
+/** Zapisnik se u ovom okruženju uopšte ne može generisati modelom (nema ključa / gašen namjerno). */
+export function zapisnikDryRun(): boolean {
+  return env.ZAPISNIK_DRY_RUN === "1" || !env.ANTHROPIC_API_KEY
+}
+
+/** Vidljiva napomena koja putuje UZ tekst šablona (i u .docx, i u prijedlog asistenta). */
+export function sablonNapomena(locale: Locale = APP_LOCALE): string {
+  const t = createTranslator({ locale, messages: getMessages(locale), namespace: "izvoz.zapisnik" })
+  return t("sablonNapomena")
+}
 
 // Mock šabloni interpoliraju više polja + opcionu lokaciju (uslovni fragment) —
 // ICU/katalog bi ovdje bio nezgrapan (select po prisustvu vrijednosti), pa ostaje
 // lokalno-ključana mapa u modulu (isti pristup kao PROMPT_JEZIK_INSTRUKCIJA ispod;
 // precedent za "model instrukcija/generisani tekst u content.ts, ne katalog").
-const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = {
+const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => { nalaz: string; zakljucak: string }> = {
   sr: (input) => {
     const lok = input.lokacija ? `, lokacija ${input.lokacija}` : ""
     return {
@@ -26,7 +66,6 @@ const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = 
       zakljucak:
         `Na osnovu izvršene provjere utvrđeno je da stanje zadovoljava propisane uslove. ` +
         `Preporučuje se redovno održavanje i naredna provjera u zakonski propisanom intervalu.`,
-      dryRun: true,
     }
   },
   en: (input) => {
@@ -38,7 +77,6 @@ const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = 
       zakljucak:
         `Based on the inspection performed, it was determined that the condition meets the prescribed requirements. ` +
         `Regular maintenance and the next inspection within the legally prescribed interval are recommended.`,
-      dryRun: true,
     }
   },
   de: (input) => {
@@ -50,14 +88,20 @@ const MOCK_SABLONI: Record<Locale, (input: ZapisnikInput) => ZapisnikContent> = 
       zakljucak:
         `Auf Grundlage der durchgeführten Prüfung wurde festgestellt, dass der Zustand die vorgeschriebenen Anforderungen erfüllt. ` +
         `Es wird eine regelmäßige Wartung sowie die nächste Prüfung innerhalb des gesetzlich vorgeschriebenen Intervalls empfohlen.`,
-      dryRun: true,
     }
   },
 }
 
-/** Deterministični mock sadržaj — koristi se bez ANTHROPIC_API_KEY ili kad je ZAPISNIK_DRY_RUN=1. */
+/**
+ * Deterministični šablonski sadržaj — koristi se bez ANTHROPIC_API_KEY ili kad je ZAPISNIK_DRY_RUN=1.
+ *
+ * N11: napomena o porijeklu ide U SAM `nalaz`, a ne samo u povratni objekat. Pozivaoci
+ * (dokumenti/actions.ts, claude/tools.ts, asistent) prosljeđuju dalje samo `nalaz`/`zakljucak`,
+ * pa je tekst jedini kanal koji sigurno stiže i do .docx-a i do prijedloga u asistentu.
+ */
 export function dryGenerateZapisnik(input: ZapisnikInput, locale: Locale = APP_LOCALE): ZapisnikContent {
-  return MOCK_SABLONI[locale](input)
+  const { nalaz, zakljucak } = MOCK_SABLONI[locale](input)
+  return zapisnikContent(`${sablonNapomena(locale)}\n${nalaz}`, zakljucak, "sablon")
 }
 
 // Jezička instrukcija modelu — dio prompta, ne UI kopija, pa ostaje ovdje (ne u katalogu).

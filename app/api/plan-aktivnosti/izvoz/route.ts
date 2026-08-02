@@ -4,9 +4,15 @@ import type { PostgrestFilterBuilder } from "@supabase/supabase-js"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { parsePlanFilteri, applyPlanFilteri, applyPlanFilteriBezDatuma } from "@/lib/plan-filteri"
 import { parseIzvozParams, type IzvozOpseg } from "@/lib/plan-izvoz/params"
-import { izvozPeriodRange, izvozPeriodLabel, type IzvozPeriod } from "@/lib/plan-izvoz/period"
+import {
+  izvozPeriodRange,
+  izvozPeriodLabel,
+  prenesenoOrIzraz,
+  jePreneseniRed,
+} from "@/lib/plan-izvoz/period"
 import { planToXlsx } from "@/lib/plan-izvoz/xlsx"
 import { planToPdf } from "@/lib/plan-izvoz/pdf"
+import { povuciSveStranice, IZVOZ_MAX_REDOVA, IZVOZ_STRANICA } from "@/lib/plan-izvoz/stranicenje"
 import type { PlanRed } from "@/lib/plan-izvoz/types"
 import { formatDatum, monthName, tekuciNarednomMjesecuRange } from "@/lib/date"
 import { toDerivedStatus } from "@/lib/termini"
@@ -39,15 +45,30 @@ function legacyPeriodLabel(mjesec: string, godina: number): string {
   return mn >= 1 && mn <= 12 ? `${monthName(mn)} ${godina}` : tIzvoz("sviMjeseci")
 }
 
-/** Ne-legacy grana: opseg-filteri (bez datuma) + period-raspon. Dijele count i fajl grana. */
+/**
+ * Ne-legacy grana: opseg-filteri (bez datuma) + period-raspon. Dijele count i fajl grana.
+ * `raspon` se računa JEDNOM u GET-u (mod "om" zavisi od današnjeg dana — dva poziva
+ * na prelazu ponoći dala bi count i fajl iz različitih mjeseci).
+ * Kad je `preneseno` uključen, uz period se povlače i otvorene obaveze ispod donje
+ * granice — inače 01.01. iz godišnjeg plana ispadne sve zaostalo iz prethodne godine.
+ */
 function applyIzvozNeLegacy<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Q extends PostgrestFilterBuilder<any, any, any, any, any>,
->(q: Q, opseg: IzvozOpseg, period: IzvozPeriod, sp: URLSearchParams): Q {
+>(
+  q: Q,
+  opseg: IzvozOpseg,
+  raspon: { from: string; to: string } | null,
+  sp: URLSearchParams,
+  preneseno: boolean,
+): Q {
   let out = q
   if (opseg === "filtrirano") out = applyPlanFilteriBezDatuma(out, parsePlanFilteri(sp))
-  const r = izvozPeriodRange(period)
-  if (r) out = out.gte("datum_prikaza", r.from).lte("datum_prikaza", r.to)
+  if (raspon) {
+    out = preneseno
+      ? out.or(prenesenoOrIzraz(raspon.from, raspon.to))
+      : out.gte("datum_prikaza", raspon.from).lte("datum_prikaza", raspon.to)
+  }
   return out
 }
 
@@ -65,46 +86,97 @@ export async function GET(req: NextRequest) {
 
   const supabase = await createServerSupabaseClient()
 
+  // Jedan snapshot raspona za obje grane. `granica` = donja ivica perioda; sve otvoreno
+  // ispod nje je PRENESENO (null → nema prenosa: legacy, mod "svi" ili preneseno=0).
+  const raspon = parsed.legacy ? null : izvozPeriodRange(parsed.period)
+  const granica = !parsed.legacy && parsed.preneseno && raspon ? raspon.from : null
+
   // Count grana: samo broj (head), bez povlačenja redova.
   if (parsed.count) {
     let cq = supabase.from("termini_view").select("*", { count: "exact", head: true })
     if (parsed.legacy) {
       cq = applyPlanFilteri(cq, parsePlanFilteri(sp))
     } else {
-      cq = applyIzvozNeLegacy(cq, parsed.opseg, parsed.period, sp)
+      cq = applyIzvozNeLegacy(cq, parsed.opseg, raspon, sp, parsed.preneseno)
     }
     const { count, error } = await cq
     if (error) return NextResponse.json({ error: tCommon("greskaUcitavanja") }, { status: 500 })
-    return NextResponse.json({ broj: count ?? 0 })
+    // C4: brojač MORA nositi i granicu — inače modal pokaže pun broj iznad dugmeta
+    // koje će vratiti 413, pa korisnik ne zna zašto.
+    const broj = count ?? 0
+    return NextResponse.json({
+      broj,
+      granica: IZVOZ_MAX_REDOVA,
+      prekoracenje: broj > IZVOZ_MAX_REDOVA,
+    })
   }
 
   // Fajl grana.
-  let q = supabase.from("termini_view").select("*").order("datum_prikaza", { ascending: true })
   let period: string
   if (parsed.legacy) {
     const f = parsePlanFilteri(sp)
-    q = applyPlanFilteri(q, f)
     period = legacyPeriodLabel(f.mjesec, f.godina)
   } else {
-    q = applyIzvozNeLegacy(q, parsed.opseg, parsed.period, sp)
     period = izvozPeriodLabel(parsed.period, tIzvoz("sviMjeseci"))
   }
 
-  const { data, error } = await q
-  if (error) return NextResponse.json({ error: tCommon("greskaUcitavanja") }, { status: 500 })
+  /**
+   * C4: svaka stranica je ZASEBAN upit — PostgREST bez `.range()` vraća najviše
+   * `max-rows` (1000) redova i tiho odsijeca ostatak. Upit se gradi iznova za svaku
+   * stranicu jer je PostgREST builder jednokratan.
+   *
+   * Sekundarni `order("id")` je OBAVEZAN: `datum_prikaza` nije jedinstven, a bez
+   * totalnog poretka Postgres smije vratiti redove sa istim datumom u različitom
+   * redoslijedu po stranici → duplikati i preskočeni redovi na granicama stranica.
+   */
+  const gradiUpit = () => {
+    const q = supabase
+      .from("termini_view")
+      .select("*")
+      .order("datum_prikaza", { ascending: true })
+      .order("id", { ascending: true })
+    return parsed.legacy
+      ? applyPlanFilteri(q, parsePlanFilteri(sp))
+      : applyIzvozNeLegacy(q, parsed.opseg, raspon, sp, parsed.preneseno)
+  }
 
-  const rows: PlanRed[] = (data ?? []).map((red) => ({
+  const rezultat = await povuciSveStranice(
+    (od, doIndeks) => gradiUpit().range(od, doIndeks),
+    { stranica: IZVOZ_STRANICA, maks: IZVOZ_MAX_REDOVA },
+  )
+  if (!rezultat.ok) {
+    // Radije jasno ODBIJ nego tiho isporuči krnji plan koji ide klijentu kao cio.
+    if (rezultat.razlog === "previse") {
+      return NextResponse.json(
+        { error: tIzvoz("previseRedova", { granica: rezultat.granica }) },
+        { status: 413 },
+      )
+    }
+    return NextResponse.json({ error: tCommon("greskaUcitavanja") }, { status: 500 })
+  }
+
+  const rows: PlanRed[] = rezultat.redovi.map((red) => ({
     klijent: red.klijent_naziv ?? "—",
     lokacija: red.lokacija_naziv ?? "—",
     usluga: red.vrsta_naziv ?? "—",
     rok: formatDatum(red.rok_dospijeca),
+    preneseno: jePreneseniRed(red.datum_prikaza, granica),
     status: tStatus(toDerivedStatus(red.status_izvedeni)),
     periodikaMj: red.interval_mjeseci ?? null,
     odgovorna: red.zaduzeni ?? "—",
     nacin: red.nacin_izvrsenja === "pracenje" ? tIzvoz("nacin.pracenje") : tIzvoz("nacin.izvrsava"),
   }))
 
-  const meta = { naslov: APP_NAME, period }
+  // Napomena samo kad je zaista nešto preneseno — inače je šum na štampi.
+  const brojPrenesenih = rows.filter((r) => r.preneseno).length
+  const meta = {
+    naslov: APP_NAME,
+    period,
+    napomena:
+      granica && brojPrenesenih > 0
+        ? tIzvoz("prenesenoNapomena", { broj: brojPrenesenih, datum: formatDatum(granica) })
+        : undefined,
+  }
   let buf: Buffer
   try {
     buf = parsed.format === "pdf" ? await planToPdf(rows, meta) : await planToXlsx(rows, meta)

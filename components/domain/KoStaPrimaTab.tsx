@@ -14,6 +14,7 @@ import {
   type RazlogNePrima,
   type LokacijaRef,
 } from "@/lib/podsjetnici/koStaPrima"
+import { buildRecipientIndex, odbaceneAdrese, parseEmailList, type KorisnikRow } from "@/lib/reminders/recipients"
 import { env } from "@/lib/env"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { cn, FOCUS_RING } from "@/lib/utils"
@@ -103,14 +104,36 @@ export async function KoStaPrimaTab() {
   const korisnici = korisniciRes.data ?? []
   const dodjele = dodjeleRes.data ?? []
   // KorisnikRow očekuje email: string — red bez mejla ne može biti primalac, pa ispada.
-  const stalni = stalniPrimaoci(
-    korisnici
-      .filter((k) => !!k.email)
-      .map((k) => ({
-        id: k.id, email: k.email!, uloga: k.uloga, aktivan: k.aktivan, prima_podsjetnike: k.prima_podsjetnike,
-      })),
-    env.REMINDER_TO,
-  )
+  const korisniciZaMotor: KorisnikRow[] = korisnici
+    .filter((k) => !!k.email)
+    .map((k) => ({
+      id: k.id, email: k.email!, uloga: k.uloga, aktivan: k.aktivan, prima_podsjetnike: k.prima_podsjetnike,
+    }))
+  const stalni = stalniPrimaoci(korisniciZaMotor, env.REMINDER_TO)
+  // PROVJERA PRED SLANJE (B5): adrese koje su KONFIGURISANE kao stalni primaoci, ali ih
+  // motor odbacuje (`jeDostavljiva`). Bez ovoga odbačena adresa samo ne bi bila u spisku
+  // „uvijek primaju", pa bi izgledala kao da je nikad niko nije ni unio — a REMINDER_TO
+  // je baš takav slučaj (npr. `tehpro-dev@example.com` iz .env.local).
+  // adminEmails dolazi iz istog `buildRecipientIndex` koji koristi motor, pa se pravilo
+  // prihvatljivosti (aktivan && prima_podsjetnike && uloga=admin) ne prepisuje ovdje.
+  const { adminEmails: adminiKandidati } = buildRecipientIndex(korisniciZaMotor, [])
+  const stalniOdbaceni = odbaceneAdrese([...parseEmailList(env.REMINDER_TO), ...adminiKandidati])
+  // Sirove adrese firminog kanala po firmi (flagovani kontakti + ad-hoc), PRIJE filtera —
+  // `grupisiAdrese` propušta sve što zadovolji EMAIL_RE, a motor traži i rutabilan domen.
+  // Razlika između to dvoje je tačno ono što vlasnik mora vidjeti prije prvog slanja.
+  const sirovePoFirmi = new Map<string, string[]>()
+  const dodajSirovu = (klijentId: string, email: string | null | undefined) => {
+    const arr = sirovePoFirmi.get(klijentId) ?? []
+    arr.push(email ?? "")
+    sirovePoFirmi.set(klijentId, arr)
+  }
+  for (const ko of kontaktiRes.data ?? []) {
+    if (!ko.podsjetnik_primalac) continue
+    dodajSirovu(ko.klijent_id, ko.email)
+  }
+  for (const k of klijentiRes.data ?? []) {
+    for (const raw of k.podsjetnik_emails ?? []) dodajSirovu(k.id, raw)
+  }
   // klijent_id → { sve, firma, poLokaciji } — grupisanje je čista, testirana funkcija
   // (`grupisiAdrese`) baš zato što je ovo mjesto gdje su se prikaz i engine prvi put razišli.
   const grupisano = grupisiAdrese({
@@ -165,9 +188,20 @@ export async function KoStaPrimaTab() {
           imaTerminaBezLokacije: klijentiSaTerminimaBezLokacije.has(k.id),
         })
       : { lokacije: [], terminiBezLokacije: false }
+    // Isti uslov kao kod nepokrivenih lokacija: dok viši razlog (globalno/firma/nema adrese)
+    // već objašnjava zašto firma ne prima, spisak odbačenih adresa je šum. Kad red kaže
+    // „prima", odbačena adresa je jedina stvar koja tu tvrdnju može učiniti neistinitom.
+    const odbacene = trebaUpozorenje({
+      saljiGlobalno,
+      saljiFirmi: k.salji_podsjetnik_klijentu ?? false,
+      brojAdresa: adrese.length,
+    })
+      ? odbaceneAdrese(sirovePoFirmi.get(k.id) ?? [])
+      : []
     return {
       id: k.id,
       naziv: k.naziv,
+      odbacene,
       radnici,
       statusRadnika,
       adrese,
@@ -235,6 +269,16 @@ export async function KoStaPrimaTab() {
         </div>
       )}
 
+      {stalniOdbaceni.length > 0 && (
+        <div
+          data-testid="ksp-stalni-odbaceni-banner"
+          className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          <AlertTriangle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
+          <span>{t("stalniOdbaceniBanner", { adrese: stalniOdbaceni.join(", ") })}</span>
+        </div>
+      )}
+
       <div className="mb-2 flex items-start justify-between gap-4">
         <span className="text-xs text-muted-foreground" data-testid="ksp-uvijek-primaju">
           {stalni.length > 0 ? t("uvijekPrimaju", { adrese: stalni.join(", ") }) : t("uvijekPrimajuPrazno")}
@@ -282,6 +326,15 @@ export async function KoStaPrimaTab() {
                         {r.nepokrivene.length > 0 && r.terminiBezLokacije && " "}
                         {r.terminiBezLokacije && t("terminiBezLokacijeNepokriveni")}
                       </span>
+                    </div>
+                  )}
+                  {r.odbacene.length > 0 && (
+                    <div
+                      data-testid={`ksp-odbacene-${r.id}`}
+                      className="mt-0.5 flex items-center gap-1 text-xs font-normal text-destructive"
+                    >
+                      <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
+                      <span>{t("odbaceneAdrese", { adrese: r.odbacene.join(", ") })}</span>
                     </div>
                   )}
                 </td>

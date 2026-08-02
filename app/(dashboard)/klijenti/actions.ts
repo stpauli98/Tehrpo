@@ -107,7 +107,17 @@ export async function createKlijent(
     return { ok: false, errors: { lokacija_naziv: [t("lokacijaNazivObavezan")] } }
   }
   const supabase = await createServerSupabaseClient()
-  const { data: novi, error } = await supabase.from("klijenti").insert({
+  // N09: id se generiše u aplikaciji i insert ide BEZ `.select()`.
+  // Razlog: `.select("id").single()` natjera PostgREST na `INSERT ... RETURNING`, a
+  // RETURNING se projektuje kroz SELECT politiku `klijenti_sel`
+  // (`ima_pristup_klijentu(id)`) PRIJE nego AFTER triger `klijent_auto_dodjela` upiše
+  // red u `korisnik_klijent`. Za svakog ne-admina dodjela u tom trenutku još ne postoji,
+  // pa RLS obori CIJELI insert greškom 42501 — kreiranje firme je operateru bilo
+  // nemoguće u 100% pokušaja. Bez RETURNING-a upis prolazi, triger odradi dodjelu,
+  // a id nam je već poznat.
+  const noviId = crypto.randomUUID()
+  const { error } = await supabase.from("klijenti").insert({
+    id: noviId,
     naziv: f.naziv,
     adresa: f.adresa,
     telefon: f.telefon,
@@ -118,7 +128,7 @@ export async function createKlijent(
     sifra_djelatnosti: f.sifra_djelatnosti ?? null,
     zaduzeni_tehpro_id: f.zaduzeni_tehpro_id ?? null,
     tip_odnosa: f.tip_odnosa ?? null,
-  }).select("id").single()
+  })
   if (error) {
     // UNIQUE constraint na naziv → prijateljska poruka
     const msg = /duplicate|unique/i.test(error.message)
@@ -134,7 +144,7 @@ export async function createKlijent(
   // napravio. Sa rollbackom je poruka tačna, a ponovni submit prolazi.
   if (lokNaziv) {
     const { error: lokErr } = await supabase.from("lokacije").insert({
-      klijent_id: novi.id,
+      klijent_id: noviId,
       naziv: lokNaziv,
       grad: f.lokacija_grad ?? null,
       adresa: f.lokacija_adresa ?? null,
@@ -143,7 +153,7 @@ export async function createKlijent(
       // .select() je bitan: pod RLS-om delete bez prava vraća uspjeh sa 0 redova,
       // pa broj obrisanih redova (ne odsustvo greške) dokazuje da je rollback prošao.
       const { data: povuceni, error: rbErr } = await supabase
-        .from("klijenti").delete().eq("id", novi.id).select("id")
+        .from("klijenti").delete().eq("id", noviId).select("id")
       revalidatePath("/klijenti", "layout")
       if (rbErr || (povuceni?.length ?? 0) !== 1) {
         // Rollback nije prošao → klijent POSTOJI. Reci to umjesto da poruka laže.
@@ -231,6 +241,58 @@ export async function deleteKlijent(
   }
   if (nijeObrisano(obrisano)) return { ok: false, message: t("brisanjeNijeDozvoljeno") }
   revalidatePath("/klijenti")
+  return { ok: true }
+}
+
+// ─── Gašenje / vraćanje klijenta (B1) ──────────────────────────────────────
+
+const setKlijentAktivanSchema = z.object({
+  id: z.string().uuid(),
+  // Iz FormData stiže string; `"true"` je jedina vrijednost koja pali klijenta.
+  aktivan: z.enum(["true", "false"]).transform((v) => v === "true"),
+})
+
+/**
+ * Prekidač „saradnja aktivna / ugašena".
+ *
+ * Zašto uopšte postoji: klijent koji raskine saradnju se do sada nije mogao
+ * ugasiti — DELETE pada na FK RESTRICT čim postoji ijedan termin, a ugovor sa
+ * isteklim rokom nema nikakav efekat na motor rokova. Interni tim je zato dobijao
+ * podsjetnike, obavijesti poslije roka i sedmični digest za bivšeg klijenta
+ * doživotno (digest nema gornju granicu po starosti roka).
+ *
+ * `aktivan = false` gasi SVA TRI izvora mejlova u bazi (get_due_podsjetnici,
+ * get_post_due_termine, get_istekli_termini — v. migraciju 20260802093000).
+ * Termini, dokumenti, zapisnici i poslati mejlovi ostaju netaknuti i vidljivi:
+ * ovo je prestanak slanja, ne brisanje istorije. Vraćanje na `true` odmah vraća
+ * klijenta u motor rokova.
+ *
+ * `.select("id")` + provjera dužine je isti obrazac kao deleteKlijent: PostgREST
+ * UPDATE koji RLS odbije vraća 0 redova BEZ greške, pa bi akcija inače javila
+ * uspjeh nad zapisom koji se nije promijenio (npr. korisnik u ulozi „pregled",
+ * koju `klijenti_upd` politika blokira kroz `NOT je_pregled()`).
+ */
+export async function setKlijentAktivan(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const parsed = setKlijentAktivanSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, aktivan } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const nema = provjeriPostojanje(
+    await postojiRed(supabase.from("klijenti").select("id").eq("id", id).maybeSingle()),
+  )
+  if (nema) return nema
+  const patch: KlijentiUpdate = { aktivan, updated_at: new Date().toISOString() }
+  const { data: izmijenjeno, error } = await supabase
+    .from("klijenti")
+    .update(patch)
+    .eq("id", id)
+    .select("id")
+  if (error) return { ok: false, message: friendlyDbError(error) }
+  if (!izmijenjeno || izmijenjeno.length === 0) return { ok: false, message: t("promjenaNijeDozvoljena") }
+  revalidatePath("/klijenti", "layout")
   return { ok: true }
 }
 

@@ -29,6 +29,16 @@ function cellLabel(cell: MatrixCell): string {
   return `${dan}${kasni}${vise}`
 }
 
+/**
+ * Kolona „preneseno" (godišnja matrica): otvorene obaveze čiji rok je istekao PRIJE
+ * prikazane godine. `datumi` mapira terminId → već formatiran datum (dd.MM.yyyy) —
+ * u toj koloni sam dan nema smisla jer je iz druge godine.
+ */
+export type MatrixPreneseno = {
+  colId: string
+  datumi: Record<string, string>
+}
+
 export function MatrixGrid({
   columns,
   rows,
@@ -36,6 +46,7 @@ export function MatrixGrid({
   emptyMessage,
   multiHref,
   fillWidth = false,
+  preneseno,
 }: {
   columns: MatrixColumn[]
   rows: MatrixRow[]
@@ -45,6 +56,7 @@ export function MatrixGrid({
   // true → kolone se rašire preko cijele širine (klijent-mod, 12 mjeseci);
   // false → sadržaj-široke kolone + horizontalni scroll (mjesec-mod, puno firmi)
   fillWidth?: boolean
+  preneseno?: MatrixPreneseno
 }) {
   const t = useTranslations("plan.matrixGrid")
   const tStatus = useTranslations("status")
@@ -76,9 +88,12 @@ export function MatrixGrid({
               <th
                 key={c.id}
                 scope="col"
+                data-testid={c.id === preneseno?.colId ? "matrix-col-preneseno" : undefined}
                 className={cn(
                   "px-2 py-2 text-center font-medium text-muted-foreground whitespace-nowrap min-w-[56px]",
                   c.isCurrent && "ring-2 ring-brand rounded",
+                  // Preneseno nije mjesec — vizuelno odvojeno da se ne čita kao januar.
+                  c.id === preneseno?.colId && "border-r-2 border-border min-w-[96px] italic",
                 )}
               >
                 {c.label}
@@ -99,6 +114,8 @@ export function MatrixGrid({
               </th>
               {columns.map((c) => {
                 const cell = row.cells[c.id] ?? null
+                const jePreneseno = c.id === preneseno?.colId
+                const datumPreneseno = cell && jePreneseno ? preneseno.datumi[cell.terminId] : undefined
                 const href =
                   cell && cell.brojUCeliji > 1 && multiHref
                     ? multiHref(row.rowId, c.id)
@@ -108,7 +125,7 @@ export function MatrixGrid({
                 return (
                   <td
                     key={c.id}
-                    className="p-1 text-center align-middle"
+                    className={cn("p-1 text-center align-middle", jePreneseno && "border-r-2 border-border")}
                     data-testid="matrix-cell"
                     data-col={c.id}
                   >
@@ -117,11 +134,27 @@ export function MatrixGrid({
                         href={href}
                         data-testid="matrix-cell-filled"
                         data-status={cell.status}
+                        data-preneseno={jePreneseno ? "1" : undefined}
                         // S12: informacija nikad SAMO u `title` — puni tekstualni
                         // ekvivalent (vrsta, dan, status, broj termina) je u aria-label.
                         title={cell.brojUCeliji > 1 ? t("viseTerminaTitle") : undefined}
                         aria-label={
-                          cell.brojUCeliji > 1
+                          // Preneseno: „dan" bi bio besmislen (drugi mjesec, druga godina) —
+                          // čitač ekrana dobija puni datum i eksplicitnu riječ „preneseno".
+                          datumPreneseno
+                            ? cell.brojUCeliji > 1
+                              ? t("celijaPrenesenoViseAriaLabel", {
+                                  vrsta: row.rowLabel,
+                                  datum: datumPreneseno,
+                                  status: tStatus(cell.status),
+                                  broj: cell.brojUCeliji - 1,
+                                })
+                              : t("celijaPrenesenoAriaLabel", {
+                                  vrsta: row.rowLabel,
+                                  datum: datumPreneseno,
+                                  status: tStatus(cell.status),
+                                })
+                            : cell.brojUCeliji > 1
                             ? t("celijaViseAriaLabel", {
                                 vrsta: row.rowLabel,
                                 dan: cell.dan,
@@ -143,7 +176,11 @@ export function MatrixGrid({
                         {cell.status === "izvrseno" && (
                           <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
                         )}
-                        <span aria-hidden>{cellLabel(cell)}</span>
+                        <span aria-hidden>
+                          {datumPreneseno
+                            ? `${datumPreneseno}${cell.brojUCeliji > 1 ? ` (+${cell.brojUCeliji - 1})` : ""}`
+                            : cellLabel(cell)}
+                        </span>
                       </Link>
                     ) : (
                       <span className="text-muted-foreground/30" aria-hidden>·</span>

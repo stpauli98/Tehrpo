@@ -194,7 +194,8 @@
       "podsjetnikEmailNijeDodat": "The address could not be added.",
       "nepostojeciKorisnik": "Non-existent user in the assignment.",
       "lokacijaNazivObavezan": "The new location name is required.",
-      "klijentBezLokacije": "The client was created, but the first location was not: {poruka} Add it in the Locations tab."
+      "klijentBezLokacije": "The client was created, but the first location was not: {poruka} Add it in the Locations tab.",
+      "promjenaNijeDozvoljena": "Your permissions do not allow this change."
     },
     "detalj": {
       "nazad": "Clients",
@@ -555,6 +556,15 @@
       "nacinPracenje": "Deadline tracking only",
       "dodajem": "Adding…",
       "dodajIGenerisi": "Add and generate appointment"
+    },
+    "aktivan": {
+      "aktivan": "Sending",
+      "ugasen": "Paused",
+      "ugasiAria": "Stop sending reminders for this client",
+      "vratiAria": "Resume sending reminders for this client",
+      "uspjehUgasen": "Reminders stopped. History and documents are kept.",
+      "uspjehVracen": "Reminders resumed.",
+      "greskaFallback": "The change was not saved."
     }
   },
   "termini": {
@@ -660,7 +670,9 @@
       "datumObavezan": "Date is required",
       "zaduzeniNemaPristup": "This person does not have access to the selected company. Company access is assigned by an admin in Settings → Users.",
       "ponavljanjeTraziLokaciju": "A recurring appointment must have a location.",
-      "ponavljanjeVrstaBezIntervala": "This type has no default interval — ask an admin to set it, or enter the appointment as one-off."
+      "ponavljanjeVrstaBezIntervala": "This type has no default interval — ask an admin to set it, or enter the appointment as one-off.",
+      "izmijenioDrugi": "Someone else changed this appointment in the meantime. Refresh the page and try again.",
+      "terminNijeDostupan": "This appointment is no longer available — it was deleted or you do not have access. Refresh the page."
     }
   },
   "status": {
@@ -717,7 +729,8 @@
       "rasponNevazeci": "Invalid date range (from must be ≤ to).",
       "preuzimam": "Downloading…",
       "uspjeh": "Report downloaded.",
-      "greskaPreuzimanja": "Download failed."
+      "greskaPreuzimanja": "Download failed.",
+      "previseAktivnosti": "Too many activities: {broj} (limit is {granica}). Narrow the period or filters."
     },
     "viewSwitcher": {
       "kalendar": "Calendar",
@@ -746,7 +759,9 @@
       "viseTerminaTitle": "Multiple appointments — open list",
       "prazno": "No data.",
       "celijaAriaLabel": "{vrsta}, day {dan}, {status}",
-      "celijaViseAriaLabel": "{vrsta}, day {dan}, {status}, {broj, plural, =1 {# more appointment} other {# more appointments}}"
+      "celijaViseAriaLabel": "{vrsta}, day {dan}, {status}, {broj, plural, =1 {# more appointment} other {# more appointments}}",
+      "celijaPrenesenoAriaLabel": "{vrsta}, carried over from an earlier year, due {datum}, {status}",
+      "celijaPrenesenoViseAriaLabel": "{vrsta}, carried over from an earlier year, due {datum}, {status}, {broj, plural, =1 {# more appointment} other {# more appointments}}"
     },
     "monthCalendar": {
       "danAriaLabel": "Day {broj}",
@@ -763,7 +778,9 @@
     "matrica": {
       "izaberiteKlijenta": "Select a client to view the annual matrix.",
       "nemaTerminaMjesec": "No appointments for the selected month.",
-      "nemaTerminaGodina": "This client has no appointments in the selected year."
+      "nemaTerminaGodina": "This client has no appointments in the selected year.",
+      "prenesenoKolona": "Carried over",
+      "prenesenoObjasnjenje": "The “Carried over” column shows open obligations that fell due before {godina} — they still have to be completed."
     },
     "prikaz": {
       "modKlijent": "By client",
@@ -928,6 +945,7 @@
     "neispravniPodaci": "Invalid data — refresh the page and try again.",
     "preuzimanjeNijeUspjelo": "Download failed. Please try again.",
     "preuzimanjeNijeDozvoljeno": "Your role is not allowed to download documents.",
+    "izmjenaNijeDozvoljena": "Your role is not allowed to add or generate documents.",
     "potvrdaBrisanjaNaslov": "Delete document?",
     "potvrdaBrisanjaOpis": "The document and its file are permanently deleted. This cannot be undone.",
     "tipovi": {
@@ -1107,7 +1125,9 @@
       "uvijekPrimajuPrazno": "Always receive: no admin currently receives reminders and REMINDER_TO is not set.",
       "nepokriveneLokacije": "No recipients for locations: {lokacije}.",
       "terminiBezLokacijeNepokriveni": "Appointments without a location have no recipient — add an address that covers the client as a whole.",
-      "nepotpuniPodaciBanner": "The client, location, contact, or appointment list was truncated (too many rows) — the table and coverage warnings may be incomplete."
+      "nepotpuniPodaciBanner": "The client, location, contact, or appointment list was truncated (too many rows) — the table and coverage warnings may be incomplete.",
+      "odbaceneAdrese": "Will not receive: {adrese} — the engine drops these addresses (reserved/non-existent domain or invalid format). Fix them before sending to real addresses starts.",
+      "stalniOdbaceniBanner": "Dropped from “always receive”: {adrese}. These addresses are configured but the engine does NOT use them (reserved/non-existent domain or invalid format) — check REMINDER_TO and the admin accounts."
     },
     "reminderForm": {
       "naDan": "on the day",
@@ -1157,7 +1177,9 @@
       "resetRateLimit": "Too many password reset requests. Try again in a few minutes.",
       "nepoznataDozvola": "Unknown permission.",
       "korisnikNePostoji": "The user does not exist.",
-      "dozvoleSamoOperater": "Permission switches apply to operators only."
+      "dozvoleSamoOperater": "Permission switches apply to operators only.",
+      "periodikaUklanjanjeBlokirano": "The interval cannot be removed: {broj} open appointments of this type are marked as recurring and have no interval of their own — closing them would break the chain and the obligation would disappear from the plan. First cancel or close those appointments (or turn off their recurrence), then remove the type's interval.",
+      "periodikaProvjeraNijeUspjela": "Could not check how many open appointments depend on this interval, so it was not removed. Please try again."
     },
     "novaVrsta": {
       "dugme": "New type",
@@ -1269,6 +1291,7 @@
       "neispravniPodaci": "The draft data is invalid.",
       "greskaCitanja": "Loading the appointment failed.",
       "terminNePostoji": "Appointment does not exist.",
+      "zapisnikSamoIzvrsen": "The record can only be saved for a completed appointment.",
       "snimanjeNijeUspjelo": "Save failed."
     },
     "api": {
@@ -1398,7 +1421,8 @@
     "oznaciPregledanim": "Mark as reviewed",
     "praznoFilteri": "No results for the selected filters.",
     "oznacenoPregledanim": "Marked as reviewed.",
-    "greskaOznacavanja": "Marking as reviewed failed. Please try again."
+    "greskaOznacavanja": "Marking as reviewed failed. Please try again.",
+    "oznacavanjeNijeDozvoljeno": "Your role is not allowed to mark emails as reviewed."
   },
   "izvoz": {
     "plan": {
@@ -1414,7 +1438,8 @@
         "status": "Status",
         "periodika": "Frequency (mo)",
         "odgovorna": "Responsible person",
-        "nacin": "Mode"
+        "nacin": "Mode",
+        "preneseno": "Carried over"
       },
       "kolonePdf": {
         "klijent": "Client",
@@ -1424,7 +1449,8 @@
         "status": "Status",
         "periodika": "Frequency",
         "odgovorna": "Responsible",
-        "nacin": "Mode"
+        "nacin": "Mode",
+        "preneseno": "Carried"
       },
       "nacin": {
         "izvrsava": "Performs",
@@ -1432,9 +1458,13 @@
       },
       "greska": "Error",
       "greskaGenerisanje": "Error generating file: {poruka}",
+      "previseRedova": "Export is too large — at most {granica} activities per file. Narrow the period or filters and try again.",
       "raspon": {
         "nevazeci": "Invalid date range (from must be ≤ to)."
-      }
+      },
+      "prenesenoDa": "Yes",
+      "prenesenoNe": "—",
+      "prenesenoNapomena": "Includes {broj, plural, =1 {# open obligation} other {# open obligations}} carried over from before {datum}."
     },
     "zapisnik": {
       "naslov": "RECORD OF COMPLETED INSPECTION",
@@ -1448,7 +1478,9 @@
       "zakljucak": "Conclusion",
       "potpis": "Signature of authorized person: ______________________________",
       "imeFajla": "Record - {vrsta} - {datum}.docx",
-      "provjeraFallback": "inspection"
+      "provjeraFallback": "inspection",
+      "sablonNapomena": "NOTE: This text is a template draft — it was not generated by an AI model. Review and complete it before certification.",
+      "greskaModelOdgovor": "The model did not return a valid record. Nothing was saved — please try again."
     }
   },
   "dbErrors": {

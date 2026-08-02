@@ -19,11 +19,20 @@ import { Tooltip } from "@/components/ui/ikona-tooltip"
 import { currentYear, monthName, todayIso } from "@/lib/date"
 import { validRaspon } from "@/lib/plan-izvoz/period"
 import { imeIzContentDisposition } from "@/lib/plan-izvoz/naziv-fajla"
+import { IZVOZ_MAX_REDOVA } from "@/lib/plan-izvoz/stranicenje"
 import { porukaIzOdgovora } from "@/lib/queries/plan-aktivnosti"
 import { useSmijePreuzeti } from "@/providers/korisnik-provider"
 
 type PeriodMod = "om" | "god" | "mj" | "raspon" | "svi"
 const FILTER_KEYS = ["status", "q", "klijent_id", "lokacija", "vrsta_id", "nacin"] as const
+
+/**
+ * C4: brojač više ne nosi samo broj. Ruta uz broj vraća i granicu izvoza, pa modal
+ * može reći ISTINU — ili „izvešće se N" (i tačno toliko će biti u fajlu), ili
+ * „previše, suzi izbor" sa onemogućenim dugmetom. Tiho odsijecanje na 1000 redova
+ * uz pun broj iznad dugmeta bilo je najgore od oba.
+ */
+type BrojStanje = { broj: number; granica: number; prekoracenje: boolean }
 
 export function PlanIzvozModal({ godine }: { godine: number[] }) {
   const params = useSearchParams()
@@ -38,7 +47,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
   const [od, setOd] = useState("")
   const [doDatum, setDoDatum] = useState("")
   const [opseg, setOpseg] = useState<"sve" | "filtrirano">("sve")
-  const [broj, setBroj] = useState<number | "loading" | null>(null)
+  const [stanje, setStanje] = useState<BrojStanje | "loading" | null>(null)
   const [preuzimanje, setPreuzimanje] = useState(false)
   const smijePreuzeti = useSmijePreuzeti()
 
@@ -71,14 +80,25 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
     if (!open || rasponNevazeci) return
     const ctrl = new AbortController()
     const timer = setTimeout(async () => {
-      setBroj("loading")
+      setStanje("loading")
       try {
         const res = await fetch(`/api/plan-aktivnosti/izvoz?${buildParams(true).toString()}`, { signal: ctrl.signal })
         if (!res.ok) throw new Error("count")
-        const data = (await res.json()) as { broj?: number }
-        setBroj(typeof data.broj === "number" ? data.broj : null)
+        const data = (await res.json()) as { broj?: number; granica?: number; prekoracenje?: boolean }
+        if (typeof data.broj !== "number") {
+          setStanje(null)
+          return
+        }
+        // `granica`/`prekoracenje` su dodati uz C4 — fallback drži modal ispravnim i
+        // ako odgovor dođe sa starijeg deploya (nema tihe „sve je u redu" pretpostavke).
+        const granica = typeof data.granica === "number" ? data.granica : IZVOZ_MAX_REDOVA
+        setStanje({
+          broj: data.broj,
+          granica,
+          prekoracenje: data.prekoracenje ?? data.broj > granica,
+        })
       } catch {
-        if (!ctrl.signal.aborted) setBroj(null)
+        if (!ctrl.signal.aborted) setStanje(null)
       }
     }, 300)
     return () => { ctrl.abort(); clearTimeout(timer) }
@@ -95,8 +115,10 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
    * bijeloj stranici, a modal bi se već bio zatvorio. Modal se sada zatvara TEK
    * nakon uspješno snimljenog fajla.
    */
+  const prekoracenje = typeof stanje === "object" && stanje !== null && stanje.prekoracenje
+
   async function preuzmi() {
-    if (rasponNevazeci || preuzimanje) return
+    if (rasponNevazeci || preuzimanje || prekoracenje) return
     setPreuzimanje(true)
     try {
       const res = await fetch(`/api/plan-aktivnosti/izvoz?${buildParams(false).toString()}`)
@@ -131,11 +153,13 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
   }
 
   // Plan N16: nevažeći raspon NIJE isto što i pad brojanja — razdvojene poruke.
+  // C4: prekoračenje je treći, zaseban slučaj — broj je tačan, ali fajl neće nastati.
   const brojTekst =
     rasponNevazeci ? t("rasponNevazeci")
-    : broj === "loading" ? t("racunam")
-    : broj === null ? t("greskaBroj")
-    : t("brojAktivnosti", { broj })
+    : stanje === "loading" ? t("racunam")
+    : stanje === null ? t("greskaBroj")
+    : stanje.prekoracenje ? t("previseAktivnosti", { broj: stanje.broj, granica: stanje.granica })
+    : t("brojAktivnosti", { broj: stanje.broj })
 
   const linkKlase = cn("self-start rounded-sm text-sm text-brand hover:underline", FOCUS_RING)
 
@@ -310,11 +334,14 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
 
         {/* Živi broj + akcija */}
         <div className="flex items-center justify-between border-t pt-3">
-          <span className="text-sm text-muted-foreground" data-testid="izvoz-broj">{brojTekst}</span>
+          <span
+            className={cn("text-sm", rasponNevazeci || prekoracenje ? "text-destructive" : "text-muted-foreground")}
+            data-testid="izvoz-broj"
+          >{brojTekst}</span>
           <Button
             type="button"
             onClick={() => void preuzmi()}
-            disabled={rasponNevazeci || preuzimanje}
+            disabled={rasponNevazeci || preuzimanje || prekoracenje}
             data-testid="izvoz-preuzmi"
           >
             <Download className="h-[18px] w-[18px] shrink-0" aria-hidden />{" "}

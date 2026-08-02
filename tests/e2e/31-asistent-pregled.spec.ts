@@ -9,6 +9,12 @@ const PREGLED_IME = "E2E Pregled"
 // Svaki test kreira svoj kontekst (bez admin storageState).
 test.use({ storageState: { cookies: [], origins: [] } })
 
+// Ista zamka kao u 09-asistent: `toHaveURL(..., { timeout: 30_000 })` ispod ne znači ništa
+// dok je budžet cijelog testa takođe 30 s. Ako se ovaj spec pokrene bez 09 (npr. sam, ili
+// prvi u redu), prva navigacija na `/asistent` plaća prvo dev prevođenje rute i test padne
+// na isteku, a ne na pogrešnom ponašanju. Diže se samo budžet — tvrdnje ostaju iste.
+test.describe.configure({ timeout: 90_000 })
+
 test.describe("Asistent — pregled (read-only) nema pristup", () => {
   test.beforeAll(async () => {
     await ensureKorisnik(PREGLED_EMAIL, PREGLED_LOZINKA, PREGLED_IME, "pregled")

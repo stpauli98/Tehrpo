@@ -38,13 +38,45 @@ test.describe("Faza 6 — Cron endpoint", () => {
     expect(res.status()).toBe(401)
   })
 
+  // Vremenski budžet ove rute NIJE nesreća nego dio ugovora, pa mu se i test mora
+  // prilagoditi umjesto da ga obara:
+  //   • jedan zahtjev vrti TRI kruga (pre-due + post-due + digest) i svaki šalje
+  //     throttlovano — REMINDER_BATCH_SIZE (2) poruka svakih REMINDER_BATCH_DELAY_MS
+  //     (1100 ms), da se ne probije Resend rate-limit. Throttling važi i u dryRun-u,
+  //     jer bi inače test mjerio put kojim produkcija nikad ne ide.
+  //   • app/api/cron/reminders/route.ts drži `maxDuration = 120` i sam siječe
+  //     post-due/digest na `pocetak + maxDuration − rezerve` (105 s), dok pre-due staje
+  //     na cap-u REMINDER_MAX_PER_RUN (90 poruka ≈ 50 s). Ruta se, dakle, sama ograničava
+  //     na ~110 s po pozivu.
+  // Zato rok NIJE „izmjereno + malo" (to bi opet puklo čim DEMO dobije više termina),
+  // nego GORNJA GRANICA koju ruta garantuje. Izmjereno na DEMO 02.08.2026: jedan dryRun
+  // poziv = 22,2 s (dijagnostika.trajanjeMs, 6 pre-due + 15 post-due + 3 digest jedinice),
+  // a test pravi DVA poziva → podrazumijevanih 30 s po testu nije moglo proći ni tada.
+  const ROK_POZIVA_MS = 120_000
+
   test("dryRun + ispravan secret → 200; ne dira ledger i zato je ponovljiv", async ({ request }) => {
+    // Legitimno spor: test radi DVA puna cron prolaza, a svaki zove RPC-e nad cloud
+    // DEMO bazom i prolazi kroz cijeli recipient pipeline. U default 30s budžetu je
+    // drugi POST znao završiti kao "Request context disposed" (timeout, ne greška
+    // aplikacije). test.slow() to i označava (anotacija „slow" u izvještaju) i diže
+    // budžet na 3× default.
+    test.slow()
+    // …ali 3 × 30 s = 90 s je i dalje ispod onoga što ruta smije potrošiti (vidi
+    // ROK_POZIVA_MS gore): dva poziva po gornjoj granici + rezerva za DB provjeru
+    // između njih. setTimeout dolazi POSLIJE slow() i postavlja apsolutnu vrijednost
+    // (TimeoutManager.setTimeout prepisuje slot, ne množi ga), pa je konačni budžet
+    // 270 s — dovoljan i kad ruta ode do svog maxDuration-a, a ne do izmjerenih 22 s.
+    test.setTimeout(2 * ROK_POZIVA_MS + 30_000)
     const secret = cronSecret()
     const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" }
 
     // Odgovor je oblika { preDue, postDue } — ovaj test cilja pre-due krug.
     // Prvi run: REMINDER_TO je postavljen → due termini imaju primaoce → sent > 0.
-    const first = await (await request.post("/api/cron/reminders", { headers, data: { dryRun: true } })).json()
+    const prvi = await request.post("/api/cron/reminders", { headers, data: { dryRun: true }, timeout: ROK_POZIVA_MS })
+    // Status je dio naziva testa, a do sada se nije provjeravao: bez ovoga bi 500
+    // (npr. RESEND_API_KEY greška) pao tek kasnije i kao nejasan `undefined.sent`.
+    expect(prvi.status()).toBe(200)
+    const first = await prvi.json()
     expect(Array.isArray(first.preDue.sent)).toBe(true)
     expect(Array.isArray(first.preDue.skipped)).toBe(true)
     expect(Array.isArray(first.preDue.errors)).toBe(true)
@@ -59,7 +91,9 @@ test.describe("Faza 6 — Cron endpoint", () => {
 
     // Posljedica: dry run je ponovljiv — drugi poziv vidi isti skup due termina.
     // Idempotenciju stvarnog slanja pokriva integracioni test nad get_due_podsjetnici.
-    const second = await (await request.post("/api/cron/reminders", { headers, data: { dryRun: true } })).json()
+    const drugi = await request.post("/api/cron/reminders", { headers, data: { dryRun: true }, timeout: ROK_POZIVA_MS })
+    expect(drugi.status()).toBe(200)
+    const second = await drugi.json()
     expect(second.preDue.sent.length).toBe(first.preDue.sent.length)
   })
 })

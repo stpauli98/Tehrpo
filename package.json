@@ -68,7 +68,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "pg": "^8.22.0",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.18",
     "shadcn": "^4.11.0",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",

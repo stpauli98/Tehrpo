@@ -1035,7 +1035,19 @@
       "deaktivacijaPotvrdaNaslov": "Benutzer deaktivieren?",
       "deaktivacijaPotvrdaOpis": "Der Benutzer verliert den Zugang zur Anwendung und erhält keine Erinnerungen mehr. Das Konto kann später wieder aktiviert werden.",
       "resetPotvrdaNaslov": "Passwort-Reset senden?",
-      "resetPotvrdaOpis": "An {email} wird eine E-Mail mit einem Link zum Festlegen eines neuen Passworts gesendet. Das bisherige Passwort bleibt gültig, bis der Benutzer es ändert."
+      "resetPotvrdaOpis": "An {email} wird eine E-Mail mit einem Link zum Festlegen eines neuen Passworts gesendet. Das bisherige Passwort bleibt gültig, bis der Benutzer es ändert.",
+      "urediPodatke": "Daten bearbeiten",
+      "obrisiTrajno": "Endgültig löschen",
+      "obrisiPotvrdaNaslov": "Benutzer endgültig löschen?",
+      "obrisiPotvrdaOpis": "Das Konto {email} wird endgültig entfernt und kann nicht wiederhergestellt werden. Bestehende Einträge (Kunden, Fristen, Dokumente, Audit) bleiben erhalten, jedoch ohne den Namen dieses Benutzers als Akteur.",
+      "korisnikObrisan": "Benutzer gelöscht."
+    },
+    "urediKorisnika": {
+      "naslov": "Benutzer bearbeiten",
+      "poljeIme": "Vor- und Nachname",
+      "poljeEmail": "E-Mail",
+      "submit": "Speichern",
+      "submitPending": "Speichern…"
     },
     "noviKorisnik": {
       "dugme": "Neuer Benutzer",
@@ -1179,7 +1191,10 @@
       "korisnikNePostoji": "Der Benutzer existiert nicht.",
       "dozvoleSamoOperater": "Berechtigungsschalter gelten nur für Operatoren.",
       "periodikaUklanjanjeBlokirano": "Das Intervall kann nicht entfernt werden: {broj} offene Termine dieser Art gelten als wiederkehrend und haben kein eigenes Intervall — beim Abschluss würde die Kette abreißen und die Pflicht aus dem Plan verschwinden. Storniere oder schließe zuerst diese Termine (oder deaktiviere ihre Wiederholung), erst danach das Intervall der Art entfernen.",
-      "periodikaProvjeraNijeUspjela": "Es konnte nicht geprüft werden, wie viele offene Termine von diesem Intervall abhängen — das Intervall wurde nicht entfernt. Bitte erneut versuchen."
+      "periodikaProvjeraNijeUspjela": "Es konnte nicht geprüft werden, wie viele offene Termine von diesem Intervall abhängen — das Intervall wurde nicht entfernt. Bitte erneut versuchen.",
+      "prvoDeaktiviraj": "Der Benutzer muss vor dem Löschen deaktiviert werden.",
+      "vlastitiNalogBrisanje": "Du kannst dein eigenes Konto nicht löschen.",
+      "brisanjeAuthGreska": "Die Kontolöschung wurde nicht abgeschlossen. Bitte erneut versuchen."
     },
     "novaVrsta": {
       "dugme": "Neue Art",

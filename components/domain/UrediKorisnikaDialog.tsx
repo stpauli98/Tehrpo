@@ -1,8 +1,8 @@
 "use client"
-import { useActionState, useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useAkcijaToast } from "@/components/akcija-toast"
+import { toast } from "sonner"
 import { urediKorisnika, type ActionResult } from "@/app/(dashboard)/postavke/actions"
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -60,30 +60,38 @@ function UrediKorisnikaForma({
   const t = useTranslations("postavke.urediKorisnika")
   const tc = useTranslations("common")
   const router = useRouter()
-  const [state, action, pending] = useActionState(urediKorisnika, initial)
-  const submitted = useRef(false)
-  useAkcijaToast(state, { uspjeh: tc("sacuvano"), greska: tc("greska") })
-
-  useEffect(() => {
-    if (submitted.current && !pending && state.ok) {
-      submitted.current = false
-      onGotovo()
-      router.refresh()
-    }
-  }, [state, pending, router, onGotovo])
+  // Imperativno (NE useActionState): red ove komponente živi u KorisniciTabela koja
+  // filtrira client-side po pretrazi (`q`). Uspješna izmjena imena/emaila kroz
+  // revalidatePath zna da red više ne odgovara filteru → tabela ga unmount-uje ODMAH,
+  // prije nego što bi useActionState stigao isporučiti novi state, pa toast/onGotovo
+  // efekat vezan za taj state nikad ne bi okinuo (komponenta je već nestala). `toast`
+  // (sonner) je modul-level poziv koji radi i nakon unmount-a; `onGotovo`/`router.refresh()`
+  // zovemo direktno iz iste closure-e, bez oslanjanja na naknadni render ove komponente.
+  const [state, setState] = useState<ActionResult>(initial)
+  const [pending, startTransition] = useTransition()
 
   const greske = state.ok === false ? state.errors : undefined
   const idImeGreska = `uredi-korisnik-ime-greska-${korisnikId}`
   const idEmailGreska = `uredi-korisnik-email-greska-${korisnikId}`
 
+  function submit(fd: FormData) {
+    startTransition(async () => {
+      const res = await urediKorisnika(initial, fd)
+      if (res.ok) {
+        toast.success(tc("sacuvano"))
+        onGotovo()
+        router.refresh()
+      } else {
+        // Mutacija NIJE prošla → red u tabeli i dalje odgovara filteru (podaci
+        // nepromijenjeni), komponenta je sigurno još mounted — lokalni state za
+        // inline greške je bezbjedan.
+        setState(res)
+      }
+    })
+  }
+
   return (
-    <form
-      action={(fd) => {
-        submitted.current = true
-        action(fd)
-      }}
-      className="space-y-3"
-    >
+    <form action={submit} className="space-y-3">
       <input type="hidden" name="id" value={korisnikId} />
       <div>
         <label className="block text-sm">

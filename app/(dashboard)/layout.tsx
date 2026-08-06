@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/shell/Sidebar"
 import { TopBar } from "@/components/shell/TopBar"
 import { DemoTraka } from "@/components/shell/DemoTraka"
+import { DemoDisklejmer } from "@/components/shell/DemoDisklejmer"
 import { DEMO_MODE } from "@/lib/demo"
 import { DesktopOnlyGate } from "@/components/shell/DesktopOnlyGate"
 import { Toaster } from "@/components/ui/sonner"
@@ -35,6 +36,7 @@ export default async function DashboardLayout({
             <main className="flex-1 overflow-auto p-6">{children}</main>
           </div>
         </div>
+        {DEMO_MODE && <DemoDisklejmer />}
         <Toaster />
       </KorisnikProvider>
     </DashboardQueryProvider>

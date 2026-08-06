@@ -1,5 +1,5 @@
 "use client"
-import { useActionState } from "react"
+import { useActionState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { prijaviSe, type ActionResult } from "./actions"
 import { Input } from "@/components/ui/input"
@@ -8,12 +8,20 @@ import { APP_NAME, APP_INITIAL } from "@/lib/brand"
 import { href } from "@/i18n/routes"
 import { DemoTraka } from "@/components/shell/DemoTraka"
 import { DEMO_MODE } from "@/lib/demo"
+import { bezbjedniSessionStorage, ponistiDisklejmer } from "@/lib/demo-disklejmer"
 
 const initial: ActionResult = { ok: true }
 
 export default function PrijavaPage() {
   const t = useTranslations("auth.prijava")
   const [state, action, pending] = useActionState(prijaviSe, initial)
+
+  // Nova prijava = novi prikaz disklejmera: dolazak na login briše potvrdu,
+  // pa modal sačeka korisnika odmah poslije uspješne prijave.
+  useEffect(() => {
+    if (DEMO_MODE) ponistiDisklejmer(bezbjedniSessionStorage())
+  }, [])
+
   return (
     <>
       {DEMO_MODE && <DemoTraka className="fixed inset-x-0 top-0 z-10" />}

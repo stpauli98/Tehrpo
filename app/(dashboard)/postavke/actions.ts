@@ -321,6 +321,99 @@ export async function postaviDodjele(korisnikId: string, klijentIds: string[]): 
   return { ok: true }
 }
 
+// ─── Trajno brisanje korisnika (samo deaktivirani) ───────────────────────────
+
+/**
+ * Trajno briše korisnika: prvo profil (SSR/RLS klijent → audit trigger zabilježi
+ * ADMINA kao aktera), zatim auth nalog (Admin API). Dozvoljeno SAMO za deaktivirane
+ * (potvrđena odluka 06.08.2026.) — time je zadnji aktivni admin automatski zaštićen,
+ * jer se aktivan korisnik ne može obrisati, a postaviAktivan brani deaktivaciju
+ * zadnjeg admina. Posljedica brisanja: audit_log.korisnik_id i kreirao_id kolone
+ * postaju NULL (svjesno prihvaćeno), korisnik_klijent/chat_poruke idu cascade.
+ */
+export async function obrisiKorisnika(korisnikId: string): Promise<ActionResult> {
+  const ja = await zahtijevajAdmina()
+  if (!UUID_RE.test(korisnikId)) return { ok: false, message: t("korisnikNePostoji") }
+  if (korisnikId === ja.id) return { ok: false, message: t("vlastitiNalogBrisanje") }
+  const supabase = await createServerSupabaseClient()
+  // Puni snapshot reda — služi za rollback ako brisanje auth naloga padne.
+  const { data: meta, error: selErr } = await supabase
+    .from("korisnici")
+    .select("*")
+    .eq("id", korisnikId)
+    .maybeSingle()
+  if (selErr) return { ok: false, message: selErr.message }
+  if (!meta) return { ok: false, message: t("korisnikNePostoji") }
+  if (meta.aktivan) return { ok: false, message: t("prvoDeaktiviraj") }
+  const { error: delErr } = await supabase.from("korisnici").delete().eq("id", korisnikId)
+  if (delErr) return { ok: false, message: delErr.message }
+  // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
+  const admin = createAdminSupabaseClient()
+  const { error: authErr } = await admin.auth.admin.deleteUser(korisnikId)
+  if (authErr) {
+    // Rollback: vrati profil red iz snapshota (SSR klijent — korisnici_wr = je_admin(),
+    // audit hvata aktera; created_at i dozvole se vraćaju identično). Dodjele firmi su
+    // već otišle cascade-om i NE vraćaju se — admin ih po potrebi ponovo postavi.
+    const { error: rbErr } = await supabase.from("korisnici").insert(meta)
+    if (rbErr) console.error("Rollback profila nakon pada auth brisanja nije uspio:", korisnikId, rbErr.message)
+    return { ok: false, message: t("brisanjeAuthGreska") }
+  }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+// ─── Uređivanje korisnika (ime + email) ──────────────────────────────────────
+
+const urediKorisnikaSchema = z.object({
+  id: z.string().uuid(),
+  ime: z.string().trim().min(1, t("imeObavezno")).max(120),
+  email: z.string().email(t("emailNeispravan")),
+})
+
+/**
+ * Mijenja ime i email korisnika. Email se prvo mijenja u auth sistemu (Admin API,
+ * email_confirm — važi odmah, interni alat), pa u profilu (SSR klijent → audit sa
+ * akterom). Pad drugog koraka → rollback auth emaila na stari. Vlastiti nalog se
+ * smije uređivati (nije destruktivno).
+ */
+export async function urediKorisnika(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const parsed = urediKorisnikaSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, ime, email } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { data: meta, error: selErr } = await supabase
+    .from("korisnici")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle()
+  if (selErr) return { ok: false, message: selErr.message }
+  if (!meta) return { ok: false, message: t("korisnikNePostoji") }
+  const stariEmail = meta.email
+  const emailPromijenjen = email.toLowerCase() !== stariEmail.toLowerCase()
+  if (emailPromijenjen) {
+    // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
+    const admin = createAdminSupabaseClient()
+    const { error: authErr } = await admin.auth.admin.updateUserById(id, { email, email_confirm: true })
+    if (authErr) {
+      return { ok: false, message: /already|registered|exists/i.test(authErr.message)
+        ? t("korisnikEmailPostoji") : t("greskaFallback") }
+    }
+  }
+  const { error: updErr } = await supabase.from("korisnici").update({ ime, email }).eq("id", id)
+  if (updErr) {
+    if (emailPromijenjen) {
+      // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
+      const admin = createAdminSupabaseClient()
+      const { error: rbErr } = await admin.auth.admin.updateUserById(id, { email: stariEmail, email_confirm: true })
+      if (rbErr) console.error("Rollback auth emaila nije uspio:", id, rbErr.message)
+    }
+    return { ok: false, message: /duplicate|unique/i.test(updErr.message) ? t("korisnikEmailPostoji") : updErr.message }
+  }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
 // ─── Uređivanje / deaktivacija vrste ─────────────────────────────────────────
 
 const updateVrstaSchema = z.object({

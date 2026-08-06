@@ -12,6 +12,16 @@
   --font-family-sans: var(--font-sans, "Inter", system-ui, sans-serif);
 }
 
+/* DEMO režim (lib/demo.ts): narandžasta umjesto plave da se demo na prvi
+   pogled razlikuje od produkcijske instance. Tailwind v4 utility klase
+   (bg-brand i sl.) kompajliraju u var(--color-brand), pa je ovaj override
+   dovoljan za cijeli interfejs. */
+html[data-demo] {
+  --color-brand: #ea580c;
+  --color-brand-dark: #c2410c;
+  --color-brand-light: #ffedd5;
+}
+
 @layer base {
   html, body {
     height: 100%;

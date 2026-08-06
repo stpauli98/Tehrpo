@@ -345,8 +345,13 @@ export async function obrisiKorisnika(korisnikId: string): Promise<ActionResult>
   if (selErr) return { ok: false, message: selErr.message }
   if (!meta) return { ok: false, message: t("korisnikNePostoji") }
   if (meta.aktivan) return { ok: false, message: t("prvoDeaktiviraj") }
-  const { error: delErr } = await supabase.from("korisnici").delete().eq("id", korisnikId)
+  // Uslov aktivan=false ide direktno na DELETE (ne oslanjamo se samo na provjeru iznad) —
+  // brani trku sa aktivacijom: ako neko drugi u međuvremenu aktivira korisnika, DELETE
+  // ne pogađa nijedan red umjesto da nepovratno obriše sad-aktivnog korisnika.
+  const { data: del, error: delErr } = await supabase
+    .from("korisnici").delete().eq("id", korisnikId).eq("aktivan", false).select("id")
   if (delErr) return { ok: false, message: delErr.message }
+  if (!del?.length) return { ok: false, message: t("prvoDeaktiviraj") }
   // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
   const admin = createAdminSupabaseClient()
   const { error: authErr } = await admin.auth.admin.deleteUser(korisnikId)

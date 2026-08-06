@@ -1193,7 +1193,7 @@
       "periodikaUklanjanjeBlokirano": "Das Intervall kann nicht entfernt werden: {broj} offene Termine dieser Art gelten als wiederkehrend und haben kein eigenes Intervall — beim Abschluss würde die Kette abreißen und die Pflicht aus dem Plan verschwinden. Storniere oder schließe zuerst diese Termine (oder deaktiviere ihre Wiederholung), erst danach das Intervall der Art entfernen.",
       "periodikaProvjeraNijeUspjela": "Es konnte nicht geprüft werden, wie viele offene Termine von diesem Intervall abhängen — das Intervall wurde nicht entfernt. Bitte erneut versuchen.",
       "prvoDeaktiviraj": "Der Benutzer muss vor dem Löschen deaktiviert werden.",
-      "vlastitiNalogBrisanje": "Du kannst dein eigenes Konto nicht löschen.",
+      "vlastitiNalogBrisanje": "Sie können Ihr eigenes Konto nicht löschen.",
       "brisanjeAuthGreska": "Die Kontolöschung wurde nicht abgeschlossen. Bitte erneut versuchen."
     },
     "novaVrsta": {

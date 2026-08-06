@@ -61,6 +61,16 @@
       "demoBedz": "DEMO",
       "demoBedzOpis": "Demo version — emails are not sent"
     },
+    "demoTraka": {
+      "tekst": "DEMO VERSION — phase 0 · a skeleton, not a finished product"
+    },
+    "demoDisklejmer": {
+      "naslov": "Welcome to the demo environment",
+      "pasus1": "This is an application skeleton — phase 0, a generic foundation we develop from scratch. It is not a finished product and does not represent any third party's product.",
+      "pasus2": "The demo shows only a small part of what is possible. Every solution is built custom: the final scope, look and functionality are defined together with the company it is implemented for.",
+      "pasus3": "All data in the demo environment is test data and does not relate to real companies.",
+      "dugme": "I understand"
+    },
     "comingSoon": {
       "naslovUskoro": "{naslov} — coming soon"
     },

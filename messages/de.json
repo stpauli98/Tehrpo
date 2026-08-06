@@ -61,6 +61,16 @@
       "demoBedz": "DEMO",
       "demoBedzOpis": "Demo-Version — es werden keine E-Mails versendet"
     },
+    "demoTraka": {
+      "tekst": "DEMO-VERSION — Phase 0 · Gerüst, kein fertiges Produkt"
+    },
+    "demoDisklejmer": {
+      "naslov": "Willkommen in der Demo-Umgebung",
+      "pasus1": "Dies ist ein Anwendungsgerüst — Phase 0, eine generische Grundlage, die wir von Grund auf neu entwickeln. Es ist kein fertiges Produkt und stellt kein Produkt eines Dritten dar.",
+      "pasus2": "Die Demo zeigt nur einen kleinen Teil der Möglichkeiten. Jede Lösung wird maßgeschneidert erstellt: endgültiger Umfang, Aussehen und Funktionen werden gemeinsam mit dem Unternehmen festgelegt, für das die Lösung umgesetzt wird.",
+      "pasus3": "Alle Daten in der Demo-Umgebung sind Testdaten und beziehen sich nicht auf reale Unternehmen.",
+      "dugme": "Verstanden"
+    },
     "comingSoon": {
       "naslovUskoro": "{naslov} — demnächst"
     },

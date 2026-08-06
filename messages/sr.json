@@ -61,6 +61,16 @@
       "demoBedz": "DEMO",
       "demoBedzOpis": "Demo verzija — mejlovi se ne šalju"
     },
+    "demoTraka": {
+      "tekst": "DEMO VERZIJA — faza 0 · kostur, ne gotov proizvod"
+    },
+    "demoDisklejmer": {
+      "naslov": "Dobrodošli u demo okruženje",
+      "pasus1": "Ovo je kostur aplikacije — faza 0, generička osnova koju razvijamo od nule. Nije gotov proizvod i ne predstavlja proizvod bilo koje treće strane.",
+      "pasus2": "Demo prikazuje samo mali dio mogućnosti. Svako rješenje se izrađuje po mjeri: konačan obim, izgled i funkcionalnosti definišu se u dogovoru sa firmom kojoj se rješenje implementira.",
+      "pasus3": "Svi podaci u demo okruženju su testni i ne odnose se na stvarne firme.",
+      "dugme": "Razumijem"
+    },
     "comingSoon": {
       "naslovUskoro": "{naslov} — uskoro"
     },

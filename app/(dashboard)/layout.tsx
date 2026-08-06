@@ -1,5 +1,8 @@
 import { Sidebar } from "@/components/shell/Sidebar"
 import { TopBar } from "@/components/shell/TopBar"
+import { DemoTraka } from "@/components/shell/DemoTraka"
+import { DemoDisklejmer } from "@/components/shell/DemoDisklejmer"
+import { DEMO_MODE } from "@/lib/demo"
 import { DesktopOnlyGate } from "@/components/shell/DesktopOnlyGate"
 import { Toaster } from "@/components/ui/sonner"
 import { getTrenutniKorisnik } from "@/lib/auth/current-user"
@@ -26,12 +29,14 @@ export default async function DashboardLayout({
         <DesktopOnlyGate />
         <AktivnostTracker />
         <div className="hidden lg:flex flex-col h-screen">
+          {DEMO_MODE && <DemoTraka />}
           <TopBar korisnik={korisnik} />
           <div className="flex flex-1 overflow-hidden">
             <Sidebar mejlGreske={mejlGreske ?? 0} />
             <main className="flex-1 overflow-auto p-6">{children}</main>
           </div>
         </div>
+        {DEMO_MODE && <DemoDisklejmer />}
         <Toaster />
       </KorisnikProvider>
     </DashboardQueryProvider>

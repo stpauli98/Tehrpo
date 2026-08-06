@@ -1045,7 +1045,19 @@
       "deaktivacijaPotvrdaNaslov": "Deaktivirati korisnika?",
       "deaktivacijaPotvrdaOpis": "Korisnik gubi pristup aplikaciji i prestaje primati podsjetnike. Nalog se kasnije može ponovo aktivirati.",
       "resetPotvrdaNaslov": "Poslati reset lozinke?",
-      "resetPotvrdaOpis": "Korisniku se šalje email na {email} sa linkom za postavljanje nove lozinke. Postojeća lozinka važi dok je korisnik sam ne promijeni."
+      "resetPotvrdaOpis": "Korisniku se šalje email na {email} sa linkom za postavljanje nove lozinke. Postojeća lozinka važi dok je korisnik sam ne promijeni.",
+      "urediPodatke": "Uredi podatke",
+      "obrisiTrajno": "Obriši trajno",
+      "obrisiPotvrdaNaslov": "Trajno obrisati korisnika?",
+      "obrisiPotvrdaOpis": "Nalog {email} se trajno uklanja i ne može se vratiti. Postojeći zapisi (klijenti, termini, dokumenti, audit) ostaju, ali bez imena ovog korisnika kao aktera.",
+      "korisnikObrisan": "Korisnik obrisan."
+    },
+    "urediKorisnika": {
+      "naslov": "Uredi korisnika",
+      "poljeIme": "Ime i prezime",
+      "poljeEmail": "Email",
+      "submit": "Sačuvaj",
+      "submitPending": "Čuvanje…"
     },
     "noviKorisnik": {
       "dugme": "Novi korisnik",
@@ -1189,7 +1201,10 @@
       "korisnikNePostoji": "Korisnik ne postoji.",
       "dozvoleSamoOperater": "Prekidači dozvola vrijede samo za operatera.",
       "periodikaUklanjanjeBlokirano": "Periodika se ne može ukloniti: {broj} otvorenih termina ove vrste vodi se kao ponavljajući i nema vlastiti interval — po izvršenju bi lanac stao i obaveza bi nestala iz plana. Prvo te termine otkaži ili zatvori, pa onda ukloni interval vrste.",
-      "periodikaProvjeraNijeUspjela": "Ne mogu provjeriti koliko otvorenih termina zavisi od ove periodike, pa interval nije uklonjen. Pokušaj ponovo."
+      "periodikaProvjeraNijeUspjela": "Ne mogu provjeriti koliko otvorenih termina zavisi od ove periodike, pa interval nije uklonjen. Pokušaj ponovo.",
+      "prvoDeaktiviraj": "Korisnik se prije brisanja mora deaktivirati.",
+      "vlastitiNalogBrisanje": "Ne možeš obrisati vlastiti nalog.",
+      "brisanjeAuthGreska": "Brisanje naloga nije dovršeno. Pokušaj ponovo."
     },
     "novaVrsta": {
       "dugme": "Nova vrsta",

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { toastRezultat } from "@/components/akcija-toast"
-import { MoreHorizontal, Send, UserX, UserCheck, KeyRound } from "lucide-react"
+import { MoreHorizontal, Send, UserX, UserCheck, KeyRound, Pencil, Trash2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,15 +14,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { PotvrdiBrisanjeDialog } from "./PotvrdiBrisanjeDialog"
-import { posaljiTestniEmail, postaviAktivan, posaljiResetKorisniku } from "@/app/(dashboard)/postavke/actions"
+import { UrediKorisnikaDialog } from "./UrediKorisnikaDialog"
+import { posaljiTestniEmail, postaviAktivan, posaljiResetKorisniku, obrisiKorisnika } from "@/app/(dashboard)/postavke/actions"
 
 export function KorisnikAkcije({
   korisnikId,
+  ime,
   email,
   aktivan,
   jeJa,
 }: {
   korisnikId: string
+  ime: string
   email: string
   aktivan: boolean
   jeJa: boolean
@@ -38,6 +41,8 @@ export function KorisnikAkcije({
   // mijenja (Talas 0 vlasništvo).
   const resetTriggerRef = useRef<HTMLButtonElement>(null)
   const deaktivirajTriggerRef = useRef<HTMLButtonElement>(null)
+  const urediTriggerRef = useRef<HTMLButtonElement>(null)
+  const obrisiTriggerRef = useRef<HTMLButtonElement>(null)
 
   // Odgoda za jedan tick: meni se prvo zatvori i vrati fokus na svoj trigger, pa tek
   // onda dialog preuzme fokus — sinhrono otvaranje bi to dvoje utrkivalo.
@@ -97,6 +102,9 @@ export function KorisnikAkcije({
           >
             <KeyRound aria-hidden /> {t("posaljiReset")}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => otvoriDialog(urediTriggerRef)} data-testid={`uredi-${korisnikId}`}>
+            <Pencil aria-hidden /> {t("urediPodatke")}
+          </DropdownMenuItem>
           <DropdownMenuItem
             variant={aktivan ? "destructive" : "default"}
             disabled={jeJa}
@@ -106,6 +114,15 @@ export function KorisnikAkcije({
             {aktivan ? <UserX aria-hidden /> : <UserCheck aria-hidden />}
             {aktivan ? t("deaktivirajKorisnika") : t("aktivirajKorisnika")}
           </DropdownMenuItem>
+          {!aktivan && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => otvoriDialog(obrisiTriggerRef)}
+              data-testid={`obrisi-${korisnikId}`}
+            >
+              <Trash2 aria-hidden /> {t("obrisiTrajno")}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -123,6 +140,29 @@ export function KorisnikAkcije({
           return res.ok ? res : { ok: false as const, message: res.message ?? t("resetGreska") }
         }}
       />
+
+      <UrediKorisnikaDialog
+        trigger={<button type="button" ref={urediTriggerRef} tabIndex={-1} aria-hidden className="hidden" />}
+        korisnikId={korisnikId}
+        ime={ime}
+        email={email}
+      />
+
+      {!aktivan && (
+        <PotvrdiBrisanjeDialog
+          trigger={<button type="button" ref={obrisiTriggerRef} tabIndex={-1} aria-hidden className="hidden" />}
+          naslov={t("obrisiPotvrdaNaslov")}
+          opis={t("obrisiPotvrdaOpis", { email })}
+          potvrdiLabel={t("obrisiTrajno")}
+          testId={`obrisi-potvrdi-${korisnikId}`}
+          onPotvrdi={async () => {
+            const res = await obrisiKorisnika(korisnikId)
+            if (res.ok) toast.success(t("korisnikObrisan"))
+            return res.ok ? res : { ok: false as const, message: res.message ?? t("greska") }
+          }}
+          onUspjeh={() => router.refresh()}
+        />
+      )}
 
       {aktivan && (
         <PotvrdiBrisanjeDialog

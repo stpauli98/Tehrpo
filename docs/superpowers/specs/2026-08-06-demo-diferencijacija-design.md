@@ -38,10 +38,14 @@ današnjem stanju.
   Time se svih ~32 mjesta koja koriste `bg-brand`/`text-brand`/`border-brand`
   (login forma, logo bedž, dugmad, sidebar) prefarbaju odjednom, bez izmjene
   ijedne komponente.
-- **DEMO traka** (`components/shell/DemoTraka.tsx`, server komponenta):
-  - Renderuje se u **root layoutu** (`app/layout.tsx`) iznad `{children}` → vidi
-    se na svakom ekranu uključujući `/prijava`; vraća `null` kad `DEMO_MODE`
-    nije uključen.
+- **DEMO traka** (`components/shell/DemoTraka.tsx`, klijentska komponenta —
+  auth stranice su klijentske pa server komponenta tu ne može, a `shell`
+  namespace je već u `CLIENT_NAMESPACES`):
+  - Renderuje se na tri mjesta, gate-ovano `{DEMO_MODE && <DemoTraka />}` na
+    pozivaocu (isti obrazac kao DEMO bedž u TopBar-u): u
+    `app/(dashboard)/layout.tsx` kao prvo dijete `h-screen` flex kolone (root
+    layout bi sa `h-screen` dashboardom napravio dupli scrollbar), te fiksirana
+    na vrh u `app/prijava/page.tsx` i `app/zaboravljena-lozinka/page.tsx`.
   - Tanka puna narandžasta traka (bg `--color-brand`, bijeli tekst), centriran
     tekst, ne može se zatvoriti. `data-testid="demo-traka"`.
   - Tekst (i18n ključ `shell.demoTraka.tekst`, sr):

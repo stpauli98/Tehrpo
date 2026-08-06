@@ -1035,7 +1035,19 @@
       "deaktivacijaPotvrdaNaslov": "Deactivate this user?",
       "deaktivacijaPotvrdaOpis": "The user loses access to the app and stops receiving reminders. The account can be reactivated later.",
       "resetPotvrdaNaslov": "Send a password reset?",
-      "resetPotvrdaOpis": "An email with a link to set a new password will be sent to {email}. The current password stays valid until the user changes it."
+      "resetPotvrdaOpis": "An email with a link to set a new password will be sent to {email}. The current password stays valid until the user changes it.",
+      "urediPodatke": "Edit details",
+      "obrisiTrajno": "Delete permanently",
+      "obrisiPotvrdaNaslov": "Permanently delete user?",
+      "obrisiPotvrdaOpis": "The account {email} will be permanently removed and cannot be restored. Existing records (clients, deadlines, documents, audit) remain, but without this user's name as the actor.",
+      "korisnikObrisan": "User deleted."
+    },
+    "urediKorisnika": {
+      "naslov": "Edit user",
+      "poljeIme": "Full name",
+      "poljeEmail": "Email",
+      "submit": "Save",
+      "submitPending": "Saving…"
     },
     "noviKorisnik": {
       "dugme": "New user",
@@ -1179,7 +1191,10 @@
       "korisnikNePostoji": "The user does not exist.",
       "dozvoleSamoOperater": "Permission switches apply to operators only.",
       "periodikaUklanjanjeBlokirano": "The interval cannot be removed: {broj} open appointments of this type are marked as recurring and have no interval of their own — closing them would break the chain and the obligation would disappear from the plan. First cancel or close those appointments (or turn off their recurrence), then remove the type's interval.",
-      "periodikaProvjeraNijeUspjela": "Could not check how many open appointments depend on this interval, so it was not removed. Please try again."
+      "periodikaProvjeraNijeUspjela": "Could not check how many open appointments depend on this interval, so it was not removed. Please try again.",
+      "prvoDeaktiviraj": "The user must be deactivated before deletion.",
+      "vlastitiNalogBrisanje": "You cannot delete your own account.",
+      "brisanjeAuthGreska": "Account deletion did not complete. Please try again."
     },
     "novaVrsta": {
       "dugme": "New type",

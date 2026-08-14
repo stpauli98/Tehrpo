@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test"
 import { injectSessionFor } from "./session-helper"
 import { ensureKorisnik, deleteKorisnikByEmail } from "./db"
 
-const PREGLED_EMAIL = "e2e-pregled@tehpro.test"
+const PREGLED_EMAIL = "e2e-pregled@demo.test"
 const PREGLED_LOZINKA = "E2ePregled2026!"
 const PREGLED_IME = "E2E Pregled"
 

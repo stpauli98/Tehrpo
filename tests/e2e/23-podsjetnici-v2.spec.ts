@@ -27,9 +27,9 @@ const otvoriPodsjetnike = (page: Page) => page.getByRole("button", { name: "Emai
 const otvoriKorisnici = (page: Page) => page.getByRole("button", { name: "Korisnici" }).click()
 
 // Fiksni test-operater namijenjen SAMO ovoj datoteci (različit email od
-// e2e-operater@tehpro.test koji koristi 18-auth-rls.spec.ts) — izbjegava
+// e2e-operater@demo.test koji koristi 18-auth-rls.spec.ts) — izbjegava
 // kontaminaciju stanja između specova ako se ikad pokrenu izvan reda.
-const RADNIK_EMAIL = "e2e-radnik-podsjetnici-v2@tehpro.test"
+const RADNIK_EMAIL = "e2e-radnik-podsjetnici-v2@demo.test"
 const RADNIK_LOZINKA = "E2eRadnikV2!2026"
 const RADNIK_IME = "E2E Radnik Podsjetnici V2"
 

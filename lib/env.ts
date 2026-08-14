@@ -25,6 +25,11 @@ const envSchema = z.object({
   REMINDER_MAX_PER_RUN: z.string().optional(),
   REMINDER_BATCH_SIZE: z.string().optional(),
   REMINDER_BATCH_DELAY_MS: z.string().optional(),
+  // Ime storage bucketa za dokumente. Env flag, ne literal: potpisani URL glasi
+  // `/object/sign/<bucket>/…` i vidi se u adresnoj traci svakome ko otvori dokument,
+  // pa instanca koja se pokazuje drugim firmama mora imati neutralno ime bucketa.
+  // Default čuva zatečeni Tehpro bucket → postojeći deployment radi bez izmjene env-a.
+  DOKUMENTI_BUCKET: z.string().min(1).default("tehpro-dokumenti"),
   // Firmin (klijentski) email brend — nezavisno od NEXT_PUBLIC_APP_NAME.
   FIRM_BRAND_NAME: z.string().min(1).default("TEHPRO"),
   FIRM_BRAND_TAGLINE: z.string().min(1).default("Zaštita na radu i zaštita od požara"),
@@ -50,6 +55,7 @@ const parsed = envSchema.safeParse({
   REMINDER_MAX_PER_RUN: process.env.REMINDER_MAX_PER_RUN,
   REMINDER_BATCH_SIZE: process.env.REMINDER_BATCH_SIZE,
   REMINDER_BATCH_DELAY_MS: process.env.REMINDER_BATCH_DELAY_MS,
+  DOKUMENTI_BUCKET: process.env.DOKUMENTI_BUCKET,
   FIRM_BRAND_NAME: process.env.FIRM_BRAND_NAME,
   FIRM_BRAND_TAGLINE: process.env.FIRM_BRAND_TAGLINE,
   FIRM_CONTACT_EMAIL: process.env.FIRM_CONTACT_EMAIL,

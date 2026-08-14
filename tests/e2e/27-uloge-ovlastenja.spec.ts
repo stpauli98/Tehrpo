@@ -59,8 +59,8 @@ test.describe.serial("Uloge i ovlaštenja", () => {
 
   test.beforeAll(async ({}, testInfo) => {
     const sufiks = testInfo.project.name
-    OP_EMAIL = `e2e-uloge-operater-${sufiks}@tehpro.test`
-    PREGLED_EMAIL = `e2e-uloge-pregled-${sufiks}@tehpro.test`
+    OP_EMAIL = `e2e-uloge-operater-${sufiks}@demo.test`
+    PREGLED_EMAIL = `e2e-uloge-pregled-${sufiks}@demo.test`
     FIRMA_MOJA = `E2E Uloge Moja DOO ${sufiks}`
     FIRMA_TUDJA = `E2E Uloge Tudja DOO ${sufiks}`
 

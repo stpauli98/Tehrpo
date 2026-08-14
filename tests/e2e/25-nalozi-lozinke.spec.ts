@@ -5,12 +5,12 @@ import { ensureOperater, deleteKorisnikByEmail } from "./db"
 // A1: prijavljen korisnik mijenja svoju lozinku (traži trenutnu). A2: admin "Pošalji reset".
 // Throwaway operater sa JEDINSTVENIM emailom + brisanje u finally — da izmijenjena lozinka
 // ne ostane i ne razbije auth drugih testova (NE koristiti fiksni test-nalog).
-// Domen @tehpro.test (RFC 2606 rezervisan TLD, isti obrazac kao 18-auth-rls/23-podsjetnici-v2) —
+// Domen @demo.test (RFC 2606 rezervisan TLD, isti obrazac kao 18-auth-rls/23-podsjetnici-v2) —
 // NE @example.com: Supabase Auth resetPasswordForEmail (koristi A2) odbija example.com kao
 // nevažeću adresu ("Email address ... is invalid"), dok .test domen prolazi.
 test.describe("Nalozi i lozinke", () => {
   test("A1: promjena lozinke — pogrešna trenutna → greška; tačna → uspjeh", async ({ page, context }) => {
-    const email = `e2e-loz-${Date.now()}@tehpro.test`
+    const email = `e2e-loz-${Date.now()}@demo.test`
     const staraLoz = "StaraLoz1!"
     await ensureOperater(email, staraLoz, "E2E Lozinka Op")
     try {
@@ -43,7 +43,7 @@ test.describe("Nalozi i lozinke", () => {
   // vrlo nizak rate limit ("email rate limit exceeded"). Kod (posaljiResetKorisniku + UI) je
   // verifikovan kroz task-review; test se re-enable-uje kad se konfiguriše custom SMTP za Auth.
   test.fixme("A2: admin Pošalji reset za korisnika → success toast", async ({ page }) => {
-    const email = `e2e-reset-${Date.now()}@tehpro.test`
+    const email = `e2e-reset-${Date.now()}@demo.test`
     await ensureOperater(email, "StaraLoz1!", "E2E Reset Op")
     try {
       // admin (default storageState) → Postavke → Korisnici

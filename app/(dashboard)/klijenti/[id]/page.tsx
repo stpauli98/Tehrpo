@@ -98,7 +98,7 @@ export default async function KlijentDetailPage({
   ] = await Promise.all([
     supabase.from("klijenti_view").select("*").eq("id", id).maybeSingle(),
     supabase.from("lokacije").select("*").eq("klijent_id", id).order("naziv", { ascending: true }),
-    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_tehpro_id, salji_podsjetnik_klijentu").eq("id", id).maybeSingle(),
+    supabase.from("klijenti").select("tip_odnosa, adresa, pib, maticni_broj, sifra_djelatnosti, telefon, email, zaduzeni_korisnik_id, salji_podsjetnik_klijentu").eq("id", id).maybeSingle(),
     // RLS na `korisnici` je self-select → direktan from() bi operateru vratio samo
     // njega samog; SECURITY DEFINER RPC daje sve aktivne (S8.6).
     supabase.rpc("get_aktivni_korisnici"),
@@ -245,8 +245,8 @@ export default async function KlijentDetailPage({
   const lokacijeOpcije = lokacije.map((l) => ({ id: l.id, naziv: l.naziv }))
   const korisnici = (korisniciRes.data ?? []).map((k) => ({ id: k.id, ime: k.ime }))
   const admini = (adminiRes.data ?? []).map((a) => ({ ime: a.ime, email: a.email }))
-  const zaduzeniIme = klijentPolja?.zaduzeni_tehpro_id
-    ? (korisnici.find((k) => k.id === klijentPolja.zaduzeni_tehpro_id)?.ime ?? null)
+  const zaduzeniIme = klijentPolja?.zaduzeni_korisnik_id
+    ? (korisnici.find((k) => k.id === klijentPolja.zaduzeni_korisnik_id)?.ime ?? null)
     : null
 
   // Paginacioni link čuva tab (i sve ostale searchParamse).
@@ -301,7 +301,7 @@ export default async function KlijentDetailPage({
               sifra_djelatnosti: klijentPolja?.sifra_djelatnosti ?? null,
               telefon: klijentPolja?.telefon ?? null,
               email: klijentPolja?.email ?? null,
-              zaduzeni_tehpro_id: klijentPolja?.zaduzeni_tehpro_id ?? null,
+              zaduzeni_korisnik_id: klijentPolja?.zaduzeni_korisnik_id ?? null,
             }}
             korisnici={korisnici}
           />

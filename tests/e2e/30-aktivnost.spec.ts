@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test"
 import { injectSessionFor } from "./session-helper"
 import { ensureOperater } from "./db"
 
-const OP_EMAIL = "e2e-operater@tehpro.test"
+const OP_EMAIL = "e2e-operater@demo.test"
 const OP_LOZINKA = "E2eOperater2026!"
 const OP_IME = "E2E Operater"
 

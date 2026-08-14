@@ -846,6 +846,7 @@
       "status": "Status",
       "napomena": "Napomena",
       "zaduzeni": "Zaduženi",
+      "zaduzeni_korisnik_id": "Zaduženi",
       "datum_zakazan": "Datum zakazan",
       "rok_dospijeca": "Rok dospijeća",
       "datum_izvrsenja": "Datum izvršenja",
@@ -1113,7 +1114,7 @@
     },
     "saljiKlijentima": {
       "naslov": "Šalji podsjetnike i firmama",
-      "upozorenje": "Uključeno = mailovi izlaze van TehPro-a (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
+      "upozorenje": "Uključeno = mailovi izlaze van vaše firme (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
     },
     "zakazanoObavijest": {
       "naslov": "Obavijest o zakazivanju poslije roka",

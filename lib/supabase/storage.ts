@@ -1,7 +1,8 @@
 import "server-only"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 
-export const DOKUMENTI_BUCKET = "tehpro-dokumenti"
+export { DOKUMENTI_BUCKET } from "@/lib/dokumenti/bucket"
+import { DOKUMENTI_BUCKET } from "@/lib/dokumenti/bucket"
 
 // Upload limiti (`ALLOWED_MIME`, `MAX_BYTES`, `ACCEPT_ATTR`) žive u client-safe
 // `lib/dokumenti.ts` — ovaj modul je `server-only` pa ih forme nisu mogle dijeliti (S8.5).

@@ -11,7 +11,7 @@ import {
   deleteKlijentByNaziv,
 } from "./db"
 
-const OP_EMAIL = "e2e-operater@tehpro.test"
+const OP_EMAIL = "e2e-operater@demo.test"
 const OP_LOZINKA = "E2eOperater2026!"
 const OP_IME = "E2E Operater"
 const KLIJENT_VIDLJIV = "E2E Vidljiv DOO"

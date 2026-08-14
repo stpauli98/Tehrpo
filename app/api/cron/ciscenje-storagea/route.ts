@@ -1,5 +1,6 @@
 /**
- * Noćno metenje osirotjelih objekata iz bucketa `tehpro-dokumenti` (cron: vercel.json).
+ * Noćno metenje osirotjelih objekata iz bucketa dokumenata (cron: vercel.json).
+ * Ime bucketa dolazi iz `DOKUMENTI_BUCKET` env-a — v. `lib/dokumenti/bucket.ts`.
  *
  * BRISANJE JE ISKLJUČENO DOK SE IZRIČITO NE UKLJUČI: bez `CISCENJE_STORAGEA_APPLY=1`
  * ruta radi PROBNI prolaz — izračuna odluku, ispiše u log tačno šta bi obrisala i vrati

@@ -9,10 +9,11 @@
  */
 import type { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import type { StorageObjekat } from "@/lib/dokumenti-gc"
+import { DOKUMENTI_BUCKET } from "@/lib/dokumenti/bucket"
 
 type Sb = ReturnType<typeof createAdminSupabaseClient>
 
-export const DOKUMENTI_BUCKET = "tehpro-dokumenti"
+export { DOKUMENTI_BUCKET }
 
 const STRANICA_STORAGE = 100
 const STRANICA_DB = 1000

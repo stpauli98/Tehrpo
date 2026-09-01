@@ -71,16 +71,33 @@ describe("prenesenoGranica", () => {
 })
 
 describe("jePreneseniRed", () => {
-  it("datum ispod granice → preneseno", () => {
-    expect(jePreneseniRed("2026-11-30", "2027-01-01")).toBe(true)
+  it("rok ispod granice → preneseno", () => {
+    expect(jePreneseniRed({ rok_dospijeca: "2026-11-30", datum_prikaza: "2026-11-30" }, "2027-01-01")).toBe(true)
   })
-  it("datum na granici ili iznad → nije preneseno", () => {
-    expect(jePreneseniRed("2027-01-01", "2027-01-01")).toBe(false)
-    expect(jePreneseniRed("2027-06-15", "2027-01-01")).toBe(false)
+  it("rok na granici ili iznad → nije preneseno", () => {
+    expect(jePreneseniRed({ rok_dospijeca: "2027-01-01", datum_prikaza: "2027-01-01" }, "2027-01-01")).toBe(false)
+    expect(jePreneseniRed({ rok_dospijeca: "2027-06-15", datum_prikaza: "2027-06-15" }, "2027-01-01")).toBe(false)
   })
   it("bez granice (mod 'svi') ili bez datuma → nije preneseno", () => {
-    expect(jePreneseniRed("2026-11-30", null)).toBe(false)
-    expect(jePreneseniRed(null, "2027-01-01")).toBe(false)
+    expect(jePreneseniRed({ rok_dospijeca: "2026-11-30", datum_prikaza: "2026-11-30" }, null)).toBe(false)
+    expect(jePreneseniRed({ rok_dospijeca: null, datum_prikaza: null }, "2027-01-01")).toBe(false)
+  })
+
+  /**
+   * Oznaka „Preneseno" mora se slagati sa kolonom „Rok" koju čitalac vidi na papiru.
+   * Kolona Rok ispisuje `rok_dospijeca`, a upit bira redove po `datum_prikaza`
+   * (= COALESCE(datum_zakazan, rok_dospijeca)) — kad se to dvoje razilazi, plan je
+   * ranije tvrdio „prenesena obaveza iz perioda prije 01.09." za red čiji Rok piše 01.09.
+   */
+  it("rok unutar perioda, ali ranije zakazan → NIJE preneseno", () => {
+    expect(jePreneseniRed({ rok_dospijeca: "2026-09-01", datum_prikaza: "2026-07-05" }, "2026-09-01")).toBe(false)
+  })
+  it("rok prije perioda, ali zakazan unutar perioda → JESTE preneseno", () => {
+    expect(jePreneseniRed({ rok_dospijeca: "2026-08-20", datum_prikaza: "2026-09-10" }, "2026-09-01")).toBe(true)
+  })
+  it("bez roka pada nazad na datum_prikaza", () => {
+    expect(jePreneseniRed({ rok_dospijeca: null, datum_prikaza: "2026-07-05" }, "2026-09-01")).toBe(true)
+    expect(jePreneseniRed({ rok_dospijeca: null, datum_prikaza: "2026-09-10" }, "2026-09-01")).toBe(false)
   })
 })
 

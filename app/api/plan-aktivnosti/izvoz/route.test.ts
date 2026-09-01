@@ -15,6 +15,7 @@ const PG_MAX_ROWS = 1000
 type Red = Record<string, unknown>
 let baza: Red[] = []
 let rangePozivi: Array<[number, number]> = []
+let orIzrazi: string[] = []
 let brojUpita = 0
 
 function napraviUpit(head: boolean) {
@@ -23,8 +24,12 @@ function napraviUpit(head: boolean) {
   let doIndeks = PG_MAX_ROWS - 1
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const b: any = {}
-  for (const m of ["select", "order", "eq", "or", "gte", "lte", "neq", "ilike", "in", "not"]) {
+  for (const m of ["select", "order", "eq", "gte", "lte", "neq", "ilike", "in", "not"]) {
     b[m] = () => b
+  }
+  b.or = (izraz: string) => {
+    orIzrazi.push(izraz)
+    return b
   }
   b.range = (a: number, z: number) => {
     od = a
@@ -105,6 +110,7 @@ describe("GET /api/plan-aktivnosti/izvoz — straničenje (C4)", () => {
   beforeEach(() => {
     baza = []
     rangePozivi = []
+    orIzrazi = []
     brojUpita = 0
     xlsxRedovi.mockReset()
     pdfRedovi.mockReset()
@@ -179,6 +185,103 @@ describe("GET /api/plan-aktivnosti/izvoz — straničenje (C4)", () => {
       broj: IZVOZ_MAX_REDOVA + 7,
       granica: IZVOZ_MAX_REDOVA,
       prekoracenje: true,
+    })
+  })
+
+  /**
+   * Oznaka „Preneseno" i kolona „Rok" moraju pričati istu priču. Upit bira redove po
+   * `datum_prikaza` (= COALESCE(datum_zakazan, rok_dospijeca)), a papir ispisuje
+   * `rok_dospijeca` — termin zakazan van svog roka je zato u septembarskom planu
+   * dobijao „Da" iako mu u koloni Rok piše 01.09.2026.
+   */
+  it("rok u periodu a raniji zakazani datum → red nije označen kao prenesen", async () => {
+    baza = [
+      {
+        klijent_naziv: "Drina Komerc d.o.o.",
+        lokacija_naziv: "Centralni magacin",
+        vrsta_naziv: "Pregled električne instalacije",
+        rok_dospijeca: "2026-09-01",
+        datum_prikaza: "2026-07-05", // zakazan u julu, rok tek 1.9.
+        status_izvedeni: "zakazano",
+        interval_mjeseci: 24,
+        zaduzeni: "Marko",
+        nacin_izvrsenja: "izvrsava",
+      },
+      {
+        klijent_naziv: "Una Tekstil d.o.o.",
+        lokacija_naziv: "Pogon Bihać",
+        vrsta_naziv: "Ispitivanje gromobrana",
+        rok_dospijeca: "2026-08-20",
+        datum_prikaza: "2026-08-20",
+        status_izvedeni: "kasni",
+        interval_mjeseci: 12,
+        zaduzeni: "Emir",
+        nacin_izvrsenja: "izvrsava",
+      },
+    ]
+    const res = await GET(zahtjev("?period=mj&godina=2026&mjesec=9&opseg=sve&format=xlsx"))
+    expect(res.status).toBe(200)
+
+    const wb = new ExcelJS.Workbook()
+    await wb.xlsx.load(await res.arrayBuffer())
+    const ws = wb.worksheets[0]!
+    // Kolona 4 = Rok, kolona 5 = Preneseno (v. PLAN_KOLONE_KEYS).
+    expect(ws.getRow(5).getCell(4).value).toBe("01.09.2026")
+    expect(ws.getRow(5).getCell(5).value).toBe("—")
+    expect(ws.getRow(6).getCell(4).value).toBe("20.08.2026")
+    expect(ws.getRow(6).getCell(5).value).toBe("Da")
+
+    // Napomena broji samo stvarno prenesene — dakle jednu, ne dvije.
+    const napomena = String(ws.getRow(3).getCell(1).value ?? "")
+    expect(napomena).toContain("01.09.2026")
+    expect(napomena).toContain("1 prenesenu obavezu")
+  })
+
+  /**
+   * `preneseno=0` je server podržavao od početka, ali bez testa — a od prekidača u
+   * modalu zavisi da isključen znači ČIST period: bez `or()` grane koja vuče zaostalo
+   * i bez ijednog reda označenog kao prenesen.
+   */
+  describe("prekidač prenesenih obaveza", () => {
+    const septembar = "?period=mj&godina=2026&mjesec=9&opseg=sve&format=xlsx"
+
+    it("uključeno (podrazumijevano): upit nosi carry-over granu", async () => {
+      napuni(1)
+      await GET(zahtjev(septembar))
+      expect(orIzrazi).toContain(
+        "and(datum_prikaza.gte.2026-09-01,datum_prikaza.lte.2026-09-30)," +
+          "and(datum_prikaza.lt.2026-09-01,status_izvedeni.neq.izvrseno,status_izvedeni.neq.otkazano)",
+      )
+    })
+
+    it("isključeno: nema carry-over grane, nijedan red nije prenesen, nema napomene", async () => {
+      baza = [{
+        klijent_naziv: "Una Tekstil d.o.o.",
+        lokacija_naziv: "Pogon Bihać",
+        vrsta_naziv: "Ispitivanje gromobrana",
+        rok_dospijeca: "2026-08-20", // prije perioda — sa uključenim bi bio „Da"
+        datum_prikaza: "2026-08-20",
+        status_izvedeni: "kasni",
+        interval_mjeseci: 12,
+        zaduzeni: "Emir",
+        nacin_izvrsenja: "izvrsava",
+      }]
+      const res = await GET(zahtjev(`${septembar}&preneseno=0`))
+      expect(res.status).toBe(200)
+      expect(orIzrazi).toEqual([])
+
+      const wb = new ExcelJS.Workbook()
+      await wb.xlsx.load(await res.arrayBuffer())
+      const ws = wb.worksheets[0]!
+      expect(ws.getRow(5).getCell(5).value).toBe("—")
+      // Red 3 nosi napomenu o prenesenima kad ih ima; ovdje mora ostati prazan.
+      expect(ws.getRow(3).getCell(1).value ?? "").toBe("")
+    })
+
+    it("mod „svi” nema donju granicu pa ni carry-over", async () => {
+      napuni(1)
+      await GET(zahtjev("?period=svi&opseg=sve&format=xlsx"))
+      expect(orIzrazi).toEqual([])
     })
   })
 

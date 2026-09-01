@@ -237,6 +237,7 @@
     },
     "karta": {
       "kasniBadge": "{count} overdue",
+      "kasniLabel": "overdue",
       "lokacija": "{count} loc.",
       "aktivnih": "{count} active",
       "ukupno": "{count} total"

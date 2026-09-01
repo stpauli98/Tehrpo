@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { Users, MapPin, AlertTriangle, CircleCheck } from "lucide-react"
+import { Users, MapPin, CalendarDays } from "lucide-react"
 import type { Database } from "@/db/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -18,67 +18,86 @@ export async function KlijentCard({ klijent }: { klijent: KlijentRow }) {
   const aktivan = klijent.aktivan ?? true
   return (
     // Prekidač je BRAT anchora, ne dijete: dugme unutar <a> je nevalidan HTML i
-    // klik bi se borio sa navigacijom kartice.
-    <div className="relative h-full">
-      <Link
-        href={href(`/klijenti/${klijent.id}`)}
-        data-testid="klijent-card"
-        data-aktivan={aktivan ? "1" : "0"}
-        className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-xl"
-      >
-        <Card
-          className={cn(
-            "h-full transition motion-reduce:transition-none hover:ring-foreground/20 hover:shadow-sm",
-            // Ugašen klijent ostaje vidljiv i otvoriv (istorija i dokumenti su tu),
-            // samo je prigušen da se na prvi pogled razlikuje od aktivnih.
-            !aktivan && "opacity-60",
-          )}
-        >
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 space-y-1.5">
-                <h3 className="font-semibold text-foreground leading-tight truncate">{klijent.naziv}</h3>
-                <TipOdnosaBadge tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null} />
+    // klik bi se borio sa navigacijom kartice. Anchor pokriva samo gornji dio
+    // kartice, pa prekidač u podnožju više ne mora da lebdi iznad njega.
+    <Card
+      data-aktivan={aktivan ? "1" : "0"}
+      className={cn(
+        // py-0/gap-0 gase vlastiti `py-(--card-spacing)` Card-a: raspored je full-bleed
+        // (podnožje ide do ivice), pa bi default padding ostavio mrtvu traku ispod.
+        "h-full flex flex-col overflow-hidden py-0 gap-0 transition motion-reduce:transition-none",
+        "hover:ring-foreground/20 hover:shadow-sm",
+        // Ugašen klijent ostaje vidljiv i otvoriv (istorija i dokumenti su tu),
+        // samo je prigušen da se na prvi pogled razlikuje od aktivnih.
+        !aktivan && "opacity-60",
+      )}
+    >
+      <CardContent className="p-0 flex flex-col h-full">
+        <div className="flex flex-1 min-h-0">
+          <div className="flex-1 min-w-0">
+            <Link
+              href={href(`/klijenti/${klijent.id}`)}
+              data-testid="klijent-card"
+              data-aktivan={aktivan ? "1" : "0"}
+              className="block p-4 pb-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-t-xl"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground leading-tight truncate">{klijent.naziv}</h3>
+                  {/* Tiha varijanta: jedini akcenat na kartici je broj koji kasni. */}
+                  <TipOdnosaBadge
+                    tip={(klijent.tip_odnosa as "ugovor" | "ponuda" | null) ?? null}
+                    variant="tekst"
+                  />
+                </div>
+                {/* Kasni UVIJEK prikazan (spec §7.2 E); brojka nosi težinu, label je titl. */}
+                <div
+                  data-testid="klijent-kasni-badge"
+                  data-kasni={kasni}
+                  className="shrink-0 text-right leading-none"
+                >
+                  <div
+                    className={cn(
+                      "text-2xl font-semibold tabular-nums",
+                      kasni > 0 ? "text-destructive" : "text-muted-foreground/50",
+                    )}
+                  >
+                    {kasni}
+                  </div>
+                  <div
+                    className={cn(
+                      "mt-1 text-[11px]",
+                      kasni > 0 ? "text-destructive/80" : "text-muted-foreground",
+                    )}
+                  >
+                    {t("kasniLabel")}
+                  </div>
+                </div>
               </div>
-              {/* Kasni badge UVIJEK prikazan (spec §7.2 E); crven kad >0, neutralan kad 0 */}
-              <span
-                data-testid="klijent-kasni-badge"
-                data-kasni={kasni}
-                className={cn(
-                  "inline-flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset",
-                  kasni > 0
-                    ? "bg-destructive/10 text-destructive ring-destructive/20"
-                    : "bg-muted text-muted-foreground ring-border"
-                )}
-              >
-                {kasni > 0 ? (
-                  <AlertTriangle className="w-3 h-3" aria-hidden />
-                ) : (
-                  <CircleCheck className="w-3 h-3" aria-hidden />
-                )}
-                {t("kasniBadge", { count: kasni })}
-              </span>
-            </div>
-            {/* pr-32 ostavlja mjesto prekidaču koji lebdi iznad donjeg desnog ugla */}
-            <div className="flex items-center gap-4 border-t border-border/60 pt-3 pr-32 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" aria-hidden />
-                {t("lokacija", { count: klijent.broj_lokacija ?? 0 })}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" aria-hidden />
-                {t("aktivnih", { count: klijent.broj_aktivnih ?? 0 })}
-              </span>
-              <span className="tabular-nums text-muted-foreground">
-                {t("ukupno", { count: klijent.broj_termina ?? 0 })}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
-      <div className="absolute bottom-3.5 right-4">
-        <KlijentAktivanPrekidac klijentId={klijent.id ?? ""} aktivan={aktivan} />
-      </div>
-    </div>
+
+              <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                  <span className="tabular-nums">{t("lokacija", { count: klijent.broj_lokacija ?? 0 })}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  <Users className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                  <span className="tabular-nums">{t("aktivnih", { count: klijent.broj_aktivnih ?? 0 })}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  <CalendarDays className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                  <span className="tabular-nums">{t("ukupno", { count: klijent.broj_termina ?? 0 })}</span>
+                </span>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Podnožje: kontrola dobija svoj red umjesto da lebdi nad sadržajem. */}
+        <div className="border-t border-border/60 px-4 py-2">
+          <KlijentAktivanPrekidac klijentId={klijent.id ?? ""} aktivan={aktivan} />
+        </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -237,6 +237,7 @@
     },
     "karta": {
       "kasniBadge": "{count} überfällig",
+      "kasniLabel": "überfällig",
       "lokacija": "{count} Standorte",
       "aktivnih": "{count} aktiv",
       "ukupno": "{count} gesamt"

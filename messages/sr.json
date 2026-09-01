@@ -237,6 +237,7 @@
     },
     "karta": {
       "kasniBadge": "{count} kasni",
+      "kasniLabel": "kasni",
       "lokacija": "{count} lok.",
       "aktivnih": "{count} aktivnih",
       "ukupno": "{count} ukupno"

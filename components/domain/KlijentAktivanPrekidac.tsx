@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils"
  * ostaju netaknuti i vidljivi; prekidač se u svakom trenutku vraća.
  *
  * Zašto NIJE unutar <Link> kartice: dugme unutar <a> je nevalidan HTML i klik bi
- * se borio sa navigacijom. Roditelj ga postavlja kao apsolutno pozicioniranog
- * BRATA anchora, pa su obje mete nezavisne i za miš i za tastaturu.
+ * se borio sa navigacijom. Roditelj ga drži u zasebnom podnožnom redu, izvan
+ * anchora, pa su obje mete nezavisne i za miš i za tastaturu.
  *
  * Uloga „pregled" ne dobija dugme (RLS bi je ionako odbio kroz `NOT je_pregled()`),
  * ali MORA vidjeti stanje — zato u tom slučaju ostaje statična oznaka za ugašenog
@@ -65,6 +65,9 @@ export function KlijentAktivanPrekidac({
     })
   }
 
+  // Prije: pilula identična dvama statusnim badge-evima pored nje — korisnik ju je
+  // pročitao kao naljepnicu i prijavio da „ne radi". Sad nosi track+thumb, pa se
+  // prekidač vidi kao prekidač i kad je ugašen.
   return (
     <button
       type="button"
@@ -76,16 +79,35 @@ export function KlijentAktivanPrekidac({
       data-aktivan={aktivan ? "1" : "0"}
       onClick={prebaci}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium",
-        "ring-1 ring-inset transition motion-reduce:transition-none",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-        "disabled:opacity-60",
-        aktivan
-          ? "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 hover:bg-emerald-500/20 dark:text-emerald-400"
-          : "bg-muted text-muted-foreground ring-border hover:bg-muted/70",
+        "group/prekidac inline-flex items-center gap-2 rounded-md px-1.5 py-1 -mx-1.5",
+        "text-xs font-medium transition motion-reduce:transition-none",
+        "hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "disabled:opacity-60 disabled:pointer-events-none",
+        // „Šalje se" je norma na skoro svakoj kartici — mora biti tiho. Pažnju
+        // zaslužuje IZUZETAK: ugašen klijent kojem mejlovi više ne idu.
+        aktivan ? "text-muted-foreground" : "text-amber-700 dark:text-amber-500",
       )}
     >
-      {aktivan ? <BellRing className="h-3 w-3" aria-hidden /> : <BellOff className="h-3 w-3" aria-hidden />}
+      <span
+        aria-hidden
+        className={cn(
+          "relative h-4 w-7 shrink-0 rounded-full transition-colors motion-reduce:transition-none",
+          aktivan ? "bg-emerald-600/70 dark:bg-emerald-500/60" : "bg-amber-500",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow-sm",
+            "transition-transform motion-reduce:transition-none",
+            aktivan && "translate-x-3",
+          )}
+        />
+      </span>
+      {aktivan ? (
+        <BellRing className="h-3 w-3 shrink-0" aria-hidden />
+      ) : (
+        <BellOff className="h-3 w-3 shrink-0" aria-hidden />
+      )}
       {aktivan ? t("aktivan") : t("ugasen")}
     </button>
   )

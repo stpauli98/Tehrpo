@@ -70,9 +70,19 @@ export function prenesenoOrIzraz(from: string, to: string): string {
 /**
  * Je li red prenesen iz ranijeg perioda. Redovi ispod granice u rezultatu upita su
  * po konstrukciji otvoreni (v. `prenesenoOrIzraz`), pa je dovoljna provjera datuma.
+ *
+ * Odlučuje `rok_dospijeca` — isti datum koji izvještaj ispisuje u koloni „Rok" —
+ * a NE `datum_prikaza` po kojem upit bira redove. To dvoje se razilazi čim je termin
+ * zakazan van svog roka (`datum_prikaza = COALESCE(datum_zakazan, rok_dospijeca)`), pa
+ * je plan umio da označi „prenesena obaveza iz perioda prije 01.09." red čiji Rok
+ * piše 01.09. Oznaka mora biti provjerljiva iz onoga što čitalac vidi na papiru.
  */
-export function jePreneseniRed(datumPrikaza: string | null | undefined, granica: string | null): boolean {
-  return !!granica && !!datumPrikaza && datumPrikaza < granica
+export function jePreneseniRed(
+  red: { rok_dospijeca?: string | null; datum_prikaza?: string | null },
+  granica: string | null,
+): boolean {
+  const rok = red.rok_dospijeca ?? red.datum_prikaza
+  return !!granica && !!rok && rok < granica
 }
 
 /** Ljudski čitljiv label perioda (PDF/Excel podnaslov + naziv fajla). `sviLabel` = prevod za "svi mjeseci". */

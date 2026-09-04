@@ -2,14 +2,14 @@ import { test, expect } from "@playwright/test"
 import { db, ensureOperater, deleteKorisnikByEmail } from "./db"
 
 // Uredi podatke (ime+email) + trajno brisanje korisnika u /postavke → Korisnici.
-// Throwaway operateri sa jedinstvenim @tehpro.test emailovima (isti obrazac kao
+// Throwaway operateri sa jedinstvenim @demo.test emailovima (isti obrazac kao
 // 25-nalozi-lozinke; NE @example.com — Supabase Auth ga odbija) + čišćenje u finally.
 // Admin je default storageState; sekcija "Korisnici" je collapsible (defaultOpen=false).
 test.describe("Korisnici: uredi i obriši", () => {
   test("B1: uredi podatke — novo ime i email vidljivi u tabeli", async ({ page }) => {
     const ts = Date.now()
-    const stariEmail = `e2e-uredi-${ts}@tehpro.test`
-    const noviEmail = `e2e-uredjen-${ts}@tehpro.test`
+    const stariEmail = `e2e-uredi-${ts}@demo.test`
+    const noviEmail = `e2e-uredjen-${ts}@demo.test`
     const staroIme = `E2E Uredi ${ts}`
     const novoIme = `E2E Uredjen ${ts}`
     const id = await ensureOperater(stariEmail, "Lozinka1!", staroIme)
@@ -34,7 +34,7 @@ test.describe("Korisnici: uredi i obriši", () => {
 
   test("B2: obriši trajno — skriveno za aktivnog; deaktiviran se briše skupa sa auth nalogom", async ({ page }) => {
     const ts = Date.now()
-    const email = `e2e-brisi-${ts}@tehpro.test`
+    const email = `e2e-brisi-${ts}@demo.test`
     const ime = `E2E Brisi ${ts}`
     const id = await ensureOperater(email, "Lozinka1!", ime)
     try {

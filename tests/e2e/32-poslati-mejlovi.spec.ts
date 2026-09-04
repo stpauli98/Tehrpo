@@ -102,7 +102,7 @@ test.describe("operater — RLS scoping na /poslati-mejlovi", () => {
 
   test.beforeAll(async ({}, testInfo) => {
     const proj = testInfo.project.name
-    opEmail = `e2e-operater-mejlovi-${proj}@tehpro.test`
+    opEmail = `e2e-operater-mejlovi-${proj}@demo.test`
     klijentNaziv = `E2E-TMP Mejlovi ${proj} ${Date.now()}`
     vidljivSubject = `${MARK} ${proj} vidljiv-operateru`
     skrivenSubject = `${MARK} ${proj} skriven-operateru`

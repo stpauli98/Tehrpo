@@ -171,7 +171,7 @@ test.describe("Yoink batch 2026-07-30", () => {
       await page.getByTestId("novi-klijent-naziv").fill(naziv)
       await page.getByTestId("novi-klijent-adresa").fill("Kralja Petra 1")
       await page.getByTestId("novi-klijent-telefon").fill("051111222")
-      await page.getByTestId("novi-klijent-email").fill(`e2e${sufiks}@tehpro.test`)
+      await page.getByTestId("novi-klijent-email").fill(`e2e${sufiks}@demo.test`)
       // Polja koja su ranije postojala SAMO u edit formi
       await page.getByTestId("novi-klijent-pib").fill("4400000000001")
       await page.getByTestId("novi-klijent-maticni_broj").fill("11111111")

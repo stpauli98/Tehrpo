@@ -40,7 +40,7 @@ const MAX_WIDTH = 264
 const DEFAULT_WIDTH = 224
 const COLLAPSE_THRESHOLD = 140 // ispod ove širine se ponaša kao skupljeno i snapuje na MIN
 const RESIZE_STEP = 16         // korak za resize sa tastature (strelice)
-const STORAGE_KEY = "tehpro:sidebar-width"
+const STORAGE_KEY = "app:sidebar-width"
 
 export function Sidebar({ mejlGreske = 0 }: { mejlGreske?: number }) {
   const pathname = usePathname()

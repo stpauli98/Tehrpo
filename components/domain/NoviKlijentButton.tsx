@@ -139,7 +139,7 @@ export function NoviKlijentButton({ korisnici = [] }: { korisnici?: { id: string
 
           <div className="space-y-1">
             <span className="block text-sm text-muted-foreground">{t("poljeZaduzeni", { appName: APP_NAME })}</span>
-            <Select name="zaduzeni_tehpro_id" defaultValue="none" items={zaduzeniItems}>
+            <Select name="zaduzeni_korisnik_id" defaultValue="none" items={zaduzeniItems}>
               <SelectTrigger data-testid="novi-klijent-zaduzeni" className="w-full">
                 <SelectValue placeholder={nijePostavljeno} />
               </SelectTrigger>

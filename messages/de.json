@@ -237,6 +237,7 @@
     },
     "karta": {
       "kasniBadge": "{count} überfällig",
+      "kasniLabel": "überfällig",
       "lokacija": "{count} Standorte",
       "aktivnih": "{count} aktiv",
       "ukupno": "{count} gesamt"
@@ -849,6 +850,7 @@
       "status": "Status",
       "napomena": "Notiz",
       "zaduzeni": "Zuständiger",
+      "zaduzeni_korisnik_id": "Zuständiger",
       "datum_zakazan": "Geplantes Datum",
       "rok_dospijeca": "Fälligkeitsdatum",
       "datum_izvrsenja": "Abschlussdatum",
@@ -1116,7 +1118,7 @@
     },
     "saljiKlijentima": {
       "naslov": "Erinnerungen auch an Firmen senden",
-      "upozorenje": "Aktiviert = E-Mails verlassen TehPro (an Kunden). Nur einzeln aktivierte Firmen mit hinterlegten Adressen erhalten sie."
+      "upozorenje": "Aktiviert = E-Mails verlassen Ihr Unternehmen (an Kunden). Nur einzeln aktivierte Firmen mit hinterlegten Adressen erhalten sie."
     },
     "zakazanoObavijest": {
       "naslov": "Benachrichtigung bei Terminplanung nach Fälligkeit",

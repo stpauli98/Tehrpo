@@ -35,7 +35,7 @@ export function KlijentEditForm({
   klijent: {
     id: string; naziv: string; napomena: string | null; tip_odnosa?: string | null
     adresa?: string | null; pib?: string | null; maticni_broj?: string | null; sifra_djelatnosti?: string | null
-    telefon?: string | null; email?: string | null; zaduzeni_tehpro_id?: string | null
+    telefon?: string | null; email?: string | null; zaduzeni_korisnik_id?: string | null
   }
   korisnici: { id: string; ime: string }[]
 }) {
@@ -154,7 +154,7 @@ export function KlijentEditForm({
 
           <div className="space-y-1">
             <span className="block text-sm text-muted-foreground">{t("zaduzenaOsoba", { appName: APP_NAME })}</span>
-            <Select name="zaduzeni_tehpro_id" defaultValue={klijent.zaduzeni_tehpro_id ?? "none"} items={zaduzeniItems}>
+            <Select name="zaduzeni_korisnik_id" defaultValue={klijent.zaduzeni_korisnik_id ?? "none"} items={zaduzeniItems}>
               <SelectTrigger data-testid="edit-klijent-zaduzeni" className="w-full">
                 <SelectValue placeholder={nijePostavljeno} />
               </SelectTrigger>
@@ -165,7 +165,7 @@ export function KlijentEditForm({
                 ))}
               </SelectContent>
             </Select>
-            <FieldError id="edit-klijent-zaduzeni-err" errors={errors?.zaduzeni_tehpro_id} />
+            <FieldError id="edit-klijent-zaduzeni-err" errors={errors?.zaduzeni_korisnik_id} />
           </div>
 
           <div className="space-y-1">

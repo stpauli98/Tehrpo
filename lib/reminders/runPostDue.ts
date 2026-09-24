@@ -78,7 +78,7 @@ export async function runPostDue(
   const send = deps.send ?? sendEmail
   const isDryRun = deps.dryRun === true
   const brand = firmBrand()
-  const fromAddr = env.EMAIL_FROM ?? "no-reply@tehpro"
+  const fromAddr = env.EMAIL_FROM ?? "no-reply@localhost"
   const maxPerRun = Math.max(1, deps.maxPerRun ?? (Number(env.REMINDER_MAX_PER_RUN) || 90))
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
   const delayMs = deps.delayMs ?? (Number(env.REMINDER_BATCH_DELAY_MS) || 1100)

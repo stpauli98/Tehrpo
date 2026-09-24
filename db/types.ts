@@ -354,7 +354,7 @@ export type Database = {
           telefon: string | null
           tip_odnosa: string | null
           updated_at: string
-          zaduzeni_tehpro_id: string | null
+          zaduzeni_korisnik_id: string | null
         }
         Insert: {
           adresa?: string | null
@@ -373,7 +373,7 @@ export type Database = {
           telefon?: string | null
           tip_odnosa?: string | null
           updated_at?: string
-          zaduzeni_tehpro_id?: string | null
+          zaduzeni_korisnik_id?: string | null
         }
         Update: {
           adresa?: string | null
@@ -392,7 +392,7 @@ export type Database = {
           telefon?: string | null
           tip_odnosa?: string | null
           updated_at?: string
-          zaduzeni_tehpro_id?: string | null
+          zaduzeni_korisnik_id?: string | null
         }
         Relationships: [
           {
@@ -403,8 +403,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "klijenti_zaduzeni_tehpro_id_fkey"
-            columns: ["zaduzeni_tehpro_id"]
+            foreignKeyName: "klijenti_zaduzeni_korisnik_id_fkey"
+            columns: ["zaduzeni_korisnik_id"]
             isOneToOne: false
             referencedRelation: "korisnici"
             referencedColumns: ["id"]

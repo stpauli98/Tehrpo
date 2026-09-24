@@ -79,7 +79,7 @@ const createKlijentSchema = z.object({
   pib: optionalText(40),
   maticni_broj: optionalText(40),
   sifra_djelatnosti: optionalText(40),
-  zaduzeni_tehpro_id: UUID_OR_EMPTY,
+  zaduzeni_korisnik_id: UUID_OR_EMPTY,
   tip_odnosa: z
     .union([z.enum(["ugovor", "ponuda"]), z.literal("none"), z.literal(""), z.null()])
     .transform((v) => (v === "none" || v === "" ? null : v))
@@ -126,7 +126,7 @@ export async function createKlijent(
     pib: f.pib ?? null,
     maticni_broj: f.maticni_broj ?? null,
     sifra_djelatnosti: f.sifra_djelatnosti ?? null,
-    zaduzeni_tehpro_id: f.zaduzeni_tehpro_id ?? null,
+    zaduzeni_korisnik_id: f.zaduzeni_korisnik_id ?? null,
     tip_odnosa: f.tip_odnosa ?? null,
   })
   if (error) {
@@ -180,7 +180,7 @@ const updateKlijentSchema = z.object({
   pib: optionalText(40),
   maticni_broj: optionalText(40),
   sifra_djelatnosti: optionalText(40),
-  zaduzeni_tehpro_id: UUID_OR_EMPTY,
+  zaduzeni_korisnik_id: UUID_OR_EMPTY,
 })
 
 export async function updateKlijent(
@@ -202,7 +202,7 @@ export async function updateKlijent(
   if (formData.has("sifra_djelatnosti")) patch.sifra_djelatnosti = f.sifra_djelatnosti ?? null
   if (formData.has("telefon")) patch.telefon = f.telefon ?? null
   if (formData.has("email")) patch.email = f.email ?? null
-  if (formData.has("zaduzeni_tehpro_id")) patch.zaduzeni_tehpro_id = f.zaduzeni_tehpro_id ?? null
+  if (formData.has("zaduzeni_korisnik_id")) patch.zaduzeni_korisnik_id = f.zaduzeni_korisnik_id ?? null
   const supabase = await createServerSupabaseClient()
   const { error } = await supabase.from("klijenti").update(patch).eq("id", id)
   if (error) {

@@ -289,3 +289,40 @@ test.describe("Faza 4 — Vizuelni smoke", () => {
     }
   })
 })
+
+/**
+ * Prekidač „Šalje se" gasi klijenta iz sva tri izvora mejlova (migracija
+ * 20260802093000_klijent_aktivan.sql). Do sada JEDINA takva kontrola bez ijednog
+ * testa — a korisnik ju je pročitao kao mrtvu naljepnicu, pa se uz redizajn
+ * afordansa zaključava i ponašanje.
+ */
+test.describe("Klijenti — prekidač slanja podsjetnika", () => {
+  test("gasi i vraća slanje, kartica prati stanje", async ({ page }) => {
+    const naziv = "E2E-TMP " + Date.now()
+    try {
+      await kreirajKlijent(page, naziv)
+      await idiNa(page, "/klijenti?q=" + encodeURIComponent(naziv), { waitUntil: "domcontentloaded" })
+
+      const kartica = page.getByTestId("klijent-card").filter({ hasText: naziv }).first()
+      await expect(kartica).toBeVisible()
+      // Prekidač je klijentska komponenta nad SSR gridom: klik prije hidracije tiho
+      // propada (nema listenera, nema zahtjeva) — v. napomenu uz `cekajHidraciju`.
+      await cekajHidraciju(page, "klijent-aktivan-prekidac")
+      const prekidac = page.getByTestId("klijent-aktivan-prekidac")
+      await expect(prekidac).toHaveAttribute("aria-checked", "true")
+      await expect(kartica).toHaveAttribute("data-aktivan", "1")
+
+      await prekidac.click()
+      await expect(prekidac).toHaveAttribute("aria-checked", "false")
+      await expect(prekidac).toContainText("Ugašeno")
+      await expect(kartica).toHaveAttribute("data-aktivan", "0")
+
+      await prekidac.click()
+      await expect(prekidac).toHaveAttribute("aria-checked", "true")
+      await expect(prekidac).toContainText("Šalje se")
+      await expect(kartica).toHaveAttribute("data-aktivan", "1")
+    } finally {
+      await deleteKlijentByNaziv(naziv)
+    }
+  })
+})

@@ -237,6 +237,7 @@
     },
     "karta": {
       "kasniBadge": "{count} overdue",
+      "kasniLabel": "overdue",
       "lokacija": "{count} loc.",
       "aktivnih": "{count} active",
       "ukupno": "{count} total"
@@ -849,6 +850,7 @@
       "status": "Status",
       "napomena": "Note",
       "zaduzeni": "Assignee",
+      "zaduzeni_korisnik_id": "Assignee",
       "datum_zakazan": "Scheduled date",
       "rok_dospijeca": "Due date",
       "datum_izvrsenja": "Completion date",
@@ -1116,7 +1118,7 @@
     },
     "saljiKlijentima": {
       "naslov": "Also send reminders to clients",
-      "upozorenje": "Enabled = emails leave TehPro (to clients). Only clients individually enabled and with addresses set will receive them."
+      "upozorenje": "Enabled = emails leave your company (to clients). Only clients individually enabled and with addresses set will receive them."
     },
     "zakazanoObavijest": {
       "naslov": "After-deadline scheduling notice",

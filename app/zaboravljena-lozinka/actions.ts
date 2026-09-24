@@ -15,9 +15,19 @@ export async function posaljiReset(_prev: ActionResult, formData: FormData): Pro
   if (!email.success) return { ok: false, message: t("zaboravljenaLozinka.greske.neispravanEmail") }
   const origin = (await headers()).get("origin") ?? ""
   const supabase = await createServerSupabaseClient()
-  await supabase.auth.resetPasswordForEmail(email.data, {
-    redirectTo: `${origin}/auth/confirm`,
-  })
+  const redirectTo = `${origin}/auth/confirm`
+  const { error } = await supabase.auth.resetPasswordForEmail(email.data, { redirectTo })
+  // Greška ide samo u serverski log (Vercel) — bez nje je pad SMTP-a / rate-limita nevidljiv.
+  // Loguje se samo domen adrese, ne cijeli email.
+  if (error) {
+    console.error("[reset-lozinke] resetPasswordForEmail nije uspio:", {
+      status: error.status,
+      code: error.code,
+      poruka: error.message,
+      domen: email.data.split("@")[1],
+      redirectTo,
+    })
+  }
   // Uvijek isti odgovor (ne otkrivaj postoji li email).
   return { ok: true, message: t("zaboravljenaLozinka.poruke.linkPoslat") }
 }

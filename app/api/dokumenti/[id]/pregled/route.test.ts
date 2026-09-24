@@ -25,9 +25,11 @@ const params = Promise.resolve({ id: "11111111-1111-1111-1111-111111111111" })
 const zahtjev = (qs = "") =>
   new Request(`http://localhost/api/dokumenti/11111111-1111-1111-1111-111111111111/pregled${qs}`)
 
-function dokument(mime: string | null, naziv = "nalaz.pdf") {
+// Mock mora vratiti SVE kolone koje ruta selektuje: `klijent_id` i `termin_id` ulaze
+// u `putanjaUOpsegu`, pa bi mock bez njih odbio svaku putanju sa 403.
+function dokument(mime: string | null, naziv = "nalaz.pdf", storage_path = "termini/t1/abc.pdf") {
   maybeSingle.mockResolvedValue({
-    data: { storage_path: "termini/t1/abc.pdf", naziv, mime_type: mime },
+    data: { storage_path, naziv, mime_type: mime, klijent_id: "k1", termin_id: "t1" },
     error: null,
   })
 }
@@ -97,5 +99,19 @@ describe("GET /api/dokumenti/[id]/pregled", () => {
     const cd = res.headers.get("Content-Disposition") ?? ""
     expect(cd).toContain("filename*=UTF-8''")
     expect(cd).not.toMatch(/[^\x20-\x7e]/) // header ostaje čist ASCII
+  })
+
+  // N1 (audit 31.07.) — druga brana uz triger `provjeri_storage_path` u bazi: ako red
+  // ipak nosi tuđu putanju, ruta je ne smije ni potpisati ni streamovati. Provjera ide
+  // PRIJE grananja po tipu, pa vrijedi i za metapodatke i za `?sadrzaj=1`.
+  it("putanja van opsega dokumenta se odbija, i za metapodatke i za bajtove", async () => {
+    dokument("application/pdf", "nalaz.pdf", "termini/TUDJI-TERMIN/abc.pdf")
+    expect((await GET(zahtjev(), { params })).status).toBe(403)
+
+    dokument("application/pdf", "nalaz.pdf", "klijenti/TUDJI-KLIJENT/abc.pdf")
+    expect((await GET(zahtjev("?sadrzaj=1"), { params })).status).toBe(403)
+
+    expect(downloadDokument).not.toHaveBeenCalled()
+    expect(signedUrl).not.toHaveBeenCalled()
   })
 })

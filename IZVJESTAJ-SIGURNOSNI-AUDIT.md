@@ -1,29 +1,22 @@
 # Sigurnosni audit — TEHPRO MVP
 
-> **Status popravki (31.07.2026.)** — sve napisano i provjereno u kodu; migracije čekaju primjenu.
+> **Status provjeren nad ŽIVOM bazom 24.09.2026.** — nalazi 1, 2 i 3 su u međuvremenu
+> zatvoreni sa drugih grana; ovaj PR nosi samo ono što je i dalje otvoreno.
 >
-> | # | Nalaz | Kod | Migracija | Primijenjeno na bazu |
-> |---|---|---|---|---|
-> | 1 | Unakrsni pristup dokumentima | ✅ `putanjaUOpsegu` + obje rute | `20260731100000` | ⏳ čeka odobrenje |
-> | 3 | Anon-revoke drift | — | `20260731101000` | ⏳ čeka odobrenje |
-> | 2 | DEFINER RPC bez provjere | — | `20260731102000` | ⏳ čeka odobrenje |
-> | 6 | Deaktivacija / `klijenti_ins` | ✅ `signOut` u `postaviAktivan` | `20260731103000` | ⏳ čeka odobrenje |
-> | 7 | Sigurnosna zaglavlja | ✅ `next.config.ts` | — | n/p |
-> | 4 | XSS preko `.docx` | ✅ `lib/html-sanitize.ts` + 2 poziva | — | n/p |
-> | 5 | Eksfiltracija u asistentu | ✅ `img: () => null` | — | n/p |
-> | 8 | Preširoki grantovi | — | `20260731104000` | ⏳ čeka odobrenje |
-> | — | Sprečavanje ponavljanja | ✅ pravilo `definer-bez-anon-revokea` | — | n/p |
+> | # | Nalaz | Stanje 24.09.2026. | U ovom PR-u |
+> |---|---|---|---|
+> | 1 | Unakrsni pristup dokumentima | **ZATVOREN** — `dokumenti_storage_path_key` + triger `provjeri_storage_path` postoje na PROD i DEMO (migracija `20260801161000` sa grane audita od 01.08.) | migracija izbačena; ostaje samo `putanjaUOpsegu` kao druga brana u kodu |
+> | 2 | DEFINER RPC bez provjere | **ZATVOREN** — `get_admini`, `get_aktivni_korisnici`, `get_zaduzeni_dodjele` imaju internu provjeru | migracija izbačena |
+> | 3 | Anon-revoke drift | **ZATVOREN** — `anon` nema EXECUTE ni na jednom od tri RPC-a | migracija izbačena |
+> | 4 | Stored XSS `.docx` → mammoth | **OTVOREN** — `DocxPreview.tsx:15` gura mammoth HTML u `dangerouslySetInnerHTML` bez sanitizacije | ✅ `lib/html-sanitize.ts` |
+> | 5 | Eksfiltracija slikom u asistentu | **OTVOREN** — `ChatMessage` override-uje samo `a`, `img` prolazi | ✅ `img: () => null` |
+> | 6 | Polise traže samo „bilo ko prijavljen" | **OTVOREN** — 4 polise na PROD-u, među njima `klijenti_ins` = `auth.uid() IS NOT NULL AND NOT je_pregled()`; deaktivacija naloga `pregled` mu upis **daje** umjesto da ga oduzme | ✅ migracija `20260731103000` |
+> | 7 | Nema sigurnosnih zaglavlja | **OTVOREN** — `next.config.ts` na `main` nema `headers()` | ✅ `next.config.ts` |
+> | 8 | Preširoki grantovi | **OTVOREN** — `anon` ima INSERT/UPDATE/DELETE/TRUNCATE na 25 tabela (PROD i DEMO); TRUNCATE ne podliježe RLS-u | ✅ migracija `20260731104000` |
 >
-> Provjere nakon izmjena: `typecheck` čist · `lint` 0 grešaka · **966 unit** (+21 novih) ·
-> **31 e2e** (sigurnosni + dokumenti) 0 padova · `provjeri:integraciju` čisto.
->
-> **Primjena migracija je blokirana permission klasifikatorom** (`pnpm db:apply-cloud`),
-> kao i čitanje PROD-a. Redoslijed kad se odobri: `100000` → `101000` → `102000` →
-> `103000` → `104000`, prvo na DEMO, pa provjera, pa PROD.
->
-> Nakon primjene `20260731100000` na DEMO ponoviti dokaz — mora pasti na koraku NAPAD:
-> `pnpm tsx scripts/audit/provjera-storage-path.ts`
-
+> Provjereno skriptom koja radi isključivo `SELECT` nad `pg_policy`, `pg_proc`,
+> `pg_indexes`, `pg_trigger` i `information_schema.role_table_grants`.
+> **Nijedna migracija nije primijenjena ni na jednu bazu.**
 - **Datum:** 31.07.2026.
 - **Grana / commit:** `audit/sigurnost` @ `9434862` (identično `origin/main`)
 - **Obim:** kod (auth, rute, server akcije, RLS/SQL, tajne, integracije) + zavisnosti + živa provjera baze + sigurnosni e2e

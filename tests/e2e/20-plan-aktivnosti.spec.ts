@@ -73,6 +73,63 @@ test.describe("Plan aktivnosti — izvoz modal", () => {
     expect(download.suggestedFilename()).toMatch(/plan-aktivnosti-.*\.xlsx$/)
   })
 
+  // Period iz modala zamjenjuje datumski filter stranice, pa modal koji se uvijek
+  // otvarao na „Ovaj mjesec" tiho izvozi drugi mjesec od onog koji je na ekranu.
+  test("modal se otvara na periodu koji je na ekranu", async ({ page }) => {
+    await page.goto("/plan-aktivnosti?view=lista&mjesec=3&godina=2026")
+    await page.getByTestId("izvoz-trigger").click()
+    await page.getByTestId("izvoz-prilagodi").click()
+    await expect(page.getByTestId("izvoz-period-mj")).toBeChecked()
+    await expect(page.getByTestId("izvoz-mjesec")).toContainText("Mart")
+    await expect(page.getByTestId("izvoz-mj-godina")).toContainText("2026")
+  })
+
+  // Matrica bira firmu kroz `klijent`, a izvoz je čitao samo `klijent_id` — filter je
+  // ispadao, a modal je uz to tvrdio da filtera nema.
+  test("filter firme sa Matrice se vidi u opsegu izvoza", async ({ page }) => {
+    await page.goto("/plan-aktivnosti?view=matrica&mode=klijent")
+    await page.getByTestId("prikaz-klijent").click()
+    await page.getByRole("option").nth(1).click()
+    await expect(page).toHaveURL(/[?&]klijent=/)
+
+    await page.getByTestId("izvoz-trigger").click()
+    await page.getByTestId("izvoz-prilagodi").click()
+    await page.getByTestId("izvoz-opseg-filtrirano").click()
+    await expect(page.getByTestId("izvoz-filteri-status")).toHaveText("Filteri sa stranice su primijenjeni")
+  })
+
+  // Carry-over je do sada bio bezuslovan: septembarski plan je uvijek vukao i sve
+  // otvorene obaveze iz ranijih mjeseci, a isključiti se moglo samo ručnim `preneseno=0`.
+  test("prekidač prenesenih obaveza smanjuje izvoz na sam period", async ({ page }) => {
+    await page.goto("/plan-aktivnosti?view=lista&mjesec=9&godina=2026")
+    await page.getByTestId("izvoz-trigger").click()
+    await page.getByTestId("izvoz-prilagodi").click()
+
+    const prekidac = page.getByTestId("izvoz-preneseno")
+    await expect(prekidac).toBeChecked()
+
+    const broj = async () => {
+      await expect(page.getByTestId("izvoz-broj")).toContainText(/\d/)
+      const tekst = await page.getByTestId("izvoz-broj").innerText()
+      return Number(tekst.replace(/\D/g, ""))
+    }
+    const sa = await broj()
+
+    await prekidac.click()
+    await expect(prekidac).not.toBeChecked()
+    await expect
+      .poll(broj, { message: "broj se mora smanjiti kad se prenesene isključe" })
+      .toBeLessThan(sa)
+  })
+
+  test("prekidač prenesenih je onemogućen kad period nema donju granicu", async ({ page }) => {
+    await page.goto("/plan-aktivnosti")
+    await page.getByTestId("izvoz-trigger").click()
+    await page.getByTestId("izvoz-prilagodi").click()
+    await page.getByTestId("izvoz-period-svi").click()
+    await expect(page.getByTestId("izvoz-preneseno")).toBeDisabled()
+  })
+
   test("prilagođeni raspon: nevažeći datumi drže Preuzmi onemogućen", async ({ page }) => {
     await page.goto("/plan-aktivnosti")
     await page.getByTestId("izvoz-trigger").click()

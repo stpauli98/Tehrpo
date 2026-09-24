@@ -160,7 +160,7 @@ export async function GET(req: NextRequest) {
     lokacija: red.lokacija_naziv ?? "—",
     usluga: red.vrsta_naziv ?? "—",
     rok: formatDatum(red.rok_dospijeca),
-    preneseno: jePreneseniRed(red.datum_prikaza, granica),
+    preneseno: jePreneseniRed(red, granica),
     status: tStatus(toDerivedStatus(red.status_izvedeni)),
     periodikaMj: red.interval_mjeseci ?? null,
     odgovorna: red.zaduzeni ?? "—",

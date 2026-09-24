@@ -83,6 +83,12 @@ export function ChatMessage({ poruka }: { poruka: UiPoruka }) {
                 a: ({ href, children }) => (
                   <a href={href ?? "#"} target="_blank" rel="noopener noreferrer">{children}</a>
                 ),
+                // Slika se učitava BEZ ikakve interakcije korisnika, pa je `![](url)`
+                // u odgovoru modela tihi kanal za iznošenje podataka: kontekst modela
+                // sadrži slobodan tekst koji operater upisuje (nazivi firmi i lokacija,
+                // lib/claude/tools.ts), pa je prompt injection ovdje realan ulaz.
+                // Asistent nema razloga da prikazuje slike — gasimo ih u cijelosti.
+                img: () => null,
               }}
             >
               {poruka.text}

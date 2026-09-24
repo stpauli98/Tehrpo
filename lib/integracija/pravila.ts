@@ -96,6 +96,17 @@ const IDENT = `${IDENT_RAZRED}+`
  *  `alterViewZaIme`. Isto kao IDENT_RAZRED, bez `.`/`"` (razdvajači, ne nastavak imena). */
 const IDENT_KARAKTER = String.raw`[\p{L}\p{N}_]`
 const VIEW = new RegExp(String.raw`CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+(${IDENT})`, "iu")
+const FUNKCIJA = new RegExp(
+  String.raw`CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(${IDENT})`,
+  "iu",
+)
+const SECURITY_DEFINER = /SECURITY\s+DEFINER/i
+/**
+ * Trigger funkcije se NE prijavljuju: EXECUTE se za njih provjerava pri KREIRANJU
+ * trigera, pa `revoke ... from anon` nema sigurnosnu korist, a nosi rizik po restore.
+ * Prepoznaju se po repo konvenciji prefiksa `tg_`.
+ */
+const TRIGGER_FUNKCIJA = /^tg_/i
 const TABELA = new RegExp(
   String.raw`CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(${IDENT})`,
   "giu",
@@ -236,6 +247,28 @@ function alterViewZaIme(ime: string): RegExp {
     String.raw`^(?:\s|--[^\n]*)*ALTER\s+VIEW\s+${IDENT_RAZRED}*(?<!${IDENT_KARAKTER})${ime}(?!${IDENT_KARAKTER})`,
     "iu",
   )
+}
+
+/**
+ * Ima li fajl naredbu koja funkciji `ime` oduzima EXECUTE ROLI `anon`?
+ *
+ * Traži se `REVOKE ... EXECUTE ... ON FUNCTION <ime> ... FROM <... anon ...>` — lista
+ * iza FROM smije nabrajati više rola (`from public, anon`), pa se `anon` traži bilo
+ * gdje u njoj, uz granicu riječi da `anonimni` ne prođe kao `anon`.
+ */
+function imaAnonRevokeZaFunkciju(naredbe: readonly Naredba[], ime: string): boolean {
+  const imeUNaredbi = new RegExp(
+    String.raw`(?<!${IDENT_KARAKTER})${ime}(?!${IDENT_KARAKTER})`,
+    "iu",
+  )
+  return naredbe.some(({ tekst }) => {
+    if (!/\bREVOKE\b/i.test(tekst)) return false
+    if (!/\bEXECUTE\b/i.test(tekst)) return false
+    if (!/\bON\s+FUNCTION\b/i.test(tekst)) return false
+    if (!imeUNaredbi.test(tekst)) return false
+    const from = tekst.match(/\bFROM\b([\s\S]*)$/i)
+    return from?.[1] !== undefined && /(?<![\p{L}\p{N}_])anon(?![\p{L}\p{N}_])/iu.test(from[1])
+  })
 }
 
 /**
@@ -466,6 +499,29 @@ export function provjeriSql(izvor: Izvor): Nalaz[] {
       pravilo: "tabela-bez-politike",
       poruka: `tabela ${ime} nema RLS politiku — cloud trigger uključi RLS, pa upit tiho vraća nula redova`,
       tabela: ime,
+    })
+  }
+
+  // SECURITY DEFINER funkcija bez EKSPLICITNOG `revoke ... from anon` u istom fajlu.
+  // Postoji jer `revoke execute ... from public` NIJE dovoljno na Supabaseu: bootstrap
+  // dodjeljuje EXECUTE direktno roli `anon`, pa `PUBLIC` revoke ne dira anon-ov
+  // privilegij. Ta greška je u ovom repou napravljena tri puta zaredom
+  // (get_admini, get_aktivni_korisnici, get_zaduzeni_dodjele) i propuštena jer je
+  // lint sloj pokrivao samo `security_invoker` na viewovima — v. audit 31.07.2026.
+  for (const { tekst: naredba, pomak } of naredbe) {
+    const pogodak = FUNKCIJA.exec(naredba)
+    if (!pogodak || pogodak[1] === undefined) continue
+    if (!SECURITY_DEFINER.test(naredba)) continue
+    const ime = kratkoIme(pogodak[1])
+    if (TRIGGER_FUNKCIJA.test(ime)) continue
+    if (imaAnonRevokeZaFunkciju(naredbe, ime)) continue
+    nalazi.push({
+      putanja,
+      linija: brojLinije(sadrzaj, pomak + pogodak.index),
+      pravilo: "definer-bez-anon-revokea",
+      poruka:
+        `SECURITY DEFINER funkcija ${ime} nema "revoke execute ... from anon" — ` +
+        `Supabase daje EXECUTE direktno anon roli, pa revoke from public NIJE dovoljan`,
     })
   }
 

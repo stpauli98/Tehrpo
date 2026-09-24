@@ -1,0 +1,83 @@
+import { describe, it, expect } from "vitest"
+import { jeBezbjedanHref, jeBezbjedanSrc, ocistiMammothHtml } from "./html-sanitize"
+
+describe("jeBezbjedanHref", () => {
+  it("prihvata http/https/mailto", () => {
+    expect(jeBezbjedanHref("https://primjer.ba/x")).toBe(true)
+    expect(jeBezbjedanHref("http://primjer.ba")).toBe(true)
+    expect(jeBezbjedanHref("mailto:neko@primjer.ba")).toBe(true)
+  })
+
+  it("prihvata relativne URL-ove i sidra", () => {
+    expect(jeBezbjedanHref("#odjeljak")).toBe(true)
+    expect(jeBezbjedanHref("/klijenti")).toBe(true)
+    expect(jeBezbjedanHref("../gore")).toBe(true)
+    expect(jeBezbjedanHref("")).toBe(true)
+  })
+
+  it("odbija javascript: — tačan payload iz audita 31.07.2026.", () => {
+    expect(jeBezbjedanHref("javascript:alert(1)")).toBe(false)
+    expect(jeBezbjedanHref("JavaScript:alert(1)")).toBe(false)
+  })
+
+  it("odbija javascript: sakriven razmacima i kontrolnim znakovima", () => {
+    expect(jeBezbjedanHref("  javascript:alert(1)")).toBe(false)
+    expect(jeBezbjedanHref("java\nscript:alert(1)")).toBe(false)
+    expect(jeBezbjedanHref("java\tscript:alert(1)")).toBe(false)
+    expect(jeBezbjedanHref("java\u0000script:alert(1)")).toBe(false)
+    expect(jeBezbjedanHref("java​script:alert(1)")).toBe(false)
+  })
+
+  it("odbija ostale izvršne/neočekivane šeme", () => {
+    expect(jeBezbjedanHref("vbscript:msgbox(1)")).toBe(false)
+    expect(jeBezbjedanHref("data:text/html,<script>alert(1)</script>")).toBe(false)
+    expect(jeBezbjedanHref("file:///etc/passwd")).toBe(false)
+  })
+})
+
+describe("jeBezbjedanSrc", () => {
+  it("dozvoljava data:image koje mammoth ugrađuje iz .docx-a", () => {
+    expect(jeBezbjedanSrc("data:image/png;base64,iVBORw0KGgo=")).toBe(true)
+    expect(jeBezbjedanSrc("data:image/jpeg;base64,/9j/4AAQ")).toBe(true)
+  })
+
+  it("odbija data: koji nije slika", () => {
+    expect(jeBezbjedanSrc("data:text/html;base64,PHNjcmlwdD4=")).toBe(false)
+    expect(jeBezbjedanSrc("data:application/javascript,alert(1)")).toBe(false)
+  })
+
+  it("odbija javascript: i u src-u", () => {
+    expect(jeBezbjedanSrc("javascript:alert(1)")).toBe(false)
+  })
+})
+
+describe("ocistiMammothHtml", () => {
+  it("zamjenjuje javascript: href, a tekst linka ostaje netaknut", () => {
+    const ulaz = '<p><a href="javascript:alert(1)">Prilog 1 – zapisnik</a></p>'
+    const izlaz = ocistiMammothHtml(ulaz)
+    expect(izlaz).toBe('<p><a href="#">Prilog 1 – zapisnik</a></p>')
+    expect(izlaz).not.toContain("javascript:")
+  })
+
+  it("ostavlja bezbjedne linkove i slike na miru", () => {
+    const ulaz =
+      '<p><a href="https://primjer.ba">link</a><img src="data:image/png;base64,AAA" /></p>'
+    expect(ocistiMammothHtml(ulaz)).toBe(ulaz)
+  })
+
+  it("čisti više atributa u istom dokumentu", () => {
+    const ulaz =
+      '<a href="javascript:a()">a</a><a href="https://ok.ba">b</a><img src="javascript:b()" />'
+    const izlaz = ocistiMammothHtml(ulaz)
+    expect(izlaz).toBe('<a href="#">a</a><a href="https://ok.ba">b</a><img src="" />')
+  })
+
+  it("ne dira običan tekst dokumenta", () => {
+    const ulaz = "<h1>Zapisnik</h1><p>Tekst sa riječju href i navodnicima &quot;x&quot;.</p>"
+    expect(ocistiMammothHtml(ulaz)).toBe(ulaz)
+  })
+
+  it("radi i kad je atribut pisan velikim slovima", () => {
+    expect(ocistiMammothHtml('<a HREF="javascript:x()">t</a>')).toBe('<a href="#">t</a>')
+  })
+})

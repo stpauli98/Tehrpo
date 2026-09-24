@@ -11,6 +11,7 @@ import {
   MAX_MB,
   safeName,
   validirajFajl,
+  putanjaUOpsegu,
 } from "./dokumenti"
 
 describe("jeValidanTip", () => {
@@ -123,5 +124,63 @@ describe("DOKUMENT_TIPOVI ↔ chk_dokumenti_tip paritet", () => {
 
     // Poređenje skupova, ne redoslijeda.
     expect(new Set(sqlTipovi)).toEqual(new Set(DOKUMENT_TIPOVI))
+  })
+})
+
+describe("putanjaUOpsegu", () => {
+  const A = "11111111-1111-4111-8111-111111111111" // firma napadača
+  const B = "22222222-2222-4222-8222-222222222222" // firma žrtve
+  const TERMIN_A = "33333333-3333-4333-8333-333333333333"
+  const TERMIN_B = "44444444-4444-4444-8444-444444444444"
+
+  it("prihvata putanju pod vlastitim klijentom", () => {
+    expect(putanjaUOpsegu(`klijenti/${A}/uuid-nalaz.pdf`, { klijentId: A })).toBe(true)
+  })
+
+  it("prihvata putanju pod vlastitim terminom", () => {
+    expect(
+      putanjaUOpsegu(`termini/${TERMIN_A}/uuid-nalaz.pdf`, { klijentId: A, terminId: TERMIN_A }),
+    ).toBe(true)
+  })
+
+  it("odbija tuđu klijent-putanju — ovo je tačan primitiv napada iz audita 31.07.2026.", () => {
+    expect(putanjaUOpsegu(`klijenti/${B}/uuid-nalaz.pdf`, { klijentId: A })).toBe(false)
+  })
+
+  it("odbija tuđi termin i kad je vlastiti termin postavljen", () => {
+    expect(
+      putanjaUOpsegu(`termini/${TERMIN_B}/uuid-nalaz.pdf`, { klijentId: A, terminId: TERMIN_A }),
+    ).toBe(false)
+  })
+
+  it("odbija termin-putanju kad red uopšte nema termin_id", () => {
+    expect(putanjaUOpsegu(`termini/${TERMIN_B}/uuid-nalaz.pdf`, { klijentId: A })).toBe(false)
+    expect(
+      putanjaUOpsegu(`termini/${TERMIN_B}/uuid-nalaz.pdf`, { klijentId: A, terminId: null }),
+    ).toBe(false)
+  })
+
+  it("ne da se prevariti prefiksom bez granice segmenta", () => {
+    // `klijenti/<A>zlo/...` počinje istim znakovima kao `klijenti/<A>`, ali je druga fascikla.
+    expect(putanjaUOpsegu(`klijenti/${A}zlo/uuid-nalaz.pdf`, { klijentId: A })).toBe(false)
+  })
+
+  it("prihvata sve oblike koje dokumentStoragePath stvarno gradi", () => {
+    expect(putanjaUOpsegu(dokumentStoragePath({ klijentId: A }, "n.pdf"), { klijentId: A })).toBe(true)
+    expect(
+      putanjaUOpsegu(dokumentStoragePath({ terminId: TERMIN_A }, "n.pdf"), {
+        klijentId: A,
+        terminId: TERMIN_A,
+      }),
+    ).toBe(true)
+  })
+
+  it("prihvata i oblik koji gradi lib/zapisnik/snimi.ts", () => {
+    expect(
+      putanjaUOpsegu(`termini/${TERMIN_A}/zapisnik-uuid.docx`, {
+        klijentId: A,
+        terminId: TERMIN_A,
+      }),
+    ).toBe(true)
   })
 })

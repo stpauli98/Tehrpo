@@ -5,6 +5,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { downloadDokument } from "@/lib/supabase/storage"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
+import { putanjaUOpsegu } from "@/lib/dokumenti"
+import { ocistiMammothHtml } from "@/lib/html-sanitize"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
 
@@ -72,7 +74,7 @@ export async function GET(
   const supabase = await createServerSupabaseClient()
   const { data: dok, error: citanjeGreska } = await supabase
     .from("dokumenti")
-    .select("storage_path, naziv, mime_type")
+    .select("storage_path, naziv, mime_type, klijent_id, termin_id")
     .eq("id", id)
     .maybeSingle()
 
@@ -82,6 +84,13 @@ export async function GET(
   }
   // RLS je jedini gate: korisnik koji dokument ne smije vidjeti dobije prazan red → 404.
   if (!dok) return NextResponse.json({ error: t("dokumentNePostoji") }, { status: 404 })
+
+  // Oba ishoda ispod čitaju fajl service-role klijentom (download i potpisivanje),
+  // pa opseg putanje mora biti provjeren PRIJE grananja po tipu.
+  if (!putanjaUOpsegu(dok.storage_path, { klijentId: dok.klijent_id, terminId: dok.termin_id })) {
+    console.error("Odbijen pregled: putanja van opsega dokumenta", { id })
+    return NextResponse.json({ error: t("pregledGreska") }, { status: 403 })
+  }
 
   const mime = mimeIz(dok.naziv, dok.mime_type)
 
@@ -116,7 +125,9 @@ export async function GET(
     try {
       const buffer = await downloadDokument(dok.storage_path)
       const { value } = await mammoth.convertToHtml({ buffer })
-      return NextResponse.json({ vrsta: "html", naziv: dok.naziv, html: value })
+      // Mammoth ne provjerava URL šemu, a izlaz ide u dangerouslySetInnerHTML
+      // (DocxPreview) — bez ovoga `href="javascript:…"` iz .docx-a preživi.
+      return NextResponse.json({ vrsta: "html", naziv: dok.naziv, html: ocistiMammothHtml(value) })
     } catch (e) {
       console.error("Konverzija dokumenta za pregled nije uspjela:", e)
       return NextResponse.json({ error: t("pregledGreska") }, { status: 500 })

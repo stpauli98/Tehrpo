@@ -12,6 +12,7 @@ import { Pagination } from "@/components/domain/Pagination"
 import { ZapisniciTabela } from "@/components/domain/ZapisniciTabela"
 import { href } from "@/i18n/routes"
 import { jeAdmin } from "@/lib/auth/roles"
+import { ocistiMammothHtml } from "@/lib/html-sanitize"
 import mammoth from "mammoth"
 
 // Isti page-size obrazac kao poslati-mejlovi/page.tsx (PER_PAGE + offset/range).
@@ -107,7 +108,9 @@ export default async function ZapisniciPage({
       try {
         const buffer = await downloadDokument(dok.storage_path)
         const result = await mammoth.convertToHtml({ buffer })
-        preview = { vrsta: "uspjeh", html: result.value, naziv: dok.naziv }
+        // Isto kao u /api/dokumenti/[id]/pregled: mammoth ne provjerava URL šemu,
+        // a izlaz završava u dangerouslySetInnerHTML (DocxPreview).
+        preview = { vrsta: "uspjeh", html: ocistiMammothHtml(result.value), naziv: dok.naziv }
       } catch {
         preview = { vrsta: "greska" }
       }

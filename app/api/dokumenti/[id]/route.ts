@@ -5,6 +5,7 @@ import { signedUrl } from "@/lib/supabase/storage"
 import { APP_LOCALE } from "@/lib/locale"
 import { getMessages } from "@/i18n/messages"
 import { smijeTrenutniPreuzeti } from "@/lib/auth/zahtijevaj-preuzimanje"
+import { putanjaUOpsegu } from "@/lib/dokumenti"
 
 const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namespace: "dokumenti" })
 
@@ -31,7 +32,7 @@ export async function GET(
   const supabase = await createServerSupabaseClient()
   const { data: dok, error: citanjeGreska } = await supabase
     .from("dokumenti")
-    .select("storage_path, naziv")
+    .select("storage_path, naziv, klijent_id, termin_id")
     .eq("id", id)
     .maybeSingle()
   // S1: pad upita nije „prazno" — 404 bi lagao da dokument ne postoji.
@@ -40,6 +41,13 @@ export async function GET(
     return NextResponse.json({ error: t("preuzimanjeNijeUspjelo") }, { status: 500 })
   }
   if (!dok) return NextResponse.json({ error: t("dokumentNePostoji") }, { status: 404 })
+
+  // RLS je pustio red, ali potpisnik je service-role i putanju ne provjerava.
+  // Red sa tuđom putanjom (naslijeđen prije 20260731100000) ne smije biti potpisan.
+  if (!putanjaUOpsegu(dok.storage_path, { klijentId: dok.klijent_id, terminId: dok.termin_id })) {
+    console.error("Odbijeno potpisivanje: putanja van opsega dokumenta", { id })
+    return NextResponse.json({ error: t("preuzimanjeNijeUspjelo") }, { status: 403 })
+  }
 
   try {
     const url = await signedUrl(dok.storage_path, { downloadName: dok.naziv })

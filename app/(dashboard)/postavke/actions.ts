@@ -249,6 +249,22 @@ export async function postaviAktivan(korisnikId: string, aktivan: boolean): Prom
   }
   const { error } = await supabase.from("korisnici").update({ aktivan }).eq("id", korisnikId)
   if (error) return { ok: false, message: error.message }
+
+  // Deaktivacija mora ubiti i ŽIVU sesiju, ne samo `aktivan` zastavicu.
+  // Bez ovoga korisnik zadržava validan access/refresh token, a refresh token se
+  // rotira neograničeno — pa deaktivirani nalog nastavlja da radi direktno protiv
+  // PostgREST-a (proxy.ts hvata samo zahtjeve koji prođu kroz Next aplikaciju, a
+  // dokumentovano je fail-open). Većinu polisa spasi `k.aktivan` u je_admin()/
+  // ima_pristup_klijentu(), ali ne sve — v. migraciju 20260731103000.
+  if (!aktivan) {
+    // integracija-dozvoli: admin-klijent — Auth Admin API nema anon ekvivalent
+    const admin = createAdminSupabaseClient()
+    const { error: odjavaErr } = await admin.auth.admin.signOut(korisnikId, "global")
+    // Ne obaramo radnju: `aktivan=false` je već upisan i polise ga hvataju.
+    // Neuspjeh je vrijedan loga jer znači da token može preživjeti do isteka.
+    if (odjavaErr) console.error("Globalna odjava deaktiviranog korisnika nije uspjela:", korisnikId, odjavaErr.message)
+  }
+
   revalidatePath("/postavke")
   return { ok: true }
 }

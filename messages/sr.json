@@ -109,7 +109,7 @@
         "neispravanEmail": "Neispravan email."
       },
       "poruke": {
-        "linkPoslat": "Ako nalog postoji, poslali smo link za reset."
+        "linkPoslat": "Ako nalog sa ovom adresom postoji, link za reset stiže za par minuta. Ako ne stigne, provjeri spam ili se obrati administratoru."
       }
     },
     "novaLozinka": {

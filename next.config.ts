@@ -26,7 +26,61 @@ function rule(from: string, to: string): { source: string; destination: string }
   return { source: `/${from}/:path*`, destination: `/${to}/:path*` };
 }
 
+/**
+ * Sigurnosna zaglavlja. Do 31.07.2026. aplikacija nije slala NIJEDNO — ni CSP, ni
+ * HSTS, ni X-Frame-Options — što je bio razlog zašto su dva nalaza iz audita bila
+ * iskoristiva umjesto ublažena.
+ *
+ * Supabase origin mora biti eksplicitno dozvoljen: pregled dokumenta učitava PDF
+ * u `<iframe>` i slike u `<img>` sa potpisanog Storage URL-a, a browser klijent
+ * priča sa REST/Auth endpointima. Bez ovoga bi pregled dokumenata pukao.
+ */
+const supabaseOrigin = (() => {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return "";
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return "";
+  }
+})();
+
+// `script-src` NAMJERNO nosi 'unsafe-inline': Next App Router hidraciju ubacuje
+// inline `<script>`-ovima (self.__next_f.push), a nonce bi tražio da svaka strana
+// pređe na dinamički render. Zato CSP ovdje NIJE odbrana od XSS-a — XSS se rješava
+// sanitizacijom na izvoru (v. lib/html-sanitize.ts). Ono što CSP ovdje stvarno
+// donosi je `img-src`/`connect-src`, tj. gašenje tihe eksfiltracije preko
+// učitavanja vanjskog resursa, i `frame-ancestors` protiv clickjackinga.
+const csp = [
+  `default-src 'self'`,
+  `base-uri 'self'`,
+  `object-src 'none'`,
+  `frame-ancestors 'none'`,
+  `form-action 'self'`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  `style-src 'self' 'unsafe-inline'`,
+  `img-src 'self' data: blob:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
+  `font-src 'self' data:`,
+  `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ""}${process.env.NODE_ENV === "development" ? " ws: http://localhost:*" : ""}`,
+  `frame-src 'self' blob:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
+].join("; ");
+
+const SIGURNOSNA_ZAGLAVLJA = [
+  { key: "Content-Security-Policy", value: csp },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+  // HSTS samo u produkciji — na localhostu bi zaključao http za cijeli dev.
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]
+    : []),
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: SIGURNOSNA_ZAGLAVLJA }];
+  },
   experimental: {
     // Default je 1 MB; dokumenti/fotografije lako pređu. Klijent dodatno ograničava na 10 MB.
     serverActions: {

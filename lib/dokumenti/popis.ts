@@ -89,14 +89,14 @@ export async function listajFajlove(
  * - Red UBAČEN tokom paginacije sa putanjom manjom od kursora se ne pročita. Takav red je upravo
  *   nastao upload-om, pa je i njegov fajl nastao maločas — grace period (24h) ga štiti od
  *   brisanja. Ovo je isti procjep zbog kojeg grace uopšte postoji.
- * - `dokumenti.storage_path` NEMA unique constraint (20260620201156_supporting_tables.sql:12);
- *   jedinstvenost je de-facto, iz UUID-a u putanji. Sa `.gt()` nad nejedinstvenim ključem bi
- *   tačan duplikat na granici stranice bio preskočen. Bezopasno je: potrošač koristi SAMO
- *   vrijednost putanje, a dvije iste putanje znače isti fajl — dovoljno je da ga popis sadrži
- *   jednom da fajl NE bude proglašen osirotjelim. Preskočen duplikat ne može ništa izgubiti.
+ * - Duplikat `storage_path` na granici stranice bi sa `.gt()` bio preskočen. Od migracije
+ *   20260731100000 duplikati više ne mogu ni nastati (`uq_dokumenti_storage_path`), pa je
+ *   procjep zatvoren u korijenu. I ranije je bio bezopasan: potrošač koristi SAMO vrijednost
+ *   putanje, a dvije iste putanje znače isti fajl — dovoljno je da ga popis sadrži jednom
+ *   da fajl NE bude proglašen osirotjelim.
  *
- * Nema indeksa na `storage_path` (samo `idx_dokumenti_termin`), pa svaka stranica sortira.
- * Tabela je mala i posao je noćni; ako ikad poraste, indeks je popravka, ne promjena logike.
+ * Ista migracija donosi i indeks nad `storage_path` (unique indeks služi oboje), pa stranice
+ * više ne sortiraju cijelu tabelu.
  */
 export async function svePutanjeUBazi(sb: Sb): Promise<{ putanje: string[]; error: string | null }> {
   const putanje: string[] = []

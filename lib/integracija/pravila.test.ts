@@ -677,3 +677,74 @@ describe("provjeriIzvore", () => {
     expect(provjeriIzvore([])).toEqual([])
   })
 })
+
+describe("provjeriSql — SECURITY DEFINER bez anon revokea", () => {
+  const pravila = (nalazi: { pravilo: string }[]) => nalazi.map((n) => n.pravilo)
+
+  it("prijavlja definer funkciju sa samo `from public` (tačna greška iz audita)", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260101000000_x.sql",
+      sadrzaj: [
+        "create function public.get_admini() returns table(ime text)",
+        "language sql stable security definer set search_path to 'public' as $$",
+        "  select k.ime from korisnici k where k.uloga = 'admin';",
+        "$$;",
+        "revoke execute on function public.get_admini() from public;",
+        "grant execute on function public.get_admini() to authenticated;",
+      ].join("\n"),
+    })
+    expect(pravila(nalazi)).toContain("definer-bez-anon-revokea")
+  })
+
+  it("ne prijavlja kad revoke eksplicitno nabraja anon", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260101000000_x.sql",
+      sadrzaj: [
+        "create function public.get_admini() returns table(ime text)",
+        "language sql stable security definer as $$ select 1; $$;",
+        "revoke execute on function public.get_admini() from public, anon;",
+        "grant execute on function public.get_admini() to authenticated;",
+      ].join("\n"),
+    })
+    expect(pravila(nalazi)).not.toContain("definer-bez-anon-revokea")
+  })
+
+  it("ne prijavlja SECURITY INVOKER funkciju (podrazumijevano) — RLS je već štiti", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260101000000_x.sql",
+      sadrzaj: "create function public.get_stats() returns int language sql as $$ select 1; $$;",
+    })
+    expect(pravila(nalazi)).not.toContain("definer-bez-anon-revokea")
+  })
+
+  it("ne prijavlja trigger funkcije (tg_) — EXECUTE se provjerava pri kreiranju trigera", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260101000000_x.sql",
+      sadrzaj: [
+        "create function public.tg_audit() returns trigger",
+        "language plpgsql security definer as $$ begin return new; end; $$;",
+      ].join("\n"),
+    })
+    expect(pravila(nalazi)).not.toContain("definer-bez-anon-revokea")
+  })
+
+  it("`anonimni` u FROM listi ne prolazi kao `anon`", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260101000000_x.sql",
+      sadrzaj: [
+        "create function public.f() returns int language sql security definer as $$ select 1; $$;",
+        "revoke execute on function public.f() from public, anonimni;",
+      ].join("\n"),
+    })
+    expect(pravila(nalazi)).toContain("definer-bez-anon-revokea")
+  })
+
+  it("hvata i `create or replace`", () => {
+    const nalazi = provjeriSql({
+      putanja: "supabase/migrations/20260101000000_x.sql",
+      sadrzaj:
+        "create or replace function public.f() returns int language sql security definer as $$ select 1; $$;",
+    })
+    expect(pravila(nalazi)).toContain("definer-bez-anon-revokea")
+  })
+})

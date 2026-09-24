@@ -61,3 +61,22 @@ export function dokumentStoragePath(scope: DokumentScope, filename: string): str
   if ("klijentId" in scope) return `klijenti/${scope.klijentId}/${rand}-${naziv}`
   return `termini/${scope.terminId}/${rand}-${naziv}`
 }
+
+/**
+ * Pripada li `putanja` opsegu reda koji je pokazuje?
+ *
+ * Postoji jer se pristup fajlu izvodi iz reda u `dokumenti`, a potpisivanje ide
+ * SERVICE-ROLE klijentom (`lib/supabase/storage.ts`) koji storage politike ne vidi.
+ * Ako bi red ikad nosio tuđu `storage_path`, potpisnik bi je poslušao bez pitanja.
+ * Baza to zaključava (`chk_dokumenti_putanja_opseg` + kompozitni FK + pin triger,
+ * migracija 20260731100000); ovo je isto pravilo na aplikativnoj strani, da nova
+ * ruta ne može zaobići provjeru i da starije, još nevalidirane redove uhvatimo prije
+ * nego se potpišu.
+ */
+export function putanjaUOpsegu(
+  putanja: string,
+  veza: { klijentId: string; terminId?: string | null },
+): boolean {
+  if (putanja.startsWith(`klijenti/${veza.klijentId}/`)) return true
+  return !!veza.terminId && putanja.startsWith(`termini/${veza.terminId}/`)
+}

@@ -109,7 +109,7 @@
         "neispravanEmail": "Ungültige E-Mail-Adresse."
       },
       "poruke": {
-        "linkPoslat": "Falls ein Konto besteht, haben wir einen Link zum Zurücksetzen gesendet."
+        "linkPoslat": "Falls ein Konto mit dieser Adresse besteht, kommt der Link zum Zurücksetzen in wenigen Minuten an. Falls nicht, prüfen Sie Ihren Spam-Ordner oder wenden Sie sich an den Administrator."
       }
     },
     "novaLozinka": {

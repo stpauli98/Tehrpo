@@ -109,7 +109,7 @@
         "neispravanEmail": "Invalid email."
       },
       "poruke": {
-        "linkPoslat": "If an account exists, we've sent a reset link."
+        "linkPoslat": "If an account with this address exists, the reset link will arrive within a few minutes. If it doesn't, check your spam folder or contact your administrator."
       }
     },
     "novaLozinka": {

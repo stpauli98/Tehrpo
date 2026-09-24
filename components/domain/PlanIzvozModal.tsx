@@ -10,44 +10,88 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
 import { cn, FOCUS_RING } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/ikona-tooltip"
-import { currentYear, monthName, todayIso } from "@/lib/date"
-import { validRaspon } from "@/lib/plan-izvoz/period"
+import { formatDatum, monthName } from "@/lib/date"
+import { validRaspon, izvozPeriodLabel, prenesenoGranica, type IzvozPeriod } from "@/lib/plan-izvoz/period"
+import { filteriSaEkrana, periodSaEkrana } from "@/lib/plan-izvoz/filteri-ekrana"
 import { imeIzContentDisposition } from "@/lib/plan-izvoz/naziv-fajla"
+import { IZVOZ_MAX_REDOVA } from "@/lib/plan-izvoz/stranicenje"
 import { porukaIzOdgovora } from "@/lib/queries/plan-aktivnosti"
 import { useSmijePreuzeti } from "@/providers/korisnik-provider"
 
 type PeriodMod = "om" | "god" | "mj" | "raspon" | "svi"
-const FILTER_KEYS = ["status", "q", "klijent_id", "lokacija", "vrsta_id", "nacin"] as const
+
+/**
+ * C4: brojač više ne nosi samo broj. Ruta uz broj vraća i granicu izvoza, pa modal
+ * može reći ISTINU — ili „izvešće se N" (i tačno toliko će biti u fajlu), ili
+ * „previše, suzi izbor" sa onemogućenim dugmetom. Tiho odsijecanje na 1000 redova
+ * uz pun broj iznad dugmeta bilo je najgore od oba.
+ */
+type BrojStanje = { broj: number; granica: number; prekoracenje: boolean }
 
 export function PlanIzvozModal({ godine }: { godine: number[] }) {
   const params = useSearchParams()
   const t = useTranslations("plan.izvoz")
 
+  // Modal starta od perioda koji je VEĆ na ekranu. Datumski filter stranice se u
+  // izvozu ne primjenjuje (ruta zove `applyPlanFilteriBezDatuma`) — period ga
+  // zamjenjuje, pa bi fiksni „Ovaj mjesec" tiho izvezao drugi mjesec od prikazanog.
+  const pocetni = periodSaEkrana(params)
+
   const [open, setOpen] = useState(false)
   const [format, setFormat] = useState<"pdf" | "xlsx">("pdf")
   const [prilagodi, setPrilagodi] = useState(false)
-  const [periodMod, setPeriodMod] = useState<PeriodMod>("om")
-  const [godina, setGodina] = useState<number>(currentYear())
-  const [mjesec, setMjesec] = useState<number>(Number(todayIso().slice(5, 7)))
+  const [periodMod, setPeriodMod] = useState<PeriodMod>(pocetni.mod)
+  const [godina, setGodina] = useState<number>(pocetni.godina)
+  const [mjesec, setMjesec] = useState<number>(pocetni.mjesec)
   const [od, setOd] = useState("")
   const [doDatum, setDoDatum] = useState("")
   const [opseg, setOpseg] = useState<"sve" | "filtrirano">("sve")
-  const [broj, setBroj] = useState<number | "loading" | null>(null)
+  const [preneseno, setPreneseno] = useState(true)
+  const [stanje, setStanje] = useState<BrojStanje | "loading" | null>(null)
   const [preuzimanje, setPreuzimanje] = useState(false)
   const smijePreuzeti = useSmijePreuzeti()
 
   const rasponNevazeci = periodMod === "raspon" && !validRaspon(od, doDatum)
 
-  const aktivniFilteri = useMemo(
-    () => FILTER_KEYS.filter((k) => params.get(k)),
-    [params]
+  // Filteri se mijenjaju dok je modal zatvoren, pa se period sije na svako otvaranje
+  // (ne samo pri montiranju); zatvaranje ne dira izbor koji je korisnik napravio.
+  function promijeniOpen(v: boolean) {
+    if (v) {
+      const p = periodSaEkrana(params)
+      setPeriodMod(p.mod)
+      setGodina(p.godina)
+      setMjesec(p.mjesec)
+      setPreneseno(true)
+    }
+    setOpen(v)
+  }
+
+  // base-ui `SelectValue` label uzima iz `items` mape — bez nje trigger pokaže sirovu
+  // vrijednost ("3" umjesto „Mart"). Isti obrazac kao PrikazToolbar.
+  const mjesecItems: Record<string, string> = Object.fromEntries(
+    Array.from({ length: 12 }, (_, i) => [String(i + 1), monthName(i + 1)])
   )
+
+  const trenutniPeriod: IzvozPeriod =
+    periodMod === "god" ? { mod: "god", godina }
+      : periodMod === "mj" ? { mod: "mj", godina, mjesec }
+        : periodMod === "raspon" ? { mod: "raspon", od, do: doDatum }
+          : periodMod === "svi" ? { mod: "svi" }
+            : { mod: "om" }
+
+  const granica = prenesenoGranica(trenutniPeriod)
+
+  // Isti izvor i za ono što se šalje i za indikator ispod „Opsega" — inače modal
+  // ume da tvrdi „nema filtera" dok ekran jeste filtriran (i obrnuto).
+  const filteriEkrana = useMemo(() => filteriSaEkrana(params), [params])
+  const aktivniFilteri = Object.keys(filteriEkrana)
 
   // Gradi query za izvoz/count. forCount: doda count=1, izostavi format.
   function buildParams(forCount: boolean): URLSearchParams {
@@ -59,31 +103,43 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
     if (periodMod === "god" || periodMod === "mj") p.set("godina", String(godina))
     if (periodMod === "mj") p.set("mjesec", String(mjesec))
     if (periodMod === "raspon") { p.set("od", od); p.set("do", doDatum) }
+    if (!preneseno) p.set("preneseno", "0")
     if (opseg === "filtrirano") {
-      for (const k of FILTER_KEYS) { const v = params.get(k); if (v) p.set(k, v) }
+      for (const [k, v] of Object.entries(filteriEkrana)) p.set(k, v)
     }
     return p
   }
 
   // Živi broj — debounce; ne zavisi od formata. Preskoči kad je raspon nevažeći.
-  const filterKljuc = FILTER_KEYS.map((k) => params.get(k) ?? "").join("|")
+  const filterKljuc = JSON.stringify(filteriEkrana)
   useEffect(() => {
     if (!open || rasponNevazeci) return
     const ctrl = new AbortController()
     const timer = setTimeout(async () => {
-      setBroj("loading")
+      setStanje("loading")
       try {
         const res = await fetch(`/api/plan-aktivnosti/izvoz?${buildParams(true).toString()}`, { signal: ctrl.signal })
         if (!res.ok) throw new Error("count")
-        const data = (await res.json()) as { broj?: number }
-        setBroj(typeof data.broj === "number" ? data.broj : null)
+        const data = (await res.json()) as { broj?: number; granica?: number; prekoracenje?: boolean }
+        if (typeof data.broj !== "number") {
+          setStanje(null)
+          return
+        }
+        // `granica`/`prekoracenje` su dodati uz C4 — fallback drži modal ispravnim i
+        // ako odgovor dođe sa starijeg deploya (nema tihe „sve je u redu" pretpostavke).
+        const granica = typeof data.granica === "number" ? data.granica : IZVOZ_MAX_REDOVA
+        setStanje({
+          broj: data.broj,
+          granica,
+          prekoracenje: data.prekoracenje ?? data.broj > granica,
+        })
       } catch {
-        if (!ctrl.signal.aborted) setBroj(null)
+        if (!ctrl.signal.aborted) setStanje(null)
       }
     }, 300)
     return () => { ctrl.abort(); clearTimeout(timer) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, periodMod, godina, mjesec, od, doDatum, opseg, filterKljuc, rasponNevazeci])
+  }, [open, periodMod, godina, mjesec, od, doDatum, opseg, preneseno, filterKljuc, rasponNevazeci])
 
   // `pregled` ne smije izvoziti — cijela komponenta je izvozni okidač (nakon svih
   // hook poziva, Rules of Hooks); okolna traka (npr. PlanViewSwitcher) ostaje.
@@ -95,8 +151,10 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
    * bijeloj stranici, a modal bi se već bio zatvorio. Modal se sada zatvara TEK
    * nakon uspješno snimljenog fajla.
    */
+  const prekoracenje = typeof stanje === "object" && stanje !== null && stanje.prekoracenje
+
   async function preuzmi() {
-    if (rasponNevazeci || preuzimanje) return
+    if (rasponNevazeci || preuzimanje || prekoracenje) return
     setPreuzimanje(true)
     try {
       const res = await fetch(`/api/plan-aktivnosti/izvoz?${buildParams(false).toString()}`)
@@ -131,16 +189,18 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
   }
 
   // Plan N16: nevažeći raspon NIJE isto što i pad brojanja — razdvojene poruke.
+  // C4: prekoračenje je treći, zaseban slučaj — broj je tačan, ali fajl neće nastati.
   const brojTekst =
     rasponNevazeci ? t("rasponNevazeci")
-    : broj === "loading" ? t("racunam")
-    : broj === null ? t("greskaBroj")
-    : t("brojAktivnosti", { broj })
+    : stanje === "loading" ? t("racunam")
+    : stanje === null ? t("greskaBroj")
+    : stanje.prekoracenje ? t("previseAktivnosti", { broj: stanje.broj, granica: stanje.granica })
+    : t("brojAktivnosti", { broj: stanje.broj })
 
   const linkKlase = cn("self-start rounded-sm text-sm text-brand hover:underline", FOCUS_RING)
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={promijeniOpen}>
       <DialogTrigger
         render={
           <Button
@@ -181,11 +241,11 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
         {/* Period: sažeto vs prilagođeno */}
         {!prilagodi ? (
           <div className="flex items-center justify-between text-sm">
-            <span><span className="text-muted-foreground">{t("period")}: </span>{t("periodOvajMjesec")}</span>
+            <span><span className="text-muted-foreground">{t("period")}: </span>{izvozPeriodLabel(trenutniPeriod, t("periodSvi"))}</span>
             <button
               type="button" className={linkKlase}
               data-testid="izvoz-prilagodi"
-              onClick={() => { setPeriodMod("om"); setPrilagodi(true) }}
+              onClick={() => setPrilagodi(true)}
             >
               <ChevronRight className="mr-1 inline-block h-[18px] w-[18px] shrink-0 align-text-bottom" aria-hidden />
               {t("prilagodi")}
@@ -234,7 +294,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                   </label>
                   {periodMod === "mj" && (
                     <>
-                      <Select value={String(mjesec)} onValueChange={(v) => setMjesec(Number(v))}>
+                      <Select value={String(mjesec)} onValueChange={(v) => setMjesec(Number(v))} items={mjesecItems}>
                         <SelectTrigger size="sm" className="w-32" data-testid="izvoz-mjesec" aria-label={t("periodMjesec")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {Array.from({ length: 12 }, (_, i) => (
@@ -243,7 +303,7 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                         </SelectContent>
                       </Select>
                       <Select value={String(godina)} onValueChange={(v) => setGodina(Number(v))}>
-                        <SelectTrigger size="sm" className="w-24" aria-label={t("periodGodina")}><SelectValue /></SelectTrigger>
+                        <SelectTrigger size="sm" className="w-24" data-testid="izvoz-mj-godina" aria-label={t("periodGodina")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {godine.map((g) => <SelectItem key={g} value={String(g)}>{g}</SelectItem>)}
                         </SelectContent>
@@ -272,6 +332,23 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
               </RadioGroup>
             </fieldset>
 
+            {/* Prenesene obaveze — mijenjaju period, ne filtere, pa stoje uz Period. */}
+            <div className="flex flex-col gap-1">
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={preneseno}
+                  disabled={!granica}
+                  onCheckedChange={(v) => setPreneseno(v === true)}
+                  data-testid="izvoz-preneseno"
+                  aria-label={t("preneseno")}
+                />
+                {t("preneseno")}
+              </label>
+              <p className="pl-6 text-xs text-muted-foreground">
+                {granica ? t("prenesenoOpis", { datum: formatDatum(granica) }) : t("prenesenoNedostupno")}
+              </p>
+            </div>
+
             {/* Opseg */}
             <fieldset className="flex flex-col gap-2" data-testid="izvoz-opseg">
               <legend className="text-xs font-medium text-muted-foreground mb-1">{t("opseg")}</legend>
@@ -291,9 +368,12 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
                 </label>
               </RadioGroup>
               {opseg === "filtrirano" && (
-                <p className="pl-6 text-xs text-muted-foreground">
-                  {aktivniFilteri.length > 0 ? t("filteriPrimijenjeni") : t("nemaFiltera")}
-                </p>
+                <>
+                  <p className="pl-6 text-xs text-muted-foreground" data-testid="izvoz-filteri-status">
+                    {aktivniFilteri.length > 0 ? t("filteriPrimijenjeni") : t("nemaFiltera")}
+                  </p>
+                  <p className="pl-6 text-xs text-muted-foreground">{t("opsegNapomena")}</p>
+                </>
               )}
             </fieldset>
 
@@ -310,11 +390,14 @@ export function PlanIzvozModal({ godine }: { godine: number[] }) {
 
         {/* Živi broj + akcija */}
         <div className="flex items-center justify-between border-t pt-3">
-          <span className="text-sm text-muted-foreground" data-testid="izvoz-broj">{brojTekst}</span>
+          <span
+            className={cn("text-sm", rasponNevazeci || prekoracenje ? "text-destructive" : "text-muted-foreground")}
+            data-testid="izvoz-broj"
+          >{brojTekst}</span>
           <Button
             type="button"
             onClick={() => void preuzmi()}
-            disabled={rasponNevazeci || preuzimanje}
+            disabled={rasponNevazeci || preuzimanje || prekoracenje}
             data-testid="izvoz-preuzmi"
           >
             <Download className="h-[18px] w-[18px] shrink-0" aria-hidden />{" "}

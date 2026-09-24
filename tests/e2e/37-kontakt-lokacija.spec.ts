@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
+import { idiNa, kreirajFirmuFiksturu, type FirmaFikstura } from "./fixtures"
 
 /**
  * Veza kontakt ↔ lokacija.
@@ -27,7 +27,9 @@ test.afterAll(async () => {
 })
 
 async function otvoriTab(page: Page, tab: "kontakti" | "lokacije") {
-  await page.goto(`/klijenti/${firma.klijentId}?tab=${tab}`)
+  // idiNa (ne goto): unos lokacije/kontakta revalidira ovu rutu, pa refresh navigacija
+  // na trenutni ?tab može prekinuti ovaj goto — v. komentar helpera u fixtures.ts.
+  await idiNa(page, `/klijenti/${firma.klijentId}?tab=${tab}`)
   // Čeka se nedvosmislen znak da je tab učitan: dugme za unos postoji u oba taba
   // i jedinstveno je, za razliku od redova kojih ima 0..N.
   await expect(

@@ -47,28 +47,75 @@ type Postavke = {
   zadnje_slanje_datum?: string | null
 } | null
 
-function makeSupabase(opts: { postavke?: Postavke; onUpdate?: () => void; updateError?: string }) {
+/**
+ * Fake `postavke` + fake `claim_pre_due` (B4).
+ *
+ * Dnevni marker se od B4 zauzima ATOMSKI, RPC-om — ne čitanjem na početku i upisom na
+ * kraju kruga. Mock zato oponaša STVARNU semantiku funkcije nad istim redom koji vraća
+ * select: claim uspije samo ako `zadnje_slanje_datum` NIJE traženi datum, i tada ga
+ * postavi. Bez toga bi test mogao tvrditi bilo šta o preskakanju kruga.
+ *
+ * `oslobodiPreDueKrug` (povrat claim-a kad pre-due padne) ide kroz običan update sa dva
+ * filtera — `update().eq("id",1).eq("zadnje_slanje_datum", datum).select("id")` — pa
+ * lanac mora podržati i taj oblik i vratiti pogođene redove.
+ */
+function makeSupabase(opts: {
+  postavke?: Postavke
+  onClaim?: () => void
+  claimError?: string
+  updateError?: string
+}) {
+  const stanje: Record<string, unknown> = { ...(opts.postavke ?? {}) }
+  const imaRed = opts.postavke !== null && opts.postavke !== undefined
   const updateCalls: Array<{ patch: Record<string, unknown> }> = []
+  const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = []
+  // O1 — otkucaj („srce") ide kroz isti klijent, ali NIJE dio toka odlučivanja: drži se
+  // odvojeno da tvrdnje o `claim_pre_due` ostanu tačne bez obzira na telemetriju.
+  const otkucaji: Array<Record<string, unknown>> = []
   const supabase = {
+    async rpc(fn: string, args: Record<string, unknown>) {
+      if (fn === "zabiljezi_cron_otkucaj") {
+        otkucaji.push(args)
+        return { data: null, error: null }
+      }
+      rpcCalls.push({ fn, args })
+      opts.onClaim?.()
+      if (fn !== "claim_pre_due") throw new Error(`neočekivan rpc(${fn}) u testu`)
+      if (opts.claimError) return { data: null, error: { message: opts.claimError } }
+      const datum = args.p_datum as string
+      if (stanje.zadnje_slanje_datum === datum) return { data: null, error: null }
+      stanje.zadnje_slanje_datum = datum
+      return { data: datum, error: null }
+    },
     from(table: string) {
       if (table !== "postavke") throw new Error(`neočekivan from(${table}) u testu`)
+      const primijeni = (patch: Record<string, unknown>) => {
+        updateCalls.push({ patch })
+        if (opts.updateError) return { data: null, error: { message: opts.updateError } }
+        Object.assign(stanje, patch)
+        return { data: [{ id: 1 }], error: null }
+      }
       return {
         select: () => ({
           eq: () => ({
-            maybeSingle: async () => ({ data: opts.postavke ?? null, error: null }),
+            maybeSingle: async () => ({ data: imaRed ? stanje : null, error: null }),
           }),
         }),
         update: (patch: Record<string, unknown>) => ({
-          eq: async () => {
-            updateCalls.push({ patch })
-            opts.onUpdate?.()
-            return opts.updateError ? { error: { message: opts.updateError } } : { error: null }
-          },
+          eq: () => ({
+            // drugi filter (`zadnje_slanje_datum = datum`) → pogađa samo vlastiti claim
+            eq: (_kolona: string, vrijednost: unknown) => ({
+              select: async () =>
+                stanje.zadnje_slanje_datum === vrijednost
+                  ? primijeni(patch)
+                  : { data: [], error: null },
+            }),
+          }),
         }),
       }
     },
   }
-  return { supabase: supabase as unknown as SupabaseClient<Database>, updateCalls }
+  return { supabase: supabase as unknown as SupabaseClient<Database>, updateCalls, rpcCalls, otkucaji, stanje }
 }
 
 function req(method: "GET" | "POST", opts?: { withAuth?: boolean; body?: unknown }): Request {
@@ -135,8 +182,8 @@ describe("GET /api/cron/reminders", () => {
     expect(runPostDueMock).not.toHaveBeenCalled()
   })
 
-  it("3. marker je današnji lokalni datum → runReminders NE, runPostDue DA, marker se ne prepisuje", async () => {
-    const { supabase, updateCalls } = makeSupabase({
+  it("3. marker je današnji lokalni datum → runReminders NE, runPostDue DA, claim se ne ni pokušava", async () => {
+    const { supabase, updateCalls, rpcCalls } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-08" },
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
@@ -149,17 +196,21 @@ describe("GET /api/cron/reminders", () => {
     expect(runRemindersMock).not.toHaveBeenCalled()
     expect(runPostDueMock).toHaveBeenCalledTimes(1)
     expect(updateCalls).toHaveLength(0) // marker se NE prepisuje
+    expect(rpcCalls).toHaveLength(0) // jeftin predfiltar je već odlučio — RPC nije potreban
     expect(body.preDue).toEqual({ sent: [], skipped: [], errors: [], deferred: 0, preskocen: "vec_slato_danas" })
   })
 
-  it("4. marker nije današnji → oba se pozivaju, marker se upisuje PRIJE runPostDue", async () => {
+  it("4. marker nije današnji → claim se uzima PRIJE runReminders, pa tek onda post-due", async () => {
     const callOrder: string[] = []
-    const { supabase, updateCalls } = makeSupabase({
+    const { supabase, rpcCalls, stanje } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
-      onUpdate: () => callOrder.push("marker"),
+      onClaim: () => callOrder.push("claim"),
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
-    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runRemindersMock.mockImplementation(async () => {
+      callOrder.push("preDue")
+      return { sent: [], skipped: [], errors: [], deferred: 0 }
+    })
     runPostDueMock.mockImplementation(async () => {
       callOrder.push("postDue")
       return { sent: [], skipped: [], errors: [] }
@@ -170,10 +221,67 @@ describe("GET /api/cron/reminders", () => {
     expect(res.status).toBe(200)
     expect(runRemindersMock).toHaveBeenCalledTimes(1)
     expect(runPostDueMock).toHaveBeenCalledTimes(1)
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0]!.patch).toEqual({ zadnje_slanje_datum: "2026-07-08" })
-    // Dokaz REDOSLIJEDA, ne samo da su se oba desila: marker mora biti upisan prije post-due poziva.
-    expect(callOrder).toEqual(["marker", "postDue"])
+    expect(rpcCalls).toEqual([{ fn: "claim_pre_due", args: { p_datum: "2026-07-08" } }])
+    expect(stanje.zadnje_slanje_datum).toBe("2026-07-08")
+    // Dokaz REDOSLIJEDA: dan se zauzima PRIJE nego što ijedan mejl krene — paralelni
+    // poziv u tom prozoru mora naći zauzeto, a ne slati isti krug drugi put.
+    expect(callOrder).toEqual(["claim", "preDue", "postDue"])
+  })
+
+  it("4b. claim vrati prazno (drugi run je već uzeo dan) → pre-due se preskače, post-due ide dalje", async () => {
+    // Predfiltar ovdje NE pomaže: `zadnje_slanje_datum` je jučerašnji jer je paralelni
+    // run još u toku i marker upisuje tek kroz svoj claim. Upravo je to prozor u kojem
+    // je stara ruta pokretala isti krug drugi put.
+    const { supabase, rpcCalls } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+    })
+    // Paralelni run „stigne prvi": marker skoči na današnji tik prije našeg claim-a.
+    const supa = supabase as unknown as { rpc: (fn: string, a: Record<string, unknown>) => Promise<unknown> }
+    const original = supa.rpc.bind(supa)
+    supa.rpc = async (fn, a) => {
+      await original(fn, { ...a, p_datum: "2026-07-08" }) // tuđi claim
+      return original(fn, a) // naš — mora naći zauzeto
+    }
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(body.preDue.preskocen).toBe("vec_slato_danas")
+    expect(runPostDueMock).toHaveBeenCalledTimes(1)
+    expect(rpcCalls.length).toBeGreaterThan(0)
+  })
+
+  it("4c. DVA preklopljena poziva nad ISTIM redom → runReminders se pokreće TAČNO JEDNOM", async () => {
+    // Srž B4: pre-due krug traje do ~50 s, a marker se ranije upisivao TEK na kraju.
+    // Dva poziva u tom prozoru (Vercel retry, drugi region, „Pokreni sada" povrh cron-a)
+    // oba su vidjela jučerašnji marker i oba su slala isti krug — mejl ide prije upisa u
+    // `podsjetnici`, pa unique tamo hvata duplikat kad je već otišao klijentu.
+    const { supabase, rpcCalls, stanje } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    // Spor krug: drugi zahtjev stiže dok prvi još radi.
+    runRemindersMock.mockImplementation(
+      () => new Promise((r) => setTimeout(() => r({ sent: [], skipped: [], errors: [], deferred: 0 }), 50)),
+    )
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const oba = Promise.all([GET(req("GET")), GET(req("GET"))])
+    await vi.advanceTimersByTimeAsync(100)
+    const [a, b] = await oba
+    const tijela = [await a.json(), await b.json()]
+
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    // Dan je zauzet ODMAH (prije prvog mejla), pa ga drugi poziv više ne dobija — bilo
+    // preko claim-a, bilo preko predfiltra koji već vidi zauzeto. Ranije su oba slala.
+    expect(rpcCalls.length).toBeGreaterThanOrEqual(1)
+    expect(tijela.filter((t) => t.preDue.preskocen === "vec_slato_danas")).toHaveLength(1)
+    expect(stanje.zadnje_slanje_datum).toBe("2026-07-08")
+    expect(runPostDueMock).toHaveBeenCalledTimes(2) // post-due nije vezan za dnevni marker
   })
 
   it("5. neautorizovan zahtjev → 401, ne otkriva ništa o konfiguraciji", async () => {
@@ -192,7 +300,7 @@ describe("GET /api/cron/reminders", () => {
 
   it("6. bez RESEND_API_KEY i bez dryRun, gating prošao → 500 sa jasnom porukom", async () => {
     envMock.RESEND_API_KEY = undefined
-    const { supabase, updateCalls } = makeSupabase({
+    const { supabase, updateCalls, rpcCalls, stanje } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
@@ -204,13 +312,18 @@ describe("GET /api/cron/reminders", () => {
     expect(body.error).toMatch(/RESEND_API_KEY/)
     expect(runRemindersMock).not.toHaveBeenCalled()
     expect(runPostDueMock).not.toHaveBeenCalled()
-    expect(updateCalls).toHaveLength(0) // 500 je PRIJE try bloka (prije marker upisa i pre/post-due poziva)
+    expect(updateCalls).toHaveLength(0) // 500 je PRIJE try bloka (prije pre/post-due poziva)
+    // B4: claim se NE smije uzeti na putu koji ionako ne šalje — inače bi 500 zbog
+    // nedostajućeg ključa pojeo dnevni krug i pre-due se do sutra ne bi ni pokušao.
+    expect(rpcCalls).toHaveLength(0)
+    expect(stanje.zadnje_slanje_datum).toBe("2026-07-07")
   })
 
-  it("7. POST (ručno) sa markerom == danas → gating blok se NE izvršava, runReminders SE poziva", async () => {
-    // Isti postavke red kao scenario 3, gdje bi GET preskočio pre-due zbog markera —
-    // ovdje dokazujemo da POST tu granu uopšte ne dodiruje (gating blok je `if (req.method === "GET")`).
-    const { supabase, updateCalls } = makeSupabase({
+  it("7. POST (ručno) sa markerom == danas → sat/prekidač se preskaču, ali dnevni claim NE (B4)", async () => {
+    // Promjena ponašanja iz B4: „Pokreni sada" je ranije zaobilazilo marker POTPUNO,
+    // pa je klik poslije jutarnjeg cron kruga slao ISTE podsjetnike drugi put
+    // (runReminders šalje mejl prije upisa u `podsjetnici` — unique tamo hvata prekasno).
+    const { supabase, rpcCalls } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-08" },
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
@@ -221,11 +334,29 @@ describe("GET /api/cron/reminders", () => {
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(runRemindersMock).toHaveBeenCalledTimes(1)
+    expect(runRemindersMock).not.toHaveBeenCalled() // dan je već odrađen
+    expect(body.preDue.preskocen).toBe("vec_slato_danas")
+    // POST ne čita `postavke` (predfiltar je GET-only), pa claim MORA biti pokušan.
+    expect(rpcCalls).toEqual([{ fn: "claim_pre_due", args: { p_datum: "2026-07-08" } }])
+    // Post-due i digest nisu vezani za dnevni marker i idu dalje.
     expect(runPostDueMock).toHaveBeenCalledTimes(1)
-    // Diskriminator skip-grane: samo preskočen pre-due (GET+marker) ima `preskocen`.
+  })
+
+  it("7c. POST sa jučerašnjim markerom → claim uspije i pre-due se stvarno pokreće", async () => {
+    const { supabase, stanje } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+
+    const res = await POST(req("POST"))
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(runRemindersMock).toHaveBeenCalledTimes(1)
     expect(body.preDue.preskocen).toBeUndefined()
-    expect(updateCalls).toHaveLength(0) // POST nikad ne upisuje dnevni marker
+    expect(stanje.zadnje_slanje_datum).toBe("2026-07-08")
   })
 
   it("7b. POST sa vrijeme_slanja_sat u budućnosti → sat-gate se ne provjerava, runReminders SE poziva", async () => {
@@ -272,29 +403,33 @@ describe("GET /api/cron/reminders", () => {
     expect(runPostDueMock).toHaveBeenCalledTimes(1)
   })
 
-  it("9. greška upisa markera (updateError) se loguje preko console.error, ali odgovor i dalje uspije", async () => {
+  it("9. greška claim-a → pre-due se preskače (fail-closed), post-due i digest nastavljaju, greška se loguje", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {})
-    const { supabase, updateCalls } = makeSupabase({
+    const { supabase } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
-      updateError: "upis nije uspio",
+      claimError: "claim_pre_due ne postoji",
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
-    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
     runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
 
     const res = await GET(req("GET"))
+    const body = await res.json()
 
-    expect(res.status).toBe(200) // greška upisa markera ne smije srušiti response
-    expect(updateCalls).toHaveLength(1) // upis je pokušan
-    expect(runPostDueMock).toHaveBeenCalledTimes(1) // i dalje nastavlja na post-due
+    expect(res.status).toBe(200) // pad claim-a ne ruši cijeli cron
+    // Bez potvrđenog claim-a pre-due se NE pokreće: propušten krug je manja šteta od
+    // duplog mejla klijentu (drugi run može biti u toku upravo sada).
+    expect(runRemindersMock).not.toHaveBeenCalled()
+    expect(body.preDue.preskocen).toBe("marker_greska")
+    expect(runPostDueMock).toHaveBeenCalledTimes(1) // ima vlastitu idempotenciju
+    expect(runDigestMock).toHaveBeenCalledTimes(1)
     expect(spy).toHaveBeenCalledWith(
-      expect.stringContaining("upis markera zadnje_slanje_datum nije uspio"),
-      "upis nije uspio",
+      expect.stringContaining("claim_pre_due nije uspio"),
+      "claim_pre_due ne postoji",
     )
   })
 
-  it("10. runPostDue baci grešku → 500, ALI marker je svejedno upisan (svrha redoslijeda marker→post-due)", async () => {
-    const { supabase, updateCalls } = makeSupabase({
+  it("10. runPostDue baci grešku → 500, ALI dan ostaje zauzet (pre-due je odrađen, ne ponavlja se)", async () => {
+    const { supabase, stanje } = makeSupabase({
       postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
     })
     createAdminSupabaseClientMock.mockReturnValue(supabase)
@@ -306,10 +441,28 @@ describe("GET /api/cron/reminders", () => {
 
     expect(res.status).toBe(500)
     expect(body.error).toContain("post-due je pukao")
-    // Ovo je cijela svrha upisa markera PRIJE runPostDue poziva (vidi komentar u route.ts):
-    // pad u post-due putanji ne smije poništiti da je pre-due danas već uspješno odrađen.
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0]!.patch).toEqual({ zadnje_slanje_datum: "2026-07-08" })
+    // Claim se vraća SAMO kad padne sam pre-due (prije prvog mejla). Pad post-due puta
+    // ne smije poništiti da je pre-due danas već uspješno poslao mejlove.
+    expect(stanje.zadnje_slanje_datum).toBe("2026-07-08")
+  })
+
+  it("10b. runReminders baci PRIJE prvog mejla → 500 i dan se VRAĆA u opticaj (claim oslobođen)", async () => {
+    const { supabase, updateCalls, stanje } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: "2026-07-07" },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    runRemindersMock.mockRejectedValue(new Error("get_due_podsjetnici ne postoji"))
+
+    const res = await GET(req("GET"))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.error).toContain("get_due_podsjetnici ne postoji")
+    // runReminders baca isključivo prije prvog poslanog mejla (per-red greške hvata
+    // iznutra), pa bi zadržan claim značio dan bez ijednog podsjetnika.
+    expect(updateCalls).toEqual([{ patch: { zadnje_slanje_datum: null } }])
+    expect(stanje.zadnje_slanje_datum).toBeNull()
+    expect(runPostDueMock).not.toHaveBeenCalled()
   })
 
   it("11. sat === vrijeme_slanja_sat (granica) → NE preskače, šalje se", async () => {
@@ -421,5 +574,67 @@ describe("GET /api/cron/reminders", () => {
     expect(runRemindersMock).not.toHaveBeenCalled()
     expect(runPostDueMock).toHaveBeenCalledTimes(1)
     expect(runDigestMock).toHaveBeenCalledTimes(1)
+  })
+
+  // ── O1: otkucaj („srce") ──────────────────────────────────────────────────
+  // Bez ovoga mrtav cron i miran dan ostavljaju identičan trag u bazi (nikakav).
+  it("otkucaj se upisuje i kad krug NIŠTA ne pošalje (ishod ok)", async () => {
+    const { supabase, otkucaji } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(true)
+    runRemindersMock.mockResolvedValue({ sent: [], skipped: [], errors: [], deferred: 0 })
+    runPostDueMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+    runDigestMock.mockResolvedValue({ sent: [], skipped: [], errors: [] })
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z"))
+
+    await GET(req("GET"))
+
+    expect(otkucaji).toHaveLength(1)
+    expect(otkucaji[0]!.p_posao).toBe("podsjetnici")
+    expect(otkucaji[0]!.p_ishod).toBe("ok")
+    expect(otkucaji[0]!.p_detalji).toMatchObject({ poslato: 0, greske: 0 })
+  })
+
+  it("preskočen krug (prekidač isključen) se bilježi kao `preskoceno`, ne kao tišina", async () => {
+    const { supabase, otkucaji } = makeSupabase({ postavke: { podsjetnici_aktivni: false } })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(true)
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z"))
+
+    await GET(req("GET"))
+
+    expect(otkucaji).toHaveLength(1)
+    expect(otkucaji[0]!.p_ishod).toBe("preskoceno")
+    expect(otkucaji[0]!.p_detalji).toMatchObject({ razlog: "podsjetnici_iskljuceni" })
+  })
+
+  it("pad kruga se bilježi kao `greska` sa porukom", async () => {
+    const { supabase, otkucaji } = makeSupabase({
+      postavke: { podsjetnici_aktivni: true, vrijeme_slanja_sat: 8, zadnje_slanje_datum: null },
+    })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(true)
+    runRemindersMock.mockRejectedValue(new Error("get_due_podsjetnici ne postoji"))
+    vi.setSystemTime(new Date("2026-07-20T09:00:00Z"))
+
+    const res = await GET(req("GET"))
+
+    expect(res.status).toBe(500)
+    expect(otkucaji).toHaveLength(1)
+    expect(otkucaji[0]!.p_ishod).toBe("greska")
+    expect(otkucaji[0]!.p_greska).toContain("get_due_podsjetnici")
+  })
+
+  it("401 NE piše otkucaj — inače bi bilo ko sa URL-om mogao lažirati „sistem radi”", async () => {
+    const { supabase, otkucaji } = makeSupabase({ postavke: { podsjetnici_aktivni: true } })
+    createAdminSupabaseClientMock.mockReturnValue(supabase)
+    isCronAuthorizedMock.mockReturnValue(false)
+
+    const res = await GET(req("GET", { withAuth: false }))
+
+    expect(res.status).toBe(401)
+    expect(otkucaji).toHaveLength(0)
   })
 })

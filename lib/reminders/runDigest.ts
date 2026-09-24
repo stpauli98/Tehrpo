@@ -12,7 +12,19 @@ import { lokalniSatIDatum } from "@/lib/reminders/gating"
 export type SentItem = { email: string; brojStavki: number; resendId: string; dryRun: boolean }
 export type SkipItem = { email: string; razlog: string }
 export type ErrItem = { email: string; message: string }
-export type DigestRunResult = { sent: SentItem[]; skipped: SkipItem[]; errors: ErrItem[] }
+export type DigestRunResult = {
+  sent: SentItem[]
+  skipped: SkipItem[]
+  errors: ErrItem[]
+  /**
+   * Koliko primalaca je ostalo NEOBRAĐENO (cap ili istrošen vremenski budžet).
+   * Nije gubitak: bez claim-a ostaju kandidati i za sljedeći prolaz, a kadenca
+   * (trebaDigest) ih drži u igri i van ponedjeljka dok ne dobiju digest.
+   */
+  deferred: number
+  /** true kad je prekid izazvao vremenski budžet (a ne cap). */
+  prekinutoZbogVremena: boolean
+}
 
 type Outcome =
   | ({ kind: "sent" } & SentItem)
@@ -43,29 +55,43 @@ const PROZOR_DANA = 14
  * Datum je uvijek LOKALNI BEOGRADSKI (Europe/Belgrade): isti izvor i za ključ u
  * ledgeru i za odluku o kadenci. Da se razilaze, u kasnim satima bi ključ i
  * odluka gledali različite dane.
+ *
+ * OGRADE PROTIV PREKIDA (maxPerRun + deadlineAt): isti razlog kao u runPostDue —
+ * kill između poslatog mejla i upisa ishoda ostavlja red 'u_toku' i za 15 minuta
+ * šalje drugi digest. Prolaz zato staje sam prije roka i ostatak prijavljuje kroz
+ * `deferred`; neobrađeni primaoci nemaju claim pa ih sljedeći prolaz preuzima.
  */
 export async function runDigest(
   supabase: SupabaseClient<Database>,
   deps: {
     send?: (a: SendArgs) => Promise<SendResult>
     now?: Date
+    maxPerRun?: number
     batchSize?: number
     delayMs?: number
     dryRun?: boolean
+    /** Apsolutni rok (Date.now() skala). Kad istekne, prolaz staje i ostatak ide u `deferred`. */
+    deadlineAt?: number
+    /** Izvor vremena — samo radi determinističkih testova; produkcija koristi Date.now. */
+    sada?: () => number
   } = {},
 ): Promise<DigestRunResult> {
   const send = deps.send ?? sendEmail
   const now = deps.now ?? new Date()
   const isDryRun = deps.dryRun === true
+  const maxPerRun = Math.max(1, deps.maxPerRun ?? (Number(env.REMINDER_MAX_PER_RUN) || 90))
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))
   const delayMs = deps.delayMs ?? (Number(env.REMINDER_BATCH_DELAY_MS) || 1100)
+  const deadlineAt = deps.deadlineAt
+  const sada = deps.sada ?? (() => Date.now())
+  const prazno = (): DigestRunResult => ({ sent: [], skipped: [], errors: [], deferred: 0, prekinutoZbogVremena: false })
 
   const { datum: danas } = lokalniSatIDatum(now)
 
   const { data: istekli, error } = await supabase.rpc("get_istekli_termini", { p_danas: danas })
   if (error) throw new Error(error.message)
   const rows = istekli ?? []
-  if (rows.length === 0) return { sent: [], skipped: [], errors: [] }
+  if (rows.length === 0) return prazno()
 
   const { index, base } = await loadRecipientIndex(supabase)
 
@@ -75,7 +101,7 @@ export async function runDigest(
     ciklusRok: r.ciklus_rok!, danaDoCiklusa: r.dana_do_ciklusa!, lokacijaNaziv: r.lokacija_naziv,
   }))
   const grupe = digestGroups(stavke, index, base)
-  if (grupe.size === 0) return { sent: [], skipped: [], errors: [] }
+  if (grupe.size === 0) return prazno()
 
   // Jedan upit za cijeli prozor umjesto po primaocu — na desetak primalaca to je
   // razlika između jednog i deset round-tripova.
@@ -185,15 +211,31 @@ export async function runDigest(
   }
 
   const zadaci = [...grupe.entries()].map(([email, lista]) => () => obradiPrimaoca(email, lista))
+  const zaObradu = zadaci.slice(0, maxPerRun)
+  let deferred = zadaci.length - zaObradu.length
+  let prekinutoZbogVremena = false
+  if (deferred > 0) {
+    console.warn(`[digest] cap ${maxPerRun}/prolaz — odgođeno ${deferred} primalaca za sljedeći prolaz`)
+  }
+
   const outcomes: Outcome[] = []
-  for (let i = 0; i < zadaci.length; i += batchSize) {
-    const grupa = zadaci.slice(i, i + batchSize)
+  for (let i = 0; i < zaObradu.length; i += batchSize) {
+    // Isto obrazloženje kao u runPostDue: prekid PRIJE grupe, nikad između mejla i upisa.
+    if (deadlineAt !== undefined && sada() >= deadlineAt) {
+      deferred += zaObradu.length - i
+      prekinutoZbogVremena = true
+      break
+    }
+    const grupa = zaObradu.slice(i, i + batchSize)
     // eslint-disable-next-line no-await-in-loop -- throttling: namjerno sekvencijalne grupe radi Resend rate-limita
     outcomes.push(...(await Promise.all(grupa.map((f) => f()))))
-    if (delayMs > 0 && i + batchSize < zadaci.length) {
+    if (delayMs > 0 && i + batchSize < zaObradu.length) {
       // eslint-disable-next-line no-await-in-loop -- pauza između grupa (rate-limit)
       await new Promise((resolve) => setTimeout(resolve, delayMs))
     }
+  }
+  if (prekinutoZbogVremena) {
+    console.warn(`[digest] vremenski budžet istekao — odgođeno ${deferred} primalaca za sljedeći prolaz`)
   }
 
   const sent: SentItem[] = []
@@ -204,5 +246,5 @@ export async function runDigest(
     else if (o.kind === "skip") skipped.push({ email: o.email, razlog: o.razlog })
     else errors.push({ email: o.email, message: o.message })
   }
-  return { sent, skipped, errors }
+  return { sent, skipped, errors, deferred, prekinutoZbogVremena }
 }

@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { maskiraj, sanitizujSql, filtrirajNamjernePolicyless } from "./sql"
+import {
+  maskiraj,
+  sanitizujSql,
+  filtrirajNamjernePolicyless,
+  filtrirajOznaceneIzuzetke,
+} from "./sql"
 import { provjeriSql, type Nalaz } from "./pravila"
 
 /** Otvarač/zatvarač SQL blok komentara, sastavljeni u vrijeme izvršavanja — doslovno
@@ -597,5 +602,63 @@ describe("filtrirajNamjernePolicyless", () => {
       ),
     ]
     expect(filtrirajNamjernePolicyless(nalazi, allowlist)).toEqual(nalazi)
+  })
+})
+
+describe("filtrirajOznaceneIzuzetke", () => {
+  const MARKER = "-- integracija-dozvoli: zastita-uklonjena — politike ne koristi nijedan tok"
+  const uPutanji = (putanja: string, pravilo = "zastita-uklonjena"): Nalaz => ({
+    putanja,
+    linija: 1,
+    pravilo,
+    poruka: "obrisana RLS politika p sa tabele t bez zamjene",
+    tabela: "t",
+  })
+
+  it("izbacuje 'zastita-uklonjena' za fajl koji nosi marker sa obrazloženjem", () => {
+    const nalazi = [uPutanji("a.sql")]
+    expect(filtrirajOznaceneIzuzetke(nalazi, new Map([["a.sql", `${MARKER}\ndrop policy p on t;`]]))).toEqual([])
+  })
+
+  it("marker u JEDNOM fajlu ne izuzima nalaz DRUGOG fajla", () => {
+    // Filter mora biti po-fajl. Da gleda globalno, jedna migracija sa markerom bi utišala
+    // sve ostale u istom prolazu — tiho i bez ikakvog traga.
+    const nalazi = [uPutanji("a.sql"), uPutanji("b.sql")]
+    const sirovo = new Map([
+      ["a.sql", `${MARKER}\ndrop policy p on t;`],
+      ["b.sql", "drop policy p on t;"],
+    ])
+    expect(filtrirajOznaceneIzuzetke(nalazi, sirovo)).toEqual([uPutanji("b.sql")])
+  })
+
+  it("goli marker BEZ razloga ne vrijedi — izuzetak mora nositi obrazloženje", () => {
+    const nalazi = [uPutanji("a.sql")]
+    for (const goli of [
+      "-- integracija-dozvoli: zastita-uklonjena",
+      "-- integracija-dozvoli: zastita-uklonjena —",
+      "-- integracija-dozvoli: zastita-uklonjena —   ",
+    ]) {
+      expect(filtrirajOznaceneIzuzetke(nalazi, new Map([["a.sql", `${goli}\ndrop policy p on t;`]]))).toEqual(
+        nalazi,
+      )
+    }
+  })
+
+  it("NE dira nalaze drugih pravila ni kad fajl nosi marker", () => {
+    // Marker izuzima isključivo `zastita-uklonjena`. Da izuzima sve, jedan komentar bi
+    // ugasio i `tabela-bez-politike` i `rls-iskljucen` u istom fajlu.
+    const nalazi = [uPutanji("a.sql", "tabela-bez-politike"), uPutanji("a.sql", "rls-iskljucen")]
+    expect(filtrirajOznaceneIzuzetke(nalazi, new Map([["a.sql", MARKER]]))).toEqual(nalazi)
+  })
+
+  it("nalaz čija putanja nije u mapi se ZADRŽAVA (fail-loud)", () => {
+    const nalazi = [uPutanji("nepoznat.sql")]
+    expect(filtrirajOznaceneIzuzetke(nalazi, new Map([["a.sql", MARKER]]))).toEqual(nalazi)
+  })
+
+  it("marker mora biti SQL komentar — isti tekst kao gola naredba ne vrijedi", () => {
+    const nalazi = [uPutanji("a.sql")]
+    const bezCrtica = "integracija-dozvoli: zastita-uklonjena — razlog"
+    expect(filtrirajOznaceneIzuzetke(nalazi, new Map([["a.sql", bezCrtica]]))).toEqual(nalazi)
   })
 })

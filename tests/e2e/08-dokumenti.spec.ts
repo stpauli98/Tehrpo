@@ -63,7 +63,25 @@ test.describe("Faza Dokumenti — termin sheet", () => {
   })
 
   test("preuzimanje pokreće download neprazan fajl", async ({ page }) => {
+    // Budžet: ovo je jedino mjesto u CIJELOM paketu koje pogodi `/api/dokumenti/[id]`, pa dev
+    // server tu rutu tek kompajlira, a za njom ide još jedan cloud round-trip za potpisani URL.
+    // Pod punim paralelnim prolazom je 30s podrazumijevanog budžeta znalo isteći na
+    // `waitForEvent("download")` — i to baš u chromium-u, koji ide prvi i plaća kompajliranje,
+    // dok webkit poslije njega prolazi za 7s. Aplikacija je ispravna (ruta preuzimanja nije
+    // dirana u ovom ciklusu; 08:65 je prošao izolovano na oba preglednika).
+    test.setTimeout(60_000)
+
     await otvoriPrviTermin(page)
+
+    // Čekanje na STANJE, ne na vrijeme: prije nego što krene mjerenje download eventa, ruta
+    // mora dokazano odgovarati. Validan ali nepostojeći UUID → 404 znači: ruta je živa i
+    // kompajlirana, a tekuća uloga smije preuzimati (uloga `pregled` bi ovdje dobila 403).
+    // Bez ovoga se kompajliranje mjeri kao "preglednik nije pokrenuo preuzimanje".
+    const zagrijavanje = await page.request.get(
+      "/api/dokumenti/00000000-0000-0000-0000-000000000000",
+    )
+    expect(zagrijavanje.status()).toBe(404)
+
     const dugme = page.getByTestId("dokument-download").first()
     await expect(dugme).toBeVisible()
     const [download] = await Promise.all([page.waitForEvent("download"), dugme.click()])

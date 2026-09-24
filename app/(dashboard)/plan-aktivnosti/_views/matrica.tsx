@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl"
 import { GreskaUcitavanja } from "@/components/domain/GreskaUcitavanja"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PrikazToolbar } from "@/components/domain/PrikazToolbar"
-import { MatrixGrid } from "@/components/domain/MatrixGrid"
+import { MatrixGrid, type MatrixPreneseno } from "@/components/domain/MatrixGrid"
+import { prenesenoUlazi, godisnjeKolone, PRENESENO_COL } from "@/components/domain/matrix-preneseno"
 import { MatrixLegenda } from "@/components/domain/MatrixLegenda"
 import type { MatrixColumn } from "@/lib/matrix"
 import { TerminSheet } from "@/components/domain/TerminSheet"
@@ -68,9 +69,11 @@ export function MatricaView({
     naziv: k.naziv,
   }))
   const termini = (data?.termini ?? []) as TerminRow[]
+  const preneseniTermini = (data?.preneseni ?? []) as TerminRow[]
 
   let matrixRows: MatrixRow[] = []
   let kolone: MatrixColumn[] = []
+  let preneseno: MatrixPreneseno | undefined
   let emptyMessage = t("izaberiteKlijenta")
 
   if (mode === "mjesec") {
@@ -88,24 +91,29 @@ export function MatricaView({
     kolone = klijenti.map((k) => ({ id: k.id, label: k.naziv }))
     emptyMessage = t("nemaTerminaMjesec")
   } else if (klijentId) {
-    const inputs: MatrixInput[] = termini
-      .filter((termin) => termin.id && termin.vrsta_provjere_id && termin.datum_prikaza)
-      .map((termin) => ({
-        id: termin.id!,
-        vrstaId: termin.vrsta_provjere_id!,
-        vrstaNaziv: termin.vrsta_naziv ?? "—",
-        columnKey: String(Number(termin.datum_prikaza!.slice(5, 7))),
-        dan: Number(termin.datum_prikaza!.slice(8, 10)),
-        status: toDerivedStatus(termin.status_izvedeni),
-      }))
-    matrixRows = buildMatrix(inputs)
+    // Prenesene idu PRVE — buildMatrix čuva redoslijed pojavljivanja, pa vrsta koja
+    // postoji samo kao zaostatak iz ranije godine dobija svoj red na vrhu.
+    const zaostaci = prenesenoUlazi(preneseniTermini)
+    const validni = (r: TerminRow) => r.id && r.vrsta_provjere_id && r.datum_prikaza
+    const inputs: MatrixInput[] = termini.filter(validni).map((termin) => ({
+      id: termin.id!,
+      vrstaId: termin.vrsta_provjere_id!,
+      vrstaNaziv: termin.vrsta_naziv ?? "—",
+      columnKey: String(Number(termin.datum_prikaza!.slice(5, 7))),
+      dan: Number(termin.datum_prikaza!.slice(8, 10)),
+      status: toDerivedStatus(termin.status_izvedeni),
+    }))
+    matrixRows = buildMatrix([...zaostaci.inputs, ...inputs])
     const currentMonthNum = Number(today.slice(5, 7))
     const currentYearNum = Number(today.slice(0, 4)) // isti todayIso snapshot kao mjesec — bez ponoćnog racea
-    kolone = Array.from({ length: 12 }, (_, i) => ({
+    const mjeseci: MatrixColumn[] = Array.from({ length: 12 }, (_, i) => ({
       id: String(i + 1),
       label: monthName(i + 1).slice(0, 3),
       isCurrent: godina === currentYearNum && i + 1 === currentMonthNum,
     }))
+    const imaZaostataka = zaostaci.inputs.length > 0
+    kolone = godisnjeKolone(mjeseci, imaZaostataka, t("prenesenoKolona"))
+    if (imaZaostataka) preneseno = { colId: PRENESENO_COL, datumi: zaostaci.datumi }
     emptyMessage = t("nemaTerminaGodina")
   }
 
@@ -113,6 +121,10 @@ export function MatricaView({
   const multiHref = (vrstaId: string, colId: string): string =>
     mode === "mjesec"
       ? href(`/plan-aktivnosti?view=lista&klijent_id=${colId}&vrsta_id=${vrstaId}&mjesec=${mjesec}&godina=${godina}`)
+      : colId === PRENESENO_COL
+      // „preneseno" nije mjesec — lista nema filter „prije godine", pa vodimo na
+      // sve termine te vrste kod tog klijenta (mjesec=svi ne postavlja datumski raspon).
+      ? href(`/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=svi`)
       : href(`/plan-aktivnosti?view=lista&klijent_id=${klijentId}&vrsta_id=${vrstaId}&mjesec=${colId}&godina=${godina}`)
 
   const currentSearch = searchParams.toString()
@@ -167,7 +179,14 @@ export function MatricaView({
             emptyMessage={emptyMessage}
             multiHref={multiHref}
             fillWidth={mode === "klijent"}
+            preneseno={preneseno}
           />
+          {preneseno && (
+            <p className="text-xs text-muted-foreground" data-testid="matrix-preneseno-napomena">
+              {/* String, ne broj — inače bi next-intl formatirao 2027 kao "2.027". */}
+              {t("prenesenoObjasnjenje", { godina: String(godina) })}
+            </p>
+          )}
           <MatrixLegenda />
         </div>
       ) : (

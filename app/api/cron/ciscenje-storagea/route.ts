@@ -1,5 +1,6 @@
 /**
- * Noćno metenje osirotjelih objekata iz bucketa `tehpro-dokumenti` (cron: vercel.json).
+ * Noćno metenje osirotjelih objekata iz bucketa dokumenata (cron: vercel.json).
+ * Ime bucketa dolazi iz `DOKUMENTI_BUCKET` env-a — v. `lib/dokumenti/bucket.ts`.
  *
  * BRISANJE JE ISKLJUČENO DOK SE IZRIČITO NE UKLJUČI: bez `CISCENJE_STORAGEA_APPLY=1`
  * ruta radi PROBNI prolaz — izračuna odluku, ispiše u log tačno šta bi obrisala i vrati
@@ -13,6 +14,7 @@
 import { NextResponse } from "next/server"
 import { createAdminSupabaseClient } from "@/lib/supabase/admin"
 import { isCronAuthorized } from "@/lib/reminders/cronAuth"
+import { zabiljeziOtkucaj, ishodIzOdgovora } from "@/lib/reminders/otkucaj"
 import { odluciSta } from "@/lib/dokumenti/sweep"
 import { listajFajlove, svePutanjeUBazi, DOKUMENTI_BUCKET } from "@/lib/dokumenti/popis"
 import { env } from "@/lib/env"
@@ -29,7 +31,7 @@ function brisanjeUkljuceno(): boolean {
   return env.CISCENJE_STORAGEA_APPLY === "1"
 }
 
-async function handle(req: Request) {
+async function izvrsi(req: Request) {
   if (!isCronAuthorized(req.headers.get("authorization"), env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -96,6 +98,46 @@ async function handle(req: Request) {
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
+}
+
+/**
+ * O1 — otkucaj („srce"). Omotač oko `izvrsi` da se nijedna postojeća `return` grana ne dira.
+ *
+ * Ovdje je otkucaj važniji nego kod ostalih poslova: metenje se može TRAJNO onesposobiti
+ * bez ijedne greške — dovoljno je da `CISCENJE_STORAGEA_APPLY` nije "1" i ruta zauvijek
+ * vraća uredan `{ ok: true, probno: true }`. Zato `probno` ide u `detalji`: ekran zdravlja
+ * onda pokazuje da posao radi ALI ništa ne briše, umjesto da to izgleda kao uspjeh.
+ */
+async function handle(req: Request) {
+  const odgovor = await izvrsi(req)
+  if (odgovor.status === 401) return odgovor
+  type Tijelo = {
+    ok?: boolean
+    error?: string
+    probno?: boolean
+    obrisano?: number
+    biObrisano?: number
+    slomljeniRedovi?: string[]
+  }
+  let tijelo: Tijelo | null = null
+  try {
+    tijelo = (await odgovor.clone().json()) as Tijelo
+  } catch {
+    // Odgovor bez JSON tijela ne smije oboriti upis otkucaja — status je i dalje signal.
+  }
+  await zabiljeziOtkucaj(
+    createAdminSupabaseClient(),
+    "ciscenje-storagea",
+    ishodIzOdgovora(odgovor.status, tijelo),
+    {
+      probno: tijelo?.probno === true,
+      obrisano: tijelo?.obrisano ?? 0,
+      biObrisano: tijelo?.biObrisano ?? 0,
+      slomljeniRedovi: tijelo?.slomljeniRedovi?.length ?? 0,
+    },
+    tijelo?.error ?? null,
+  )
+  return odgovor
 }
 
 export const GET = handle

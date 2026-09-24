@@ -29,22 +29,28 @@ test.describe("Faza 1 smoke", () => {
     await expect(page.getByRole("banner")).toContainText("Sistem za termine i provjere")
   })
 
-  test("Sidebar prikazuje svih 7 nav stavki", async ({ page }) => {
+  test("Sidebar prikazuje svih 9 nav stavki", async ({ page }) => {
+    // Default storageState je admin → vidljive su i admin-only stavke
+    // (Asistent, Zapisnici, Aktivnost) uz Poslati mejlovi iz yoink batcha.
+    // exact: true jer je "Aktivnost" substring od "Plan aktivnosti".
     await page.goto("/plan-aktivnosti")
     const nav = page.getByRole("navigation", { name: "Glavna navigacija" })
-    await expect(nav.getByRole("link", { name: "Pregled" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Plan aktivnosti" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Obilasci" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Klijenti" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Asistent" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Zapisnici" })).toBeVisible()
-    await expect(nav.getByRole("link", { name: "Postavke" })).toBeVisible()
-    await expect(nav.getByRole("link")).toHaveCount(7)
+    await expect(nav.getByRole("link", { name: "Pregled", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Plan aktivnosti", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Obilasci", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Klijenti", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Poslati mejlovi", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Asistent", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Zapisnici", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Aktivnost", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link", { name: "Postavke", exact: true })).toBeVisible()
+    await expect(nav.getByRole("link")).toHaveCount(9)
   })
 
   test("Aktivna stavka u Sidebar-u ima aria-current=page", async ({ page }) => {
     await page.goto("/plan-aktivnosti")
-    const active = page.getByRole("link", { name: "Plan aktivnosti" })
+    const nav = page.getByRole("navigation", { name: "Glavna navigacija" })
+    const active = nav.getByRole("link", { name: "Plan aktivnosti", exact: true })
     await expect(active).toHaveAttribute("aria-current", "page")
   })
 

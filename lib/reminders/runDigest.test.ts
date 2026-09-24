@@ -28,7 +28,10 @@ function makeFake(opts: {
   updateError?: string
 }) {
   const updates: Array<{ id: unknown; patch: Record<string, unknown> }> = []
-  const claims = [...(opts.claimIds ?? ["c1", "c2", "c3"])]
+  // Bez eksplicitne liste claim-ovi se izdaju neograničeno (c1, c2, …) — testovi sa
+  // desetinama primalaca inače bi tiho dobili null i pretvorili "poslato" u skip.
+  const claims = opts.claimIds ? [...opts.claimIds] : null
+  let brojacClaimova = 0
   const rpcPozivi: string[] = []
   const fake = {
     from(table: string) {
@@ -62,7 +65,8 @@ function makeFake(opts: {
       if (name === "get_istekli_termini") return { data: opts.rows ?? [], error: null }
       if (name === "claim_digest") {
         if (opts.claimError) return { data: null, error: { message: opts.claimError } }
-        return { data: claims.shift() ?? null, error: null }
+        brojacClaimova += 1
+        return { data: claims ? (claims.shift() ?? null) : `c${brojacClaimova}`, error: null }
       }
       return { data: null, error: null }
     },
@@ -194,5 +198,68 @@ describe("runDigest", () => {
     })
     expect(poslato).toBe(0)
     expect(res.errors).toHaveLength(1)
+  })
+})
+
+// Svaki admin je zaseban primalac digesta (digestGroups koristi recipientsForKlijent),
+// pa N admina = N mejlova u jednom prolazu.
+const admini = (n: number) =>
+  Array.from({ length: n }, (_, i) => ({ ...ADMIN, id: `u${i + 1}`, email: `admin${i + 1}@x.com` }))
+
+describe("runDigest — ograde protiv prekida na velikom backlog-u", () => {
+  it("cap po prolazu: obradi maxPerRun primalaca, ostatak prijavi kao deferred", async () => {
+    let poslato = 0
+    const { supabase } = makeFake({ rows: [ROW], korisnici: admini(60) })
+    const res = await runDigest(supabase, {
+      send: async () => { poslato += 1; return { id: `re_${poslato}`, dryRun: false } },
+      now: PONEDJELJAK, maxPerRun: 20, delayMs: 0,
+    })
+    expect(poslato).toBe(20)
+    expect(res.sent).toHaveLength(20)
+    expect(res.deferred).toBe(40)
+    expect(res.prekinutoZbogVremena).toBe(false)
+  })
+
+  it("odgođeni primaoci nemaju claim — kadenca ih zadržava i sljedeći prolaz ih pokupi", async () => {
+    const { supabase, rpcPozivi } = makeFake({ rows: [ROW], korisnici: admini(50) })
+    const res = await runDigest(supabase, {
+      send: okSend, now: PONEDJELJAK, maxPerRun: 8, delayMs: 0,
+    })
+    expect(rpcPozivi.filter((n) => n === "claim_digest")).toHaveLength(8)
+    expect(res.deferred).toBe(42)
+  })
+
+  it("vremenski budžet: prekida se prije roka, bez claim-a za neobrađene", async () => {
+    let sat = 1000
+    const { supabase, rpcPozivi } = makeFake({ rows: [ROW], korisnici: admini(40) })
+    const res = await runDigest(supabase, {
+      send: async () => { sat += 500; return { id: "re_x", dryRun: false } },
+      now: PONEDJELJAK, batchSize: 2, delayMs: 0, deadlineAt: 3000, sada: () => sat,
+    })
+    expect(res.sent).toHaveLength(4)
+    expect(res.deferred).toBe(36)
+    expect(res.prekinutoZbogVremena).toBe(true)
+    expect(rpcPozivi.filter((n) => n === "claim_digest")).toHaveLength(4)
+  })
+
+  it("rok istekao prije početka: nijedan digest se ne šalje i ništa nije claim-ovano", async () => {
+    let poslato = 0
+    const { supabase, rpcPozivi } = makeFake({ rows: [ROW], korisnici: admini(10) })
+    const res = await runDigest(supabase, {
+      send: async () => { poslato += 1; return { id: "x", dryRun: false } },
+      now: PONEDJELJAK, delayMs: 0, deadlineAt: 1000, sada: () => 9000,
+    })
+    expect(poslato).toBe(0)
+    expect(res.deferred).toBe(10)
+    expect(res.prekinutoZbogVremena).toBe(true)
+    expect(rpcPozivi).not.toContain("claim_digest")
+  })
+
+  it("bez deadlineAt ponašanje je nepromijenjeno", async () => {
+    const { supabase } = makeFake({ rows: [ROW], korisnici: admini(5) })
+    const res = await runDigest(supabase, { send: okSend, now: PONEDJELJAK, delayMs: 0 })
+    expect(res.sent).toHaveLength(5)
+    expect(res.deferred).toBe(0)
+    expect(res.prekinutoZbogVremena).toBe(false)
   })
 })

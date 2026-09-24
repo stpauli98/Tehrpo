@@ -56,10 +56,20 @@ test.describe("Prikaz — dorada", () => {
     try {
       await page.goto(`/prikaz?mode=klijent&klijent=${klijentId}&godina=2035`)
       await expect(page.getByTestId("prikaz-matrix")).toBeVisible()
-      // Jedina ćelija koja vodi na /plan-aktivnosti je naša (+1); single ćelije vode na ?selected
-      const multi = page.locator('a[data-testid="matrix-cell-filled"][href*="/plan-aktivnosti"]')
-      await expect(multi).toHaveCount(1)
-      const href = await multi.getAttribute("href")
+      // Ćeliju biramo po KOLONI (maj = "5"), ne po tome što je jedina sa /plan-aktivnosti
+      // linkom. Razlog: godišnja matrica sada ima i kolonu „Preneseno" — otvorene obaveze
+      // čiji je datum_prikaza prije 1. januara prikazane godine. Prije te ispravke su takve
+      // obaveze 01.01. jednostavno nestajale iz plana (audit B2), pa je klijent gubio iz vida
+      // sve zaostalo — novo ponašanje je ispravno i te ćelije LEGITIMNO stoje u matrici 2035.
+      // Stari uslov („tačno jedan link na /plan-aktivnosti") je time postao besmislen: i
+      // pojedinačne ćelije vode na /plan-aktivnosti (?selected=<id>), pa ih je brojao takođe.
+      const majCelija = page.locator('td[data-testid="matrix-cell"][data-col="5"] a[data-testid="matrix-cell-filled"]')
+      await expect(majCelija).toHaveCount(1)
+      // Ovo je poenta testa: ćelija sa VIŠE termina (+N) ne vodi na jedan termin nego na
+      // filtriranu listu — pa mora i izgledati kao (+1) i imati lista-href.
+      await expect(majCelija).toContainText("(+1)")
+      const href = await majCelija.getAttribute("href")
+      expect(href).toMatch(/view=lista/)
       expect(href).toMatch(new RegExp(`vrsta_id=${vrstaId}`))
       expect(href).toMatch(/mjesec=5/)
       expect(href).toMatch(/godina=2035/)

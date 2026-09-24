@@ -20,6 +20,40 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## `pnpm seed` — uvoz iz Excela BRIŠE podatke
+
+`pnpm seed` nije čista dopuna. Prije uvoza briše `termini`, `klijent_provjere` i
+`lokacije` (kaskadno i `podsjetnici`, `dokumenti`, `termin_zakazano_obavijest`,
+`post_due_obavijesti`; fajlovi u Storage-u ostaju osirotjeli). Zato okruženje
+mora biti navedeno **eksplicitno**, isto kao kod `pnpm db:apply-cloud`:
+
+```bash
+pnpm seed --lokalno                                  # lokalni `supabase start`
+pnpm seed --demo                                     # DEMO baza
+POTVRDI_PROD=da SEED_BRISI=da pnpm seed --prod       # PRODUKCIJA — dvije potvrde
+```
+
+Bez `--lokalno` / `--demo` / `--prod` skripta odbija rad. Guard radi **prije
+ijednog upita** (i prije čitanja Excela): URL na koji bi se spojila mora stvarno
+voditi na traženo okruženje (`zahtijevajCilj` iz `lib/supabase/refs.ts`), pa se
+pogrešan cilj vidi prije nego što išta nestane. Prije prvog `DELETE`-a skripta
+ispiše **koliko redova nestaje**, po tabeli.
+
+Dodatne zastavice:
+
+| Zastavica | Značenje |
+| --- | --- |
+| `--suho` | ništa ne mijenja — ispiše cilj i koliko bi redova nestalo, pa izađe |
+| `--samo-brisanje` | uradi samo wipe, bez uvoza Excela |
+| `--bez-brisanja` | preskoči wipe, uradi samo uvoz (nema gubitka podataka) |
+
+Ako env fajl gađa drugu bazu od tražene, cilj se postavlja bez diranja `.env.local`:
+`SUPABASE_URL_LOKALNO` / `SUPABASE_URL_DEMO` / `SUPABASE_URL_PROD` (i odgovarajući
+`SUPABASE_SERVICE_ROLE_KEY_*`) imaju prednost nad `NEXT_PUBLIC_SUPABASE_URL`.
+
+Poslije seed-a pokreni `pnpm gc:dokumenti` — brisanje termina ne briše fajlove iz
+Storage-a.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

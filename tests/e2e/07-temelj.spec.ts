@@ -124,12 +124,17 @@ test.describe("Temelj — Postavke vrste pregleda (interval autosave)", () => {
     // Sačuvaj originalnu vrijednost
     const originalValue = (await firstInput.inputValue()) ?? ""
 
-    // Postavi novu vrijednost → Enter blur-uje polje i autosave-uje red
+    // Postavi novu vrijednost → Enter blur-uje polje i autosave-uje red.
+    //
+    // Signal završetka je TOAST, ne networkidle: od 6144d15 autosave javlja ishod kroz
+    // kanonski toastRezultat() (prije je bilo inline "saved" stanje sa 2s setTimeout).
+    // networkidle je uz to bio i nepouzdan — Playwright ga izričito ne preporučuje, a
+    // Next dev server drži otvorene HMR/RSC kanale pa "idle" ume da ne nastupi (pad 20s).
+    const toastSpremljeno = page.locator("[data-sonner-toast]").getByText("spremljeno")
     const newValue = originalValue === "12" ? "24" : "12"
     await firstInput.fill(newValue)
     await firstInput.press("Enter")
-    // Sačekaj da server action + router.refresh završe (cloud DB latencija)
-    await page.waitForLoadState("networkidle")
+    await expect(toastSpremljeno).toBeVisible()
 
     // Reload — provjeri da je vrijednost sačuvana
     await page.reload()
@@ -138,10 +143,10 @@ test.describe("Temelj — Postavke vrste pregleda (interval autosave)", () => {
     const afterReload = tabela.locator("input[type='number']").first()
     await expect(afterReload).toHaveValue(newValue)
 
-    // Vrati na originalnu vrijednost (cleanup)
+    // Vrati na originalnu vrijednost (cleanup) — isti deterministički signal
     await afterReload.fill(originalValue)
     await afterReload.press("Enter")
-    await page.waitForLoadState("networkidle")
+    await expect(toastSpremljeno).toBeVisible()
   })
 })
 

@@ -181,6 +181,18 @@ function extractDate(raw: ExcelJS.CellValue): string | null {
   return null
 }
 
+/**
+ * Da li je ćelija SLAVE dio spojenog (merged) raspona?
+ *
+ * ExcelJS `row.eachCell` obilazi i slave ćelije spoja i vraća im vrijednost
+ * mastera (cell.type === ValueType.Merge). Master ćelija ima `master === self`,
+ * pa je poređenje adrese pouzdano i za spojene i za obične ćelije.
+ */
+export function jeSlaveSpoja(cell: ExcelJS.Cell): boolean {
+  const master = cell.master
+  return master != null && master.address !== cell.address
+}
+
 function rawIsNonEmpty(v: ExcelJS.CellValue): boolean {
   if (v == null) return false
   if (typeof v === "string") return v.trim().length > 0
@@ -280,6 +292,12 @@ export async function parseTehproExcel(filePath: string): Promise<ParseResult> {
     // row3 za stub provjeru ("po ponudi" u izvr-koloni row3)
     row2.eachCell((cell, colNumber) => {
       if (colNumber === 1) return
+      // Spojene ćelije (npr. B2:C2 = jedan klijent preko para Izvršeno/Planirano):
+      // ExcelJS emituje i SLAVE ćeliju spoja sa vrijednošću mastera. Ako je ne
+      // preskočimo, neparna (Planirano) kolona se registruje kao nova "izvr"
+      // kolona pa se cijeli par pomjeri za 1 — planirano se čita kao izvršeno,
+      // a izvršeno sljedeće firme kao fantomski planirani termin.
+      if (jeSlaveSpoja(cell)) return
       const val = String(cell.value ?? "").trim()
       if (!val) return
       // Provjeri i po row2 i po row3 da li je stub

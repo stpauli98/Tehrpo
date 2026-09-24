@@ -34,7 +34,7 @@ export async function runReminders(
 ): Promise<ReminderRunResult> {
   const send = deps.send ?? sendEmail
   const brand = firmBrand()
-  const fromAddr = env.EMAIL_FROM ?? "no-reply@tehpro"
+  const fromAddr = env.EMAIL_FROM ?? "no-reply@localhost"
   // Throttling (env-konfigurabilno; defaulti za Resend free: 100/dan, ~2 req/s).
   const maxPerRun = deps.maxPerRun ?? (Number(env.REMINDER_MAX_PER_RUN) || 90)
   const batchSize = Math.max(1, deps.batchSize ?? (Number(env.REMINDER_BATCH_SIZE) || 2))

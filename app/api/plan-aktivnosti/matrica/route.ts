@@ -19,8 +19,10 @@ const t = createTranslator({ locale: APP_LOCALE, messages: getMessages(), namesp
  *
  * Returns:
  *   {
- *     termini:  TerminMatricaRow[]  – raw rows from termini_view for the active branch
- *     klijenti: { id: string, naziv: string }[]  – full klijenti list for the picker
+ *     termini:   TerminMatricaRow[]  – raw rows from termini_view for the active branch
+ *     preneseni: TerminMatricaRow[]  – open obligations carried over from earlier years
+ *                                      (mode="klijent" only; [] otherwise)
+ *     klijenti:  { id: string, naziv: string }[]  – full klijenti list for the picker
  *   }
  *
  * Branch "mode=mjesec" — termini columns:
@@ -56,6 +58,9 @@ export async function GET(req: NextRequest) {
   }
 
   let termini: unknown[] = []
+  // Otvorene obaveze čiji je datum_prikaza PRIJE odabrane godine. Bez njih godišnja
+  // matrica 01.01. izgubi sve zaostalo iz prethodne godine (v. audit B2).
+  let preneseni: unknown[] = []
 
   if (mode === "mjesec") {
     // Svi termini za odabrani mjesec — kolone su klijenti
@@ -78,11 +83,24 @@ export async function GET(req: NextRequest) {
       .order("vrsta_naziv")
     if (error) return NextResponse.json({ error: t("greskaUcitavanja") }, { status: 400 })
     termini = data ?? []
+
+    // Preneseno: otvoreno (ni izvršeno ni otkazano) sa datumom prije 1. januara.
+    const { data: prenData, error: prenError } = await supabase
+      .from("termini_view")
+      .select("id, vrsta_provjere_id, vrsta_naziv, rok_dospijeca, datum_prikaza, status_izvedeni")
+      .eq("klijent_id", klijentId)
+      .lt("datum_prikaza", `${godina}-01-01`)
+      .neq("status_izvedeni", "izvrseno")
+      .neq("status_izvedeni", "otkazano")
+      .order("datum_prikaza", { ascending: true })
+    if (prenError) return NextResponse.json({ error: t("greskaUcitavanja") }, { status: 400 })
+    preneseni = prenData ?? []
   }
   // else: mode="klijent" without klijentId → termini stays []
 
   return NextResponse.json({
     termini,
+    preneseni,
     klijenti: klijentiData ?? [],
   })
 }

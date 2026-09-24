@@ -20,7 +20,7 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 test.describe("pregled — read-only UX", () => {
   test("pregled ne vidi write dugmad na kartici klijenta, ali vidi podatke", async ({ page, context }) => {
-    const email = `e2e-pregled-${Date.now()}@tehpro.test`
+    const email = `e2e-pregled-${Date.now()}@demo.test`
     const naziv = "E2E-TMP PREGLED " + Date.now()
     const kid = await insertKlijent(naziv)
     const kontaktIme = "E2E Kontakt " + Date.now()

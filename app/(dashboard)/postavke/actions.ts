@@ -74,6 +74,46 @@ export async function updatePostavke(
 // Koristi ga postaviVrstaInterval (inline autosave u tabeli Vrste pregleda).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+// C1: uklanjanje periodike sa vrste TIHO ubija lance obaveza.
+//
+// tg_termini_auto_cycle sljedeći ciklus računa iz
+// coalesce(termini.interval_mjeseci, vrste_provjera.podrazumevani_interval_mjeseci).
+// Otvoreni ponavljajući termin koji nema VLASTITI interval visi, dakle, o intervalu vrste:
+// čim se on obriše, zatvaranje tog termina prolazi bez sljedećeg ciklusa — zakonska obaveza
+// nestane iz plana. Baza to od sada bilježi (prekinuti_lanci) i javlja u zdravlje_sistema(),
+// ali ovdje se sprječava da uopšte nastane.
+//
+// Zašto SPRJEČAVANJE, a ne samo upozorenje: rezultat akcije koji UI prikazuje je ili uspjeh
+// ili poruka greške (lib/akcija-toast.ts) — „uspjeh sa upozorenjem" se ne bi vidio nigdje, a
+// upozorenje koje niko ne pročita je isto što i tišina. Sistem uz to VEĆ odbija da napravi
+// ponavljajući termin nad vrstom bez intervala (app/(dashboard)/termini/actions.ts i
+// klijenti/actions.ts); ovo je isto pravilo, samo na drugom kraju — inače invarijanta vrijedi
+// pri unosu, a ruši se naknadnim brisanjem.
+//
+// Izlaz iz situacije postoji i bez ove akcije: termini se mogu otkazati/zatvoriti, ili im se
+// isključi ponavljanje — tek onda periodika vrste više nikome ne treba.
+type SupabaseKlijent = Awaited<ReturnType<typeof createServerSupabaseClient>>
+
+async function periodikaSeSmijeUkloniti(
+  supabase: SupabaseKlijent,
+  vrstaId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const { count, error } = await supabase
+    .from("termini")
+    .select("id", { count: "exact", head: true })
+    .eq("vrsta_provjere_id", vrstaId)
+    .eq("ponavlja_se", true)
+    .is("interval_mjeseci", null)
+    .is("datum_izvrsenja", null)
+    .in("status", ["planirano", "zakazano"])
+
+  // Neprovjereno ≠ bezopasno: ako provjera ne uspije, radnja se ne pušta. Uklanjanje
+  // periodike nije hitno i ponovni pokušaj ništa ne košta; tiho ubijen lanac košta rok.
+  if (error) return { ok: false, message: t("periodikaProvjeraNijeUspjela") }
+  if ((count ?? 0) > 0) return { ok: false, message: t("periodikaUklanjanjeBlokirano", { broj: count ?? 0 }) }
+  return { ok: true }
+}
+
 // ─── Nova vrsta pregleda ─────────────────────────────────────────────────────
 
 const createVrstaSchema = z.object({
@@ -297,6 +337,104 @@ export async function postaviDodjele(korisnikId: string, klijentIds: string[]): 
   return { ok: true }
 }
 
+// ─── Trajno brisanje korisnika (samo deaktivirani) ───────────────────────────
+
+/**
+ * Trajno briše korisnika: prvo profil (SSR/RLS klijent → audit trigger zabilježi
+ * ADMINA kao aktera), zatim auth nalog (Admin API). Dozvoljeno SAMO za deaktivirane
+ * (potvrđena odluka 06.08.2026.) — time je zadnji aktivni admin automatski zaštićen,
+ * jer se aktivan korisnik ne može obrisati, a postaviAktivan brani deaktivaciju
+ * zadnjeg admina. Posljedica brisanja: audit_log.korisnik_id i kreirao_id kolone
+ * postaju NULL (svjesno prihvaćeno), korisnik_klijent/chat_poruke idu cascade.
+ */
+export async function obrisiKorisnika(korisnikId: string): Promise<ActionResult> {
+  const ja = await zahtijevajAdmina()
+  if (!UUID_RE.test(korisnikId)) return { ok: false, message: t("korisnikNePostoji") }
+  if (korisnikId === ja.id) return { ok: false, message: t("vlastitiNalogBrisanje") }
+  const supabase = await createServerSupabaseClient()
+  // Puni snapshot reda — služi za rollback ako brisanje auth naloga padne.
+  const { data: meta, error: selErr } = await supabase
+    .from("korisnici")
+    .select("*")
+    .eq("id", korisnikId)
+    .maybeSingle()
+  if (selErr) return { ok: false, message: selErr.message }
+  if (!meta) return { ok: false, message: t("korisnikNePostoji") }
+  if (meta.aktivan) return { ok: false, message: t("prvoDeaktiviraj") }
+  // Uslov aktivan=false ide direktno na DELETE (ne oslanjamo se samo na provjeru iznad) —
+  // brani trku sa aktivacijom: ako neko drugi u međuvremenu aktivira korisnika, DELETE
+  // ne pogađa nijedan red umjesto da nepovratno obriše sad-aktivnog korisnika.
+  const { data: del, error: delErr } = await supabase
+    .from("korisnici").delete().eq("id", korisnikId).eq("aktivan", false).select("id")
+  if (delErr) return { ok: false, message: delErr.message }
+  if (!del?.length) return { ok: false, message: t("prvoDeaktiviraj") }
+  // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
+  const admin = createAdminSupabaseClient()
+  const { error: authErr } = await admin.auth.admin.deleteUser(korisnikId)
+  if (authErr) {
+    // Rollback: vrati profil red iz snapshota (SSR klijent — korisnici_wr = je_admin(),
+    // audit hvata aktera; created_at i dozvole se vraćaju identično). Dodjele firmi su
+    // već otišle cascade-om i NE vraćaju se — admin ih po potrebi ponovo postavi.
+    const { error: rbErr } = await supabase.from("korisnici").insert(meta)
+    if (rbErr) console.error("Rollback profila nakon pada auth brisanja nije uspio:", korisnikId, rbErr.message)
+    return { ok: false, message: t("brisanjeAuthGreska") }
+  }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
+// ─── Uređivanje korisnika (ime + email) ──────────────────────────────────────
+
+const urediKorisnikaSchema = z.object({
+  id: z.string().uuid(),
+  ime: z.string().trim().min(1, t("imeObavezno")).max(120),
+  email: z.string().email(t("emailNeispravan")),
+})
+
+/**
+ * Mijenja ime i email korisnika. Email se prvo mijenja u auth sistemu (Admin API,
+ * email_confirm — važi odmah, interni alat), pa u profilu (SSR klijent → audit sa
+ * akterom). Pad drugog koraka → rollback auth emaila na stari. Vlastiti nalog se
+ * smije uređivati (nije destruktivno).
+ */
+export async function urediKorisnika(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await zahtijevajAdmina()
+  const parsed = urediKorisnikaSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
+  const { id, ime, email } = parsed.data
+  const supabase = await createServerSupabaseClient()
+  const { data: meta, error: selErr } = await supabase
+    .from("korisnici")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle()
+  if (selErr) return { ok: false, message: selErr.message }
+  if (!meta) return { ok: false, message: t("korisnikNePostoji") }
+  const stariEmail = meta.email
+  const emailPromijenjen = email.toLowerCase() !== stariEmail.toLowerCase()
+  if (emailPromijenjen) {
+    // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
+    const admin = createAdminSupabaseClient()
+    const { error: authErr } = await admin.auth.admin.updateUserById(id, { email, email_confirm: true })
+    if (authErr) {
+      return { ok: false, message: /already|registered|exists/i.test(authErr.message)
+        ? t("korisnikEmailPostoji") : t("greskaFallback") }
+    }
+  }
+  const { error: updErr } = await supabase.from("korisnici").update({ ime, email }).eq("id", id)
+  if (updErr) {
+    if (emailPromijenjen) {
+      // integracija-dozvoli: admin-klijent — Supabase Auth Admin API nema anon ekvivalent
+      const admin = createAdminSupabaseClient()
+      const { error: rbErr } = await admin.auth.admin.updateUserById(id, { email: stariEmail, email_confirm: true })
+      if (rbErr) console.error("Rollback auth emaila nije uspio:", id, rbErr.message)
+    }
+    return { ok: false, message: /duplicate|unique/i.test(updErr.message) ? t("korisnikEmailPostoji") : updErr.message }
+  }
+  revalidatePath("/postavke")
+  return { ok: true }
+}
+
 // ─── Uređivanje / deaktivacija vrste ─────────────────────────────────────────
 
 const updateVrstaSchema = z.object({
@@ -322,6 +460,19 @@ export async function updateVrsta(_prev: ActionResult, formData: FormData): Prom
   if (!parsed.success) return { ok: false, errors: parsed.error.flatten().fieldErrors }
   const { id, naziv, interval, zakonski_osnov, vodi_dokumentaciju } = parsed.data
   const supabase = await createServerSupabaseClient()
+
+  // C1: periodika se smije UKLONITI samo ako od nje ne visi nijedan otvoren lanac.
+  // Provjerava se prije upisa — ostatak izmjene (naziv, osnov, dokumentacija) se ne smije
+  // primijeniti napola.
+  if (interval === null) {
+    const { data: trenutna } = await supabase
+      .from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", id).maybeSingle()
+    if (trenutna?.podrazumevani_interval_mjeseci != null) {
+      const provjera = await periodikaSeSmijeUkloniti(supabase, id)
+      if (!provjera.ok) return { ok: false, message: provjera.message }
+    }
+  }
+
   const { error } = await supabase.from("vrste_provjera").update({
     naziv,
     podrazumevani_interval_mjeseci: interval,
@@ -356,6 +507,19 @@ export async function postaviVrstaInterval(vrstaId: string, interval: number | n
     return { ok: false, message: t("intervalNeispravanTacka") }
   }
   const supabase = await createServerSupabaseClient()
+
+  // C1: brisanje intervala (polje se isprazni pa se izgubi fokus) je do sada prolazilo bez
+  // ijedne provjere, iako je to jedini korak koji otvorenim ponavljajućim terminima te vrste
+  // oduzima periodiku.
+  if (interval === null) {
+    const { data: trenutna } = await supabase
+      .from("vrste_provjera").select("podrazumevani_interval_mjeseci").eq("id", vrstaId).maybeSingle()
+    if (trenutna?.podrazumevani_interval_mjeseci != null) {
+      const provjera = await periodikaSeSmijeUkloniti(supabase, vrstaId)
+      if (!provjera.ok) return { ok: false, message: provjera.message }
+    }
+  }
+
   const { error } = await supabase
     .from("vrste_provjera")
     .update({ podrazumevani_interval_mjeseci: interval })

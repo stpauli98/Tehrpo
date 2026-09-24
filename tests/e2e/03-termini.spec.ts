@@ -3,6 +3,7 @@ import {
   firstActiveVrstaId, setVrstaInterval, getVrstaInterval,
   insertTermin, deleteTerminiByKlijent, insertKlijent, deleteKlijentByNaziv,
 } from "./db"
+import { idiNa } from "./fixtures"
 
 // Serijsko izvršavanje za cijeli fajl: testovi mark-izvršeno i Novi termin
 // mijenjaju zajedničku lokalnu bazu; paralelni workeri (Chromium+WebKit) bi
@@ -40,7 +41,11 @@ test.describe("Faza 3 — Termini tabela", () => {
     const table = page.getByTestId("termini-table")
     await expect(table).toBeVisible()
 
-    const headers = ["Datum roka", "Klijent", "Lokacija", "Vrsta", "Status", "Zaduženi", "Akcije"]
+    // Kolona "Datum roka" je preimenovana u "Datum" (prikazuje datum_prikaza, a rok
+    // ide kao sekundarni red u ćeliji kad je termin zakazan) — v. TerminiTable COL_KEYS
+    // + messages termini.tabela.kolone. Broj kolona je i dalje 7; count dokazuje tačan skup.
+    const headers = ["Datum", "Klijent", "Lokacija", "Vrsta", "Status", "Zaduženi", "Akcije"]
+    await expect(table.getByRole("columnheader")).toHaveCount(headers.length)
     await Promise.all(
       headers.map((h) => expect(table.getByRole("columnheader", { name: h })).toBeVisible())
     )
@@ -157,6 +162,11 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
       await expect(page.getByTestId("termin-sheet")).toBeVisible()
       await page.getByTestId("edit-napomena").fill("E2E test napomena")
       await page.getByTestId("edit-save").click()
+      // Uspjeh se od yoink batcha potvrđuje sonner toastom (useAkcijaToast u TerminSheet);
+      // inline [role=alert] ostaje samo za field-greške (FieldError) — mora ih biti 0.
+      await expect(
+        page.locator("[data-sonner-toast]").getByText("Izmjene sačuvane"),
+      ).toBeVisible()
       await expect(page.getByTestId("termin-sheet").locator("[role=alert]")).toHaveCount(0)
     } finally {
       await deleteTerminiByKlijent(kid)
@@ -182,7 +192,8 @@ test.describe("Faza 3 — Termin detalji i mutacije", () => {
       // re-renderuje i "Označi izvršeno" forma nestaje (termin.status === "izvrseno").
       // Bez ovoga test čita stat PRIJE commita — RLS/proxy latencija je tu trku razotkrila.
       await expect(page.getByTestId("mark-done-form")).toHaveCount(0)
-      await page.goto("/termini?mjesec=svi")
+      // idiNa: revalidate refresh nakon akcije može prekinuti goto (v. fixtures.ts)
+      await idiNa(page, "/termini?mjesec=svi")
       const after = await readTotal(page)
       expect(after).toBe(before + 1)
     } finally {
@@ -256,7 +267,8 @@ test.describe("Faza 3 — Novi termin", () => {
       await page.getByTestId("novi-rok").fill("2029-03-15")
       await page.getByTestId("novi-submit").click()
       await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
-      await page.goto("/termini?mjesec=svi")
+      // idiNa: revalidate refresh nakon akcije može prekinuti goto (v. fixtures.ts)
+      await idiNa(page, "/termini?mjesec=svi")
       const after = await readTotal(page)
       expect(after).toBe(before + 1)
     } finally {
@@ -284,7 +296,11 @@ test.describe("Faza 3 — Novi termin", () => {
       await popuni()
       await expect(page.getByTestId("novi-termin-sheet")).toBeHidden({ timeout: 5000 })
       await popuni()
-      await expect(page.getByText("Termin za istu firmu, vrstu i rok već postoji.")).toBeVisible()
+      // `message` greške idu isključivo u sonner toast (yoink batch; inline samo
+      // field-greške) — scope na toast kontejner, isti obrazac kao 16-profil.spec.
+      await expect(
+        page.locator("[data-sonner-toast]").getByText("Termin za istu firmu, vrstu i rok već postoji."),
+      ).toBeVisible()
     } finally {
       await deleteTerminiByKlijent(kid)
       await deleteKlijentByNaziv(naziv)

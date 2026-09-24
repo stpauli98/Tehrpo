@@ -37,4 +37,16 @@ describe("parseIzvozParams", () => {
   it("nepoznat period → fallback om", () => {
     expect(parseIzvozParams(new URLSearchParams("period=xyz"))).toMatchObject({ period: { mod: "om" } })
   })
+
+  // ── Prelazak godine (B2) ──
+  it("prenesene obaveze su uključene po defaultu", () => {
+    expect(parseIzvozParams(new URLSearchParams("period=god&godina=2027"))).toMatchObject({ preneseno: true })
+  })
+  it("preneseno=0 → striktno kalendarski period", () => {
+    expect(parseIzvozParams(new URLSearchParams("period=god&godina=2027&preneseno=0"))).toMatchObject({ preneseno: false })
+  })
+  it("preneseno=1 ili bilo šta drugo → uključeno", () => {
+    expect(parseIzvozParams(new URLSearchParams("period=god&preneseno=1"))).toMatchObject({ preneseno: true })
+    expect(parseIzvozParams(new URLSearchParams("period=god&preneseno=da"))).toMatchObject({ preneseno: true })
+  })
 })

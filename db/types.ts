@@ -158,6 +158,7 @@ export type Database = {
       dokumenti: {
         Row: {
           generated_by_ai: boolean
+          zapisnik_izvor: string | null
           id: string
           klijent_id: string
           kreirao_id: string | null
@@ -172,6 +173,7 @@ export type Database = {
         }
         Insert: {
           generated_by_ai?: boolean
+          zapisnik_izvor?: string | null
           id?: string
           klijent_id: string
           kreirao_id?: string | null
@@ -186,6 +188,7 @@ export type Database = {
         }
         Update: {
           generated_by_ai?: boolean
+          zapisnik_izvor?: string | null
           id?: string
           klijent_id?: string
           kreirao_id?: string | null
@@ -336,6 +339,7 @@ export type Database = {
       klijenti: {
         Row: {
           adresa: string | null
+          aktivan: boolean
           created_at: string
           email: string | null
           id: string
@@ -350,10 +354,11 @@ export type Database = {
           telefon: string | null
           tip_odnosa: string | null
           updated_at: string
-          zaduzeni_tehpro_id: string | null
+          zaduzeni_korisnik_id: string | null
         }
         Insert: {
           adresa?: string | null
+          aktivan?: boolean
           created_at?: string
           email?: string | null
           id?: string
@@ -368,10 +373,11 @@ export type Database = {
           telefon?: string | null
           tip_odnosa?: string | null
           updated_at?: string
-          zaduzeni_tehpro_id?: string | null
+          zaduzeni_korisnik_id?: string | null
         }
         Update: {
           adresa?: string | null
+          aktivan?: boolean
           created_at?: string
           email?: string | null
           id?: string
@@ -386,7 +392,7 @@ export type Database = {
           telefon?: string | null
           tip_odnosa?: string | null
           updated_at?: string
-          zaduzeni_tehpro_id?: string | null
+          zaduzeni_korisnik_id?: string | null
         }
         Relationships: [
           {
@@ -397,8 +403,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "klijenti_zaduzeni_tehpro_id_fkey"
-            columns: ["zaduzeni_tehpro_id"]
+            foreignKeyName: "klijenti_zaduzeni_korisnik_id_fkey"
+            columns: ["zaduzeni_korisnik_id"]
             isOneToOne: false
             referencedRelation: "korisnici"
             referencedColumns: ["id"]
@@ -871,6 +877,7 @@ export type Database = {
           lokacija_id: string | null
           nacin_izvrsenja: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena: string | null
+          ponavlja_se: boolean
           rok_dospijeca: string
           status: Database["public"]["Enums"]["termini_status"]
           updated_at: string
@@ -889,6 +896,7 @@ export type Database = {
           lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
+          ponavlja_se?: boolean
           rok_dospijeca: string
           status?: Database["public"]["Enums"]["termini_status"]
           updated_at?: string
@@ -907,6 +915,7 @@ export type Database = {
           lokacija_id?: string | null
           nacin_izvrsenja?: Database["public"]["Enums"]["nacin_izvrsenja_tip"]
           napomena?: string | null
+          ponavlja_se?: boolean
           rok_dospijeca?: string
           status?: Database["public"]["Enums"]["termini_status"]
           updated_at?: string
@@ -1058,6 +1067,7 @@ export type Database = {
     Views: {
       klijenti_view: {
         Row: {
+          aktivan: boolean | null
           broj_aktivnih: number | null
           broj_izvrseno: number | null
           broj_kasni: number | null
@@ -1141,6 +1151,7 @@ export type Database = {
           datum_zakazan: string | null
           id: string | null
           interval_mjeseci: number | null
+          klijent_aktivan: boolean | null
           klijent_id: string | null
           klijent_naziv: string | null
           lokacija_grad: string | null

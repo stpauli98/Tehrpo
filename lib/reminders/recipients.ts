@@ -5,15 +5,59 @@ import { env } from "@/lib/env"
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Domeni koji po standardu NIKAD ne postoje na javnom DNS-u: RFC 6762 (`.local`),
- * RFC 2606 (`.invalid`, `.localhost`) i RFC 8375 (`.home.arpa`).
+ * Zone koje po standardu NIKAD ne postoje na javnom DNS-u — mejl na njih ne može stići
+ * nikome, pa je slanje uvijek greška, nikad „možda prođe".
  *
- * Namjerno IZOSTAVLJENI `.test` i `.example`: ovaj repo ih koristi kao fiksture
- * (E2E nalozi `*@tehpro.test`, klijentske adrese `*@example.com`), pa bi njihovo
- * filtriranje ovdje ugasilo E2E pokrivenost podsjetnika. Za njih zaštita ostaje
- * organizaciona — takav korisnik mora imati `prima_podsjetnike=false`.
+ *  - `local`                       RFC 6762 (mDNS)
+ *  - `test`, `example`, `invalid`,
+ *    `localhost`                   RFC 2606 §2 — rezervisani TLD-ovi
+ *  - `example.com/.net/.org`       RFC 2606 §3 — rezervisani domeni drugog nivoa
+ *  - `home.arpa`                   RFC 8375
+ *  - `alt`                         RFC 9476 (ne-DNS imena)
+ *  - `internal`                    ICANN 2024 — trajno nedelegiran, za privatne mreže
+ *
+ * `test` i `example*` su OVDJE OD 02.08.2026 (audit B5). Ranije su bili namjerno
+ * izostavljeni jer ih repo koristi kao fiksture (`*@tehpro.test`, `*@example.com`), uz
+ * obrazloženje da bi filtriranje ugasilo E2E pokrivenost. To obrazloženje više ne stoji:
+ * nijedan E2E test ne traži da fikstura bude ISPORUČENA — `06-podsjetnici` traži samo
+ * `preDue.sent.length > 0`, što na DEMO-u pokriva aktivan admin `nmil32@icloud.com`, a
+ * `32/33` upisuju primaoce direktno u `mejl_log`/`podsjetnik_emails` i ne prolaze kroz
+ * ovu provjeru. Cijena obrnute greške je nesimetrična: propuštena fikstura je crven test,
+ * a propuštena zaštita je mejl sa zakonskim rokom poslat na adresu koja ne postoji.
+ *
+ * Poređenje ide po CIJELOJ zoni na kraju hosta (`endsWith("." + zona)` ili tačan host),
+ * ne po `includes`: `local.ba`, `tehpro.localhost.ba` i `example.com.ba` su legitimni.
  */
-const NERUTABILNI_DOMENI = ["local", "localhost", "invalid", "home.arpa"] as const
+export const NERUTABILNE_ZONE = [
+  "local",
+  "test",
+  "example",
+  "invalid",
+  "localhost",
+  "example.com",
+  "example.net",
+  "example.org",
+  "home.arpa",
+  "alt",
+  "internal",
+] as const
+
+/** Zašto adresa ne može primiti mejl. `null` = može. */
+export type RazlogNedostavljivosti = "oblik" | "nerutabilna"
+
+/**
+ * Razlog zašto se na adresu ne smije pokušati slanje — ili `null` ako smije.
+ *
+ * Odvojeno od `jeDostavljiva` da pred-slanje ekran može reći ŠTA nije u redu
+ * („nije adresa" vs „domen ne postoji"), umjesto da adresa samo tiho nestane.
+ */
+export function razlogNedostavljivosti(raw: string | null | undefined): RazlogNedostavljivosti | null {
+  const e = (raw ?? "").trim().toLowerCase()
+  if (!EMAIL_RE.test(e)) return "oblik" // `root@localhost` pada već ovdje — nema tačke
+  const host = e.slice(e.lastIndexOf("@") + 1)
+  if (NERUTABILNE_ZONE.some((z) => host === z || host.endsWith(`.${z}`))) return "nerutabilna"
+  return null
+}
 
 /**
  * Smije li se na ovu adresu uopšte pokušati slanje.
@@ -22,15 +66,29 @@ const NERUTABILNI_DOMENI = ["local", "localhost", "invalid", "home.arpa"] as con
  * u svaki interni podsjetnik i tvrdo bounce-ovao. Kako Resend šalje jedan send (jedan
  * `email_id`) na sve primaoce, taj jedan bounce je cijeli red u „Poslatim mejlovima"
  * bojio u „Odbijeno" iako su ostali primaoci mejl uredno dobili — i punio brojač grešaka.
- *
- * Poređenje ide po CIJELOJ zoni na kraju hosta (`endsWith("." + zona)` ili tačan host),
- * ne po `includes`: `local.ba` i `tehpro.localhost.ba` su legitimni domeni.
  */
 export function jeDostavljiva(raw: string | null | undefined): boolean {
-  const e = (raw ?? "").trim().toLowerCase()
-  if (!EMAIL_RE.test(e)) return false // `root@localhost` pada već ovdje — nema tačke
-  const host = e.slice(e.lastIndexOf("@") + 1)
-  return !NERUTABILNI_DOMENI.some((z) => host === z || host.endsWith(`.${z}`))
+  return razlogNedostavljivosti(raw) === null
+}
+
+/**
+ * Adrese koje su KONFIGURISANE kao primaoci ali ih motor odbacuje — ulaz za pred-slanje
+ * prikaz. Bez ovoga odbačena adresa samo nestane sa spiska i vlasnik misli da je pokrivena.
+ *
+ * Vraća normalizovane (trim+lowercase) adrese, dedupirane, u ulaznom redoslijedu.
+ * Prazni/`null` unosi se preskaču — oni nisu „odbačena adresa" nego prazno polje.
+ */
+export function odbaceneAdrese(adrese: ReadonlyArray<string | null | undefined>): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of adrese) {
+    const e = (raw ?? "").trim().toLowerCase()
+    if (e.length === 0) continue
+    if (jeDostavljiva(e) || seen.has(e)) continue
+    seen.add(e)
+    out.push(e)
+  }
+  return out
 }
 
 export function parseEmailList(raw: string | null | undefined): string[] {

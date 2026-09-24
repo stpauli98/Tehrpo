@@ -30,6 +30,11 @@ test.describe("PP-1 — ID karta (klijent/ugovor/kontakt/dokument)", () => {
     await page.getByTestId("novi-klijent-email").fill("e2e-klijent@example.com")
     await page.getByTestId("novi-klijent-submit").click()
     await expect(page.getByTestId("novi-klijent-sheet")).toBeHidden({ timeout: 5000 })
+    // Server akcija radi `revalidatePath`, pa App Router sam pokrene osvježavanje /klijenti.
+    // Ako odmah izdamo `page.goto`, ta osvježavajuća navigacija prekine našu i Playwright
+    // baci „interrupted by another navigation". Čekamo STANJE (mreža se smirila = refresh je
+    // slegao), ne fiksnu pauzu i ne retry.
+    await page.waitForLoadState("networkidle")
     await otvoriIdKarta(page)
   })
 
@@ -49,6 +54,17 @@ test.describe("PP-1 — ID karta (klijent/ugovor/kontakt/dokument)", () => {
     await page.getByTestId("novi-kontakt-btn").click()
     await page.getByTestId("kontakt-ime").fill("Marko Marković")
     await page.getByTestId("kontakt-funkcija").fill("Direktor")
+    // SPOJ: PR #83 je dodao sekciju LOKACIJA u kontakt sheet, pa je PR #81 ovdje morao
+    // popuniti obavezan naziv nove lokacije — tada je klijent BEZ lokacija dobijao samo
+    // granu „Nova lokacija" sa `required` nazivom. Audit grana je to naknadno ispravila
+    // (5643856): prisiljavati korisnika da izmisli lokaciju samo da bi unio kontakt firme
+    // bio je bug, pa firma bez lokacija sada dobija izričit i PODRAZUMIJEVAN izbor
+    // „Sve lokacije — kontakt firme" (lokacija_id = NULL). Zato polje
+    // `kontakt-nova-lokacija-naziv` ovdje uopšte nije u DOM-u i #81 verzija linije
+    // ne može proći. Namjeru #81 (sekcija postoji i ne smije tiho blokirati submit)
+    // čuvamo tako što izbor eksplicitno TVRDIMO umjesto da ga slijepo pretpostavimo —
+    // ovo je ujedno regresioni čuvar za 5643856.
+    await expect(page.getByTestId("kontakt-lokacija-firma")).toBeChecked()
     await page.getByTestId("kontakt-submit").click()
     await expect(page.getByTestId("kontakt-sheet")).toBeHidden({ timeout: 5000 })
     await expect(page.getByTestId("kontakt-red")).toContainText("Marko Marković")
@@ -60,7 +76,18 @@ test.describe("PP-1 — ID karta (klijent/ugovor/kontakt/dokument)", () => {
     await page.waitForURL(/\/klijenti\/[0-9a-f-]{36}/)
     await page.getByTestId("tab-dokumenti").click()
     await expect(page.getByTestId("klijent-dok-upload")).toBeVisible()
-    await page.getByTestId("klijent-dok-tip").selectOption("ugovor")
+    // „Tip dokumenta" NIJE native <select> nego Base UI Select: testid stoji na
+    // SelectTrigger-u (<button role="combobox">), pa `selectOption` ovdje nema šta da radi.
+    // Novo ponašanje je ispravno — cijela aplikacija je namjerno prešla na isti Select
+    // (isti obrazac vozi i 08-dokumenti.spec.ts / 23-podsjetnici-v2.spec.ts): tastaturna
+    // navigacija, aria-activedescendant i prevedene labele koje native <option> ne bi imao.
+    // Zato biramo klikom na trigger i role=option, i dodatno tvrdimo da je izbor stvarno
+    // primljen (trigger prikazuje „Ugovor") — inače bi tihi promašaj kliknuo pogrešnu opciju
+    // a upload bi i dalje prošao sa zadanim tipom.
+    const tipTrigger = page.getByTestId("klijent-dok-tip")
+    await tipTrigger.click()
+    await page.getByRole("option", { name: "Ugovor", exact: true }).click()
+    await expect(tipTrigger).toContainText("Ugovor")
     await page.getByTestId("klijent-dok-file").setInputFiles({
       name: "ugovor-e2e.pdf",
       mimeType: "application/pdf",

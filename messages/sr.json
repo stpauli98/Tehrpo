@@ -61,6 +61,16 @@
       "demoBedz": "DEMO",
       "demoBedzOpis": "Demo verzija — mejlovi se ne šalju"
     },
+    "demoTraka": {
+      "tekst": "DEMO VERZIJA — faza 0 · kostur, ne gotov proizvod"
+    },
+    "demoDisklejmer": {
+      "naslov": "Dobrodošli u demo okruženje",
+      "pasus1": "Ovo je kostur aplikacije — faza 0, generička osnova koju razvijamo od nule. Nije gotov proizvod i ne predstavlja proizvod bilo koje treće strane.",
+      "pasus2": "Demo prikazuje samo mali dio mogućnosti. Svako rješenje se izrađuje po mjeri: konačan obim, izgled i funkcionalnosti definišu se u dogovoru sa firmom kojoj se rješenje implementira.",
+      "pasus3": "Svi podaci u demo okruženju su testni i ne odnose se na stvarne firme.",
+      "dugme": "Razumijem"
+    },
     "comingSoon": {
       "naslovUskoro": "{naslov} — uskoro"
     },
@@ -194,7 +204,8 @@
       "podsjetnikEmailNijeDodat": "Nije moguće dodati adresu.",
       "nepostojeciKorisnik": "Nepostojeći korisnik u dodjeli.",
       "lokacijaNazivObavezan": "Naziv nove lokacije je obavezan.",
-      "klijentBezLokacije": "Klijent je kreiran, ali prva lokacija nije: {poruka} Dodajte je u tabu Lokacije."
+      "klijentBezLokacije": "Klijent je kreiran, ali prva lokacija nije: {poruka} Dodajte je u tabu Lokacije.",
+      "promjenaNijeDozvoljena": "Vaše dozvole ne dopuštaju ovu promjenu."
     },
     "detalj": {
       "nazad": "Klijenti",
@@ -226,6 +237,7 @@
     },
     "karta": {
       "kasniBadge": "{count} kasni",
+      "kasniLabel": "kasni",
       "lokacija": "{count} lok.",
       "aktivnih": "{count} aktivnih",
       "ukupno": "{count} ukupno"
@@ -555,6 +567,15 @@
       "nacinPracenje": "Samo praćenje roka",
       "dodajem": "Dodajem…",
       "dodajIGenerisi": "Dodaj i generiši termin"
+    },
+    "aktivan": {
+      "aktivan": "Šalje se",
+      "ugasen": "Ugašeno",
+      "ugasiAria": "Ugasi slanje podsjetnika za ovog klijenta",
+      "vratiAria": "Vrati slanje podsjetnika za ovog klijenta",
+      "uspjehUgasen": "Slanje podsjetnika je ugašeno. Istorija i dokumenti ostaju.",
+      "uspjehVracen": "Slanje podsjetnika je vraćeno.",
+      "greskaFallback": "Promjena nije sačuvana."
     }
   },
   "termini": {
@@ -660,7 +681,9 @@
       "datumObavezan": "Datum je obavezan",
       "zaduzeniNemaPristup": "Ova osoba nema pristup izabranoj firmi. Pristup firmama dodjeljuje admin u Postavke → Korisnici.",
       "ponavljanjeTraziLokaciju": "Ponavljajući termin mora imati lokaciju.",
-      "ponavljanjeVrstaBezIntervala": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi, ili unesi termin kao jednokratni."
+      "ponavljanjeVrstaBezIntervala": "Ova vrsta nema podrazumijevani interval — javi se adminu da ga postavi, ili unesi termin kao jednokratni.",
+      "izmijenioDrugi": "Neko drugi je u međuvremenu izmijenio ovaj termin. Osvježi stranicu pa pokušaj ponovo.",
+      "terminNijeDostupan": "Ovaj termin više nije dostupan — obrisan je ili nemaš pristup. Osvježi stranicu."
     }
   },
   "status": {
@@ -702,6 +725,9 @@
       "periodMjesec": "Određeni mjesec",
       "periodRaspon": "Prilagođeni raspon",
       "periodSvi": "Sve (bez vremenskog ograničenja)",
+      "preneseno": "Uključi prenesene obaveze",
+      "prenesenoOpis": "Zaostale otvorene obaveze iz perioda prije {datum}.",
+      "prenesenoNedostupno": "Period bez donje granice — nema šta da se prenese.",
       "od": "Od",
       "do": "Do",
       "opseg": "Opseg",
@@ -709,6 +735,7 @@
       "opsegFiltrirano": "Samo trenutno filtrirano",
       "filteriPrimijenjeni": "Filteri sa stranice su primijenjeni",
       "nemaFiltera": "Nema aktivnih filtera na stranici",
+      "opsegNapomena": "Period iznad zamjenjuje filter mjeseca sa stranice.",
       "prilagodi": "Prilagodi",
       "sakrij": "Sakrij",
       "brojAktivnosti": "Izvešće se {broj} aktivnosti",
@@ -717,7 +744,8 @@
       "rasponNevazeci": "Nevažeći raspon datuma (od mora biti ≤ do).",
       "preuzimam": "Preuzimam…",
       "uspjeh": "Izvještaj je preuzet.",
-      "greskaPreuzimanja": "Preuzimanje nije uspjelo."
+      "greskaPreuzimanja": "Preuzimanje nije uspjelo.",
+      "previseAktivnosti": "Previše aktivnosti: {broj} (granica je {granica}). Suzite period ili filtere."
     },
     "viewSwitcher": {
       "kalendar": "Kalendar",
@@ -746,7 +774,9 @@
       "viseTerminaTitle": "Više termina — otvori listu",
       "prazno": "Nema podataka.",
       "celijaAriaLabel": "{vrsta}, dan {dan}, {status}",
-      "celijaViseAriaLabel": "{vrsta}, dan {dan}, {status}, još {broj, plural, =1 {# termin} other {# termina}}"
+      "celijaViseAriaLabel": "{vrsta}, dan {dan}, {status}, još {broj, plural, =1 {# termin} other {# termina}}",
+      "celijaPrenesenoAriaLabel": "{vrsta}, preneseno iz ranije godine, rok {datum}, {status}",
+      "celijaPrenesenoViseAriaLabel": "{vrsta}, preneseno iz ranije godine, rok {datum}, {status}, još {broj, plural, =1 {# termin} other {# termina}}"
     },
     "monthCalendar": {
       "danAriaLabel": "Dan {broj}",
@@ -763,7 +793,9 @@
     "matrica": {
       "izaberiteKlijenta": "Izaberite klijenta za prikaz godišnje matrice.",
       "nemaTerminaMjesec": "Nema termina za izabrani mjesec.",
-      "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini."
+      "nemaTerminaGodina": "Ovaj klijent nema termina u izabranoj godini.",
+      "prenesenoKolona": "Preneseno",
+      "prenesenoObjasnjenje": "Kolona „Preneseno“ prikazuje otvorene obaveze kojima je rok istekao prije {godina}. godine — one i dalje moraju biti izvršene."
     },
     "prikaz": {
       "modKlijent": "Po klijentu",
@@ -818,6 +850,7 @@
       "status": "Status",
       "napomena": "Napomena",
       "zaduzeni": "Zaduženi",
+      "zaduzeni_korisnik_id": "Zaduženi",
       "datum_zakazan": "Datum zakazan",
       "rok_dospijeca": "Rok dospijeća",
       "datum_izvrsenja": "Datum izvršenja",
@@ -928,6 +961,7 @@
     "neispravniPodaci": "Neispravni podaci — osvježite stranicu i pokušajte ponovo.",
     "preuzimanjeNijeUspjelo": "Preuzimanje nije uspjelo. Pokušajte ponovo.",
     "preuzimanjeNijeDozvoljeno": "Vaša uloga nema pravo preuzimanja dokumenata.",
+    "izmjenaNijeDozvoljena": "Vaša uloga nema pravo dodavanja ni generisanja dokumenata.",
     "potvrdaBrisanjaNaslov": "Obrisati dokument?",
     "potvrdaBrisanjaOpis": "Dokument i fajl se trajno brišu. Ovo se ne može poništiti.",
     "tipovi": {
@@ -1017,7 +1051,19 @@
       "deaktivacijaPotvrdaNaslov": "Deaktivirati korisnika?",
       "deaktivacijaPotvrdaOpis": "Korisnik gubi pristup aplikaciji i prestaje primati podsjetnike. Nalog se kasnije može ponovo aktivirati.",
       "resetPotvrdaNaslov": "Poslati reset lozinke?",
-      "resetPotvrdaOpis": "Korisniku se šalje email na {email} sa linkom za postavljanje nove lozinke. Postojeća lozinka važi dok je korisnik sam ne promijeni."
+      "resetPotvrdaOpis": "Korisniku se šalje email na {email} sa linkom za postavljanje nove lozinke. Postojeća lozinka važi dok je korisnik sam ne promijeni.",
+      "urediPodatke": "Uredi podatke",
+      "obrisiTrajno": "Obriši trajno",
+      "obrisiPotvrdaNaslov": "Trajno obrisati korisnika?",
+      "obrisiPotvrdaOpis": "Nalog {email} se trajno uklanja i ne može se vratiti. Postojeći zapisi (klijenti, termini, dokumenti, audit) ostaju, ali bez imena ovog korisnika kao aktera.",
+      "korisnikObrisan": "Korisnik obrisan."
+    },
+    "urediKorisnika": {
+      "naslov": "Uredi korisnika",
+      "poljeIme": "Ime i prezime",
+      "poljeEmail": "Email",
+      "submit": "Sačuvaj",
+      "submitPending": "Čuvanje…"
     },
     "noviKorisnik": {
       "dugme": "Novi korisnik",
@@ -1072,7 +1118,7 @@
     },
     "saljiKlijentima": {
       "naslov": "Šalji podsjetnike i firmama",
-      "upozorenje": "Uključeno = mailovi izlaze van TehPro-a (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
+      "upozorenje": "Uključeno = mailovi izlaze van vaše firme (klijentima). Šalje se samo firmama koje su pojedinačno uključene i imaju upisane adrese."
     },
     "zakazanoObavijest": {
       "naslov": "Obavijest o zakazivanju poslije roka",
@@ -1107,7 +1153,9 @@
       "uvijekPrimajuPrazno": "Uvijek primaju: nijedan admin trenutno ne prima podsjetnike i REMINDER_TO nije postavljen.",
       "nepokriveneLokacije": "Bez primaoca za lokacije: {lokacije}.",
       "terminiBezLokacijeNepokriveni": "Termini bez lokacije nemaju primaoca — dodaj adresu koja pokriva cijelu firmu.",
-      "nepotpuniPodaciBanner": "Spisak firmi, lokacija, kontakata ili termina je odsječen (previše redova) — tabela i upozorenja o pokrivenosti možda nisu potpuni."
+      "nepotpuniPodaciBanner": "Spisak firmi, lokacija, kontakata ili termina je odsječen (previše redova) — tabela i upozorenja o pokrivenosti možda nisu potpuni.",
+      "odbaceneAdrese": "Neće primiti: {adrese} — motor odbacuje ove adrese (rezervisan/nepostojeći domen ili neispravan oblik). Ispravi ih prije nego počne slanje na prave adrese.",
+      "stalniOdbaceniBanner": "Odbačeno iz „uvijek primaju“: {adrese}. Te adrese su podešene, ali motor ih NE koristi (rezervisan/nepostojeći domen ili neispravan oblik) — provjeri REMINDER_TO i admin naloge."
     },
     "reminderForm": {
       "naDan": "na dan",
@@ -1157,7 +1205,12 @@
       "resetRateLimit": "Previše zahtjeva za reset lozinke. Pokušaj ponovo za nekoliko minuta.",
       "nepoznataDozvola": "Nepoznata dozvola.",
       "korisnikNePostoji": "Korisnik ne postoji.",
-      "dozvoleSamoOperater": "Prekidači dozvola vrijede samo za operatera."
+      "dozvoleSamoOperater": "Prekidači dozvola vrijede samo za operatera.",
+      "periodikaUklanjanjeBlokirano": "Periodika se ne može ukloniti: {broj} otvorenih termina ove vrste vodi se kao ponavljajući i nema vlastiti interval — po izvršenju bi lanac stao i obaveza bi nestala iz plana. Prvo te termine otkaži ili zatvori, pa onda ukloni interval vrste.",
+      "periodikaProvjeraNijeUspjela": "Ne mogu provjeriti koliko otvorenih termina zavisi od ove periodike, pa interval nije uklonjen. Pokušaj ponovo.",
+      "prvoDeaktiviraj": "Korisnik se prije brisanja mora deaktivirati.",
+      "vlastitiNalogBrisanje": "Ne možeš obrisati vlastiti nalog.",
+      "brisanjeAuthGreska": "Brisanje naloga nije dovršeno. Pokušaj ponovo."
     },
     "novaVrsta": {
       "dugme": "Nova vrsta",
@@ -1269,6 +1322,7 @@
       "neispravniPodaci": "Neispravni podaci prijedloga.",
       "greskaCitanja": "Učitavanje termina nije uspjelo.",
       "terminNePostoji": "Termin ne postoji.",
+      "zapisnikSamoIzvrsen": "Zapisnik se snima samo za izvršen termin.",
       "snimanjeNijeUspjelo": "Snimanje nije uspjelo."
     },
     "api": {
@@ -1398,7 +1452,8 @@
     "oznaciPregledanim": "Označi pregledanim",
     "praznoFilteri": "Nema rezultata za zadate filtere.",
     "oznacenoPregledanim": "Označeno kao pregledano.",
-    "greskaOznacavanja": "Označavanje nije uspjelo. Pokušajte ponovo."
+    "greskaOznacavanja": "Označavanje nije uspjelo. Pokušajte ponovo.",
+    "oznacavanjeNijeDozvoljeno": "Vaša uloga nema pravo označavanja mejlova."
   },
   "izvoz": {
     "plan": {
@@ -1414,7 +1469,8 @@
         "status": "Status",
         "periodika": "Periodika (mj)",
         "odgovorna": "Odgovorna osoba",
-        "nacin": "Način"
+        "nacin": "Način",
+        "preneseno": "Preneseno"
       },
       "kolonePdf": {
         "klijent": "Klijent",
@@ -1424,7 +1480,8 @@
         "status": "Status",
         "periodika": "Periodika",
         "odgovorna": "Odgovorna",
-        "nacin": "Način"
+        "nacin": "Način",
+        "preneseno": "Preneseno"
       },
       "nacin": {
         "izvrsava": "Izvršava",
@@ -1432,9 +1489,13 @@
       },
       "greska": "Greška",
       "greskaGenerisanje": "Greška pri generisanju fajla: {poruka}",
+      "previseRedova": "Izvoz je prevelik — najviše {granica} aktivnosti po fajlu. Suzite period ili filtere pa pokušajte ponovo.",
       "raspon": {
         "nevazeci": "Nevažeći raspon datuma (od mora biti ≤ do)."
-      }
+      },
+      "prenesenoDa": "Da",
+      "prenesenoNe": "—",
+      "prenesenoNapomena": "Plan uključuje i {broj, plural, =1 {# prenesenu obavezu} few {# prenesene obaveze} other {# prenesenih obaveza}} iz perioda prije {datum}."
     },
     "zapisnik": {
       "naslov": "ZAPISNIK O IZVRŠENOJ PROVJERI",
@@ -1448,7 +1509,9 @@
       "zakljucak": "Zaključak",
       "potpis": "Potpis ovlaštenog lica: ______________________________",
       "imeFajla": "Zapisnik - {vrsta} - {datum}.docx",
-      "provjeraFallback": "provjera"
+      "provjeraFallback": "provjera",
+      "sablonNapomena": "NAPOMENA: Ovaj tekst je šablonski nacrt — nije ga generisao AI model. Obavezno ga provjerite i dopunite prije ovjere.",
+      "greskaModelOdgovor": "Model nije vratio ispravan zapisnik. Ništa nije snimljeno — pokušajte ponovo."
     }
   },
   "dbErrors": {

@@ -144,36 +144,52 @@ export async function updateTermin(
 
   const supabase = await createServerSupabaseClient()
 
+  // B4 — JEDAN snimak reda za SVE odluke ove akcije (firma za pravilo „Zaduženi",
+  // status za sinhronizaciju sa „Datum zakazan", rok za obavijest) i, što je važnije,
+  // za VERZIJU pod kojom se upisuje. Dosad su to bila dva odvojena čitanja bez ijednog
+  // uslova u samom UPDATE-u: paralelno „Označi izvršeno" u istoj sekundi ostavljalo je
+  // termin u stanju koje po modelu ne postoji (status='zakazano' SA datum_izvrsenja,
+  // uz već napravljen sljedeći ciklus).
+  // S1: pad lookup-a NIJE "nema reda" — greška čitanja se ne smije protumačiti kao prazno.
+  const { data: snimak, error: snimakGreska } = await supabase
+    .from("termini")
+    .select("klijent_id, status, rok_dospijeca, updated_at")
+    .eq("id", id)
+    .maybeSingle()
+  if (snimakGreska) return { ok: false, message: friendlyDbError(snimakGreska) }
+  if (!snimak) return { ok: false, message: t("terminNijeDostupan") }
+
   // Pravila „Zaduženi" po ulozi — vrijede i pri izmjeni; treba firma termina
-  let klijentIdTermina: string | null = null
+  const klijentIdTermina = snimak.klijent_id
   if (typeof patch.zaduzeni === "string" && patch.zaduzeni) {
-    // S1: pad lookup-a NIJE "nema reda" — bez firme se pravilo ne može provjeriti, pa se upis odbija
-    const { data: red, error: redGreska } = await supabase
-      .from("termini").select("klijent_id").eq("id", id).maybeSingle()
-    if (redGreska) return { ok: false, message: friendlyDbError(redGreska) }
-    klijentIdTermina = red?.klijent_id ?? null
-    if (klijentIdTermina) {
-      const zaduzeniGreska = await provjeriZaduzenogZaFirmu(supabase, klijentIdTermina, patch.zaduzeni)
-      if (zaduzeniGreska) return zaduzeniGreska
-    }
+    const zaduzeniGreska = await provjeriZaduzenogZaFirmu(supabase, klijentIdTermina, patch.zaduzeni)
+    if (zaduzeniGreska) return zaduzeniGreska
   }
 
-  // Sinhronizuj status sa "Datum zakazan": planirano ↔ zakazano; usput dohvati rok
-  // (treba za detekciju zakazano-poslije-roka nakon upisa).
+  // Sinhronizuj status sa "Datum zakazan": planirano ↔ zakazano; rok treba za detekciju
+  // zakazano-poslije-roka nakon upisa.
   let rokDospijeca: string | null = null
   if (formData.has("datum_zakazan")) {
-    const { data: cur } = await supabase
-      .from("termini").select("status, rok_dospijeca").eq("id", id).maybeSingle()
-    rokDospijeca = cur?.rok_dospijeca ?? null
-    if (cur?.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
-    else if (cur?.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
+    rokDospijeca = snimak.rok_dospijeca
+    if (snimak.status === "planirano" && patch.datum_zakazan) patch.status = "zakazano"
+    else if (snimak.status === "zakazano" && !patch.datum_zakazan) patch.status = "planirano"
   }
 
   if (Object.keys(patch).length === 0) return { ok: true }
 
-  const { error } = await supabase.from("termini").update(patch).eq("id", id)
+  // GUARD u samom UPDATE-u: `updated_at` je verzija reda (tg_termini_compute_rok ga
+  // postavlja na now() pri SVAKOM upisu), pa uslov hvata BILO KOJU tuđu izmjenu između
+  // snimka i upisa — ne samo promjenu statusa. Nula pogođenih redova nije uspjeh:
+  // dosad se u tom slučaju vraćalo ok:true i korisnik je vjerovao da je sačuvano.
+  const { data: pogodjeni, error } = await supabase
+    .from("termini")
+    .update(patch)
+    .eq("id", id)
+    .eq("updated_at", snimak.updated_at)
+    .select("id")
 
   if (error) return { ok: false, message: friendlyDbError(error) }
+  if (!pogodjeni || pogodjeni.length === 0) return { ok: false, message: t("izmijenioDrugi") }
 
   // Admin: zaduženom radniku auto-dodijeli firmu (pristup) — tek nakon uspješnog upisa
   if (typeof patch.zaduzeni === "string" && patch.zaduzeni && klijentIdTermina) {
@@ -194,7 +210,15 @@ export async function updateTermin(
 
 const otkaziSchema = z.object({ id: z.string().uuid() })
 
-/** Otkaži termin — postavi status na 'otkazano'. */
+/**
+ * Otkaži termin — postavi status na 'otkazano'.
+ *
+ * B4 guard: `.neq("status", "izvrseno")` u samom UPDATE-u. Bez njega je zastarjeli
+ * ekran (otvoren prije nego što je kolega upisao izvršenje) pretvarao IZVRŠEN termin
+ * u otkazan — sa datumom izvršenja koji ostaje visiti, i sa sljedećim ciklusom koji je
+ * auto-cycle već napravio. Otkazivanje već otkazanog i dalje prolazi (idempotentno:
+ * uslov ga ne isključuje), pa dvoklik ne pravi lažnu grešku.
+ */
 export async function otkaziTermin(
   _prev: ActionResult,
   formData: FormData,
@@ -202,10 +226,31 @@ export async function otkaziTermin(
   const parsed = otkaziSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { ok: false, message: t("neispravanZahtjev") }
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("termini").update({ status: "otkazano" }).eq("id", parsed.data.id)
+  const { data: pogodjeni, error } = await supabase
+    .from("termini")
+    .update({ status: "otkazano" })
+    .eq("id", parsed.data.id)
+    .neq("status", "izvrseno")
+    .select("id")
   if (error) return { ok: false, message: friendlyDbError(error) }
+  if (!pogodjeni || pogodjeni.length === 0) {
+    return { ok: false, message: await porukaZaPromasaj(supabase, parsed.data.id) }
+  }
   return { ok: true }
+}
+
+/**
+ * Zašto UPDATE nije pogodio nijedan red: reda nema (obrisan ili van dosega RLS-a) ili
+ * ga je neko izmijenio u međuvremenu. Poziva se ISKLJUČIVO na promašaj, pa dodatni
+ * upit ne opterećuje normalan put.
+ */
+async function porukaZaPromasaj(
+  supabase: SupabaseServerClient,
+  id: string,
+): Promise<string> {
+  const { data: stanje } = await supabase
+    .from("termini").select("id").eq("id", id).maybeSingle()
+  return stanje ? t("izmijenioDrugi") : t("terminNijeDostupan")
 }
 
 const createSchema = z.object({
@@ -285,6 +330,10 @@ export async function createTermin(
     datum_zakazan: datum_zakazan ?? null,
     zaduzeni: zaduzeni ?? null,
     status: datum_zakazan ? "zakazano" : "planirano",
+    // N03: izbor „Jednokratno / Ponavlja se" mora završiti U REDU termina — inače
+    // ga tg_termini_auto_cycle ne vidi i jednokratnom unosu po izvršenju svejedno
+    // napravi sljedeći ciklus (iz podrazumijevanog intervala vrste).
+    ponavlja_se: jePonavljajuci,
   }).select("id").single()
 
   if (error) return { ok: false, message: friendlyDbError(error) }
@@ -342,13 +391,32 @@ export async function markIzvrseno(
   const { id, datum_izvrsenja } = parsed.data
 
   const supabase = await createServerSupabaseClient()
-  // Mark-done u JEDNOM pozivu (datum + status) → tg_termini_auto_cycle spawn-uje sljedeći termin
-  const { error } = await supabase
+  // Mark-done u JEDNOM pozivu (datum + status) → tg_termini_auto_cycle spawn-uje sljedeći termin.
+  //
+  // B4 guard: `.is("datum_izvrsenja", null)` — zatvara se SAMO još nezatvoren termin.
+  // Bez toga je zastarjeli ekran mogao prepisati tuđi datum izvršenja, a ta izmjena se
+  // kroz tg_termini_korekcija_datuma propagira i na već napravljeni sljedeći ciklus
+  // (pomjeren zakonski rok, tiho). Otkazan termin ostaje zatvoriv (datum mu je null) —
+  // ta putanja postoji u UI-u (dugme „Označi izvršeno" se krije samo za izvršene).
+  const { data: pogodjeni, error } = await supabase
     .from("termini")
     .update({ datum_izvrsenja, status: "izvrseno" })
     .eq("id", id)
+    .is("datum_izvrsenja", null)
+    .select("id")
 
   if (error) return { ok: false, message: friendlyDbError(error) }
+
+  if (!pogodjeni || pogodjeni.length === 0) {
+    const { data: stanje } = await supabase
+      .from("termini").select("status, datum_izvrsenja").eq("id", id).maybeSingle()
+    if (!stanje) return { ok: false, message: t("terminNijeDostupan") }
+    // Ponovljeni submit/dvoklik sa ISTIM datumom nije sudar — ishod je već postignut.
+    if (stanje.status === "izvrseno" && stanje.datum_izvrsenja === datum_izvrsenja) {
+      return { ok: true }
+    }
+    return { ok: false, message: t("izmijenioDrugi") }
+  }
 
   return { ok: true }
 }
